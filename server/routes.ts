@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertCarSchema, insertContactSchema } from "@shared/schema";
+import { insertCarSchema, insertContactSchema, insertSubscriptionSchema, insertFeaturedListingSchema } from "@shared/schema";
 import { priceComparisonService } from "./priceComparison";
 import { marketplaceAggregator } from "./marketplaceAggregator";
 import { z } from "zod";
@@ -210,7 +210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const filters = searchSchema.parse(req.body);
       console.log('Marketplace search filters:', filters);
 
-      const searchResult = await marketplaceAggregator.searchAcrossPortals(filters);
+      const searchResult = await marketplaceAggregator.searchAcrossPortals(filters as any);
       res.json(searchResult);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -218,6 +218,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error('Marketplace search error:', error);
       res.status(500).json({ error: "Failed to search marketplace" });
+    }
+  });
+
+  // Premium subscription endpoints
+  app.post("/api/subscriptions", async (req, res) => {
+    try {
+      const subscriptionData = insertSubscriptionSchema.parse(req.body);
+      const subscription = await storage.createSubscription(subscriptionData);
+      res.status(201).json(subscription);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid subscription data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create subscription" });
+    }
+  });
+
+  // Featured listings endpoints
+  app.post("/api/featured-listings", async (req, res) => {
+    try {
+      const featuredData = insertFeaturedListingSchema.parse(req.body);
+      const featured = await storage.createFeaturedListing(featuredData);
+      
+      // Update car to be featured
+      await storage.updateCarFeatured(featuredData.carId, true, new Date(Date.now() + featuredData.duration * 24 * 60 * 60 * 1000));
+      
+      res.status(201).json(featured);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid featured listing data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create featured listing" });
+    }
+  });
+
+  app.get("/api/subscriptions/user/:userId", async (req, res) => {
+    try {
+      const subscription = await storage.getUserSubscription(req.params.userId);
+      res.json(subscription);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch subscription" });
     }
   });
 

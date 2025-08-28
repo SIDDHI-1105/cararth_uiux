@@ -6,10 +6,13 @@ import CarFilters from "@/components/car-filters";
 import CarCard from "@/components/car-card";
 import AdvancedFilters from "@/components/advanced-filters";
 import MarketplaceResults from "@/components/marketplace-results";
+import PremiumUpgrade from "@/components/premium-upgrade";
+import FeaturedListingModal from "@/components/featured-listing-modal";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChevronLeft, ChevronRight, Search, Globe } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ChevronLeft, ChevronRight, Search, Globe, Star, Crown } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { type Car } from "@shared/schema";
 import logoImage from "@/assets/logo.png";
@@ -20,6 +23,9 @@ export default function Home() {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState("local");
   const [marketplaceResult, setMarketplaceResult] = useState<any>(null);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showFeaturedModal, setShowFeaturedModal] = useState(false);
+  const [selectedCarForFeatured, setSelectedCarForFeatured] = useState<{id: string, title: string} | null>(null);
 
   const { data: cars = [], isLoading } = useQuery<Car[]>({
     queryKey: ["/api/cars", filters],
@@ -99,6 +105,11 @@ export default function Home() {
     });
   };
 
+  const handleMakeFeatured = (car: Car) => {
+    setSelectedCarForFeatured({ id: car.id, title: car.title });
+    setShowFeaturedModal(true);
+  };
+
   // Marketplace search mutation
   const marketplaceSearch = useMutation({
     mutationFn: async (searchFilters: any) => {
@@ -142,6 +153,40 @@ export default function Home() {
             onSearch={handleMarketplaceSearch}
             isLoading={marketplaceSearch.isPending}
           />
+        </div>
+
+        {/* Premium Upgrade Banner */}
+        <div className="mb-8">
+          <div className="steel-gradient rounded-lg border-2 border-yellow-500/50 p-6 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-amber-500/10"></div>
+            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between">
+              <div className="flex items-center gap-4 mb-4 md:mb-0">
+                <div className="p-3 bg-gradient-to-r from-yellow-500 to-amber-500 rounded-full">
+                  <Crown className="w-6 h-6 text-black" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Upgrade to Premium</h3>
+                  <p className="text-muted-foreground">Get advanced filters, price alerts, and market analytics</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <Dialog open={showPremiumModal} onOpenChange={setShowPremiumModal}>
+                  <DialogTrigger asChild>
+                    <Button className="btn-metallic" data-testid="button-upgrade-premium">
+                      <Star className="w-4 h-4 mr-2" />
+                      Upgrade Now
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="steel-gradient max-w-4xl">
+                    <DialogHeader>
+                      <DialogTitle>Choose Your Premium Plan</DialogTitle>
+                    </DialogHeader>
+                    <PremiumUpgrade onUpgrade={() => setShowPremiumModal(false)} />
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Results Tabs */}
@@ -216,6 +261,27 @@ export default function Home() {
                     />
                   ))}
                 </div>
+                
+                {/* Seller Actions */}
+                {sortedCars.length > 0 && (
+                  <div className="mt-8 p-4 steel-gradient rounded-lg border border-steel-primary/30">
+                    <h3 className="font-semibold mb-3 flex items-center gap-2">
+                      <Star className="w-5 h-5 text-yellow-500" />
+                      Boost Your Listings
+                    </h3>
+                    <p className="text-muted-foreground text-sm mb-4">
+                      Make your car stand out with featured placement and get 5x more visibility
+                    </p>
+                    <Button 
+                      onClick={() => handleMakeFeatured(sortedCars[0])}
+                      className="btn-metallic"
+                      data-testid="button-make-featured"
+                    >
+                      <Star className="w-4 h-4 mr-2" />
+                      Make Listing Featured
+                    </Button>
+                  </div>
+                )}
 
                 {sortedCars.length === 0 && (
                   <div className="text-center py-12" data-testid="text-no-results">
@@ -334,6 +400,19 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Featured Listing Modal */}
+      {selectedCarForFeatured && (
+        <FeaturedListingModal
+          carId={selectedCarForFeatured.id}
+          carTitle={selectedCarForFeatured.title}
+          isOpen={showFeaturedModal}
+          onClose={() => {
+            setShowFeaturedModal(false);
+            setSelectedCarForFeatured(null);
+          }}
+        />
+      )}
     </div>
   );
 }

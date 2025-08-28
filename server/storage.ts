@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Car, type InsertCar, type Contact, type InsertContact } from "@shared/schema";
+import { type User, type InsertUser, type Car, type InsertCar, type Contact, type InsertContact, type Subscription, type InsertSubscription, type FeaturedListing, type InsertFeaturedListing } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -28,17 +28,29 @@ export interface IStorage {
   // Contact operations
   createContact(contact: InsertContact): Promise<Contact>;
   getContactsForCar(carId: string): Promise<Contact[]>;
+  
+  // Premium subscription operations
+  createSubscription(subscription: InsertSubscription): Promise<Subscription>;
+  getUserSubscription(userId: string): Promise<Subscription | undefined>;
+  
+  // Featured listing operations
+  createFeaturedListing(featured: InsertFeaturedListing): Promise<FeaturedListing>;
+  updateCarFeatured(carId: string, isFeatured: boolean, expiresAt?: Date): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private cars: Map<string, Car>;
   private contacts: Map<string, Contact>;
+  private subscriptions: Map<string, Subscription>;
+  private featuredListings: Map<string, FeaturedListing>;
 
   constructor() {
     this.users = new Map();
     this.cars = new Map();
     this.contacts = new Map();
+    this.subscriptions = new Map();
+    this.featuredListings = new Map();
     
     // Initialize with some sample data for development
     this.initializeSampleData();
@@ -53,6 +65,8 @@ export class MemStorage implements IStorage {
       phone: "+91 98765 43210",
       name: "Rajesh Kumar",
       password: "hashed_password",
+      isPremium: false,
+      premiumExpiresAt: null,
       createdAt: new Date(),
     };
     this.users.set(sampleSeller.id, sampleSeller);
@@ -79,6 +93,8 @@ export class MemStorage implements IStorage {
         images: ["https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=300"],
         isVerified: true,
         isSold: false,
+        isFeatured: false,
+        featuredExpiresAt: null,
         createdAt: new Date(),
       },
       {
@@ -101,6 +117,8 @@ export class MemStorage implements IStorage {
         images: ["https://images.unsplash.com/photo-1583121274602-3e2820c69888?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=300"],
         isVerified: true,
         isSold: false,
+        isFeatured: false,
+        featuredExpiresAt: null,
         createdAt: new Date(),
       },
       {
@@ -123,6 +141,8 @@ export class MemStorage implements IStorage {
         images: ["https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=300"],
         isVerified: true,
         isSold: false,
+        isFeatured: false,
+        featuredExpiresAt: null,
         createdAt: new Date(),
       },
       {
@@ -145,6 +165,8 @@ export class MemStorage implements IStorage {
         images: ["https://images.unsplash.com/photo-1600712242805-5f78671b24da?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=300"],
         isVerified: true,
         isSold: false,
+        isFeatured: false,
+        featuredExpiresAt: null,
         createdAt: new Date(),
       },
       {
@@ -167,6 +189,8 @@ export class MemStorage implements IStorage {
         images: ["https://pixabay.com/get/g74d2edb73c0af2c28d85337c9fca7dba950ed5a7304fc969f6386870eaf804adebf05fac7ee85afeb4d3077ba46391a547c02ff1fce7cf565a0de3586f814b34_1280.jpg"],
         isVerified: true,
         isSold: false,
+        isFeatured: false,
+        featuredExpiresAt: null,
         createdAt: new Date(),
       },
       {
@@ -189,6 +213,8 @@ export class MemStorage implements IStorage {
         images: ["https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=300"],
         isVerified: true,
         isSold: false,
+        isFeatured: false,
+        featuredExpiresAt: null,
         createdAt: new Date(),
       },
     ];
@@ -212,7 +238,9 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const user: User = { 
       ...insertUser, 
-      id, 
+      id,
+      isPremium: false,
+      premiumExpiresAt: null,
       createdAt: new Date()
     };
     this.users.set(id, user);
@@ -238,8 +266,12 @@ export class MemStorage implements IStorage {
       id,
       owners: insertCar.owners || 1,
       description: insertCar.description || null,
+      features: insertCar.features || [],
+      images: insertCar.images || [],
       isVerified: false,
       isSold: false,
+      isFeatured: false,
+      featuredExpiresAt: null,
       createdAt: new Date(),
     };
     this.cars.set(id, car);
@@ -316,6 +348,50 @@ export class MemStorage implements IStorage {
 
   async getContactsForCar(carId: string): Promise<Contact[]> {
     return Array.from(this.contacts.values()).filter(contact => contact.carId === carId);
+  }
+
+  // Premium subscription operations
+  async createSubscription(insertSubscription: InsertSubscription): Promise<Subscription> {
+    const id = randomUUID();
+    const subscription: Subscription = {
+      ...insertSubscription,
+      id,
+      status: 'active',
+      startDate: new Date(),
+      endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+      createdAt: new Date(),
+    };
+    this.subscriptions.set(id, subscription);
+    return subscription;
+  }
+
+  async getUserSubscription(userId: string): Promise<Subscription | undefined> {
+    return Array.from(this.subscriptions.values())
+      .find(sub => sub.userId === userId && sub.status === 'active');
+  }
+
+  // Featured listing operations
+  async createFeaturedListing(insertFeatured: InsertFeaturedListing): Promise<FeaturedListing> {
+    const id = randomUUID();
+    const featured: FeaturedListing = {
+      ...insertFeatured,
+      id,
+      startDate: new Date(),
+      endDate: new Date(Date.now() + insertFeatured.duration * 24 * 60 * 60 * 1000),
+      isActive: true,
+      createdAt: new Date(),
+    };
+    this.featuredListings.set(id, featured);
+    return featured;
+  }
+
+  async updateCarFeatured(carId: string, isFeatured: boolean, expiresAt?: Date): Promise<void> {
+    const car = this.cars.get(carId);
+    if (car) {
+      car.isFeatured = isFeatured;
+      car.featuredExpiresAt = expiresAt ?? null;
+      this.cars.set(carId, car);
+    }
   }
 }
 

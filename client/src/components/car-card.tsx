@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Heart, Calendar, Gauge, Fuel, Settings, MapPin } from "lucide-react";
+import { Heart, Calendar, Gauge, Fuel, Settings, MapPin, Star } from "lucide-react";
 import { type Car } from "@shared/schema";
 
 interface CarCardProps {
@@ -27,7 +27,17 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
   };
 
   return (
-    <div className="car-card steel-gradient rounded-lg overflow-hidden border-2 border-steel-primary/30" data-testid={`card-car-${car.id}`}>
+    <div className={`car-card steel-gradient rounded-lg overflow-hidden border-2 ${
+      car.isFeatured 
+        ? 'border-yellow-500 shadow-lg shadow-yellow-500/20 relative'
+        : 'border-steel-primary/30'
+    }`} data-testid={`card-car-${car.id}`}>
+      {car.isFeatured && (
+        <div className="absolute top-2 left-2 bg-gradient-to-r from-yellow-500 to-amber-500 text-black px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 z-10">
+          <Star className="w-3 h-3 fill-current" />
+          FEATURED
+        </div>
+      )}
       <img 
         src={(car.images && car.images[0]) || "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=300"} 
         alt={car.title} 
