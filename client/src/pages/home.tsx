@@ -1,0 +1,267 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import Navbar from "@/components/navbar";
+import HeroSection from "@/components/hero-section";
+import CarFilters from "@/components/car-filters";
+import CarCard from "@/components/car-card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { type Car } from "@shared/schema";
+
+export default function Home() {
+  const [filters, setFilters] = useState<Record<string, any>>({});
+  const [sortBy, setSortBy] = useState("price-low");
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+
+  const { data: cars = [], isLoading } = useQuery<Car[]>({
+    queryKey: ["/api/cars", filters],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      
+      if (filters.brand) params.append("brand", filters.brand);
+      if (filters.city) params.append("city", filters.city);
+      if (filters.fuelType) params.append("fuelType", filters.fuelType);
+      if (filters.priceMin) params.append("priceMin", filters.priceMin.toString());
+      if (filters.priceMax) params.append("priceMax", filters.priceMax.toString());
+      if (filters.yearMin) params.append("yearMin", filters.yearMin.toString());
+      if (filters.yearMax) params.append("yearMax", filters.yearMax.toString());
+      
+      const response = await fetch(`/api/cars?${params}`);
+      if (!response.ok) throw new Error("Failed to fetch cars");
+      return response.json();
+    },
+  });
+
+  const handleHeroSearch = (searchFilters: any) => {
+    const newFilters: Record<string, any> = {};
+    
+    if (searchFilters.brand && searchFilters.brand !== "all") newFilters.brand = searchFilters.brand;
+    if (searchFilters.city && searchFilters.city !== "all") newFilters.city = searchFilters.city;
+    if (searchFilters.fuelType && searchFilters.fuelType !== "all") newFilters.fuelType = searchFilters.fuelType;
+    
+    if (searchFilters.budget && searchFilters.budget !== "all") {
+      const [min, max] = searchFilters.budget.split("-").map(Number);
+      if (min) newFilters.priceMin = min / 100000; // Convert to lakhs
+      if (max && max !== 99999999) newFilters.priceMax = max / 100000;
+    }
+    
+    setFilters(newFilters);
+  };
+
+  const handleFilterChange = (filterData: any) => {
+    const newFilters: Record<string, any> = { ...filters };
+    
+    // Handle price ranges
+    if (filterData.priceRanges.length > 0) {
+      const prices = filterData.priceRanges.map((range: string) => {
+        const [min, max] = range.split("-").map(Number);
+        return { min: min / 100000, max: max / 100000 };
+      });
+      newFilters.priceMin = Math.min(...prices.map((p: {min: number; max: number}) => p.min));
+      newFilters.priceMax = Math.max(...prices.map((p: {min: number; max: number}) => p.max));
+    }
+    
+    // Handle brands
+    if (filterData.brands.length > 0) {
+      newFilters.brand = filterData.brands[0]; // For simplicity, use first brand
+    }
+    
+    // Handle years
+    if (filterData.years.length > 0) {
+      const yearRanges = filterData.years.map((range: string) => {
+        const [min, max] = range.split("-").map(Number);
+        return { min, max };
+      });
+      newFilters.yearMin = Math.min(...yearRanges.map((y: {min: number; max: number}) => y.min));
+      newFilters.yearMax = Math.max(...yearRanges.map((y: {min: number; max: number}) => y.max));
+    }
+    
+    setFilters(newFilters);
+  };
+
+  const handleFavoriteToggle = (carId: string) => {
+    setFavorites(prev => {
+      const newFavorites = new Set(prev);
+      if (newFavorites.has(carId)) {
+        newFavorites.delete(carId);
+      } else {
+        newFavorites.add(carId);
+      }
+      return newFavorites;
+    });
+  };
+
+  const sortedCars = [...cars].sort((a, b) => {
+    switch (sortBy) {
+      case "price-low":
+        return parseFloat(a.price) - parseFloat(b.price);
+      case "price-high":
+        return parseFloat(b.price) - parseFloat(a.price);
+      case "year-new":
+        return b.year - a.year;
+      case "mileage-low":
+        return a.mileage - b.mileage;
+      default:
+        return 0;
+    }
+  });
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      
+      <HeroSection onSearch={handleHeroSearch} />
+      
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+          
+          <CarFilters onApplyFilters={handleFilterChange} />
+          
+          <div className="lg:w-3/4">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold" data-testid="text-results-title">
+                Used Cars in India
+              </h2>
+              <div className="flex items-center space-x-4">
+                <span className="text-muted-foreground text-sm">Sort by:</span>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-48" data-testid="select-sort">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="price-low">Price: Low to High</SelectItem>
+                    <SelectItem value="price-high">Price: High to Low</SelectItem>
+                    <SelectItem value="year-new">Year: Newest First</SelectItem>
+                    <SelectItem value="mileage-low">Mileage: Low to High</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="bg-card border border-border rounded-lg overflow-hidden animate-pulse">
+                    <div className="w-full h-48 bg-muted"></div>
+                    <div className="p-4 space-y-3">
+                      <div className="h-6 bg-muted rounded w-3/4"></div>
+                      <div className="h-8 bg-muted rounded w-1/2"></div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="h-4 bg-muted rounded"></div>
+                        <div className="h-4 bg-muted rounded"></div>
+                        <div className="h-4 bg-muted rounded"></div>
+                        <div className="h-4 bg-muted rounded"></div>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div className="h-4 bg-muted rounded w-1/3"></div>
+                        <div className="h-8 bg-muted rounded w-20"></div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8" data-testid="grid-car-listings">
+                  {sortedCars.map((car) => (
+                    <CarCard
+                      key={car.id}
+                      car={car}
+                      onFavoriteToggle={handleFavoriteToggle}
+                      isFavorite={favorites.has(car.id)}
+                    />
+                  ))}
+                </div>
+
+                {sortedCars.length === 0 && (
+                  <div className="text-center py-12" data-testid="text-no-results">
+                    <p className="text-muted-foreground text-lg">No cars found matching your criteria.</p>
+                    <p className="text-muted-foreground">Try adjusting your filters to see more results.</p>
+                  </div>
+                )}
+
+                {sortedCars.length > 0 && (
+                  <div className="flex justify-center items-center space-x-2 mt-8" data-testid="pagination-controls">
+                    <Button variant="outline" size="sm" data-testid="button-prev-page">
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" className="bg-primary text-primary-foreground" data-testid="button-page-1">1</Button>
+                    <Button variant="outline" size="sm" data-testid="button-page-2">2</Button>
+                    <Button variant="outline" size="sm" data-testid="button-page-3">3</Button>
+                    <span className="px-3 py-2">...</span>
+                    <Button variant="outline" size="sm" data-testid="button-page-10">10</Button>
+                    <Button variant="outline" size="sm" data-testid="button-next-page">
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-muted border-t border-border mt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+              <h3 className="text-lg font-bold text-primary mb-4">
+                🚗 CarBazaar
+              </h3>
+              <p className="text-muted-foreground text-sm mb-4">
+                India's most trusted platform for buying and selling used cars.
+              </p>
+              <div className="flex space-x-4">
+                <a href="#" className="text-muted-foreground hover:text-primary">📘</a>
+                <a href="#" className="text-muted-foreground hover:text-primary">🐦</a>
+                <a href="#" className="text-muted-foreground hover:text-primary">📷</a>
+                <a href="#" className="text-muted-foreground hover:text-primary">📺</a>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-4">Popular Brands</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="text-muted-foreground hover:text-primary">Maruti Suzuki</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-primary">Hyundai</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-primary">Tata</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-primary">Mahindra</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-primary">Honda</a></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-4">Popular Cities</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="text-muted-foreground hover:text-primary">Mumbai</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-primary">Delhi</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-primary">Bangalore</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-primary">Chennai</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-primary">Hyderabad</a></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-4">Support</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="text-muted-foreground hover:text-primary">Help Center</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-primary">Contact Us</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-primary">Privacy Policy</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-primary">Terms of Service</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-primary">Sell Your Car</a></li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="border-t border-border mt-8 pt-8 text-center">
+            <p className="text-muted-foreground text-sm">
+              © 2024 CarBazaar. All rights reserved. | Made with ❤️ for car enthusiasts in India
+            </p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
