@@ -27,7 +27,7 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
   };
 
   return (
-    <div className="car-card rounded-lg overflow-hidden" data-testid={`card-car-${car.id}`}>
+    <div className="car-card steel-gradient rounded-lg overflow-hidden border-2 border-steel-primary/30" data-testid={`card-car-${car.id}`}>
       <img 
         src={(car.images && car.images[0]) || "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=300"} 
         alt={car.title} 

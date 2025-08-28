@@ -78,6 +78,38 @@
   --shadow-metallic: 0 8px 30px rgba(244, 114, 18, 0.3), 0 3px 12px rgba(244, 114, 18, 0.2);
 }
 
+/* Dark Mode Carbon Fiber Pattern */
+.dark .carbon-fiber {
+  background: 
+    linear-gradient(135deg, var(--background) 0%, var(--background) 100%),
+    radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
+    linear-gradient(45deg, rgba(255, 255, 255, 0.05) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.05) 75%),
+    linear-gradient(-45deg, rgba(255, 255, 255, 0.05) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.05) 75%),
+    var(--background);
+  background-size: 100% 100%, 25px 25px, 25px 25px, 12px 12px, 12px 12px;
+  background-position: 0 0, 0 0, 12px 12px, 0 0, 6px 6px;
+}
+
+/* Dark Mode Steel Gradient */
+.dark .steel-gradient {
+  background: 
+    linear-gradient(135deg, 
+      rgba(30, 41, 59, 0.95) 0%, 
+      rgba(51, 65, 85, 0.9) 25%, 
+      rgba(30, 41, 59, 0.95) 50%, 
+      rgba(51, 65, 85, 0.9) 75%, 
+      rgba(30, 41, 59, 0.95) 100%),
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 1px,
+      rgba(148, 163, 184, 0.1) 1px,
+      rgba(148, 163, 184, 0.1) 2px
+    );
+  background-size: 100% 100%, 8px 8px;
+}
+
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
     --background: hsl(210 8% 8%);
@@ -139,23 +171,33 @@
 /* Carbon Fiber Background Pattern */
 .carbon-fiber {
   background: 
-    radial-gradient(circle at 25% 25%, var(--carbon-secondary) 0%, transparent 50%),
-    radial-gradient(circle at 75% 75%, var(--carbon-secondary) 0%, transparent 50%),
-    linear-gradient(45deg, var(--carbon-primary) 25%, transparent 25%, transparent 75%, var(--carbon-primary) 75%),
-    linear-gradient(-45deg, var(--carbon-primary) 25%, transparent 25%, transparent 75%, var(--carbon-primary) 75%),
-    var(--carbon-primary);
-  background-size: 20px 20px, 20px 20px, 10px 10px, 10px 10px;
-  background-position: 0 0, 10px 10px, 0 0, 5px 5px;
+    linear-gradient(135deg, var(--background) 0%, var(--background) 100%),
+    radial-gradient(circle at 25% 25%, rgba(33, 37, 41, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(33, 37, 41, 0.15) 0%, transparent 50%),
+    linear-gradient(45deg, rgba(33, 37, 41, 0.1) 25%, transparent 25%, transparent 75%, rgba(33, 37, 41, 0.1) 75%),
+    linear-gradient(-45deg, rgba(33, 37, 41, 0.1) 25%, transparent 25%, transparent 75%, rgba(33, 37, 41, 0.1) 75%),
+    var(--background);
+  background-size: 100% 100%, 25px 25px, 25px 25px, 12px 12px, 12px 12px;
+  background-position: 0 0, 0 0, 12px 12px, 0 0, 6px 6px;
 }
 
 /* Steel Gradient */
 .steel-gradient {
-  background: linear-gradient(135deg, 
-    var(--steel-primary) 0%, 
-    var(--steel-secondary) 25%, 
-    var(--steel-primary) 50%, 
-    var(--steel-secondary) 75%, 
-    var(--steel-primary) 100%);
+  background: 
+    linear-gradient(135deg, 
+      rgba(248, 250, 252, 0.95) 0%, 
+      rgba(226, 232, 240, 0.9) 25%, 
+      rgba(248, 250, 252, 0.95) 50%, 
+      rgba(226, 232, 240, 0.9) 75%, 
+      rgba(248, 250, 252, 0.95) 100%),
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 1px,
+      rgba(148, 163, 184, 0.1) 1px,
+      rgba(148, 163, 184, 0.1) 2px
+    );
+  background-size: 100% 100%, 8px 8px;
 }
 
 /* Hero Section with Carbon Fiber */
@@ -173,7 +215,11 @@
 /* Enhanced Card Styles */
 .car-card {
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  background: var(--card);
+  background: 
+    linear-gradient(135deg, var(--card) 0%, rgba(255,255,255,0.95) 100%),
+    radial-gradient(circle at 20% 20%, var(--carbon-secondary) 0%, transparent 40%),
+    radial-gradient(circle at 80% 80%, var(--carbon-secondary) 0%, transparent 40%),
+    var(--card);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-steel);
   position: relative;
@@ -204,9 +250,10 @@
 
 /* Navigation Enhancements */
 .nav-carbon {
-  background: var(--card);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--border);
+  background: 
+    linear-gradient(135deg, var(--card) 0%, rgba(255,255,255,0.98) 100%);
+  backdrop-filter: blur(15px);
+  border-bottom: 2px solid var(--steel-primary);
   box-shadow: var(--shadow-carbon);
 }
 
@@ -255,10 +302,11 @@
 
 /* Enhanced Forms */
 .form-steel {
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: 
+    linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,240,245,0.9) 100%);
+  border: 2px solid var(--steel-primary);
   box-shadow: var(--shadow-steel);
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(10px);
 }
 
 /* Responsive Typography */

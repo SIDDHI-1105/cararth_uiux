@@ -28,7 +28,7 @@ export default function HeroSection({ onSearch }: HeroSearchProps) {
         <h1 className="text-4xl md:text-6xl font-bold mb-4">Your Journey. Simplified.</h1>
         <p className="text-xl md:text-2xl mb-8 text-blue-100">Find your perfect car from across all major portals in India</p>
         
-        <div className="form-steel rounded-lg p-6 backdrop-blur-sm">
+        <div className="form-steel steel-gradient rounded-lg p-8 backdrop-blur-sm border border-steel-primary/20">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
             <div>
               <label className="block text-gray-700 text-sm font-medium mb-2">Brand</label>
