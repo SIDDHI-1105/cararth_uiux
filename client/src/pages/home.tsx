@@ -1,18 +1,24 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import Navbar from "@/components/navbar";
 import HeroSection from "@/components/hero-section";
 import CarFilters from "@/components/car-filters";
 import CarCard from "@/components/car-card";
+import AdvancedFilters from "@/components/advanced-filters";
+import MarketplaceResults from "@/components/marketplace-results";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ChevronLeft, ChevronRight, Search, Globe } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
 import { type Car } from "@shared/schema";
 
 export default function Home() {
   const [filters, setFilters] = useState<Record<string, any>>({});
   const [sortBy, setSortBy] = useState("price-low");
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [activeTab, setActiveTab] = useState("local");
+  const [marketplaceResult, setMarketplaceResult] = useState<any>(null);
 
   const { data: cars = [], isLoading } = useQuery<Car[]>({
     queryKey: ["/api/cars", filters],
@@ -92,6 +98,21 @@ export default function Home() {
     });
   };
 
+  // Marketplace search mutation
+  const marketplaceSearch = useMutation({
+    mutationFn: async (searchFilters: any) => {
+      return apiRequest("POST", "/api/marketplace/search", searchFilters);
+    },
+    onSuccess: (data) => {
+      setMarketplaceResult(data);
+      setActiveTab("marketplace");
+    },
+  });
+
+  const handleMarketplaceSearch = (searchFilters: any) => {
+    marketplaceSearch.mutate(searchFilters);
+  };
+
   const sortedCars = [...cars].sort((a, b) => {
     switch (sortBy) {
       case "price-low":
@@ -114,11 +135,32 @@ export default function Home() {
       <HeroSection onSearch={handleHeroSearch} />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          
-          <CarFilters onApplyFilters={handleFilterChange} />
-          
-          <div className="lg:w-3/4">
+        {/* Advanced Search Section */}
+        <div className="mb-8">
+          <AdvancedFilters 
+            onSearch={handleMarketplaceSearch}
+            isLoading={marketplaceSearch.isPending}
+          />
+        </div>
+
+        {/* Results Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="local" className="flex items-center gap-2">
+              <Search className="w-4 h-4" />
+              Local Listings ({cars.length})
+            </TabsTrigger>
+            <TabsTrigger value="marketplace" className="flex items-center gap-2">
+              <Globe className="w-4 h-4" />
+              All Portals {marketplaceResult ? `(${marketplaceResult.analytics?.totalListings || 0})` : ''}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="local">
+            <div className="flex flex-col lg:flex-row gap-8">
+              <CarFilters onApplyFilters={handleFilterChange} />
+              
+              <div className="lg:w-3/4">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold" data-testid="text-results-title">
                 Used Cars in India
@@ -198,8 +240,30 @@ export default function Home() {
                 )}
               </>
             )}
-          </div>
-        </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="marketplace">
+            {marketplaceResult ? (
+              <MarketplaceResults 
+                searchResult={marketplaceResult}
+                isLoading={marketplaceSearch.isPending}
+              />
+            ) : (
+              <div className="text-center py-12">
+                <Globe className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-xl font-semibold mb-2">Search Across All Portals</h3>
+                <p className="text-muted-foreground mb-4">
+                  Use the advanced search above to find cars from CarDekho, OLX, Cars24, CarWale, and more.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Get comprehensive market insights, price comparisons, and access to thousands of verified listings.
+                </p>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* Footer */}

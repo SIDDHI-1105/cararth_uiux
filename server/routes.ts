@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertCarSchema, insertContactSchema } from "@shared/schema";
 import { priceComparisonService } from "./priceComparison";
+import { marketplaceAggregator } from "./marketplaceAggregator";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -173,6 +174,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid request data", details: error.errors });
       }
       res.status(500).json({ error: "Failed to compare price" });
+    }
+  });
+
+  // Advanced marketplace search across portals
+  app.post("/api/marketplace/search", async (req, res) => {
+    try {
+      const searchSchema = z.object({
+        brand: z.string().optional(),
+        model: z.string().optional(),
+        yearMin: z.number().optional(),
+        yearMax: z.number().optional(),
+        priceMin: z.number().optional(),
+        priceMax: z.number().optional(),
+        city: z.string().optional(),
+        state: z.string().optional(),
+        radiusKm: z.number().optional(),
+        fuelType: z.array(z.string()).optional(),
+        transmission: z.array(z.string()).optional(),
+        mileageMax: z.number().optional(),
+        owners: z.array(z.number()).optional(),
+        condition: z.array(z.string()).optional(),
+        verificationStatus: z.array(z.string()).optional(),
+        sellerType: z.array(z.string()).optional(),
+        features: z.array(z.string()).optional(),
+        hasImages: z.boolean().optional(),
+        hasWarranty: z.boolean().optional(),
+        listedWithinDays: z.number().optional(),
+        sources: z.array(z.string()).optional(),
+        sortBy: z.string().optional(),
+        sortOrder: z.string().optional(),
+        limit: z.number().optional()
+      });
+
+      const filters = searchSchema.parse(req.body);
+      console.log('Marketplace search filters:', filters);
+
+      const searchResult = await marketplaceAggregator.searchAcrossPortals(filters);
+      res.json(searchResult);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid search parameters", details: error.errors });
+      }
+      console.error('Marketplace search error:', error);
+      res.status(500).json({ error: "Failed to search marketplace" });
     }
   });
 
