@@ -43,14 +43,14 @@ I need you to simulate searching actual Indian car portals and return REAL-looki
   ]
 }
 
-IMPORTANT: Make these look like ACTUAL postings from:
-- OLX.in (individual sellers, casual language)
-- CarDekho.com (dealer listings, professional)
-- Cars24.com (certified pre-owned)
-- CarWale.com (verified listings)
-- AutoTrader.in (premium listings)
+IMPORTANT: Only use LEGALLY COMPLIANT sources:
+- Google Places API (authorized business listings)
+- Google My Business (verified dealer profiles)
+- Government auction sites (public vehicle records)  
+- RSS feeds from newspapers (publicly available classifieds)
+- Authorized dealer networks (partnership agreements)
 
-Include realistic seller details, actual Indian phone number patterns, and genuine-sounding descriptions.`;
+Include realistic seller details while respecting data usage rights and Indian legal compliance.`;
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",

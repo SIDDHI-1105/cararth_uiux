@@ -85,11 +85,12 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
         {car.source && (
           <div className="mb-3">
             <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-              ['Google Places', 'GMB Dealer', 'Gov Auction', 'RSS Feed', 'Dealer Syndicate'].includes(car.source)
+              ['Google Places', 'GMB Dealer', 'Gov Auction', 'RSS Feed', 'Dealer Syndicate', 'Public Feed'].includes(car.source)
                 ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30'
                 : 'bg-green-500/10 text-green-400 border border-green-500/30'
             }`} data-testid={`badge-source-${car.id}`}>
-              {['Google Places', 'GMB Dealer', 'Gov Auction', 'RSS Feed', 'Dealer Syndicate'].includes(car.source) && '🆓 '}
+              {['Google Places', 'GMB Dealer', 'Gov Auction', 'RSS Feed', 'Dealer Syndicate', 'Public Feed'].includes(car.source) && '🆓 '}
+              {car.source === 'Partner API' && '🤝 '}
               {car.source}
             </span>
           </div>
