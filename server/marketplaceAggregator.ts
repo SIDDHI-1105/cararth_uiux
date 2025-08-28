@@ -644,7 +644,7 @@ Ensure prices match the specified range (${filters.priceMin || 200000} to ${filt
         city,
         source,
         url: `https://${source.toLowerCase().replace(/\s+/g, '')}.com/used-${brand.toLowerCase().replace(' ', '-')}-${model.toLowerCase()}-${year}-${city.toLowerCase()}-${Math.random().toString(36).substr(2, 8)}`,
-        images: ['https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400'],
+        images: [this.getCarSpecificImage(brand, model)],
         description: `${year} ${brand} ${model} ${filters.fuelType?.[0] || ['Petrol', 'Diesel', 'CNG'][i % 3]} ${filters.transmission?.[0] || ['Manual', 'Automatic'][i % 2]} in ${city}. ${['Excellent running condition, well maintained by single owner.', 'Full service history available, recently serviced.', 'No accident history, all original parts intact.', 'Premium variant with all accessories included.'][i % 4]}`,
         features: ['AC', 'Power Steering', 'Music System'],
         condition: ['Excellent', 'Good', 'Fair'][i % 3],
@@ -655,6 +655,47 @@ Ensure prices match the specified range (${filters.priceMin || 200000} to ${filt
     }
     
     return listings;
+  }
+
+  private getCarSpecificImage(brand: string, model: string): string {
+    // Return car-specific images based on actual brand and model
+    const carImageMap: Record<string, string> = {
+      // Maruti Suzuki
+      'maruti_swift': 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=400&q=80',
+      'maruti_baleno': 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=400&q=80',
+      'maruti_dzire': 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400&q=80',
+      
+      // Hyundai
+      'hyundai_i20': 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400&q=80',
+      'hyundai_creta': 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=400&q=80',
+      'hyundai_verna': 'https://images.unsplash.com/photo-1502877338535-766e1452684a?w=400&q=80',
+      
+      // Tata
+      'tata_nexon': 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&q=80',
+      'tata_harrier': 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=400&q=80',
+      'tata_safari': 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400&q=80',
+      
+      // Honda
+      'honda_city': 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=400&q=80',
+      'honda_amaze': 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400&q=80',
+      'honda_crv': 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=400&q=80',
+      
+      // Toyota
+      'toyota_innova': 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400&q=80',
+      'toyota_fortuner': 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=400&q=80',
+      'toyota_camry': 'https://images.unsplash.com/photo-1502877338535-766e1452684a?w=400&q=80',
+      
+      // Mahindra
+      'mahindra_xuv300': 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&q=80',
+      'mahindra_scorpio': 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=400&q=80',
+      'mahindra_thar': 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400&q=80'
+    };
+    
+    // Create a key from brand and model
+    const key = `${brand.toLowerCase().replace(' ', '_')}_${model.toLowerCase()}`;
+    
+    // Return specific image or fallback to a generic car image
+    return carImageMap[key] || 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=400&q=80';
   }
 }
 
