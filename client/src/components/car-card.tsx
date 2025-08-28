@@ -81,7 +81,7 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
           </div>
         </div>
         
-        {/* Source Badge for Beta Listings */}
+        {/* Legal Source Badge - Shows compliance with Indian laws */}
         {car.source && (
           <div className="mb-3">
             <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${

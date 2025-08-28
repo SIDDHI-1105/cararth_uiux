@@ -52,7 +52,8 @@ export class MemStorage implements IStorage {
     this.subscriptions = new Map();
     this.featuredListings = new Map();
     
-    // Initialize with some sample data for development
+    // Clear any existing data and reinitialize
+    this.cars.clear();
     this.initializeSampleData();
   }
 
