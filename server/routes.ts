@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertCarSchema, insertContactSchema } from "@shared/schema";
+import { priceComparisonService } from "./priceComparison";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -120,6 +121,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(sellerInfo);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch seller information" });
+    }
+  });
+
+  // Get price insights for a car
+  app.get("/api/cars/:id/price-insights", async (req, res) => {
+    try {
+      const car = await storage.getCar(req.params.id);
+      if (!car) {
+        return res.status(404).json({ error: "Car not found" });
+      }
+
+      const carData = {
+        brand: car.brand,
+        model: car.model,
+        year: car.year,
+        city: car.city,
+        mileage: car.mileage,
+        fuelType: car.fuelType,
+        transmission: car.transmission
+      };
+
+      const insights = await priceComparisonService.getPriceInsights(carData);
+      res.json(insights);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch price insights" });
+    }
+  });
+
+  // Compare car price with market
+  app.post("/api/cars/compare-price", async (req, res) => {
+    try {
+      const schema = z.object({
+        brand: z.string(),
+        model: z.string(),
+        year: z.number(),
+        city: z.string(),
+        mileage: z.number(),
+        fuelType: z.string(),
+        transmission: z.string(),
+        userPrice: z.number()
+      });
+
+      const data = schema.parse(req.body);
+      const { userPrice, ...carData } = data;
+
+      const comparison = await priceComparisonService.comparePrices(carData, userPrice);
+      res.json(comparison);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to compare price" });
     }
   });
 

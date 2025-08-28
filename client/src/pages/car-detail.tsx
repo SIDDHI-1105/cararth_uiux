@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/navbar";
 import ContactModal from "@/components/contact-modal";
+import PriceInsights from "@/components/price-insights";
 import { Phone, Calendar, MapPin, User, Star, Check, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 import { type Car, type User as UserType } from "@shared/schema";
@@ -192,6 +193,9 @@ export default function CarDetail() {
                 </div>
               ))}
             </div>
+
+            {/* Price Insights Component */}
+            <PriceInsights car={car} />
           </div>
           
           <div>

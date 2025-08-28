@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Navbar from "@/components/navbar";
+import PriceRecommendation from "@/components/price-recommendation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -198,6 +199,22 @@ export default function SellCar() {
                     />
                   </div>
                 </div>
+
+                {/* Smart Price Recommendation */}
+                {formData.brand && formData.model && formData.year && formData.city && (
+                  <PriceRecommendation
+                    carData={{
+                      brand: formData.brand,
+                      model: formData.model,
+                      year: formData.year,
+                      city: formData.city,
+                      mileage: formData.mileage || 0,
+                      fuelType: formData.fuelType || "Petrol",
+                      transmission: formData.transmission || "Manual"
+                    }}
+                    onPriceRecommend={(price) => handleInputChange("price", price.toString())}
+                  />
+                )}
               </div>
 
               {/* Vehicle Details */}
