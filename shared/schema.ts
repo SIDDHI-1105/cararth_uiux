@@ -33,6 +33,7 @@ export const cars = pgTable("cars", {
   description: text("description"),
   features: text("features").array().default([]),
   images: text("images").array().default([]),
+  source: text("source"), // Legal data source: Google Places, GMB Dealer, etc.
   isVerified: boolean("is_verified").default(false),
   isSold: boolean("is_sold").default(false),
   isFeatured: boolean("is_featured").default(false),
