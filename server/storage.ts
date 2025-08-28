@@ -274,6 +274,7 @@ export class MemStorage implements IStorage {
       description: insertCar.description || null,
       features: insertCar.features || [],
       images: insertCar.images || [],
+      source: insertCar.source || null,
       isVerified: false,
       isSold: false,
       isFeatured: false,
