@@ -5,25 +5,25 @@
 
 :root {
   /* Light Theme - Carbon Fiber & Steel */
-  --background: hsl(0 0% 98%);
-  --foreground: hsl(0 0% 8%);
-  --card: hsl(0 0% 100%);
-  --card-foreground: hsl(0 0% 8%);
-  --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(0 0% 8%);
-  --primary: hsl(210 100% 20%);
-  --primary-foreground: hsl(0 0% 98%);
-  --secondary: hsl(210 5% 92%);
-  --secondary-foreground: hsl(0 0% 8%);
-  --muted: hsl(210 5% 95%);
-  --muted-foreground: hsl(0 0% 40%);
-  --accent: hsl(25 95% 53%);
-  --accent-foreground: hsl(0 0% 98%);
+  --background: hsl(210 5% 98%);
+  --foreground: hsl(210 10% 8%);
+  --card: hsl(210 5% 100%);
+  --card-foreground: hsl(210 10% 8%);
+  --popover: hsl(210 5% 100%);
+  --popover-foreground: hsl(210 10% 8%);
+  --primary: hsl(210 20% 25%);
+  --primary-foreground: hsl(210 5% 98%);
+  --secondary: hsl(210 8% 92%);
+  --secondary-foreground: hsl(210 10% 8%);
+  --muted: hsl(210 8% 95%);
+  --muted-foreground: hsl(210 10% 45%);
+  --accent: hsl(210 15% 45%);
+  --accent-foreground: hsl(210 5% 98%);
   --destructive: hsl(0 84.2% 60.2%);
-  --destructive-foreground: hsl(0 0% 98%);
-  --border: hsl(210 5% 85%);
-  --input: hsl(210 5% 92%);
-  --ring: hsl(210 100% 20%);
+  --destructive-foreground: hsl(210 5% 98%);
+  --border: hsl(210 10% 85%);
+  --input: hsl(210 8% 92%);
+  --ring: hsl(210 20% 25%);
   --radius: 0.375rem;
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-heading: 'Orbitron', system-ui, sans-serif;
@@ -31,16 +31,16 @@
   --font-mono: 'Courier New', monospace;
   
   /* Carbon Fiber Pattern Variables */
-  --carbon-primary: hsl(210 8% 15%);
-  --carbon-secondary: hsl(210 8% 25%);
-  --steel-primary: hsl(210 10% 60%);
-  --steel-secondary: hsl(210 10% 75%);
-  --metallic-accent: hsl(25 95% 53%);
+  --carbon-primary: hsl(210 15% 15%);
+  --carbon-secondary: hsl(210 15% 25%);
+  --steel-primary: hsl(210 20% 60%);
+  --steel-secondary: hsl(210 20% 75%);
+  --metallic-accent: hsl(210 25% 50%);
   
   /* Enhanced Shadows */
   --shadow-carbon: 0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   --shadow-steel: 0 4px 12px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-metallic: 0 8px 25px rgba(244, 114, 18, 0.25), 0 3px 10px rgba(244, 114, 18, 0.15);
+  --shadow-metallic: 0 8px 25px rgba(100, 116, 139, 0.25), 0 3px 10px rgba(100, 116, 139, 0.15);
 }
 
 /* Dark Theme - Enhanced Carbon Fiber & Steel */
@@ -51,31 +51,31 @@
   --card-foreground: hsl(0 0% 95%);
   --popover: hsl(210 8% 10%);
   --popover-foreground: hsl(0 0% 95%);
-  --primary: hsl(25 95% 53%);
-  --primary-foreground: hsl(210 8% 8%);
-  --secondary: hsl(210 8% 18%);
-  --secondary-foreground: hsl(0 0% 95%);
-  --muted: hsl(210 8% 15%);
-  --muted-foreground: hsl(0 0% 65%);
-  --accent: hsl(25 95% 53%);
-  --accent-foreground: hsl(210 8% 8%);
+  --primary: hsl(210 25% 65%);
+  --primary-foreground: hsl(210 10% 8%);
+  --secondary: hsl(210 10% 18%);
+  --secondary-foreground: hsl(210 5% 95%);
+  --muted: hsl(210 10% 15%);
+  --muted-foreground: hsl(210 5% 65%);
+  --accent: hsl(210 25% 65%);
+  --accent-foreground: hsl(210 10% 8%);
   --destructive: hsl(0 84.2% 60.2%);
-  --destructive-foreground: hsl(0 0% 98%);
-  --border: hsl(210 8% 20%);
-  --input: hsl(210 8% 15%);
-  --ring: hsl(25 95% 53%);
+  --destructive-foreground: hsl(210 5% 98%);
+  --border: hsl(210 10% 20%);
+  --input: hsl(210 10% 15%);
+  --ring: hsl(210 25% 65%);
   
   /* Dark Carbon Fiber Pattern Variables */
   --carbon-primary: hsl(210 8% 5%);
   --carbon-secondary: hsl(210 8% 12%);
-  --steel-primary: hsl(210 10% 35%);
-  --steel-secondary: hsl(210 10% 45%);
-  --metallic-accent: hsl(25 95% 53%);
+  --steel-primary: hsl(210 20% 35%);
+  --steel-secondary: hsl(210 20% 45%);
+  --metallic-accent: hsl(210 30% 60%);
   
   /* Enhanced Dark Shadows */
   --shadow-carbon: 0 2px 12px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   --shadow-steel: 0 4px 20px rgba(0, 0, 0, 0.3), 0 1px 5px rgba(0, 0, 0, 0.2);
-  --shadow-metallic: 0 8px 30px rgba(244, 114, 18, 0.3), 0 3px 12px rgba(244, 114, 18, 0.2);
+  --shadow-metallic: 0 8px 30px rgba(100, 116, 139, 0.3), 0 3px 12px rgba(100, 116, 139, 0.2);
 }
 
 /* Dark Mode Carbon Fiber Pattern */
@@ -203,11 +203,11 @@
 /* Hero Section with Carbon Fiber */
 .hero-gradient {
   background: 
-    linear-gradient(135deg, rgba(244, 114, 18, 0.95) 0%, rgba(194, 84, 13, 0.9) 100%),
-    radial-gradient(circle at 25% 25%, hsl(210 8% 25%) 0%, transparent 50%),
-    radial-gradient(circle at 75% 75%, hsl(210 8% 25%) 0%, transparent 50%),
-    linear-gradient(45deg, hsl(210 8% 15%) 25%, transparent 25%, transparent 75%, hsl(210 8% 15%) 75%),
-    hsl(210 8% 12%);
+    linear-gradient(135deg, rgba(71, 85, 105, 0.95) 0%, rgba(51, 65, 85, 0.9) 100%),
+    radial-gradient(circle at 25% 25%, hsl(210 15% 25%) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, hsl(210 15% 25%) 0%, transparent 50%),
+    linear-gradient(45deg, hsl(210 15% 15%) 25%, transparent 25%, transparent 75%, hsl(210 15% 15%) 75%),
+    hsl(210 15% 12%);
   background-size: 100% 100%, 30px 30px, 30px 30px, 15px 15px;
   background-position: 0 0, 0 0, 15px 15px, 0 0;
 }
@@ -259,7 +259,7 @@
 
 /* Enhanced Buttons */
 .btn-metallic {
-  background: linear-gradient(135deg, var(--metallic-accent) 0%, hsl(25 95% 45%) 100%);
+  background: linear-gradient(135deg, var(--metallic-accent) 0%, hsl(210 30% 45%) 100%);
   color: var(--accent-foreground);
   border: none;
   box-shadow: var(--shadow-metallic);
@@ -269,9 +269,9 @@
 }
 
 .btn-metallic:hover {
-  background: linear-gradient(135deg, hsl(25 95% 58%) 0%, var(--metallic-accent) 100%);
+  background: linear-gradient(135deg, hsl(210 30% 65%) 0%, var(--metallic-accent) 100%);
   transform: translateY(-2px);
-  box-shadow: 0 12px 35px rgba(244, 114, 18, 0.35), 0 5px 15px rgba(244, 114, 18, 0.25);
+  box-shadow: 0 12px 35px rgba(100, 116, 139, 0.35), 0 5px 15px rgba(100, 116, 139, 0.25);
 }
 
 /* Filter Sidebar */
@@ -297,7 +297,7 @@
 }
 
 .filter-sidebar::-webkit-scrollbar-thumb:hover {
-  background: hsl(25 95% 58%);
+  background: hsl(210 30% 65%);
 }
 
 /* Enhanced Forms */
