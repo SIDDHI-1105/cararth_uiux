@@ -1,3 +1,5 @@
+import { GoogleGenAI } from "@google/genai";
+
 // Web search functionality for price comparison
 export interface SearchResult {
   title: string;
@@ -6,21 +8,71 @@ export interface SearchResult {
   source: string;
 }
 
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+
 export async function webSearch(query: string): Promise<SearchResult[]> {
   try {
-    // This would typically use a web search API
-    // For now, we'll simulate search results with realistic car pricing data
     console.log(`Searching for: ${query}`);
     
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
+    if (!process.env.GEMINI_API_KEY) {
+      console.log('Using fallback mock data - Gemini API key not available');
+      return generateMockSearchResults(query);
+    }
     
-    // Return simulated search results with realistic Indian car pricing data
+    // Use Gemini to get intelligent market analysis
+    const prompt = `You are a car marketplace expert analyzing the Indian used car market. 
+    
+Search query: "${query}"
+
+Based on current Indian market conditions, provide realistic car listing information in the following JSON format:
+
+{
+  "listings": [
+    {
+      "title": "Car listing title with year, brand, model",
+      "content": "Detailed description with price, condition, features",
+      "url": "https://cardekho.com/used-cars",
+      "source": "CarDekho"
+    },
+    {
+      "title": "Another listing from different portal",
+      "content": "Description with market price range",
+      "url": "https://olx.in/cars", 
+      "source": "OLX"
+    }
+  ]
+}
+
+Include 4-5 realistic listings from major Indian car portals: CarDekho, OLX, Cars24, CarWale, AutoTrader.
+Use current 2024 market prices in Indian Rupees (lakhs format).
+Make prices realistic based on car age, brand, and Indian market conditions.`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+    });
+
+    const resultText = response.text || "";
+    
+    try {
+      // Extract JSON from response
+      const jsonMatch = resultText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        if (parsed.listings && Array.isArray(parsed.listings)) {
+          return parsed.listings;
+        }
+      }
+    } catch (parseError) {
+      console.error('Error parsing Gemini response:', parseError);
+    }
+    
+    // Fallback to mock data if parsing fails
     return generateMockSearchResults(query);
     
   } catch (error) {
     console.error('Web search error:', error);
-    return [];
+    return generateMockSearchResults(query);
   }
 }
 
