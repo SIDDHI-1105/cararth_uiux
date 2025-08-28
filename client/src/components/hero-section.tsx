@@ -25,8 +25,8 @@ export default function HeroSection({ onSearch }: HeroSearchProps) {
   return (
     <section className="hero-gradient text-white py-16 px-4">
       <div className="max-w-4xl mx-auto text-center">
-        <h1 className="text-4xl md:text-6xl font-bold mb-6">Find Your Perfect Car</h1>
-        <p className="text-xl md:text-2xl mb-8 text-blue-100">Discover thousands of verified cars across India</p>
+        <h1 className="text-4xl md:text-6xl font-bold mb-4">Your Journey. Simplified.</h1>
+        <p className="text-xl md:text-2xl mb-8 text-blue-100">Find your perfect car from across all major portals in India</p>
         
         <div className="bg-white rounded-lg p-6 shadow-xl">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">

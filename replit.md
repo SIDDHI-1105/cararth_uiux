@@ -1,10 +1,10 @@
-# CarBazaar - Car Marketplace Application
+# The Mobility Hub - Your Journey. Simplified.
 
 ## Overview
 
-CarBazaar is a full-stack car marketplace application that enables users to buy and sell cars online. The platform features a modern React frontend with a Node.js/Express backend, providing a comprehensive solution for car listings, search functionality, and buyer-seller interactions.
+The Mobility Hub is a comprehensive marketplace aggregator that revolutionizes how Indians buy and sell cars online. The platform scans multiple car portals (CarDekho, OLX, Cars24, CarWale, AutoTrader) to provide intelligent pricing insights, granular filtering capabilities, and market analytics with historical data for both buyers and sellers.
 
-The application follows a monorepo structure with shared TypeScript schemas, uses Drizzle ORM for database management, and implements a clean REST API architecture. It's designed as a production-ready marketplace with features like advanced filtering, image management, and contact forms.
+The application follows a monorepo structure with shared TypeScript schemas, uses Drizzle ORM for database management, and implements a clean REST API architecture. It's designed as a production-ready marketplace aggregator with features like cross-portal scanning, intelligent price comparison, advanced filtering down to granular details, and comprehensive market analytics.
 
 ## User Preferences
 

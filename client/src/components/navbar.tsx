@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Car, Heart, Menu } from "lucide-react";
+import logoImage from "@/assets/logo.png";
 
 export default function Navbar() {
   const [location] = useLocation();
@@ -10,10 +11,16 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <Link href="/" className="flex-shrink-0" data-testid="link-home">
-              <h1 className="text-2xl font-bold text-primary">
-                <Car className="inline mr-2" />
-                CarBazaar
-              </h1>
+              <div className="flex items-center">
+                <img 
+                  src={logoImage} 
+                  alt="The Mobility Hub" 
+                  className="h-10 w-10 mr-3"
+                />
+                <h1 className="text-xl font-bold text-primary">
+                  The Mobility Hub
+                </h1>
+              </div>
             </Link>
           </div>
           

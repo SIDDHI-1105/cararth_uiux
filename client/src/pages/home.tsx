@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChevronLeft, ChevronRight, Search, Globe } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { type Car } from "@shared/schema";
+import logoImage from "@/assets/logo.png";
 
 export default function Home() {
   const [filters, setFilters] = useState<Record<string, any>>({});
@@ -163,7 +164,7 @@ export default function Home() {
               <div className="lg:w-3/4">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold" data-testid="text-results-title">
-                Used Cars in India
+                Verified Cars in India
               </h2>
               <div className="flex items-center space-x-4">
                 <span className="text-muted-foreground text-sm">Sort by:</span>
@@ -271,11 +272,18 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-lg font-bold text-primary mb-4">
-                🚗 CarBazaar
-              </h3>
+              <div className="flex items-center mb-4">
+                <img 
+                  src={logoImage} 
+                  alt="The Mobility Hub" 
+                  className="h-8 w-8 mr-2"
+                />
+                <h3 className="text-lg font-bold text-primary">
+                  The Mobility Hub
+                </h3>
+              </div>
               <p className="text-muted-foreground text-sm mb-4">
-                India's most trusted platform for buying and selling used cars.
+                Your journey simplified. India's comprehensive car marketplace aggregator.
               </p>
               <div className="flex space-x-4">
                 <a href="#" className="text-muted-foreground hover:text-primary">📘</a>
@@ -321,7 +329,7 @@ export default function Home() {
           
           <div className="border-t border-border mt-8 pt-8 text-center">
             <p className="text-muted-foreground text-sm">
-              © 2024 CarBazaar. All rights reserved. | Made with ❤️ for car enthusiasts in India
+              © 2024 The Mobility Hub. All rights reserved. | Your Journey. Simplified.
             </p>
           </div>
         </div>
