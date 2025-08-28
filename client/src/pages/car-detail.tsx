@@ -158,7 +158,7 @@ export default function CarDetail() {
               <div className="space-y-3">
                 <Button 
                   onClick={() => setContactModalOpen(true)}
-                  className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
+                  className="w-full btn-metallic py-3 font-semibold"
                   data-testid="button-contact-seller"
                 >
                   <Phone className="mr-2 h-4 w-4" />

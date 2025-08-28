@@ -51,6 +51,11 @@ export default {
           "4": "var(--chart-4)",
           "5": "var(--chart-5)",
         },
+        "carbon-primary": "var(--carbon-primary)",
+        "carbon-secondary": "var(--carbon-secondary)",
+        "steel-primary": "var(--steel-primary)",
+        "steel-secondary": "var(--steel-secondary)",
+        "metallic-accent": "var(--metallic-accent)",
         sidebar: {
           DEFAULT: "var(--sidebar-background)",
           foreground: "var(--sidebar-foreground)",
@@ -64,8 +69,9 @@ export default {
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
+        heading: ["Orbitron", "system-ui", "sans-serif"],
         serif: ["Georgia", "serif"],
-        mono: ["Menlo", "monospace"],
+        mono: ["Courier New", "monospace"],
       },
       keyframes: {
         "accordion-down": {

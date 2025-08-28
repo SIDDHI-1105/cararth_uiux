@@ -28,7 +28,7 @@ export default function HeroSection({ onSearch }: HeroSearchProps) {
         <h1 className="text-4xl md:text-6xl font-bold mb-4">Your Journey. Simplified.</h1>
         <p className="text-xl md:text-2xl mb-8 text-blue-100">Find your perfect car from across all major portals in India</p>
         
-        <div className="bg-white rounded-lg p-6 shadow-xl">
+        <div className="form-steel rounded-lg p-6 backdrop-blur-sm">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
             <div>
               <label className="block text-gray-700 text-sm font-medium mb-2">Brand</label>
@@ -102,7 +102,7 @@ export default function HeroSection({ onSearch }: HeroSearchProps) {
           
           <Button 
             onClick={handleSearch}
-            className="w-full bg-accent text-accent-foreground py-3 px-6 rounded-md font-semibold hover:bg-accent/90 transition-colors"
+            className="w-full btn-metallic py-4 px-6 rounded-lg font-bold text-lg tracking-wide"
             data-testid="button-search-cars"
           >
             <Search className="mr-2 h-4 w-4" />

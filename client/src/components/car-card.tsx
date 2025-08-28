@@ -27,7 +27,7 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
   };
 
   return (
-    <div className="car-card bg-card border border-border rounded-lg overflow-hidden" data-testid={`card-car-${car.id}`}>
+    <div className="car-card rounded-lg overflow-hidden" data-testid={`card-car-${car.id}`}>
       <img 
         src={(car.images && car.images[0]) || "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=300"} 
         alt={car.title} 
@@ -79,7 +79,7 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
           <Link href={`/car/${car.id}`}>
             <Button 
               size="sm"
-              className="bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+              className="btn-metallic px-4 py-2 text-sm font-semibold"
               data-testid={`button-view-details-${car.id}`}
             >
               View Details
