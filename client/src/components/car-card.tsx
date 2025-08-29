@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Heart, Calendar, Gauge, Fuel, Settings, MapPin, Star } from "lucide-react";
@@ -10,6 +11,14 @@ interface CarCardProps {
 }
 
 export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: CarCardProps) {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  
+  useEffect(() => {
+    // Track recently viewed cars
+    const viewedCars = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+    const updatedViewed = [car.id, ...viewedCars.filter((id: string) => id !== car.id)].slice(0, 6);
+    localStorage.setItem('recentlyViewed', JSON.stringify(updatedViewed));
+  }, [car.id]);
   const formatPrice = (price: string) => {
     const numPrice = parseFloat(price);
     if (numPrice >= 1) {
@@ -38,12 +47,22 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
           FEATURED
         </div>
       )}
-      <img 
-        src={(car.images && car.images[0]) || "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=300"} 
-        alt={car.title} 
-        className="w-full h-48 object-cover"
-        data-testid={`img-car-${car.id}`}
-      />
+      <div className="relative overflow-hidden">
+        {!imageLoaded && (
+          <div className="absolute inset-0 bg-muted animate-pulse flex items-center justify-center">
+            <div className="text-muted-foreground">Loading...</div>
+          </div>
+        )}
+        <img 
+          src={(car.images && car.images[0]) || "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=300"} 
+          alt={car.title} 
+          className={`w-full h-48 object-cover transition-opacity duration-300 ${
+            imageLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
+          data-testid={`img-car-${car.id}`}
+          onLoad={() => setImageLoaded(true)}
+        />
+      </div>
       <div className="p-4">
         <div className="flex justify-between items-start mb-2">
           <h3 className="text-lg font-semibold" data-testid={`text-title-${car.id}`}>
