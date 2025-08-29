@@ -8,6 +8,7 @@ import AdvancedFilters from "@/components/advanced-filters";
 import MarketplaceResults from "@/components/marketplace-results";
 import PremiumUpgrade from "@/components/premium-upgrade";
 import FeaturedListingModal from "@/components/featured-listing-modal";
+import Footer from "@/components/footer";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

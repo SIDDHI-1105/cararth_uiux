@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search } from "lucide-react";
+import logoImage from "@/assets/logo.png";
 
 interface HeroSearchProps {
   onSearch: (filters: {
@@ -25,6 +26,13 @@ export default function HeroSection({ onSearch }: HeroSearchProps) {
   return (
     <section className="hero-gradient text-white py-16 px-4">
       <div className="max-w-4xl mx-auto text-center">
+        <div className="flex justify-center mb-6">
+          <img 
+            src={logoImage} 
+            alt="The Mobility Hub" 
+            className="h-20 w-20 md:h-24 md:w-24 animate-pulse-subtle"
+          />
+        </div>
         <h1 className="text-4xl md:text-6xl font-bold mb-4">Your Journey. Simplified.</h1>
         <p className="text-xl md:text-2xl mb-8 text-blue-100">Find your perfect car from across all major portals in India</p>
         

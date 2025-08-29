@@ -6,9 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/navbar";
 import ContactModal from "@/components/contact-modal";
 import PriceInsights from "@/components/price-insights";
+import Footer from "@/components/footer";
 import { Phone, Calendar, MapPin, User, Star, Check, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 import { type Car, type User as UserType } from "@shared/schema";
+import logoImage from "@/assets/logo.png";
 
 export default function CarDetail() {
   const { id } = useParams<{ id: string }>();
@@ -244,6 +246,8 @@ export default function CarDetail() {
         carId={car.id}
         carTitle={car.title}
       />
+      
+      <Footer />
     </div>
   );
 }
