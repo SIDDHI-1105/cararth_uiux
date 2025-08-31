@@ -617,6 +617,26 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
     
     // LEGALLY COMPLIANT SOURCES ONLY - Authorized APIs and public feeds
     const portalStyles = {
+      'CarDekho Dealer': {
+        titles: ['Dealer Verified', 'CarDekho Pro', 'Certified Dealer', 'Verified Listing', 'Premium Dealer'],
+        descriptions: ['CarDekho verified dealer with certification and warranty support.', 'Established dealer on CarDekho platform with verified credentials.', 'Premium dealer listing with comprehensive vehicle history.']
+      },
+      'OLX Verified': {
+        titles: ['OLX Verified', 'Seller Verified', 'KYC Complete', 'Trusted Seller', 'Verified Profile'],
+        descriptions: ['OLX verified seller with complete KYC documentation.', 'Trusted seller with verified profile and transaction history.', 'OLX premium listing with seller verification badge.']
+      },
+      'Cars24 Outlet': {
+        titles: ['Cars24 Store', 'Assured Quality', 'Warranty Included', 'Certified Pre-owned', 'Quality Assured'],
+        descriptions: ['Cars24 certified pre-owned vehicle with quality assurance.', 'Professional inspection completed with warranty coverage.', 'Cars24 outlet with standardized quality checks.']
+      },
+      'CarWale Partner': {
+        titles: ['CarWale Partner', 'Dealer Network', 'Certified Dealer', 'Network Partner', 'Verified Dealer'],
+        descriptions: ['CarWale certified dealer partner with verified inventory.', 'Network dealer with standardized processes and support.', 'CarWale verified dealer with customer support backing.']
+      },
+      'AutoTrader Pro': {
+        titles: ['AutoTrader Pro', 'Professional Dealer', 'Trade Certified', 'Pro Listing', 'Industry Expert'],
+        descriptions: ['AutoTrader professional dealer with industry certification.', 'Expert dealer with professional listing and trade support.', 'AutoTrader pro member with enhanced listing features.']
+      },
       'Google Places': {
         titles: ['Verified Dealer', 'Google Listed', 'Business Verified', 'Local Dealer', 'Trusted Seller'],
         descriptions: ['Google verified car dealer with physical location. Visit showroom for inspection.', 'Established dealership listed on Google Places. Multiple payment options available.', 'Local authorized dealer with Google business verification.']
@@ -644,6 +664,26 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
       'Public Feed': {
         titles: ['Public Listing', 'Open Data', 'Municipal Records', 'Transport Dept', 'Official Registry'],
         descriptions: ['Public listing from official government transport records.', 'Open data from municipal vehicle registration database.', 'Official transport department public vehicle registry.']
+      },
+      'Spinny Hub': {
+        titles: ['Spinny Assured', 'Quality Checked', 'Spinny Store', 'Certified Vehicle', 'Warranty Included'],
+        descriptions: ['Spinny assured vehicle with comprehensive quality checks.', 'Certified pre-owned car with warranty and quality guarantee.', 'Spinny store vehicle with professional inspection.']
+      },
+      'CARS24 Store': {
+        titles: ['CARS24 Outlet', 'Fixed Price', 'No Haggling', 'Quality Assured', 'Instant Purchase'],
+        descriptions: ['CARS24 store with fixed pricing and quality assurance.', 'No haggling policy with transparent pricing.', 'Quality assured vehicle with instant purchase option.']
+      },
+      'Mahindra First Choice': {
+        titles: ['First Choice', 'Mahindra Assured', 'Certified Exchange', 'Brand Warranty', 'Genuine Parts'],
+        descriptions: ['Mahindra First Choice certified pre-owned vehicle.', 'Brand assured quality with genuine parts guarantee.', 'Mahindra certified exchange program vehicle.']
+      },
+      'Maruti True Value': {
+        titles: ['True Value', 'Maruti Certified', 'Brand Assured', 'Genuine Service', 'Exchange Benefit'],
+        descriptions: ['Maruti True Value certified pre-owned vehicle.', 'Brand assured quality with genuine service history.', 'Maruti certified with exchange benefits available.']
+      },
+      'Hyundai Promise': {
+        titles: ['Hyundai Promise', 'Brand Certified', 'Quality Assured', 'Service History', 'Warranty Support'],
+        descriptions: ['Hyundai Promise certified pre-owned vehicle.', 'Brand quality assurance with complete service history.', 'Hyundai certified with warranty support included.']
       }
     };
     
