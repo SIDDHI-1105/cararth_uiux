@@ -30,21 +30,28 @@ export default function Home() {
   const [selectedCarForFeatured, setSelectedCarForFeatured] = useState<{id: string, title: string} | null>(null);
 
   const { data: cars = [], isLoading } = useQuery<Car[]>({
-    queryKey: ["/api/cars", filters],
+    queryKey: ["/api/marketplace/search", filters],
     queryFn: async () => {
-      const params = new URLSearchParams();
+      const searchFilters = {
+        brand: filters.brand,
+        city: filters.city,
+        fuelType: filters.fuelType ? [filters.fuelType] : undefined,
+        priceMin: filters.priceMin ? filters.priceMin * 100000 : undefined,
+        priceMax: filters.priceMax ? filters.priceMax * 100000 : undefined,
+        yearMin: filters.yearMin,
+        yearMax: filters.yearMax,
+        limit: 50
+      };
+
+      const response = await fetch('/api/marketplace/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(searchFilters)
+      });
       
-      if (filters.brand) params.append("brand", filters.brand);
-      if (filters.city) params.append("city", filters.city);
-      if (filters.fuelType) params.append("fuelType", filters.fuelType);
-      if (filters.priceMin) params.append("priceMin", filters.priceMin.toString());
-      if (filters.priceMax) params.append("priceMax", filters.priceMax.toString());
-      if (filters.yearMin) params.append("yearMin", filters.yearMin.toString());
-      if (filters.yearMax) params.append("yearMax", filters.yearMax.toString());
-      
-      const response = await fetch(`/api/cars?${params}`);
       if (!response.ok) throw new Error("Failed to fetch cars");
-      return response.json();
+      const result = await response.json();
+      return result.listings || [];
     },
   });
 
