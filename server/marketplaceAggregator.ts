@@ -646,7 +646,10 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
   private generateMockListings(filters: DetailedFilters): MarketplaceListing[] {
     console.log('🚀 Aggregating listings from multiple portal sources...');
     
-    const brands = ['Maruti Suzuki', 'Hyundai', 'Tata', 'Mahindra', 'Honda', 'Toyota', 'Ford', 'Volkswagen', 'Nissan', 'Renault'];
+    // CRITICAL FIX: Use filter-specific brands and models to prevent mismatches
+    const targetBrand = filters.brand || 'Hyundai'; // Default to Hyundai if no brand specified
+    const targetModel = filters.model;
+    
     const modelMap: Record<string, string[]> = {
       'Maruti Suzuki': ['Swift', 'Baleno', 'Dzire', 'Vitara Brezza', 'Ertiga', 'XL6', 'S-Cross', 'Ignis', 'WagonR', 'Alto K10'],
       'Hyundai': ['i20', 'Creta', 'Verna', 'Venue', 'Alcazar', 'Tucson', 'Kona Electric', 'i10 Nios', 'Aura', 'Santro'],
@@ -655,6 +658,9 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
       'Honda': ['City', 'Amaze', 'WR-V', 'Jazz', 'BR-V', 'Civic', 'CR-V', 'Accord', 'Pilot', 'HR-V'],
       'Toyota': ['Innova Crysta', 'Fortuner', 'Glanza', 'Urban Cruiser', 'Yaris', 'Camry', 'Prius', 'Land Cruiser', 'Hilux', 'Vellfire']
     };
+    
+    // Get models for the target brand only
+    const availableModels = modelMap[targetBrand] || ['i20', 'Creta', 'Verna'];
     // LEGALLY COMPLIANT SOURCES ONLY - Authorized business listings and public data
     const sources = ['CarDekho Dealer', 'OLX Verified', 'Cars24 Outlet', 'CarWale Partner', 'AutoTrader Pro', 'Spinny Hub', 'CARS24 Store', 'Mahindra First Choice', 'Maruti True Value', 'Hyundai Promise', 'Facebook Marketplace'];
     const cities = ['Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Hyderabad', 'Pune', 'Kolkata', 'Ahmedabad', 'Jaipur', 'Lucknow', 'Kanpur', 'Nagpur', 'Indore', 'Bhopal', 'Visakhapatnam', 'Patna'];
