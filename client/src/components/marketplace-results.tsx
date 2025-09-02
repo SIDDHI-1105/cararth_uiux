@@ -7,8 +7,9 @@ import { Progress } from "@/components/ui/progress";
 import { 
   TrendingUp, TrendingDown, Minus, ExternalLink, Verified, 
   MapPin, Calendar, Gauge, Fuel, Settings, Star, Filter,
-  BarChart3, Users, Clock, Award
+  BarChart3, Users, Clock, Award, Eye, Phone
 } from "lucide-react";
+import { Link } from "wouter";
 
 interface MarketplaceListing {
   id: string;
@@ -217,13 +218,16 @@ export default function MarketplaceResults({ searchResult, isLoading }: Marketpl
               </div>
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" asChild>
-                  <a href={listing.url} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="w-4 h-4 mr-1" />
-                    View
-                  </a>
+                  <Link href={`/marketplace/${listing.id}`}>
+                    <Eye className="w-4 h-4 mr-1" />
+                    View Details
+                  </Link>
                 </Button>
-                <Button size="sm">
-                  Contact Seller
+                <Button size="sm" asChild>
+                  <a href={listing.url} target="_blank" rel="noopener noreferrer">
+                    <Phone className="w-4 h-4 mr-1" />
+                    Contact
+                  </a>
                 </Button>
               </div>
             </div>

@@ -221,6 +221,135 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get individual marketplace listing details
+  app.get("/api/marketplace/listing/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Generate detailed listing data for demo
+      const listing = {
+        id,
+        title: `Hyundai i20 Sportz - Well Maintained Car`,
+        brand: 'Hyundai',
+        model: 'i20',
+        year: 2020,
+        price: 650000,
+        mileage: 35000,
+        fuelType: 'Petrol',
+        transmission: 'Manual',
+        condition: 'Excellent',
+        location: 'Mumbai, Maharashtra',
+        source: 'CarDekho',
+        verificationStatus: 'verified',
+        sellerType: 'dealer',
+        listingDate: new Date().toISOString(),
+        description: `This Hyundai i20 Sportz is in excellent condition with complete service history. 
+        Single owner, non-accident car with all genuine parts. Well-maintained with regular servicing at authorized service center.`,
+        images: [
+          "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=800",
+          "https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=800",
+          "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800",
+          "https://images.unsplash.com/photo-1494976688230-f527b8a4bdca?w=800"
+        ],
+        features: [
+          'Air Conditioning', 'Power Steering', 'Power Windows', 'Central Locking',
+          'ABS', 'Dual Airbags', 'Music System', 'Bluetooth Connectivity',
+          'Alloy Wheels', 'Fog Lights', 'Rear Parking Sensors', 'Electric Mirrors'
+        ],
+        seller: {
+          name: 'Mumbai Car Bazaar',
+          type: 'dealer',
+          rating: 4.5,
+          reviews: 127,
+          verified: true
+        }
+      };
+      
+      res.json(listing);
+    } catch (error) {
+      console.error('Get listing error:', error);
+      res.status(500).json({ error: 'Failed to fetch listing details' });
+    }
+  });
+
+  // Contact seller with OTP verification
+  app.post("/api/marketplace/contact", async (req, res) => {
+    try {
+      const { name, phone, email, message, listingId, listingTitle } = req.body;
+      
+      if (!name || !phone || !listingId) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+
+      // Generate and store OTP (in production, use SMS service)
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      // Store OTP in session for demo (use database in production)
+      const contactRequest = {
+        id: `contact-${Date.now()}`,
+        name,
+        phone,
+        email,
+        message,
+        listingId,
+        listingTitle,
+        otp,
+        createdAt: new Date(),
+        verified: false
+      };
+      
+      // Store in session for demo
+      if (!req.session) req.session = {};
+      req.session.contactRequest = contactRequest;
+      
+      console.log(`📱 OTP for ${phone}: ${otp} (Listing: ${listingTitle})`);
+      
+      res.json({ 
+        success: true, 
+        message: 'OTP sent successfully',
+        contactId: contactRequest.id 
+      });
+    } catch (error) {
+      console.error('Contact request error:', error);
+      res.status(500).json({ error: 'Failed to send contact request' });
+    }
+  });
+
+  // Verify OTP and complete contact sharing
+  app.post("/api/marketplace/verify-contact", async (req, res) => {
+    try {
+      const { phone, otp, listingId } = req.body;
+      
+      if (!phone || !otp || !listingId) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+
+      const contactRequest = req.session?.contactRequest;
+      
+      if (!contactRequest || 
+          contactRequest.phone !== phone || 
+          contactRequest.listingId !== listingId ||
+          contactRequest.otp !== otp) {
+        return res.status(400).json({ error: 'Invalid OTP or request' });
+      }
+
+      // Mark as verified
+      contactRequest.verified = true;
+      contactRequest.verifiedAt = new Date();
+      
+      // In production, save to database and notify seller
+      console.log(`✅ Contact verified: ${contactRequest.name} (${contactRequest.phone}) interested in ${contactRequest.listingTitle}`);
+      
+      res.json({ 
+        success: true, 
+        message: 'Contact details shared with seller successfully' 
+      });
+    } catch (error) {
+      console.error('OTP verification error:', error);
+      res.status(500).json({ error: 'Failed to verify OTP' });
+    }
+  });
+
   // Premium subscription endpoints
   app.post("/api/subscriptions", async (req, res) => {
     try {
