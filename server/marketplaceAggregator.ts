@@ -612,7 +612,7 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
       'Toyota': ['Innova Crysta', 'Fortuner', 'Glanza', 'Urban Cruiser', 'Yaris', 'Camry', 'Prius', 'Land Cruiser', 'Hilux', 'Vellfire']
     };
     // LEGALLY COMPLIANT SOURCES ONLY - Authorized business listings and public data
-    const sources = ['CarDekho Dealer', 'OLX Verified', 'Cars24 Outlet', 'CarWale Partner', 'AutoTrader Pro', 'Spinny Hub', 'CARS24 Store', 'Mahindra First Choice', 'Maruti True Value', 'Hyundai Promise'];
+    const sources = ['CarDekho Dealer', 'OLX Verified', 'Cars24 Outlet', 'CarWale Partner', 'AutoTrader Pro', 'Spinny Hub', 'CARS24 Store', 'Mahindra First Choice', 'Maruti True Value', 'Hyundai Promise', 'Facebook Marketplace'];
     const cities = ['Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Hyderabad', 'Pune', 'Kolkata', 'Ahmedabad', 'Jaipur', 'Lucknow', 'Kanpur', 'Nagpur', 'Indore', 'Bhopal', 'Visakhapatnam', 'Patna'];
     
     // LEGALLY COMPLIANT SOURCES ONLY - Authorized APIs and public feeds
@@ -684,6 +684,10 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
       'Hyundai Promise': {
         titles: ['Hyundai Promise', 'Brand Certified', 'Quality Assured', 'Service History', 'Warranty Support'],
         descriptions: ['Hyundai Promise certified pre-owned vehicle.', 'Brand quality assurance with complete service history.', 'Hyundai certified with warranty support included.']
+      },
+      'Facebook Marketplace': {
+        titles: ['FB Marketplace', 'Local Seller', 'Community Listed', 'Social Verified', 'Peer-to-Peer'],
+        descriptions: ['Facebook Marketplace listing from verified local seller with social profile.', 'Community marketplace listing with seller social verification and ratings.', 'Local seller on Facebook Marketplace with verified profile and transaction history.']
       }
     };
     
