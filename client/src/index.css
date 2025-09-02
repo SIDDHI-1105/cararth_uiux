@@ -4,43 +4,40 @@
 @tailwind utilities;
 
 :root {
-  /* Light Theme - Carbon Fiber & Steel */
-  --background: hsl(210 5% 98%);
-  --foreground: hsl(210 10% 8%);
-  --card: hsl(210 5% 100%);
-  --card-foreground: hsl(210 10% 8%);
-  --popover: hsl(210 5% 100%);
-  --popover-foreground: hsl(210 10% 8%);
-  --primary: hsl(210 20% 25%);
-  --primary-foreground: hsl(210 5% 98%);
-  --secondary: hsl(210 8% 92%);
-  --secondary-foreground: hsl(210 10% 8%);
-  --muted: hsl(210 8% 95%);
-  --muted-foreground: hsl(210 10% 45%);
-  --accent: hsl(210 15% 45%);
-  --accent-foreground: hsl(210 5% 98%);
+  /* Clean Professional Theme */
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(222.2 84% 4.9%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(222.2 84% 4.9%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(222.2 84% 4.9%);
+  --primary: hsl(222.2 47.4% 11.2%);
+  --primary-foreground: hsl(210 40% 98%);
+  --secondary: hsl(210 40% 96%);
+  --secondary-foreground: hsl(222.2 84% 4.9%);
+  --muted: hsl(210 40% 96%);
+  --muted-foreground: hsl(215.4 16.3% 46.9%);
+  --accent: hsl(45 90% 55%);
+  --accent-foreground: hsl(222.2 84% 4.9%);
   --destructive: hsl(0 84.2% 60.2%);
-  --destructive-foreground: hsl(210 5% 98%);
-  --border: hsl(210 10% 85%);
-  --input: hsl(210 8% 92%);
-  --ring: hsl(210 20% 25%);
-  --radius: 0.375rem;
+  --destructive-foreground: hsl(210 40% 98%);
+  --border: hsl(214.3 31.8% 91.4%);
+  --input: hsl(214.3 31.8% 91.4%);
+  --ring: hsl(222.2 84% 4.9%);
+  --radius: 0.75rem;
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-heading: 'Orbitron', system-ui, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: 'Courier New', monospace;
   
-  /* Carbon Fiber Pattern Variables */
-  --carbon-primary: hsl(210 15% 15%);
-  --carbon-secondary: hsl(210 15% 25%);
-  --steel-primary: hsl(210 20% 60%);
-  --steel-secondary: hsl(210 20% 75%);
-  --metallic-accent: hsl(210 25% 50%);
+  /* Subtle accent highlights */
+  --steel-highlight: hsl(210 15% 25%);
+  --carbon-accent: hsl(0 0% 5%);
+  --professional-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --elevated-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   
-  /* Enhanced Shadows */
-  --shadow-carbon: 0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  --shadow-steel: 0 4px 12px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-metallic: 0 8px 25px rgba(100, 116, 139, 0.25), 0 3px 10px rgba(100, 116, 139, 0.15);
+  /* Logo watermark */
+  --logo-watermark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Cdefs%3E%3Cpattern id='logo-pattern' x='0' y='0' width='200' height='200' patternUnits='userSpaceOnUse'%3E%3Ctext x='100' y='100' text-anchor='middle' dominant-baseline='middle' font-family='Inter, sans-serif' font-size='14' font-weight='600' fill='%23f8f9fa' opacity='0.02'%3ETHE MOBILITY HUB%3C/text%3E%3C/pattern%3E%3C/defs%3E%3Crect width='400' height='400' fill='url(%23logo-pattern)'/%3E%3C/svg%3E");
 }
 
 /* Dark Theme - Enhanced Carbon Fiber & Steel */
@@ -362,4 +359,26 @@
   .car-card:hover {
     transform: none;
   }
+}
+
+/* Logo watermark background */
+body {
+  background-image: var(--logo-watermark);
+  background-attachment: fixed;
+  background-size: 400px 400px;
+  background-repeat: repeat;
+}
+
+/* Clean professional styling with subtle highlights */
+.card-professional {
+  box-shadow: var(--professional-shadow);
+  border: 1px solid var(--border);
+}
+
+.card-elevated {
+  box-shadow: var(--elevated-shadow);
+}
+
+.steel-highlight {
+  background: linear-gradient(135deg, var(--steel-highlight) 0%, var(--carbon-accent) 100%);
 }

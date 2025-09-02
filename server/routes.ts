@@ -350,6 +350,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Messaging system endpoints
+  app.get("/api/conversations/:listingId", async (req, res) => {
+    try {
+      const { listingId } = req.params;
+      
+      // Generate demo conversation for listing
+      const messages = [
+        {
+          id: 'msg-1',
+          senderId: 'buyer-123',
+          senderType: 'buyer',
+          senderName: 'Interested Buyer',
+          content: 'Hi, I\'m interested in this car. Is it still available?',
+          timestamp: new Date(Date.now() - 3600000), // 1 hour ago
+          isRead: true
+        },
+        {
+          id: 'msg-2', 
+          senderId: 'seller-456',
+          senderType: 'seller',
+          senderName: 'Car Owner',
+          content: 'Yes, the car is available. Would you like to schedule a test drive?',
+          timestamp: new Date(Date.now() - 1800000), // 30 minutes ago
+          isRead: true
+        }
+      ];
+      
+      res.json(messages);
+    } catch (error) {
+      console.error('Get conversation error:', error);
+      res.status(500).json({ error: 'Failed to fetch conversation' });
+    }
+  });
+
+  app.post("/api/conversations/:listingId/messages", async (req, res) => {
+    try {
+      const { listingId } = req.params;
+      const { content, senderType, listingTitle } = req.body;
+      
+      if (!content || !senderType) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+
+      const newMessage = {
+        id: `msg-${Date.now()}`,
+        senderId: `${senderType}-${Math.random().toString(36).substr(2, 9)}`,
+        senderType,
+        senderName: senderType === 'buyer' ? 'Interested Buyer' : 'Car Owner',
+        content,
+        timestamp: new Date(),
+        isRead: false
+      };
+      
+      // In production, save to database
+      console.log(`💬 New message in ${listingTitle}: ${content} (from ${senderType})`);
+      
+      res.json({ success: true, message: newMessage });
+    } catch (error) {
+      console.error('Send message error:', error);
+      res.status(500).json({ error: 'Failed to send message' });
+    }
+  });
+
+  app.post("/api/conversations/:listingId/request-contact", async (req, res) => {
+    try {
+      const { listingId } = req.params;
+      const { senderType } = req.body;
+      
+      // Pro feature - share contact details
+      console.log(`📞 Contact details requested for listing ${listingId} by ${senderType}`);
+      
+      res.json({ 
+        success: true, 
+        contactShared: true,
+        message: 'Contact details shared successfully' 
+      });
+    } catch (error) {
+      console.error('Request contact error:', error);
+      res.status(500).json({ error: 'Failed to request contact details' });
+    }
+  });
+
   // Premium subscription endpoints
   app.post("/api/subscriptions", async (req, res) => {
     try {

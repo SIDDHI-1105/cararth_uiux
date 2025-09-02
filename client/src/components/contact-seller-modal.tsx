@@ -11,8 +11,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Phone, User, Mail, MessageSquare, Shield, 
-  CheckCircle, AlertCircle, Send, ArrowRight 
+  CheckCircle, AlertCircle, Send, ArrowRight, Crown 
 } from 'lucide-react';
+import MessagingSystem from './messaging-system';
 
 interface ContactSellerModalProps {
   open: boolean;
@@ -25,7 +26,8 @@ export default function ContactSellerModal({
   onOpenChange, 
   listing 
 }: ContactSellerModalProps) {
-  const [step, setStep] = useState<'contact' | 'verify' | 'success'>('contact');
+  const [step, setStep] = useState<'contact' | 'verify' | 'messaging' | 'success'>('contact');
+  const [isProUser, setIsProUser] = useState(Math.random() > 0.5); // Demo: randomly assign Pro status
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -83,10 +85,10 @@ export default function ContactSellerModal({
       return response.json();
     },
     onSuccess: () => {
-      setStep('success');
+      setStep('messaging');
       toast({
-        title: "Contact Shared Successfully!",
-        description: "The seller will contact you shortly.",
+        title: "Contact Verified!",
+        description: "You can now message the seller securely through our platform.",
       });
     },
     onError: () => {
@@ -309,6 +311,25 @@ export default function ContactSellerModal({
               </Button>
             </div>
           </>
+        )}
+
+        {/* Messaging Step */}
+        {step === 'messaging' && (
+          <div className="space-y-4">
+            <MessagingSystem
+              open={true}
+              onOpenChange={(open) => {
+                if (!open) {
+                  onOpenChange(false);
+                  resetModal();
+                }
+              }}
+              listingId={listing.id}
+              listingTitle={listing.title}
+              userType="buyer"
+              isProUser={isProUser}
+            />
+          </div>
         )}
 
         {step === 'success' && (
