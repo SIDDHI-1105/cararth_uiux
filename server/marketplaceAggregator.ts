@@ -693,77 +693,92 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
     
     const listings: MarketplaceListing[] = [];
     
-    for (let i = 0; i < 15; i++) {
-      const selectedBrand = filters.brand || brands[i % brands.length];
+    // If brand filter is specified, only generate listings for that brand
+    const targetBrands = filters.brand ? [filters.brand] : brands;
+    const listingsPerBrand = Math.ceil(50 / targetBrands.length);
+    
+    for (const selectedBrand of targetBrands) {
       const brandModels = modelMap[selectedBrand] || ['Sedan', 'Hatchback', 'SUV'];
-      const selectedModel = filters.model || brandModels[i % brandModels.length];
-      const year = filters.yearMin || 2018 + (i % 6);
-      const city = filters.city || cities[i % cities.length];
-      const source = sources[i % sources.length];
       
-      // Generate realistic price based on filters
-      let basePrice = 400000;
-      if (selectedBrand === 'Toyota') basePrice = 800000;
-      else if (selectedBrand === 'Honda') basePrice = 600000;
-      else if (selectedBrand === 'Hyundai') basePrice = 500000;
+      for (let i = 0; i < listingsPerBrand && listings.length < 50; i++) {
+        const selectedModel = filters.model || brandModels[i % brandModels.length];
+        const year = filters.yearMin || (2018 + (i % 6));
+        const city = filters.city || cities[i % cities.length];
+        const source = sources[i % sources.length];
       
-      const ageDiscount = (2024 - year) * 0.1;
-      const price = Math.floor(basePrice * (1 - ageDiscount) + (Math.random() - 0.5) * 200000);
+        // Generate realistic price based on actual brand
+        let basePrice = 400000;
+        if (selectedBrand === 'Toyota') basePrice = 800000;
+        else if (selectedBrand === 'Honda') basePrice = 600000;
+        else if (selectedBrand === 'Hyundai') basePrice = 500000;
+        else if (selectedBrand === 'Maruti Suzuki') basePrice = 350000;
+        else if (selectedBrand === 'Tata') basePrice = 450000;
+        else if (selectedBrand === 'Mahindra') basePrice = 550000;
       
-      // Ensure price is within filter range
-      const finalPrice = Math.max(
-        filters.priceMin || 200000,
-        Math.min(filters.priceMax || 2000000, price)
-      );
-      
-      const sourceStyle = portalStyles[source as keyof typeof portalStyles];
-      const titleStyle = sourceStyle.titles[i % sourceStyle.titles.length];
-      const descStyle = sourceStyle.descriptions[i % sourceStyle.descriptions.length];
-      
-      listings.push({
-        id: `${source.toLowerCase()}-${year}-${selectedBrand.replace(' ', '')}-${Date.now()}${i}`,
-        title: `${year} ${selectedBrand} ${selectedModel} - ${titleStyle}`,
-        brand: selectedBrand,
-        model: selectedModel,
-        year,
-        price: finalPrice,
-        mileage: 20000 + Math.floor(Math.random() * 60000),
-        fuelType: filters.fuelType?.[0] || ['Petrol', 'Diesel', 'CNG'][i % 3],
-        transmission: filters.transmission?.[0] || ['Manual', 'Automatic'][i % 2],
-        location: city,
-        city,
-        source,
-        url: this.generatePortalURL(source, selectedBrand, selectedModel, year, city, i),
-        images: [this.getCarSpecificImage(selectedBrand, selectedModel)],
-        description: `${year} ${selectedBrand} ${selectedModel} ${filters.fuelType?.[0] || ['Petrol', 'Diesel', 'CNG'][i % 3]} ${filters.transmission?.[0] || ['Manual', 'Automatic'][i % 2]} in ${city}. ${descStyle} Contact: ${this.generateContactHint(source)}.`,
-        features: ['AC', 'Power Steering', 'Music System'],
-        condition: ['Excellent', 'Good', 'Fair'][i % 3],
-        verificationStatus: ['verified', 'certified', 'unverified'][i % 3] as 'verified' | 'certified' | 'unverified',
-        listingDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
-        sellerType: ['individual', 'dealer', 'oem'][i % 3] as 'individual' | 'dealer' | 'oem'
-      });
+        const ageDiscount = (2024 - year) * 0.1;
+        const price = Math.floor(basePrice * (1 - ageDiscount) + (Math.random() - 0.5) * 200000);
+        
+        // Ensure price is within filter range
+        const finalPrice = Math.max(
+          filters.priceMin || 200000,
+          Math.min(filters.priceMax || 2000000, price)
+        );
+        
+        const sourceStyle = portalStyles[source as keyof typeof portalStyles];
+        const titleStyle = sourceStyle.titles[i % sourceStyle.titles.length];
+        const descStyle = sourceStyle.descriptions[i % sourceStyle.descriptions.length];
+        
+        listings.push({
+          id: `${source.toLowerCase()}-${year}-${selectedBrand.replace(' ', '')}-${Date.now()}${i}`,
+          title: `${year} ${selectedBrand} ${selectedModel} - ${titleStyle}`,
+          brand: selectedBrand,
+          model: selectedModel,
+          year,
+          price: finalPrice,
+          mileage: 20000 + Math.floor(Math.random() * 60000),
+          fuelType: filters.fuelType?.[0] || ['Petrol', 'Diesel', 'CNG'][i % 3],
+          transmission: filters.transmission?.[0] || ['Manual', 'Automatic'][i % 2],
+          location: city,
+          city,
+          source,
+          url: this.generatePortalURL(source, selectedBrand, selectedModel, year, city, i),
+          images: [this.getCarSpecificImage(selectedBrand, selectedModel)],
+          description: `${year} ${selectedBrand} ${selectedModel} ${filters.fuelType?.[0] || ['Petrol', 'Diesel', 'CNG'][i % 3]} ${filters.transmission?.[0] || ['Manual', 'Automatic'][i % 2]} in ${city}. ${descStyle} Contact: ${this.generateContactHint(source)}.`,
+          features: ['AC', 'Power Steering', 'Music System'],
+          condition: ['Excellent', 'Good', 'Fair'][i % 3],
+          verificationStatus: ['verified', 'certified', 'unverified'][i % 3] as 'verified' | 'certified' | 'unverified',
+          listingDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
+          sellerType: ['individual', 'dealer', 'oem'][i % 3] as 'individual' | 'dealer' | 'oem'
+        });
+      }
     }
     
     return listings;
   }
 
   private getCarSpecificImage(brand: string, model: string): string {
-    // Return car-specific images based on actual brand and model
+    // Return more realistic car images based on actual brand and model
     const carImageMap: Record<string, string> = {
-      // Maruti Suzuki
-      'maruti_swift': 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=400&q=80',
-      'maruti_baleno': 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=400&q=80',
-      'maruti_dzire': 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400&q=80',
+      // Maruti Suzuki - Popular models with realistic colors
+      'maruti suzuki_swift': 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=400&q=80',
+      'maruti suzuki_baleno': 'https://images.unsplash.com/photo-1594736797933-d0401ba2fe65?w=400&q=80',
+      'maruti suzuki_dzire': 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400&q=80',
+      'maruti suzuki_vitara brezza': 'https://images.unsplash.com/photo-1606016159991-dfa3ec4b87c4?w=400&q=80',
+      'maruti suzuki_ertiga': 'https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?w=400&q=80',
       
-      // Hyundai
+      // Hyundai - Specific model images
       'hyundai_i20': 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400&q=80',
-      'hyundai_creta': 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=400&q=80',
+      'hyundai_creta': 'https://images.unsplash.com/photo-1606016159991-dfa3ec4b87c4?w=400&q=80',
       'hyundai_verna': 'https://images.unsplash.com/photo-1502877338535-766e1452684a?w=400&q=80',
+      'hyundai_venue': 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=400&q=80',
+      'hyundai_alcazar': 'https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?w=400&q=80',
       
-      // Tata
-      'tata_nexon': 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&q=80',
+      // Tata - SUV and hatchback specific
+      'tata_nexon': 'https://images.unsplash.com/photo-1606016159991-dfa3ec4b87c4?w=400&q=80',
       'tata_harrier': 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=400&q=80',
-      'tata_safari': 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400&q=80',
+      'tata_safari': 'https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?w=400&q=80',
+      'tata_tiago': 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400&q=80',
+      'tata_altroz': 'https://images.unsplash.com/photo-1594736797933-d0401ba2fe65?w=400&q=80',
       
       // Honda
       'honda_city': 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=400&q=80',
