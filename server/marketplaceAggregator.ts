@@ -1298,46 +1298,32 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
   }
 
   private getCarSpecificImage(brand: string, model: string): string {
-    // Use completely generic car images without any visible branding or distinctive features
-    const imageOptions = [
-      // Generic white car - no visible badges or distinctive styling
-      `https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3`,
-      // Generic silver sedan - plain and unbranded
-      `https://images.unsplash.com/photo-1494905998402-395d579af36f?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3`,
-      // Generic black SUV - no visible branding
-      `https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3`,
-      // Generic red hatchback - plain styling
-      `https://images.unsplash.com/photo-1502877338535-766e1452684a?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3`,
-      // Generic blue car - no distinctive features
-      `https://images.unsplash.com/photo-1493238792000-8113da705763?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3`,
-      // Generic dark car - brand neutral
-      `https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3`,
-      // Generic light colored car
-      `https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3`,
-      // Generic compact car
-      `https://images.unsplash.com/photo-1511919884226-fd3cad34687c?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3`
+    // Use small animated car icons that are appropriately sized for listings
+    const carIcons = [
+      '/attached_assets/generated_images/Small_animated_car_icon_4aebd8a2.png', // Generic sedan
+      '/attached_assets/generated_images/Small_animated_car_icon_4aebd8a2.png', // Generic sedan
+      '/attached_assets/generated_images/Compact_SUV_car_icon_fb946f8b.png', // Compact SUV
+      '/attached_assets/generated_images/Small_hatchback_car_icon_ba50a687.png' // Small hatchback
     ];
     
-    // Use car type to determine appropriate generic image
+    // Use car type to determine appropriate animated icon
     const modelLower = model.toLowerCase();
-    let imageIndex = 0;
+    let iconIndex = 0;
     
     if (modelLower.includes('suv') || modelLower.includes('nexon') || modelLower.includes('creta') || 
         modelLower.includes('brezza') || modelLower.includes('venue') || modelLower.includes('harrier') ||
         modelLower.includes('safari') || modelLower.includes('scorpio') || modelLower.includes('thar') ||
         modelLower.includes('fortuner') || modelLower.includes('innova')) {
-      imageIndex = 2; // Generic SUV
+      iconIndex = 2; // SUV icon
     } else if (modelLower.includes('hatch') || modelLower.includes('swift') || modelLower.includes('i20') ||
                modelLower.includes('tiago') || modelLower.includes('alto') || modelLower.includes('jazz') ||
                modelLower.includes('polo') || modelLower.includes('baleno')) {
-      imageIndex = 3; // Generic hatchback
+      iconIndex = 3; // Hatchback icon  
     } else {
-      // For sedans and other cars, use brand hash for variety
-      const brandModelHash = this.hashString(brand + model);
-      imageIndex = brandModelHash % 6; // Use first 6 images for variety
+      iconIndex = 1; // Sedan icon for default
     }
     
-    return imageOptions[imageIndex];
+    return carIcons[iconIndex];
   }
   
   private hashString(str: string): number {
