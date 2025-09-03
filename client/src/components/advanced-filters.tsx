@@ -149,8 +149,6 @@ export default function AdvancedFilters({ onSearch, isLoading }: AdvancedFilters
   };
 
   const handleSearch = () => {
-    console.log('🔍 AdvancedFilters: Current brand selected:', filters.brand);
-    
     // Convert filters to API format
     const searchFilters = {
       brand: filters.brand, // Keep brand as is, don't convert empty string to undefined
