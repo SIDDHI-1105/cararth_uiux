@@ -787,6 +787,128 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.send(svg);
   });
 
+  // Seller service endpoints
+  const sellerService = new (await import('./sellerService')).SellerService();
+  const objectStorageService = new (await import('./objectStorage')).ObjectStorageService();
+
+  // Create new seller listing
+  app.post("/api/seller/listings", async (req, res) => {
+    try {
+      const listingData = req.body;
+      const listing = await sellerService.createListing("temp-seller", listingData);
+      res.status(201).json(listing);
+    } catch (error) {
+      console.error('Error creating seller listing:', error);
+      res.status(500).json({ error: "Failed to create listing" });
+    }
+  });
+
+  // Get upload URL for seller documents/photos
+  app.get("/api/seller/upload-url", async (req, res) => {
+    try {
+      const category = req.query.category as string;
+      if (!category) {
+        return res.status(400).json({ error: "Category is required" });
+      }
+      
+      const uploadURL = await sellerService.getUploadURL(category);
+      res.json(uploadURL);
+    } catch (error) {
+      console.error('Error getting upload URL:', error);
+      res.status(500).json({ error: "Failed to get upload URL" });
+    }
+  });
+
+  // Update listing with uploaded files
+  app.patch("/api/seller/listings/:id/files", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      const listing = await sellerService.updateListingFiles(id, updates);
+      res.json(listing);
+    } catch (error) {
+      console.error('Error updating listing files:', error);
+      res.status(500).json({ error: "Failed to update listing files" });
+    }
+  });
+
+  // Generate AI content for listing
+  app.post("/api/seller/listings/:id/generate-content", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const content = await sellerService.generateListingContent(id);
+      res.json(content);
+    } catch (error) {
+      console.error('Error generating listing content:', error);
+      res.status(500).json({ error: "Failed to generate content" });
+    }
+  });
+
+  // Post listing to multiple platforms
+  app.post("/api/seller/listings/:id/post-platforms", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const results = await sellerService.postToMultiplePlatforms(id);
+      res.json(results);
+    } catch (error) {
+      console.error('Error posting to platforms:', error);
+      res.status(500).json({ error: "Failed to post to platforms" });
+    }
+  });
+
+  // Get seller listings
+  app.get("/api/seller/listings", async (req, res) => {
+    try {
+      const sellerId = req.query.sellerId as string || "temp-seller";
+      const listings = await sellerService.getSellerListings(sellerId);
+      res.json(listings);
+    } catch (error) {
+      console.error('Error fetching seller listings:', error);
+      res.status(500).json({ error: "Failed to fetch listings" });
+    }
+  });
+
+  // Handle masked contact inquiries
+  app.post("/api/seller/inquiries/:maskedContactId", async (req, res) => {
+    try {
+      const { maskedContactId } = req.params;
+      const inquiryData = req.body;
+      
+      const result = await sellerService.routeInquiry(maskedContactId, inquiryData);
+      res.json(result);
+    } catch (error) {
+      console.error('Error routing inquiry:', error);
+      res.status(500).json({ error: "Failed to route inquiry" });
+    }
+  });
+
+  // Serve private object files
+  app.get("/objects/:objectPath(*)", async (req, res) => {
+    try {
+      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error("Error accessing object:", error);
+      return res.sendStatus(404);
+    }
+  });
+
+  // Serve public object files  
+  app.get("/public-objects/:filePath(*)", async (req, res) => {
+    try {
+      const filePath = req.params.filePath;
+      const file = await objectStorageService.searchPublicObject(filePath);
+      if (!file) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      objectStorageService.downloadObject(file, res);
+    } catch (error) {
+      console.error("Error searching for public object:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
