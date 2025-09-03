@@ -661,28 +661,129 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Placeholder image endpoints
-  app.get("/api/placeholder/blog-image", (req, res) => {
+  // Dynamic placeholder image endpoints with automotive visuals
+  app.get("/api/placeholder/:imageType", (req, res) => {
+    const { imageType } = req.params;
+    
+    const imageConfigs = {
+      'blog-image': {
+        title: 'Automotive News',
+        subtitle: '#themobilityhub',
+        icon: '🚗',
+        gradient: ['#3b82f6', '#06b6d4'],
+        bgColor: '#f1f5f9'
+      },
+      'buying-guide-image': {
+        title: 'Car Buying Guide',
+        subtitle: 'Expert Tips & Reviews',
+        icon: '🔍',
+        gradient: ['#10b981', '#06d6a0'],
+        bgColor: '#ecfdf5'
+      },
+      'market-trend-image': {
+        title: 'Market Insights',
+        subtitle: 'Trends & Analysis',
+        icon: '📊',
+        gradient: ['#8b5cf6', '#a855f7'],
+        bgColor: '#faf5ff'
+      },
+      'tech-image': {
+        title: 'Auto Technology',
+        subtitle: 'Innovation & Features',
+        icon: '⚡',
+        gradient: ['#f59e0b', '#f97316'],
+        bgColor: '#fffbeb'
+      },
+      'policy-image': {
+        title: 'Policy Updates',
+        subtitle: 'Regulations & Laws',
+        icon: '📋',
+        gradient: ['#ef4444', '#dc2626'],
+        bgColor: '#fef2f2'
+      },
+      'automotive-hero-image': {
+        title: 'The Mobility Hub',
+        subtitle: 'Your Journey. Simplified.',
+        icon: '🏎️',
+        gradient: ['#1e40af', '#3b82f6'],
+        bgColor: '#eff6ff'
+      }
+    };
+    
+    const config = imageConfigs[imageType as keyof typeof imageConfigs] || imageConfigs['blog-image'];
+    
     const svg = `
       <svg width="800" height="400" xmlns="http://www.w3.org/2000/svg">
-        <rect width="800" height="400" fill="#f1f5f9"/>
-        <rect x="0" y="0" width="800" height="400" fill="url(#gradient)" opacity="0.1"/>
+        <!-- Animated background -->
         <defs>
-          <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
-            <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:1" />
+          <linearGradient id="mainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:${config.gradient[0]};stop-opacity:1" />
+            <stop offset="100%" style="stop-color:${config.gradient[1]};stop-opacity:1" />
           </linearGradient>
+          <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:${config.bgColor};stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0.9" />
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feMerge> 
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/> 
+            </feMerge>
+          </filter>
         </defs>
-        <g transform="translate(400,200)">
-          <rect x="-80" y="-40" width="160" height="80" fill="#64748b" opacity="0.3" rx="8"/>
-          <text x="0" y="0" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" fill="#475569" font-weight="600">Automotive News</text>
-          <text x="0" y="25" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" fill="#64748b">#themobilityhub</text>
+        
+        <!-- Background -->
+        <rect width="800" height="400" fill="url(#bgGradient)"/>
+        
+        <!-- Animated geometric shapes -->
+        <circle cx="150" cy="100" r="40" fill="url(#mainGradient)" opacity="0.1">
+          <animateTransform attributeName="transform" attributeType="XML" type="rotate"
+                          from="0 150 100" to="360 150 100" dur="20s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="650" cy="320" r="30" fill="url(#mainGradient)" opacity="0.15">
+          <animateTransform attributeName="transform" attributeType="XML" type="rotate"
+                          from="360 650 320" to="0 650 320" dur="15s" repeatCount="indefinite"/>
+        </circle>
+        
+        <!-- Car silhouette animation -->
+        <g transform="translate(50,300)" opacity="0.1">
+          <path d="M0,20 Q20,0 60,5 L120,5 Q140,0 160,20 L160,40 Q140,50 120,45 L60,45 Q20,50 0,40 Z" 
+                fill="url(#mainGradient)">
+            <animateTransform attributeName="transform" attributeType="XML" type="translate"
+                            values="0,0; 20,0; 0,0" dur="8s" repeatCount="indefinite"/>
+          </path>
         </g>
+        
+        <!-- Central content -->
+        <g transform="translate(400,200)">
+          <rect x="-120" y="-60" width="240" height="120" fill="white" opacity="0.9" rx="12" 
+                filter="url(#glow)"/>
+          
+          <!-- Icon with pulse animation -->
+          <text x="0" y="-20" text-anchor="middle" font-size="32" fill="url(#mainGradient)">
+            ${config.icon}
+            <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite"/>
+          </text>
+          
+          <text x="0" y="10" text-anchor="middle" font-family="Inter, sans-serif" 
+                font-size="22" fill="#1f2937" font-weight="700">${config.title}</text>
+          <text x="0" y="35" text-anchor="middle" font-family="Inter, sans-serif" 
+                font-size="14" fill="#6b7280" font-weight="500">${config.subtitle}</text>
+        </g>
+        
+        <!-- Decorative elements -->
+        <path d="M0,200 Q200,180 400,200 T800,200" stroke="url(#mainGradient)" 
+              stroke-width="2" fill="none" opacity="0.3">
+          <animate attributeName="d" 
+                   values="M0,200 Q200,180 400,200 T800,200;M0,200 Q200,220 400,200 T800,200;M0,200 Q200,180 400,200 T800,200" 
+                   dur="6s" repeatCount="indefinite"/>
+        </path>
       </svg>
     `;
     
     res.setHeader('Content-Type', 'image/svg+xml');
-    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader('Cache-Control', 'public, max-age=3600'); // 1 hour cache
     res.send(svg);
   });
 

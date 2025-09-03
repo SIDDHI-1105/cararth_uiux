@@ -119,6 +119,15 @@ Target length: 800-1200 words.`;
       const wordCount = content.split(' ').length;
       const readTime = Math.ceil(wordCount / 200);
 
+      // Generate category-specific image
+      const categoryImages = {
+        'buying-guides': '/api/placeholder/buying-guide-image',
+        'market-trends': '/api/placeholder/market-trend-image', 
+        'technology': '/api/placeholder/tech-image',
+        'policy': '/api/placeholder/policy-image',
+        'automotive': '/api/placeholder/automotive-hero-image'
+      };
+
       return {
         id: `article-${Date.now()}`,
         title: title.substring(0, 100),
@@ -130,7 +139,7 @@ Target length: 800-1200 words.`;
         publishedAt: new Date().toISOString(),
         readTime,
         sources: data.citations || [],
-        image: '/api/placeholder/blog-image'
+        image: categoryImages[category as keyof typeof categoryImages] || categoryImages['automotive']
       };
 
     } catch (error) {

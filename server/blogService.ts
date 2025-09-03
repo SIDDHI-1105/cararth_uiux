@@ -42,13 +42,45 @@ class BlogService {
   }
 
   private initializeSampleArticles() {
-    // Add some sample articles for demo
+    // Add some sample articles for demo with enhanced visual content
     const sampleArticles: BlogArticle[] = [
       {
         id: 'sample-1',
         title: 'Top 5 Pre-owned Cars Under ₹5 Lakhs in India 2024',
-        content: `The Indian pre-owned car market has witnessed significant growth, offering excellent opportunities for budget-conscious buyers...`,
-        excerpt: 'Discover the best value-for-money pre-owned cars under ₹5 lakhs that offer reliability, fuel efficiency, and low maintenance costs.',
+        content: `# Top 5 Pre-owned Cars Under ₹5 Lakhs in India 2024
+
+The Indian pre-owned car market has witnessed significant growth, offering excellent opportunities for budget-conscious buyers. Here's our comprehensive guide to the best value-for-money vehicles.
+
+## 🚗 1. Maruti Suzuki Alto 800 (2018-2020)
+**Price Range**: ₹3.2 - ₹4.8 Lakhs
+- **Fuel Efficiency**: 22-24 kmpl
+- **Maintenance**: Very affordable parts and service
+- **Best For**: First-time buyers and city driving
+
+## 🏎️ 2. Hyundai Grand i10 (2017-2019) 
+**Price Range**: ₹4.0 - ₹4.9 Lakhs
+- **Features**: Touchscreen infotainment, automatic climate control
+- **Engine**: Reliable 1.2L Kappa petrol engine
+- **Best For**: Families seeking comfort and features
+
+## 🚙 3. Tata Tiago (2018-2020)
+**Price Range**: ₹3.8 - ₹4.7 Lakhs
+- **Safety**: 4-star NCAP rating
+- **Design**: Contemporary styling with spacious interior
+- **Best For**: Safety-conscious buyers
+
+## 💰 Key Buying Tips:
+- Always check vehicle history and service records
+- Inspect for rust, accident damage, and engine condition
+- Verify ownership documents and NOC status
+- Consider certified pre-owned programs from dealers
+- Factor in insurance, registration, and immediate repair costs
+
+## 📊 Market Insights:
+The pre-owned car segment has grown by 15% in 2024, with increasing demand for well-maintained vehicles under ₹5 lakhs. Financing options have become more accessible, with banks offering up to 85% funding for cars up to 5 years old.
+
+**Final Verdict**: These vehicles offer the perfect balance of affordability, reliability, and features for budget-conscious Indian buyers.`,
+        excerpt: 'Discover the best value-for-money pre-owned cars under ₹5 lakhs that offer reliability, fuel efficiency, and low maintenance costs. Complete with buying tips and market insights.',
         category: 'buying-guides',
         tags: ['#themobilityhub', '#preownedcars', '#budget', '#india'],
         author: 'The Mobility Hub Editorial Team',
@@ -57,6 +89,36 @@ class BlogService {
         sources: [],
         status: 'published',
         socialMediaShared: true
+      },
+      {
+        id: 'sample-2',
+        title: 'Electric Vehicle Revolution: Impact on Pre-owned Car Values',
+        content: `# Electric Vehicle Revolution: Impact on Pre-owned Car Values
+
+## 📈 The EV Shift and Market Dynamics
+
+The rapid adoption of electric vehicles is reshaping the automotive landscape, creating both opportunities and challenges in the pre-owned car market.
+
+### Key Market Changes:
+- **Petrol Car Depreciation**: Accelerated due to EV adoption
+- **Hybrid Premium**: Used hybrids now command higher prices
+- **ICE Longevity**: Well-maintained petrol cars still valuable for budget buyers
+
+### Smart Investment Tips:
+1. **Consider Total Cost of Ownership** - Factor in fuel savings vs. maintenance
+2. **Research Brand Reliability** - Some EVs hold value better than others
+3. **Check Battery Health** - Critical for EV resale value
+
+The transition period offers unique opportunities for smart buyers and sellers alike.`,
+        excerpt: 'How the electric vehicle revolution is changing pre-owned car values and what it means for buyers and sellers in the Indian market.',
+        category: 'market-trends',
+        tags: ['#themobilityhub', '#electricvehicles', '#markettrends', '#investment'],
+        author: 'The Mobility Hub Editorial Team',
+        publishedAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+        readTime: 6,
+        sources: [],
+        status: 'published',
+        socialMediaShared: false
       }
     ];
 

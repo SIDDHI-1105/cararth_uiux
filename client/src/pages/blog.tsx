@@ -17,6 +17,7 @@ import {
   Zap
 } from "lucide-react";
 import SocialShare from "@/components/social-share";
+import VideoThumbnail from "@/components/video-thumbnail";
 
 interface BlogArticle {
   id: string;
@@ -249,10 +250,12 @@ export default function BlogPage() {
             {isLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {[...Array(6)].map((_, i) => (
-                  <div key={i} className="bg-card rounded-lg p-6 animate-pulse">
-                    <div className="h-4 bg-muted rounded mb-4"></div>
-                    <div className="h-20 bg-muted rounded mb-4"></div>
-                    <div className="h-4 bg-muted rounded w-1/2"></div>
+                  <div key={i} className="bg-card rounded-lg p-6 border overflow-hidden relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 animate-shimmer"></div>
+                    <div className="h-32 bg-gradient-to-r from-muted to-muted/50 rounded mb-4 animate-pulse"></div>
+                    <div className="h-4 bg-gradient-to-r from-muted to-muted/50 rounded mb-2 animate-pulse"></div>
+                    <div className="h-4 bg-gradient-to-r from-muted to-muted/50 rounded mb-4 w-3/4 animate-pulse"></div>
+                    <div className="h-3 bg-gradient-to-r from-muted to-muted/50 rounded w-1/2 animate-pulse"></div>
                   </div>
                 ))}
               </div>
@@ -261,17 +264,25 @@ export default function BlogPage() {
                 {filteredArticles.map((article: BlogArticle) => (
                   <article 
                     key={article.id} 
-                    className="bg-card rounded-lg p-6 border hover:shadow-lg transition-shadow cursor-pointer"
+                    className="bg-card rounded-lg p-6 border hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer group overflow-hidden relative"
                     onClick={() => setSelectedArticle(article)}
                     data-testid={`card-article-${article.id}`}
                   >
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="relative z-10">
                     {article.image && (
-                      <img 
-                        src={article.image} 
-                        alt={article.title}
-                        className="w-full h-32 object-cover rounded mb-4"
-                        data-testid={`img-article-${article.id}`}
-                      />
+                      <div className="relative overflow-hidden rounded mb-4 group-hover:scale-105 transition-transform duration-300">
+                        <img 
+                          src={article.image} 
+                          alt={article.title}
+                          className="w-full h-32 object-cover"
+                          data-testid={`img-article-${article.id}`}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div className="absolute top-2 right-2 bg-white/90 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <BookOpen className="w-3 h-3 text-blue-600" />
+                        </div>
+                      </div>
                     )}
                     
                     <h2 className="text-xl font-bold mb-3 line-clamp-2" data-testid={`text-title-${article.id}`}>
@@ -297,10 +308,11 @@ export default function BlogPage() {
                     
                     <div className="flex flex-wrap gap-1">
                       {article.tags.slice(0, 3).map((tag, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
+                        <Badge key={index} variant="secondary" className="text-xs hover:bg-blue-100 transition-colors">
                           {tag}
                         </Badge>
                       ))}
+                    </div>
                     </div>
                   </article>
                 ))}
@@ -322,13 +334,16 @@ export default function BlogPage() {
                     key={index}
                     variant="ghost"
                     size="sm"
-                    className="w-full justify-start text-left h-auto p-2"
+                    className="w-full justify-start text-left h-auto p-2 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 transition-all duration-300 group"
                     onClick={() => handleGenerateArticle(topic)}
                     disabled={generateArticle.isPending}
                     data-testid={`button-topic-${index}`}
                   >
-                    <Zap className="w-3 h-3 mr-2 flex-shrink-0" />
+                    <Zap className="w-3 h-3 mr-2 flex-shrink-0 group-hover:text-blue-600 group-hover:animate-pulse" />
                     <span className="line-clamp-2">{topic}</span>
+                    <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="w-1 h-1 bg-blue-500 rounded-full animate-ping"></div>
+                    </div>
                   </Button>
                 ))}
               </div>
