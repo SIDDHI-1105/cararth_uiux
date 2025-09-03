@@ -56,6 +56,8 @@ export default function Home() {
   });
 
   const handleHeroSearch = (searchFilters: any) => {
+    console.log('🔍 Hero search called with:', searchFilters);
+    
     // Convert hero search to marketplace search format
     const marketplaceFilters: any = {
       limit: 50,
@@ -65,6 +67,7 @@ export default function Home() {
     
     if (searchFilters.brand && searchFilters.brand !== "all") {
       marketplaceFilters.brand = searchFilters.brand;
+      console.log('✅ Brand filter set to:', searchFilters.brand);
     }
     if (searchFilters.city && searchFilters.city !== "all") {
       marketplaceFilters.city = searchFilters.city;
@@ -78,6 +81,8 @@ export default function Home() {
       if (min) marketplaceFilters.priceMin = min;
       if (max && max !== 99999999) marketplaceFilters.priceMax = max;
     }
+    
+    console.log('🎯 Final marketplace filters:', marketplaceFilters);
     
     // Trigger marketplace search and switch to marketplace tab
     handleMarketplaceSearch(marketplaceFilters);

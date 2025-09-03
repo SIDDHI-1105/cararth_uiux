@@ -648,7 +648,8 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
 
   private generateMockListings(filters: DetailedFilters): MarketplaceListing[] {
     console.log('🚀 Aggregating listings from multiple portal sources...');
-    console.log('🔍 Brand filter applied:', filters.brand);
+    console.log('🔍 EXACT Brand filter received:', filters.brand);
+    console.log('🔍 All filters received:', JSON.stringify(filters, null, 2));
     
     // CRITICAL FIX: Use filter-specific brands and models to prevent mismatches
     const targetBrand = filters.brand; // Use exact brand from filter
@@ -748,9 +749,11 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
     const listings: MarketplaceListing[] = [];
     
     // STRICT BRAND FILTERING: Only show listings for the exact brand requested
-    if (filters.brand) {
-      console.log(`✅ Filtering strictly for brand: ${filters.brand}`);
-      const brandModels = modelMap[filters.brand] || ['i20', 'Creta', 'Verna'];
+    if (filters.brand && filters.brand.trim() !== '') {
+      console.log(`✅ Filtering strictly for brand: "${filters.brand}"`);
+      console.log(`🔍 Available model map keys:`, Object.keys(modelMap));
+      const brandModels = modelMap[filters.brand] || ['Sedan', 'Hatchback', 'SUV'];
+      console.log(`🚗 Models for ${filters.brand}:`, brandModels);
       const listingsToGenerate = 18; // Fixed number for filtered search
       
       for (let i = 0; i < listingsToGenerate; i++) {
