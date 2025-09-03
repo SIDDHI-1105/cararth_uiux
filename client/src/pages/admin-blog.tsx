@@ -68,10 +68,11 @@ export default function AdminBlogPage() {
   // Approve article mutation
   const approveArticle = useMutation({
     mutationFn: async ({ articleId, approver }: { articleId: string; approver: string }) => {
-      return apiRequest(`/api/admin/blog/approve/${articleId}`, {
+      return fetch(`/api/admin/blog/approve/${articleId}`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ approver }),
-      });
+      }).then(res => res.json());
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/blog/articles'] });
@@ -82,9 +83,10 @@ export default function AdminBlogPage() {
   // Publish article mutation
   const publishArticle = useMutation({
     mutationFn: async (articleId: string) => {
-      return apiRequest(`/api/admin/blog/publish/${articleId}`, {
+      return fetch(`/api/admin/blog/publish/${articleId}`, {
         method: 'POST',
-      });
+        headers: { 'Content-Type': 'application/json' },
+      }).then(res => res.json());
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/blog/articles'] });
@@ -95,9 +97,10 @@ export default function AdminBlogPage() {
   // Share to social media mutation
   const shareToSocialMedia = useMutation({
     mutationFn: async (articleId: string) => {
-      return apiRequest(`/api/admin/blog/share/${articleId}`, {
+      return fetch(`/api/admin/blog/share/${articleId}`, {
         method: 'POST',
-      });
+        headers: { 'Content-Type': 'application/json' },
+      }).then(res => res.json());
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/blog/articles'] });
@@ -108,10 +111,11 @@ export default function AdminBlogPage() {
   // Update article mutation
   const updateArticle = useMutation({
     mutationFn: async ({ articleId, updates }: { articleId: string; updates: Partial<BlogArticle> }) => {
-      return apiRequest(`/api/admin/blog/update/${articleId}`, {
+      return fetch(`/api/admin/blog/update/${articleId}`, {
         method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
-      });
+      }).then(res => res.json());
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/blog/articles'] });
@@ -122,9 +126,10 @@ export default function AdminBlogPage() {
   // Delete article mutation
   const deleteArticle = useMutation({
     mutationFn: async (articleId: string) => {
-      return apiRequest(`/api/admin/blog/delete/${articleId}`, {
+      return fetch(`/api/admin/blog/delete/${articleId}`, {
         method: 'DELETE',
-      });
+        headers: { 'Content-Type': 'application/json' },
+      }).then(res => res.json());
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/blog/articles'] });
@@ -133,7 +138,7 @@ export default function AdminBlogPage() {
     },
   });
 
-  const filteredArticles = articles.filter((article: BlogArticle) => {
+  const filteredArticles = (articles as BlogArticle[]).filter((article: BlogArticle) => {
     if (filterStatus === 'all') return true;
     return article.status === filterStatus;
   });
@@ -195,19 +200,19 @@ export default function AdminBlogPage() {
           {analytics && (
             <div className="grid grid-cols-4 gap-4">
               <div className="bg-card p-4 rounded-lg border text-center">
-                <div className="text-2xl font-bold">{analytics.total}</div>
+                <div className="text-2xl font-bold">{(analytics as any).total}</div>
                 <div className="text-sm text-muted-foreground">Total Articles</div>
               </div>
               <div className="bg-card p-4 rounded-lg border text-center">
-                <div className="text-2xl font-bold">{analytics.pending}</div>
+                <div className="text-2xl font-bold">{(analytics as any).pending}</div>
                 <div className="text-sm text-muted-foreground">Pending Approval</div>
               </div>
               <div className="bg-card p-4 rounded-lg border text-center">
-                <div className="text-2xl font-bold">{analytics.published}</div>
+                <div className="text-2xl font-bold">{(analytics as any).published}</div>
                 <div className="text-sm text-muted-foreground">Published</div>
               </div>
               <div className="bg-card p-4 rounded-lg border text-center">
-                <div className="text-2xl font-bold">{analytics.shared}</div>
+                <div className="text-2xl font-bold">{(analytics as any).shared}</div>
                 <div className="text-sm text-muted-foreground">Shared</div>
               </div>
             </div>

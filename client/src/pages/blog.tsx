@@ -16,7 +16,6 @@ import {
   Car,
   Zap
 } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
 import SocialShare from "@/components/social-share";
 
 interface BlogArticle {
@@ -54,10 +53,11 @@ export default function BlogPage() {
   // Generate new article mutation
   const generateArticle = useMutation({
     mutationFn: async (topic: string) => {
-      return apiRequest('/api/blog/generate', {
+      return fetch('/api/blog/generate', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ topic, category: 'automotive' }),
-      });
+      }).then(res => res.json());
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/blog/articles'] });
@@ -67,16 +67,17 @@ export default function BlogPage() {
   // Refresh articles mutation
   const refreshArticles = useMutation({
     mutationFn: async () => {
-      return apiRequest('/api/blog/refresh', {
+      return fetch('/api/blog/refresh', {
         method: 'POST',
-      });
+        headers: { 'Content-Type': 'application/json' },
+      }).then(res => res.json());
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/blog/articles'] });
     },
   });
 
-  const filteredArticles = articles.filter((article: BlogArticle) => {
+  const filteredArticles = (articles as BlogArticle[]).filter((article: BlogArticle) => {
     const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          article.content.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === "all" || article.category === selectedCategory;
@@ -316,7 +317,7 @@ export default function BlogPage() {
                 Trending Topics
               </h3>
               <div className="space-y-2">
-                {trendingTopics.slice(0, 5).map((topic: string, index: number) => (
+                {(trendingTopics as string[]).slice(0, 5).map((topic: string, index: number) => (
                   <Button
                     key={index}
                     variant="ghost"
