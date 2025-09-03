@@ -246,10 +246,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description: `This Hyundai i20 Sportz is in excellent condition with complete service history. 
         Single owner, non-accident car with all genuine parts. Well-maintained with regular servicing at authorized service center.`,
         images: [
-          "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=800",
-          "https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=800",
-          "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800",
-          "https://images.unsplash.com/photo-1494976688230-f527b8a4bdca?w=800"
+          "/api/placeholder/car-image",
+          "/api/placeholder/car-image",
+          "/api/placeholder/car-image",
+          "/api/placeholder/car-image"
         ],
         features: [
           'Air Conditioning', 'Power Steering', 'Power Windows', 'Central Locking',
@@ -471,6 +471,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch subscription" });
     }
+  });
+
+  // Placeholder image endpoint
+  app.get("/api/placeholder/car-image", (req, res) => {
+    // Generate a simple SVG placeholder for car images
+    const svg = `
+      <svg width="500" height="300" xmlns="http://www.w3.org/2000/svg">
+        <rect width="500" height="300" fill="#f8f9fa"/>
+        <rect x="0" y="0" width="500" height="300" fill="url(#gradient)" opacity="0.1"/>
+        <defs>
+          <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#06B6D4;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <g transform="translate(250,150)">
+          <path d="M-80,-20 L-40,-40 L40,-40 L80,-20 L80,20 L60,30 L-60,30 L-80,20 Z" fill="#64748b" opacity="0.3"/>
+          <circle cx="-50" cy="25" r="15" fill="#374151" opacity="0.4"/>
+          <circle cx="50" cy="25" r="15" fill="#374151" opacity="0.4"/>
+          <rect x="-70" y="-35" width="20" height="15" fill="#9CA3AF" opacity="0.3"/>
+          <rect x="-30" y="-35" width="60" height="15" fill="#9CA3AF" opacity="0.3"/>
+          <rect x="50" y="-35" width="20" height="15" fill="#9CA3AF" opacity="0.3"/>
+        </g>
+        <text x="250" y="200" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" fill="#6B7280">Car Image</text>
+      </svg>
+    `;
+    
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+    res.send(svg);
   });
 
   const httpServer = createServer(app);

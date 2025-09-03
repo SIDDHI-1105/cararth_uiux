@@ -21,6 +21,7 @@ import {
   ChevronLeft,
   ChevronRight
 } from "lucide-react";
+import SocialShare from "@/components/social-share";
 
 interface CarDetailModalProps {
   car: any;
@@ -34,7 +35,7 @@ export default function CarDetailModal({ car, isOpen, onClose }: CarDetailModalP
 
   if (!car) return null;
 
-  const images = car.images || ['https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3'];
+  const images = car.images || ['/api/placeholder/car-image'];
 
   const formatPrice = (price: number) => {
     return `₹${(price / 100000).toFixed(1)}L`;
@@ -78,9 +79,12 @@ export default function CarDetailModal({ car, isOpen, onClose }: CarDetailModalP
               >
                 <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
               </Button>
-              <Button variant="ghost" size="sm">
-                <Share className="w-4 h-4" />
-              </Button>
+              <SocialShare 
+                url={`/car/${car.id}`}
+                title={car.title}
+                description={`${car.year} ${car.title} - ${formatPrice(car.price)} | ${car.location}`}
+                imageUrl={images[0]}
+              />
             </div>
           </DialogTitle>
         </DialogHeader>

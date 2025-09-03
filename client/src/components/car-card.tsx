@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Heart, Calendar, Gauge, Fuel, Settings, MapPin, Star } from "lucide-react";
+import { Heart, Calendar, Gauge, Fuel, Settings, MapPin, Star, Share2 } from "lucide-react";
 import { type Car } from "@shared/schema";
+import SocialShare from "@/components/social-share";
 
 interface CarCardProps {
   car: Car;
@@ -54,7 +55,7 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
           </div>
         )}
         <img 
-          src={(car.images && car.images[0]) || "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=300"} 
+          src={(car.images && car.images[0]) || "/api/placeholder/car-image"} 
           alt={car.title} 
           className={`w-full h-48 object-cover transition-opacity duration-300 ${
             imageLoaded ? 'opacity-100' : 'opacity-0'
@@ -120,15 +121,22 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
             <MapPin className="w-4 h-4 mr-1" />
             <span data-testid={`text-location-${car.id}`}>{car.city}, {car.state}</span>
           </span>
-          <Link href={`/car/${car.id}`}>
-            <Button 
-              size="sm"
-              className="btn-metallic px-4 py-2 text-sm font-semibold"
-              data-testid={`button-view-details-${car.id}`}
-            >
-              View Details
-            </Button>
-          </Link>
+          <div className="flex gap-2">
+            <SocialShare 
+              url={`/car/${car.id}`}
+              title={car.title}
+              description={`${car.year} ${car.title} - ${formatPrice(car.price)} | ${car.city}, ${car.state}`}
+            />
+            <Link href={`/car/${car.id}`}>
+              <Button 
+                size="sm"
+                className="btn-metallic px-4 py-2 text-sm font-semibold"
+                data-testid={`button-view-details-${car.id}`}
+              >
+                View Details
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     </div>

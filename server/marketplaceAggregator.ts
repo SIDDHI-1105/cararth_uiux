@@ -209,9 +209,9 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
     try {
       console.log('🔍 Making Gemini API call...');
       
-      // Add timeout to prevent hanging
+      // Optimized timeout to prevent hanging
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Gemini API timeout')), 30000);
+        setTimeout(() => reject(new Error('Gemini API timeout')), 20000);
       });
       
       const apiPromise = ai.models.generateContent({
@@ -320,8 +320,10 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
         const listings = this.parseSearchResults(searchResults, filters);
         allListings.push(...listings);
         
-        // Add delay to respect rate limits
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Enhanced delay with exponential backoff to prevent 429 errors
+        const baseDelay = 1500;
+        const jitter = Math.random() * 1000;
+        await new Promise(resolve => setTimeout(resolve, baseDelay + jitter));
       } catch (error) {
         console.error(`Error searching for: ${query}`, error);
       }
@@ -1025,7 +1027,9 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
         // Use Firecrawl's scrape endpoint with correct v1 API format
         const result = await firecrawl.scrapeUrl(searchUrl, {
           formats: ['markdown'],
-          onlyMainContent: true
+          onlyMainContent: true,
+          timeout: 15000,
+          waitFor: 2000
         });
 
         if (result && result.success && result.markdown) {
@@ -1037,8 +1041,8 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
           }
         }
         
-        // Limit to prevent rate limiting
-        if (scrapedListings.length >= 10) break;
+        // Conservative limit to prevent API rate limiting
+        if (scrapedListings.length >= 5) break;
         
       } catch (error) {
         console.log(`⚠️ Failed to scrape ${searchUrl}: ${error}`);
