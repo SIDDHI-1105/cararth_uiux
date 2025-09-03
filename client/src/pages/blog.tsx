@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import SocialShare from "@/components/social-share";
 import VideoThumbnail from "@/components/video-thumbnail";
+import { QuickTipCard, ComparisonTable, PriceCalculator, NewsBrief, MarketChart } from "@/components/content-types";
 
 interface BlogArticle {
   id: string;
@@ -322,6 +323,17 @@ export default function BlogPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* Interactive Price Calculator */}
+            <PriceCalculator 
+              title="Quick Price Estimator"
+              basePrices={{
+                'Maruti Alto': 350000,
+                'Hyundai i10': 450000,
+                'Tata Tiago': 420000,
+                'Honda City': 650000,
+                'Maruti Swift': 480000
+              }}
+            />
             {/* Trending Topics */}
             <div className="bg-card rounded-lg p-6 border">
               <h3 className="font-bold mb-4 flex items-center gap-2">
@@ -348,6 +360,55 @@ export default function BlogPage() {
                 ))}
               </div>
             </div>
+
+            {/* Market Data Visualization */}
+            <MarketChart 
+              title="Popular Car Brands"
+              data={[
+                { label: 'Maruti', value: 41 },
+                { label: 'Hyundai', value: 17 },
+                { label: 'Tata', value: 14 },
+                { label: 'Mahindra', value: 9 },
+                { label: 'Others', value: 19 }
+              ]}
+            />
+            
+            {/* Quick Tips */}
+            <QuickTipCard
+              title="Car Buying Tips"
+              tips={[
+                'Check vehicle history and service records',
+                'Inspect for accident damage and rust',
+                'Verify ownership documents',
+                'Test drive in different conditions',
+                'Compare prices across platforms'
+              ]}
+              variant="success"
+            />
+            
+            {/* Latest News Briefs */}
+            <NewsBrief 
+              items={[
+                {
+                  type: 'price',
+                  title: 'Used car prices drop 12% in Q1',
+                  summary: 'Best time to buy in 3 years',
+                  date: '2 days ago'
+                },
+                {
+                  type: 'launch',
+                  title: 'New Maruti Fronx bookings open',
+                  summary: 'Starting at ₹7.46 lakhs',
+                  date: '1 day ago'
+                },
+                {
+                  type: 'policy',
+                  title: 'New emission norms delayed',
+                  summary: 'BS-VII implementation postponed',
+                  date: '3 days ago'
+                }
+              ]}
+            />
 
             {/* Generate Custom Article */}
             <div className="bg-card rounded-lg p-6 border">
