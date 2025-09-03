@@ -18,6 +18,7 @@ function Router() {
       <Route path="/car/:id" component={CarDetail} />
       <Route path="/marketplace/:id" component={MarketplaceListing} />
       <Route path="/sell" component={SellCar} />
+      <Route path="/sell-car" component={SellCar} />
       <Route path="/blog" component={Blog} />
       <Route path="/admin/blog" component={AdminBlog} />
       <Route component={NotFound} />

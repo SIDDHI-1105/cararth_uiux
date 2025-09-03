@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { Facebook, Twitter, Instagram, Youtube, Linkedin } from "lucide-react";
 import logoImage from "@/assets/logo.png";
 
 export default function Footer() {
@@ -22,9 +23,58 @@ export default function Footer() {
             <p className="text-muted-foreground text-sm mb-4 max-w-md">
               India's premier car marketplace aggregator. Find the best deals across all major portals with complete legal compliance and transparency.
             </p>
-            <div className="flex space-x-4">
+            <div className="flex flex-col space-y-4">
               <div className="text-xs text-muted-foreground">
                 🇮🇳 Proudly Made in India
+              </div>
+              
+              {/* Social Media Links */}
+              <div className="flex space-x-3">
+                <a 
+                  href="https://facebook.com/themobilityhub" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                  data-testid="link-facebook"
+                >
+                  <Facebook className="h-5 w-5" />
+                </a>
+                <a 
+                  href="https://twitter.com/mobilityhubin" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                  data-testid="link-twitter"
+                >
+                  <Twitter className="h-5 w-5" />
+                </a>
+                <a 
+                  href="https://instagram.com/themobilityhub" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                  data-testid="link-instagram"
+                >
+                  <Instagram className="h-5 w-5" />
+                </a>
+                <a 
+                  href="https://youtube.com/@themobilityhub" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                  data-testid="link-youtube"
+                >
+                  <Youtube className="h-5 w-5" />
+                </a>
+                <a 
+                  href="https://linkedin.com/company/themobilityhub" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                  data-testid="link-linkedin"
+                >
+                  <Linkedin className="h-5 w-5" />
+                </a>
               </div>
             </div>
           </div>

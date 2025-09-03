@@ -50,9 +50,9 @@ export default function Navbar() {
                 Buy Cars
               </Link>
               <Link 
-                href="/sell" 
+                href="/sell-car" 
                 className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                  location === "/sell" 
+                  location === "/sell-car" || location === "/sell"
                     ? "text-accent-foreground bg-accent shadow-metallic" 
                     : "text-muted-foreground hover:text-accent hover:bg-accent/10"
                 }`}
@@ -125,9 +125,9 @@ export default function Navbar() {
                 Buy Cars
               </Link>
               <Link 
-                href="/sell" 
+                href="/sell-car" 
                 className={`block px-3 py-2 rounded-lg text-base font-semibold transition-all duration-300 ${
-                  location === "/sell" 
+                  location === "/sell-car" || location === "/sell"
                     ? "text-accent-foreground bg-accent" 
                     : "text-muted-foreground hover:text-accent hover:bg-accent/10"
                 }`}
