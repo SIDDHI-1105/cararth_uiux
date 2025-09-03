@@ -57,11 +57,21 @@ export default function Home() {
 
   const handleHeroSearch = (searchFilters: any) => {
     // Convert hero search to marketplace search format
-    const marketplaceFilters: any = {};
+    const marketplaceFilters: any = {
+      limit: 50,
+      sortBy: "relevance",
+      sortOrder: "asc"
+    };
     
-    if (searchFilters.brand && searchFilters.brand !== "all") marketplaceFilters.brand = searchFilters.brand;
-    if (searchFilters.city && searchFilters.city !== "all") marketplaceFilters.city = searchFilters.city;
-    if (searchFilters.fuelType && searchFilters.fuelType !== "all") marketplaceFilters.fuelType = [searchFilters.fuelType];
+    if (searchFilters.brand && searchFilters.brand !== "all") {
+      marketplaceFilters.brand = searchFilters.brand;
+    }
+    if (searchFilters.city && searchFilters.city !== "all") {
+      marketplaceFilters.city = searchFilters.city;
+    }
+    if (searchFilters.fuelType && searchFilters.fuelType !== "all") {
+      marketplaceFilters.fuelType = [searchFilters.fuelType];
+    }
     
     if (searchFilters.budget && searchFilters.budget !== "all") {
       const [min, max] = searchFilters.budget.split("-").map(Number);
@@ -69,10 +79,7 @@ export default function Home() {
       if (max && max !== 99999999) marketplaceFilters.priceMax = max;
     }
     
-    // Add default values for missing fields
-    marketplaceFilters.limit = 50;
-    
-    // Trigger marketplace search directly
+    // Trigger marketplace search and switch to marketplace tab
     handleMarketplaceSearch(marketplaceFilters);
   };
 
@@ -127,16 +134,36 @@ export default function Home() {
   // Marketplace search mutation
   const marketplaceSearch = useMutation({
     mutationFn: async (searchFilters: any) => {
+      console.log('Sending marketplace search:', searchFilters);
       return apiRequest("POST", "/api/marketplace/search", searchFilters);
     },
     onSuccess: (data) => {
+      console.log('Marketplace search success:', data);
       setMarketplaceResult(data);
       setActiveTab("marketplace");
     },
+    onError: (error) => {
+      console.error('Marketplace search error:', error);
+    }
   });
 
   const handleMarketplaceSearch = (searchFilters: any) => {
-    marketplaceSearch.mutate(searchFilters);
+    // Ensure all required fields are present and properly formatted
+    const cleanFilters = {
+      ...searchFilters,
+      limit: searchFilters.limit || 50,
+      sortBy: searchFilters.sortBy || "relevance",
+      sortOrder: searchFilters.sortOrder || "asc"
+    };
+    
+    // Clean undefined values
+    Object.keys(cleanFilters).forEach(key => {
+      if (cleanFilters[key] === undefined || cleanFilters[key] === null || cleanFilters[key] === "") {
+        delete cleanFilters[key];
+      }
+    });
+    
+    marketplaceSearch.mutate(cleanFilters);
   };
 
   const sortedCars = [...cars].sort((a, b) => {
