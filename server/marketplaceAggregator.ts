@@ -1298,19 +1298,19 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
   }
 
   private getCarSpecificImage(brand: string, model: string): string {
-    // Return generic animated car icons to prevent misleading brand mismatches
+    // Aesthetically pleasing chrome car silhouettes to prevent misleading brand mismatches
     const genericCarIcons = [
-      // Generic car silhouettes and illustrations - no specific brands
-      'https://img.icons8.com/color/400/car.png',
-      'https://img.icons8.com/color/400/sedan.png', 
-      'https://img.icons8.com/color/400/suv.png',
-      'https://img.icons8.com/color/400/hatchback.png',
-      'https://img.icons8.com/fluency/400/car.png',
-      'https://img.icons8.com/fluency/400/sedan.png',
-      'https://img.icons8.com/fluency/400/suv.png',
-      'https://img.icons8.com/dusk/400/car.png',
-      'https://img.icons8.com/dusk/400/sedan.png',
-      'https://img.icons8.com/plasticine/400/car.png'
+      // High-quality chrome car silhouettes - no specific brands
+      '/client/src/assets/images/Chrome_sedan_car_silhouette_834bc875.png',
+      '/client/src/assets/images/Chrome_sedan_car_silhouette_834bc875.png', 
+      '/client/src/assets/images/Chrome_SUV_car_silhouette_7820aecb.png',
+      '/client/src/assets/images/Chrome_hatchback_car_silhouette_010b79b1.png',
+      '/client/src/assets/images/Chrome_sedan_car_silhouette_834bc875.png',
+      '/client/src/assets/images/Chrome_sedan_car_silhouette_834bc875.png',
+      '/client/src/assets/images/Chrome_SUV_car_silhouette_7820aecb.png',
+      '/client/src/assets/images/Chrome_hatchback_car_silhouette_010b79b1.png',
+      '/client/src/assets/images/Chrome_sedan_car_silhouette_834bc875.png',
+      '/client/src/assets/images/Chrome_SUV_car_silhouette_7820aecb.png'
     ];
     
     // Return a consistent generic car icon based on model type

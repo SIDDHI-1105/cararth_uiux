@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import CarDetailModal from "@/components/car-detail-modal";
 import { 
   TrendingUp, TrendingDown, Minus, ExternalLink, Verified, 
   MapPin, Calendar, Gauge, Fuel, Settings, Star, Filter,
@@ -63,6 +64,8 @@ interface MarketplaceResultsProps {
 export default function MarketplaceResults({ searchResult, isLoading }: MarketplaceResultsProps) {
   const [selectedTab, setSelectedTab] = useState("all");
   const [sortBy, setSortBy] = useState("relevance");
+  const [selectedCar, setSelectedCar] = useState<MarketplaceListing | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   if (isLoading) {
     return (
@@ -217,11 +220,16 @@ export default function MarketplaceResults({ searchResult, isLoading }: Marketpl
                 <span>{Math.ceil((Date.now() - listing.listingDate.getTime()) / (1000 * 60 * 60 * 24))} days ago</span>
               </div>
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" asChild>
-                  <Link href={`/marketplace/${listing.id}`}>
-                    <Eye className="w-4 h-4 mr-1" />
-                    View Details
-                  </Link>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedCar(listing);
+                    setShowDetailModal(true);
+                  }}
+                >
+                  <Eye className="w-4 h-4 mr-1" />
+                  View Details
                 </Button>
                 <Button size="sm" asChild>
                   <a href={listing.url} target="_blank" rel="noopener noreferrer">
@@ -401,6 +409,16 @@ export default function MarketplaceResults({ searchResult, isLoading }: Marketpl
           </div>
         </TabsContent>
       </Tabs>
+      
+      {/* Car Detail Modal */}
+      <CarDetailModal 
+        car={selectedCar}
+        isOpen={showDetailModal}
+        onClose={() => {
+          setShowDetailModal(false);
+          setSelectedCar(null);
+        }}
+      />
     </div>
   );
 }

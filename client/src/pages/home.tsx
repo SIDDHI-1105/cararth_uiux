@@ -56,19 +56,24 @@ export default function Home() {
   });
 
   const handleHeroSearch = (searchFilters: any) => {
-    const newFilters: Record<string, any> = {};
+    // Convert hero search to marketplace search format
+    const marketplaceFilters: any = {};
     
-    if (searchFilters.brand && searchFilters.brand !== "all") newFilters.brand = searchFilters.brand;
-    if (searchFilters.city && searchFilters.city !== "all") newFilters.city = searchFilters.city;
-    if (searchFilters.fuelType && searchFilters.fuelType !== "all") newFilters.fuelType = searchFilters.fuelType;
+    if (searchFilters.brand && searchFilters.brand !== "all") marketplaceFilters.brand = searchFilters.brand;
+    if (searchFilters.city && searchFilters.city !== "all") marketplaceFilters.city = searchFilters.city;
+    if (searchFilters.fuelType && searchFilters.fuelType !== "all") marketplaceFilters.fuelType = [searchFilters.fuelType];
     
     if (searchFilters.budget && searchFilters.budget !== "all") {
       const [min, max] = searchFilters.budget.split("-").map(Number);
-      if (min) newFilters.priceMin = min / 100000; // Convert to lakhs
-      if (max && max !== 99999999) newFilters.priceMax = max / 100000;
+      if (min) marketplaceFilters.priceMin = min;
+      if (max && max !== 99999999) marketplaceFilters.priceMax = max;
     }
     
-    setFilters(newFilters);
+    // Add default values for missing fields
+    marketplaceFilters.limit = 50;
+    
+    // Trigger marketplace search directly
+    handleMarketplaceSearch(marketplaceFilters);
   };
 
   const handleFilterChange = (filterData: any) => {
