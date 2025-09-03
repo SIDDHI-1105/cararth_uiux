@@ -77,7 +77,11 @@ export default function AdvancedFilters({ onSearch, isLoading }: AdvancedFilters
   const conditions = ["Excellent", "Good", "Fair", "Average"];
   const verificationStatuses = ["Verified", "Certified", "Unverified"];
   const sellerTypes = ["Individual", "Dealer", "OEM"];
-  const sources = ["CarDekho", "OLX", "Cars24", "CarWale", "AutoTrader", "Internal"];
+  const sources = [
+    "CarDekho", "OLX", "Cars24", "CarWale", "AutoTrader", "Spinny",
+    "Facebook Marketplace", "Google Places", "Government Auctions", 
+    "Classified Ads", "Dealer Networks", "Partner APIs"
+  ];
 
   const features = [
     "Air Conditioning", "Power Steering", "ABS", "Airbags", "Alloy Wheels",

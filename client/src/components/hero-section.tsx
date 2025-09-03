@@ -24,19 +24,27 @@ export default function HeroSection({ onSearch }: HeroSearchProps) {
   };
 
   return (
-    <section className="hero-gradient text-white py-16 px-4">
-      <div className="max-w-4xl mx-auto text-center">
-        <div className="flex justify-center mb-6">
-          <img 
-            src={logoImage} 
-            alt="The Mobility Hub" 
-            className="h-20 w-20 md:h-24 md:w-24 animate-pulse-subtle"
-          />
-        </div>
-        <h1 className="text-4xl md:text-6xl font-bold mb-4">Your Journey. Simplified.</h1>
-        <p className="text-xl md:text-2xl mb-8 text-blue-100">Find your perfect car from across all major portals in India</p>
+    <section className="bg-gradient-to-br from-chrome-primary via-chrome-secondary to-white py-20 px-4">
+      <div className="max-w-6xl mx-auto text-center">
+        <h1 className="text-5xl md:text-7xl font-bold mb-4 text-foreground">All the cars. One search.</h1>
+        <p className="text-xl md:text-2xl mb-8 text-muted-foreground max-w-4xl mx-auto">
+          Browse listings from all the major used car sites in India, including:
+        </p>
         
-        <div className="form-steel steel-gradient rounded-lg p-8 backdrop-blur-sm border border-steel-primary/20">
+        {/* Source Logos - AutoTempest Style */}
+        <div className="flex flex-wrap justify-center items-center gap-4 mb-8 opacity-80">
+          {[
+            "CarDekho", "OLX", "Cars24", "CarWale", "AutoTrader", "Spinny",
+            "Facebook Marketplace", "Google Places", "Government Auctions"
+          ].map((source) => (
+            <div key={source} className="text-sm font-medium text-muted-foreground bg-white/70 px-3 py-1 rounded-md border shadow-sm">
+              {source}
+            </div>
+          ))}
+          <div className="text-sm font-medium text-muted-foreground font-bold">& More!</div>
+        </div>
+        
+        <div className="bg-white/90 backdrop-blur-sm rounded-xl p-8 border shadow-lg max-w-4xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
             <div>
               <label className="block text-gray-700 text-sm font-medium mb-2">Brand</label>
@@ -110,13 +118,18 @@ export default function HeroSection({ onSearch }: HeroSearchProps) {
           
           <Button 
             onClick={handleSearch}
-            className="w-full btn-metallic py-4 px-6 rounded-lg font-bold text-lg tracking-wide"
+            className="w-full bg-accent hover:bg-accent/90 text-accent-foreground py-4 px-6 rounded-lg font-bold text-lg tracking-wide transition-all duration-200 shadow-lg hover:shadow-xl"
             data-testid="button-search-cars"
           >
-            <Search className="mr-2 h-4 w-4" />
+            <Search className="mr-2 h-5 w-5" />
             Search Cars
           </Button>
         </div>
+        
+        <p className="text-sm text-muted-foreground mt-8 max-w-3xl mx-auto">
+          We aggregate millions of listings from dealers and private sellers across India. 
+          Our goal is to capture all the results in a single search, to save you time and help you find your ideal next car.
+        </p>
       </div>
     </section>
   );

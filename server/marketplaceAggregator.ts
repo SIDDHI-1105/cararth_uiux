@@ -91,8 +91,10 @@ export interface DetailedFilters {
 
 export class MarketplaceAggregator {
   private readonly marketplaceSources = [
-    'CarDekho', 'OLX', 'Cars24', 'CarWale', 'AutoTrader', 'CarTrade', 
-    'Mahindra First Choice', 'Maruti True Value', 'Spinny', 'CARS24'
+    'CarDekho', 'OLX', 'Cars24', 'CarWale', 'AutoTrader', 'Spinny',
+    'Facebook Marketplace', 'Google Places', 'Government Auctions', 
+    'Classified Ads', 'Dealer Networks', 'Partner APIs', 'CarTrade',
+    'Mahindra First Choice', 'Maruti True Value', 'Truebil'
   ];
 
   async searchAcrossPortals(filters: DetailedFilters): Promise<AggregatedSearchResult> {
@@ -744,8 +746,9 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
     
     const listings: MarketplaceListing[] = [];
     
+    const allBrands = ['Maruti Suzuki', 'Hyundai', 'Tata', 'Mahindra', 'Honda', 'Toyota', 'Ford', 'Volkswagen', 'Skoda', 'Renault', 'Nissan', 'Kia'];
     // If brand filter is specified, only generate listings for that brand
-    const targetBrands = filters.brand ? [filters.brand] : brands;
+    const targetBrands = filters.brand ? [filters.brand] : allBrands;
     const listingsPerBrand = Math.ceil(50 / targetBrands.length);
     
     for (const selectedBrand of targetBrands) {
@@ -958,9 +961,9 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
           onlyMainContent: true
         });
 
-        if (result && result.success && result.data) {
+        if (result && result.success && result.markdown) {
           // Parse the extracted content to find car listings
-          const extractedListings = this.parseFirecrawlContent(result.data, domain, params);
+          const extractedListings = this.parseFirecrawlContent(result.markdown, domain, params);
           if (extractedListings.length > 0) {
             scrapedListings.push(...extractedListings);
             console.log(`✅ Extracted ${extractedListings.length} listings from ${searchUrl}`);
