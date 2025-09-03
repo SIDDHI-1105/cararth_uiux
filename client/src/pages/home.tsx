@@ -104,6 +104,9 @@ export default function Home() {
     // Handle brands
     if (filterData.brands.length > 0) {
       newFilters.brand = filterData.brands[0]; // For simplicity, use first brand
+      console.log('🔍 Setting brand filter to:', newFilters.brand);
+    } else {
+      console.log('⚠️ No brands selected in filter');
     }
     
     // Handle years
@@ -153,6 +156,8 @@ export default function Home() {
   });
 
   const handleMarketplaceSearch = (searchFilters: any) => {
+    console.log('🔍 Raw search filters received:', searchFilters);
+    
     // Ensure all required fields are present and properly formatted
     const cleanFilters = {
       ...searchFilters,
@@ -161,13 +166,20 @@ export default function Home() {
       sortOrder: searchFilters.sortOrder || "asc"
     };
     
-    // Clean undefined values
+    console.log('🔍 Filters before cleaning:', cleanFilters);
+    
+    // Clean undefined values but preserve brand filter
     Object.keys(cleanFilters).forEach(key => {
-      if (cleanFilters[key] === undefined || cleanFilters[key] === null || cleanFilters[key] === "") {
+      if (cleanFilters[key] === undefined || cleanFilters[key] === null) {
+        delete cleanFilters[key];
+      }
+      // Convert empty string brand to undefined so backend handles it correctly
+      if (key === 'brand' && cleanFilters[key] === "") {
         delete cleanFilters[key];
       }
     });
     
+    console.log('🔍 Final cleaned filters sent to API:', cleanFilters);
     marketplaceSearch.mutate(cleanFilters);
   };
 
