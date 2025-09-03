@@ -992,7 +992,7 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
     }
     
     // Fallback to generated data if Firecrawl fails
-    console.log(`📡 Using fallback data for ${domain}...`);
+    console.log(`📡 Using fallback data for ${domain} with params:`, params);
     
     if (domain.includes('cardekho')) {
       return { data: this.generateCarDekhoData(params) };
@@ -1127,18 +1127,23 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
   }
 
   private generateCarDekhoData(params: any): any[] {
-    // Respect brand filtering - if brand is specified, use only that brand
+    // CRITICAL FIX: Only generate data for the exact searched brand
     const searchBrand = params.brand;
-    const brands = searchBrand ? [searchBrand] : ['Hyundai', 'Maruti Suzuki', 'Tata', 'Honda', 'Mahindra'];
+    console.log(`🚗 CarDekho generating data for brand: "${searchBrand}"`);
+    
+    if (!searchBrand) {
+      console.log('⚠️ No brand specified, returning empty CarDekho results');  
+      return [];
+    }
+    
     const cities = params.city ? [params.city] : ['Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Pune'];
     
     return Array.from({ length: 5 }, (_, i) => {
-      const selectedBrand = searchBrand || brands[Math.floor(Math.random() * brands.length)];
-      const selectedModel = this.getRandomModel(selectedBrand);
+      const selectedModel = this.getRandomModel(searchBrand);
       
       return {
         id: `cd-${Date.now()}-${i}`,
-        brand: selectedBrand,
+        brand: searchBrand,  // Use ONLY the searched brand
         model: selectedModel,
         year: 2018 + Math.floor(Math.random() * 6),
         price: 400000 + Math.floor(Math.random() * 1200000),
@@ -1146,49 +1151,57 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
         fuel_type: ['Petrol', 'Diesel', 'CNG'][Math.floor(Math.random() * 3)],
         transmission: ['Manual', 'Automatic'][Math.floor(Math.random() * 2)],
         city: cities[Math.floor(Math.random() * cities.length)],
-        title: `Well maintained ${selectedBrand} ${selectedModel}`,
-        description: `Genuine CarDekho listing with verified documents for ${selectedBrand} ${selectedModel}`,
-        url: `https://www.cardekho.com/used-cars/${selectedBrand.toLowerCase()}`,
-        images: [this.getCarSpecificImage(selectedBrand, selectedModel)]
+        title: `Well maintained ${searchBrand} ${selectedModel}`,
+        description: `Genuine CarDekho listing with verified documents for ${searchBrand} ${selectedModel}`,
+        url: `https://www.cardekho.com/used-cars/${searchBrand.toLowerCase()}`,
+        images: [this.getCarSpecificImage(searchBrand, selectedModel)]
       };
     });
   }
 
   private generateOLXData(params: any): any[] {
     const searchBrand = params.brand;
-    const brands = searchBrand ? [searchBrand] : ['Hyundai', 'Maruti Suzuki', 'Tata', 'Honda'];
+    console.log(`🛒 OLX generating data for brand: "${searchBrand}"`);
+    
+    if (!searchBrand) {
+      console.log('⚠️ No brand specified, returning empty OLX results');
+      return [];
+    }
     
     return Array.from({ length: 4 }, (_, i) => {
-      const selectedBrand = searchBrand || brands[Math.floor(Math.random() * brands.length)];
-      const selectedModel = this.getRandomModel(selectedBrand);
+      const selectedModel = this.getRandomModel(searchBrand);
       
       return {
         id: `olx-${Date.now()}-${i}`,
-        make: selectedBrand,
+        make: searchBrand,  // Use ONLY the searched brand
         model: selectedModel,
         manufacturing_year: 2017 + Math.floor(Math.random() * 7),
         selling_price: 350000 + Math.floor(Math.random() * 1000000),
         mileage: 25000 + Math.floor(Math.random() * 75000),
         fuel: ['Petrol', 'Diesel'][Math.floor(Math.random() * 2)],
         location: params.location || 'Mumbai',
-        name: `${selectedBrand} ${selectedModel} - Single Owner`,
+        name: `${searchBrand} ${selectedModel} - Single Owner`,
         link: 'https://www.olx.in/cars',
-        images: [this.getCarSpecificImage(selectedBrand, selectedModel)]
+        images: [this.getCarSpecificImage(searchBrand, selectedModel)]
       };
     });
   }
 
   private generateCars24Data(params: any): any[] {
     const searchBrand = params.make || params.brand;
-    const brands = searchBrand ? [searchBrand] : ['Hyundai', 'Maruti Suzuki', 'Honda'];
+    console.log(`🚙 Cars24 generating data for brand: "${searchBrand}"`);
+    
+    if (!searchBrand) {
+      console.log('⚠️ No brand specified, returning empty Cars24 results');
+      return [];
+    }
     
     return Array.from({ length: 3 }, (_, i) => {
-      const selectedBrand = searchBrand || brands[Math.floor(Math.random() * brands.length)];
-      const selectedModel = this.getRandomModel(selectedBrand);
+      const selectedModel = this.getRandomModel(searchBrand);
       
       return {
         id: `c24-${Date.now()}-${i}`,
-        brand: selectedBrand,
+        brand: searchBrand,  // Use ONLY the searched brand
         model: selectedModel,
         year: 2019 + Math.floor(Math.random() * 5),
         price: 500000 + Math.floor(Math.random() * 800000),
@@ -1197,50 +1210,58 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
         city: params.city || 'Bangalore',
         condition: 'Excellent',
         seller_type: 'dealer',
-        images: [this.getCarSpecificImage(selectedBrand, selectedModel)]
+        images: [this.getCarSpecificImage(searchBrand, selectedModel)]
       };
     });
   }
 
   private generateCarWaleData(params: any): any[] {
     const searchBrand = params.brand;
-    const brands = searchBrand ? [searchBrand] : ['Hyundai', 'Maruti Suzuki', 'Tata'];
+    console.log(`🏪 CarWale generating data for brand: "${searchBrand}"`);
+    
+    if (!searchBrand) {
+      console.log('⚠️ No brand specified, returning empty CarWale results');
+      return [];
+    }
     
     return Array.from({ length: 4 }, (_, i) => {
-      const selectedBrand = searchBrand || brands[Math.floor(Math.random() * brands.length)];
-      const selectedModel = this.getRandomModel(selectedBrand);
+      const selectedModel = this.getRandomModel(searchBrand);
       
       return {
         id: `cw-${Date.now()}-${i}`,
-        brand: selectedBrand,
+        brand: searchBrand,  // Use ONLY the searched brand
         model: selectedModel,
         year: 2018 + Math.floor(Math.random() * 6),
         price: 450000 + Math.floor(Math.random() * 900000),
         mileage: 30000 + Math.floor(Math.random() * 70000),
         fuel_type: 'Diesel',
         location: params.location || 'Delhi',
-        images: [this.getCarSpecificImage(selectedBrand, selectedModel)]
+        images: [this.getCarSpecificImage(searchBrand, selectedModel)]
       };
     });
   }
 
   private generateFacebookData(params: any): any[] {
     const searchBrand = params.vehicle_make || params.brand;
-    const brands = searchBrand ? [searchBrand] : ['Hyundai', 'Honda'];
+    console.log(`📘 Facebook generating data for brand: "${searchBrand}"`);
+    
+    if (!searchBrand) {
+      console.log('⚠️ No brand specified, returning empty Facebook results');
+      return [];
+    }
     
     return Array.from({ length: 2 }, (_, i) => {
-      const selectedBrand = searchBrand || brands[Math.floor(Math.random() * brands.length)];
-      const selectedModel = this.getRandomModel(selectedBrand);
+      const selectedModel = this.getRandomModel(searchBrand);
       
       return {
         id: `fb-${Date.now()}-${i}`,
-        brand: selectedBrand,
+        brand: searchBrand,  // Use ONLY the searched brand
         model: selectedModel,
         year: 2020 + Math.floor(Math.random() * 4),
         price: 600000 + Math.floor(Math.random() * 600000),
         location: params.location || 'Chennai',
-        title: `Facebook Marketplace - ${selectedBrand} ${selectedModel}`,
-        images: [this.getCarSpecificImage(selectedBrand, selectedModel)]
+        title: `Facebook Marketplace - ${searchBrand} ${selectedModel}`,
+        images: [this.getCarSpecificImage(searchBrand, selectedModel)]
       };
     });
   }
