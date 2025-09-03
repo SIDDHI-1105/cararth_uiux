@@ -503,6 +503,189 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.send(svg);
   });
 
+  // Blog management endpoints
+  const blogService = new (await import('./blogService')).default();
+
+  // Public blog endpoints
+  app.get("/api/blog/articles", async (req, res) => {
+    try {
+      const articles = blogService.getAllArticles().filter(article => 
+        article.status === 'published' || article.status === 'shared'
+      );
+      res.json(articles);
+    } catch (error) {
+      console.error('Error fetching blog articles:', error);
+      res.status(500).json({ error: 'Failed to fetch articles' });
+    }
+  });
+
+  app.get("/api/blog/trending-topics", async (req, res) => {
+    try {
+      const topics = await blogService.getTrendingTopics();
+      res.json(topics);
+    } catch (error) {
+      console.error('Error fetching trending topics:', error);
+      res.status(500).json({ error: 'Failed to fetch trending topics' });
+    }
+  });
+
+  app.post("/api/blog/generate", async (req, res) => {
+    try {
+      const { topic, category } = req.body;
+      if (!topic) {
+        return res.status(400).json({ error: 'Topic is required' });
+      }
+      
+      const article = await blogService.generateArticle(topic, category);
+      res.json(article);
+    } catch (error) {
+      console.error('Error generating article:', error);
+      res.status(500).json({ error: 'Failed to generate article' });
+    }
+  });
+
+  app.post("/api/blog/refresh", async (req, res) => {
+    try {
+      const newArticles = await blogService.refreshContent();
+      res.json({ 
+        success: true, 
+        articlesGenerated: newArticles.length,
+        articles: newArticles 
+      });
+    } catch (error) {
+      console.error('Error refreshing content:', error);
+      res.status(500).json({ error: 'Failed to refresh content' });
+    }
+  });
+
+  // Admin blog endpoints
+  app.get("/api/admin/blog/articles", async (req, res) => {
+    try {
+      const articles = blogService.getAllArticles();
+      res.json(articles);
+    } catch (error) {
+      console.error('Error fetching admin articles:', error);
+      res.status(500).json({ error: 'Failed to fetch articles' });
+    }
+  });
+
+  app.get("/api/admin/blog/analytics", async (req, res) => {
+    try {
+      const analytics = blogService.getAnalytics();
+      res.json(analytics);
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
+      res.status(500).json({ error: 'Failed to fetch analytics' });
+    }
+  });
+
+  app.post("/api/admin/blog/approve/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { approver } = req.body;
+      
+      const article = blogService.approveArticle(id, approver || 'Admin');
+      if (!article) {
+        return res.status(404).json({ error: 'Article not found' });
+      }
+      
+      res.json(article);
+    } catch (error) {
+      console.error('Error approving article:', error);
+      res.status(500).json({ error: 'Failed to approve article' });
+    }
+  });
+
+  app.post("/api/admin/blog/publish/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const article = blogService.publishArticle(id);
+      if (!article) {
+        return res.status(404).json({ error: 'Article not found or not approved' });
+      }
+      
+      res.json(article);
+    } catch (error) {
+      console.error('Error publishing article:', error);
+      res.status(500).json({ error: 'Failed to publish article' });
+    }
+  });
+
+  app.post("/api/admin/blog/share/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const article = await blogService.shareToSocialMedia(id);
+      if (!article) {
+        return res.status(404).json({ error: 'Article not found or not published' });
+      }
+      
+      res.json(article);
+    } catch (error) {
+      console.error('Error sharing article:', error);
+      res.status(500).json({ error: 'Failed to share article' });
+    }
+  });
+
+  app.put("/api/admin/blog/update/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      const article = blogService.updateArticle(id, updates);
+      if (!article) {
+        return res.status(404).json({ error: 'Article not found' });
+      }
+      
+      res.json(article);
+    } catch (error) {
+      console.error('Error updating article:', error);
+      res.status(500).json({ error: 'Failed to update article' });
+    }
+  });
+
+  app.delete("/api/admin/blog/delete/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const deleted = blogService.deleteArticle(id);
+      if (!deleted) {
+        return res.status(404).json({ error: 'Article not found' });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting article:', error);
+      res.status(500).json({ error: 'Failed to delete article' });
+    }
+  });
+
+  // Placeholder image endpoints
+  app.get("/api/placeholder/blog-image", (req, res) => {
+    const svg = `
+      <svg width="800" height="400" xmlns="http://www.w3.org/2000/svg">
+        <rect width="800" height="400" fill="#f1f5f9"/>
+        <rect x="0" y="0" width="800" height="400" fill="url(#gradient)" opacity="0.1"/>
+        <defs>
+          <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <g transform="translate(400,200)">
+          <rect x="-80" y="-40" width="160" height="80" fill="#64748b" opacity="0.3" rx="8"/>
+          <text x="0" y="0" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" fill="#475569" font-weight="600">Automotive News</text>
+          <text x="0" y="25" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" fill="#64748b">#themobilityhub</text>
+        </g>
+      </svg>
+    `;
+    
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.send(svg);
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
