@@ -3,6 +3,7 @@ import { Car, Heart, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "@/components/theme-toggle";
+import SocialMediaLinks from "@/components/social-media-links";
 import logoImage from "@/assets/logo.png";
 
 export default function Navbar() {
@@ -77,7 +78,12 @@ export default function Navbar() {
             </div>
           </div>
           
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-4">
+            {/* Social Media Links - Desktop */}
+            <div className="hidden lg:flex">
+              <SocialMediaLinks size="sm" variant="header" />
+            </div>
+            
             <Button
               variant="ghost" 
               size="sm"
@@ -155,7 +161,13 @@ export default function Navbar() {
               >
                 Analytics
               </a>
-              <div className="pt-2 border-t border-border mt-2">
+              <div className="pt-2 border-t border-border mt-2 space-y-3">
+                {/* Social Media Links - Mobile */}
+                <div className="px-3">
+                  <p className="text-xs text-muted-foreground mb-2">Follow Us:</p>
+                  <SocialMediaLinks size="sm" variant="header" />
+                </div>
+                
                 <Button
                   className="w-full btn-metallic py-3 text-base font-semibold"
                   data-testid="mobile-button-login"

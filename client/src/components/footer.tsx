@@ -1,5 +1,6 @@
 import { Link } from "wouter";
-import { Facebook, Twitter, Instagram, Youtube, Linkedin, Mail, MessageCircle } from "lucide-react";
+import { Mail, MessageCircle } from "lucide-react";
+import SocialMediaLinks from "@/components/social-media-links";
 import logoImage from "@/assets/logo.png";
 
 export default function Footer() {
@@ -80,58 +81,7 @@ export default function Footer() {
               {/* Social Media Links */}
               <div className="pt-2">
                 <p className="text-xs text-muted-foreground mb-2">Follow Us:</p>
-                <div className="flex space-x-3">
-                  <a 
-                    href="https://facebook.com/themobilityhub" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                    data-testid="link-facebook"
-                    title="Facebook"
-                  >
-                    <Facebook className="h-5 w-5" />
-                  </a>
-                  <a 
-                    href="https://twitter.com/mobilityhubin" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                    data-testid="link-twitter"
-                    title="Twitter"
-                  >
-                    <Twitter className="h-5 w-5" />
-                  </a>
-                  <a 
-                    href="https://instagram.com/themobilityhub" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                    data-testid="link-instagram"
-                    title="Instagram"
-                  >
-                    <Instagram className="h-5 w-5" />
-                  </a>
-                  <a 
-                    href="https://youtube.com/@themobilityhub" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                    data-testid="link-youtube"
-                    title="YouTube"
-                  >
-                    <Youtube className="h-5 w-5" />
-                  </a>
-                  <a 
-                    href="https://linkedin.com/company/themobilityhub" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                    data-testid="link-linkedin"
-                    title="LinkedIn"
-                  >
-                    <Linkedin className="h-5 w-5" />
-                  </a>
-                </div>
+                <SocialMediaLinks size="md" variant="footer" />
               </div>
             </div>
           </div>
