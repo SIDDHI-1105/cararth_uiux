@@ -648,9 +648,10 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
 
   private generateMockListings(filters: DetailedFilters): MarketplaceListing[] {
     console.log('🚀 Aggregating listings from multiple portal sources...');
+    console.log('🔍 Brand filter applied:', filters.brand);
     
     // CRITICAL FIX: Use filter-specific brands and models to prevent mismatches
-    const targetBrand = filters.brand || 'Hyundai'; // Default to Hyundai if no brand specified
+    const targetBrand = filters.brand; // Use exact brand from filter
     const targetModel = filters.model;
     
     const modelMap: Record<string, string[]> = {
@@ -746,28 +747,26 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
     
     const listings: MarketplaceListing[] = [];
     
-    const allBrands = ['Maruti Suzuki', 'Hyundai', 'Tata', 'Mahindra', 'Honda', 'Toyota', 'Ford', 'Volkswagen', 'Skoda', 'Renault', 'Nissan', 'Kia'];
-    // If brand filter is specified, only generate listings for that brand
-    const targetBrands = filters.brand ? [filters.brand] : allBrands;
-    const listingsPerBrand = Math.ceil(50 / targetBrands.length);
-    
-    for (const selectedBrand of targetBrands) {
-      const brandModels = modelMap[selectedBrand] || ['Sedan', 'Hatchback', 'SUV'];
+    // STRICT BRAND FILTERING: Only show listings for the exact brand requested
+    if (filters.brand) {
+      console.log(`✅ Filtering strictly for brand: ${filters.brand}`);
+      const brandModels = modelMap[filters.brand] || ['i20', 'Creta', 'Verna'];
+      const listingsToGenerate = 18; // Fixed number for filtered search
       
-      for (let i = 0; i < listingsPerBrand && listings.length < 50; i++) {
+      for (let i = 0; i < listingsToGenerate; i++) {
         const selectedModel = filters.model || brandModels[i % brandModels.length];
         const year = filters.yearMin || (2018 + (i % 6));
         const city = filters.city || cities[i % cities.length];
         const source = sources[i % sources.length];
       
-        // Generate realistic price based on actual brand
+        // Generate realistic price based on the FILTERED brand only
         let basePrice = 400000;
-        if (selectedBrand === 'Toyota') basePrice = 800000;
-        else if (selectedBrand === 'Honda') basePrice = 600000;
-        else if (selectedBrand === 'Hyundai') basePrice = 500000;
-        else if (selectedBrand === 'Maruti Suzuki') basePrice = 350000;
-        else if (selectedBrand === 'Tata') basePrice = 450000;
-        else if (selectedBrand === 'Mahindra') basePrice = 550000;
+        if (filters.brand === 'Toyota') basePrice = 800000;
+        else if (filters.brand === 'Honda') basePrice = 600000;
+        else if (filters.brand === 'Hyundai') basePrice = 500000;
+        else if (filters.brand === 'Maruti Suzuki') basePrice = 350000;
+        else if (filters.brand === 'Tata') basePrice = 450000;
+        else if (filters.brand === 'Mahindra') basePrice = 550000;
       
         const ageDiscount = (2024 - year) * 0.1;
         const price = Math.floor(basePrice * (1 - ageDiscount) + (Math.random() - 0.5) * 200000);
@@ -783,9 +782,9 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
         const descStyle = sourceStyle.descriptions[i % sourceStyle.descriptions.length];
         
         listings.push({
-          id: `${source.toLowerCase()}-${year}-${selectedBrand.replace(' ', '')}-${Date.now()}${i}`,
-          title: `${year} ${selectedBrand} ${selectedModel} - ${titleStyle}`,
-          brand: selectedBrand,
+          id: `${source.toLowerCase()}-${year}-${filters.brand.replace(' ', '')}-${Date.now()}${i}`,
+          title: `${year} ${filters.brand} ${selectedModel} - ${titleStyle}`,
+          brand: filters.brand,
           model: selectedModel,
           year,
           price: finalPrice,
@@ -795,15 +794,70 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
           location: city,
           city,
           source,
-          url: this.generatePortalURL(source, selectedBrand, selectedModel, year, city, i),
-          images: [this.getCarSpecificImage(selectedBrand, selectedModel)],
-          description: `${year} ${selectedBrand} ${selectedModel} ${filters.fuelType?.[0] || ['Petrol', 'Diesel', 'CNG'][i % 3]} ${filters.transmission?.[0] || ['Manual', 'Automatic'][i % 2]} in ${city}. ${descStyle} Contact: ${this.generateContactHint(source)}.`,
+          url: this.generatePortalURL(source, filters.brand, selectedModel, year, city, i),
+          images: [this.getCarSpecificImage(filters.brand, selectedModel)],
+          description: `${year} ${filters.brand} ${selectedModel} ${filters.fuelType?.[0] || ['Petrol', 'Diesel', 'CNG'][i % 3]} ${filters.transmission?.[0] || ['Manual', 'Automatic'][i % 2]} in ${city}. ${descStyle} Contact: ${this.generateContactHint(source)}.`,
           features: ['AC', 'Power Steering', 'Music System'],
           condition: ['Excellent', 'Good', 'Fair'][i % 3],
           verificationStatus: ['verified', 'certified', 'unverified'][i % 3] as 'verified' | 'certified' | 'unverified',
           listingDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
           sellerType: ['individual', 'dealer', 'oem'][i % 3] as 'individual' | 'dealer' | 'oem'
         });
+      }
+    } else {
+      console.log('⚠️ No brand filter - showing mixed brands');
+      // If no brand filter, show mixed brands (old behavior)
+      const allBrands = ['Maruti Suzuki', 'Hyundai', 'Tata', 'Mahindra', 'Honda', 'Toyota'];
+      const listingsPerBrand = Math.ceil(18 / allBrands.length);
+      
+      for (const selectedBrand of allBrands) {
+        const brandModels = modelMap[selectedBrand] || ['Sedan', 'Hatchback', 'SUV'];
+        
+        for (let i = 0; i < listingsPerBrand && listings.length < 18; i++) {
+          const selectedModel = brandModels[i % brandModels.length];
+          const year = 2018 + (i % 6);
+          const city = cities[i % cities.length];
+          const source = sources[i % sources.length];
+          
+          let basePrice = 400000;
+          if (selectedBrand === 'Toyota') basePrice = 800000;
+          else if (selectedBrand === 'Honda') basePrice = 600000;
+          else if (selectedBrand === 'Hyundai') basePrice = 500000;
+          else if (selectedBrand === 'Maruti Suzuki') basePrice = 350000;
+          else if (selectedBrand === 'Tata') basePrice = 450000;
+          else if (selectedBrand === 'Mahindra') basePrice = 550000;
+          
+          const ageDiscount = (2024 - year) * 0.1;
+          const price = Math.floor(basePrice * (1 - ageDiscount) + (Math.random() - 0.5) * 200000);
+          const finalPrice = Math.max(200000, Math.min(2000000, price));
+          
+          const sourceStyle = portalStyles[source as keyof typeof portalStyles];
+          const titleStyle = sourceStyle.titles[i % sourceStyle.titles.length];
+          const descStyle = sourceStyle.descriptions[i % sourceStyle.descriptions.length];
+          
+          listings.push({
+            id: `${source.toLowerCase()}-${year}-${selectedBrand.replace(' ', '')}-${Date.now()}${i}`,
+            title: `${year} ${selectedBrand} ${selectedModel} - ${titleStyle}`,
+            brand: selectedBrand,
+            model: selectedModel,
+            year,
+            price: finalPrice,
+            mileage: 20000 + Math.floor(Math.random() * 60000),
+            fuelType: ['Petrol', 'Diesel', 'CNG'][i % 3],
+            transmission: ['Manual', 'Automatic'][i % 2],
+            location: city,
+            city,
+            source,
+            url: this.generatePortalURL(source, selectedBrand, selectedModel, year, city, i),
+            images: [this.getCarSpecificImage(selectedBrand, selectedModel)],
+            description: `${year} ${selectedBrand} ${selectedModel} in ${city}. ${descStyle} Contact: ${this.generateContactHint(source)}.`,
+            features: ['AC', 'Power Steering', 'Music System'],
+            condition: ['Excellent', 'Good', 'Fair'][i % 3],
+            verificationStatus: ['verified', 'certified', 'unverified'][i % 3] as 'verified' | 'certified' | 'unverified',
+            listingDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
+            sellerType: ['individual', 'dealer', 'oem'][i % 3] as 'individual' | 'dealer' | 'oem'
+          });
+        }
       }
     }
     
