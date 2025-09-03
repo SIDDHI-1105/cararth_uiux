@@ -127,6 +127,15 @@ export class MarketplaceAggregator {
       if (allListings.length > 0) {
         console.log(`🎯 ${allListings.length} genuine listings aggregated from real portals`);
         
+        // CRITICAL: Apply brand filtering to real results too!
+        if (filters.brand && filters.brand.trim() !== '') {
+          console.log(`🔍 Filtering real results for brand: ${filters.brand}`);
+          allListings = allListings.filter(listing => 
+            listing.brand === filters.brand || listing.title.includes(filters.brand)
+          );
+          console.log(`✅ After brand filtering: ${allListings.length} listings`);
+        }
+        
         const analytics = this.generateAnalytics(allListings);
         const recommendations = this.generateRecommendations(allListings, analytics);
         
@@ -144,6 +153,7 @@ export class MarketplaceAggregator {
 
     if (!process.env.GEMINI_API_KEY) {
       console.log('⚠️ GEMINI_API_KEY not found - using fallback data');
+      console.log('📋 About to call getFallbackResults with filters:', filters);
       return this.getFallbackResults(filters);
     }
     
