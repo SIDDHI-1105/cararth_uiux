@@ -1,12 +1,12 @@
 import { Link } from "wouter";
-import { Facebook, Twitter, Instagram, Youtube, Linkedin } from "lucide-react";
+import { Facebook, Twitter, Instagram, Youtube, Linkedin, Mail, MessageCircle } from "lucide-react";
 import logoImage from "@/assets/logo.png";
 
 export default function Footer() {
   return (
     <footer className="bg-muted border-t border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           {/* Brand Section */}
           <div className="col-span-1 md:col-span-2">
             <Link href="/" className="flex items-center mb-4">
@@ -23,59 +23,8 @@ export default function Footer() {
             <p className="text-muted-foreground text-sm mb-4 max-w-md">
               India's premier car marketplace aggregator. Find the best deals across all major portals with complete legal compliance and transparency.
             </p>
-            <div className="flex flex-col space-y-4">
-              <div className="text-xs text-muted-foreground">
-                🇮🇳 Proudly Made in India
-              </div>
-              
-              {/* Social Media Links */}
-              <div className="flex space-x-3">
-                <a 
-                  href="https://facebook.com/themobilityhub" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-primary transition-colors"
-                  data-testid="link-facebook"
-                >
-                  <Facebook className="h-5 w-5" />
-                </a>
-                <a 
-                  href="https://twitter.com/mobilityhubin" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-primary transition-colors"
-                  data-testid="link-twitter"
-                >
-                  <Twitter className="h-5 w-5" />
-                </a>
-                <a 
-                  href="https://instagram.com/themobilityhub" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-primary transition-colors"
-                  data-testid="link-instagram"
-                >
-                  <Instagram className="h-5 w-5" />
-                </a>
-                <a 
-                  href="https://youtube.com/@themobilityhub" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-primary transition-colors"
-                  data-testid="link-youtube"
-                >
-                  <Youtube className="h-5 w-5" />
-                </a>
-                <a 
-                  href="https://linkedin.com/company/themobilityhub" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-primary transition-colors"
-                  data-testid="link-linkedin"
-                >
-                  <Linkedin className="h-5 w-5" />
-                </a>
-              </div>
+            <div className="text-xs text-muted-foreground">
+              🇮🇳 Proudly Made in India
             </div>
           </div>
 
@@ -101,6 +50,92 @@ export default function Footer() {
             </div>
           </div>
 
+          {/* Contact Information */}
+          <div>
+            <h4 className="font-semibold mb-4">Contact Us</h4>
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center space-x-2">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <a 
+                  href="mailto:kritarth@themobilityhub.in" 
+                  className="text-muted-foreground hover:text-accent transition-colors"
+                  data-testid="link-email"
+                >
+                  kritarth@themobilityhub.in
+                </a>
+              </div>
+              <div className="flex items-center space-x-2">
+                <MessageCircle className="h-4 w-4 text-muted-foreground" />
+                <a 
+                  href="https://wa.me/919573424321" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-accent transition-colors"
+                  data-testid="link-whatsapp"
+                >
+                  WhatsApp: +91 9573424321
+                </a>
+              </div>
+              
+              {/* Social Media Links */}
+              <div className="pt-2">
+                <p className="text-xs text-muted-foreground mb-2">Follow Us:</p>
+                <div className="flex space-x-3">
+                  <a 
+                    href="https://facebook.com/themobilityhub" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                    data-testid="link-facebook"
+                    title="Facebook"
+                  >
+                    <Facebook className="h-5 w-5" />
+                  </a>
+                  <a 
+                    href="https://twitter.com/mobilityhubin" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                    data-testid="link-twitter"
+                    title="Twitter"
+                  >
+                    <Twitter className="h-5 w-5" />
+                  </a>
+                  <a 
+                    href="https://instagram.com/themobilityhub" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                    data-testid="link-instagram"
+                    title="Instagram"
+                  >
+                    <Instagram className="h-5 w-5" />
+                  </a>
+                  <a 
+                    href="https://youtube.com/@themobilityhub" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                    data-testid="link-youtube"
+                    title="YouTube"
+                  >
+                    <Youtube className="h-5 w-5" />
+                  </a>
+                  <a 
+                    href="https://linkedin.com/company/themobilityhub" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                    data-testid="link-linkedin"
+                    title="LinkedIn"
+                  >
+                    <Linkedin className="h-5 w-5" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Support & Legal */}
           <div>
             <h4 className="font-semibold mb-4">Support</h4>
@@ -108,7 +143,7 @@ export default function Footer() {
               <a href="#" className="block text-muted-foreground hover:text-accent transition-colors">
                 Help Center
               </a>
-              <a href="#" className="block text-muted-foreground hover:text-accent transition-colors">
+              <a href="mailto:kritarth@themobilityhub.in" className="block text-muted-foreground hover:text-accent transition-colors">
                 Contact Us
               </a>
               <a href="#" className="block text-muted-foreground hover:text-accent transition-colors">
