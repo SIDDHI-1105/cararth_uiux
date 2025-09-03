@@ -34,7 +34,7 @@ export default function CarDetailModal({ car, isOpen, onClose }: CarDetailModalP
 
   if (!car) return null;
 
-  const images = car.images || [car.images?.[0] || '/attached_assets/generated_images/Chrome_sedan_car_silhouette_834bc875.png'];
+  const images = car.images || ['https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3'];
 
   const formatPrice = (price: number) => {
     return `₹${(price / 100000).toFixed(1)}L`;
