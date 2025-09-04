@@ -198,22 +198,73 @@ export default function AdminBlogPage() {
           </div>
           
           {analytics && (
-            <div className="grid grid-cols-4 gap-4">
-              <div className="bg-card p-4 rounded-lg border text-center">
-                <div className="text-2xl font-bold">{(analytics as any).total}</div>
-                <div className="text-sm text-muted-foreground">Total Articles</div>
+            <div className="space-y-4">
+              <div className="grid grid-cols-4 gap-4">
+                <div className="bg-card p-4 rounded-lg border text-center">
+                  <div className="text-2xl font-bold">{(analytics as any).total}</div>
+                  <div className="text-sm text-muted-foreground">Total Articles</div>
+                </div>
+                <div className="bg-card p-4 rounded-lg border text-center">
+                  <div className="text-2xl font-bold">{(analytics as any).pending}</div>
+                  <div className="text-sm text-muted-foreground">Pending Approval</div>
+                </div>
+                <div className="bg-card p-4 rounded-lg border text-center">
+                  <div className="text-2xl font-bold">{(analytics as any).published}</div>
+                  <div className="text-sm text-muted-foreground">Published</div>
+                </div>
+                <div className="bg-card p-4 rounded-lg border text-center">
+                  <div className="text-2xl font-bold">{(analytics as any).shared}</div>
+                  <div className="text-sm text-muted-foreground">Shared</div>
+                </div>
               </div>
-              <div className="bg-card p-4 rounded-lg border text-center">
-                <div className="text-2xl font-bold">{(analytics as any).pending}</div>
-                <div className="text-sm text-muted-foreground">Pending Approval</div>
-              </div>
-              <div className="bg-card p-4 rounded-lg border text-center">
-                <div className="text-2xl font-bold">{(analytics as any).published}</div>
-                <div className="text-sm text-muted-foreground">Published</div>
-              </div>
-              <div className="bg-card p-4 rounded-lg border text-center">
-                <div className="text-2xl font-bold">{(analytics as any).shared}</div>
-                <div className="text-sm text-muted-foreground">Shared</div>
+              
+              {/* Data Transparency Section */}
+              <div className="bg-muted/30 p-4 rounded-lg border">
+                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4" />
+                  Data Sources & API Status
+                </h3>
+                
+                <div className="grid grid-cols-3 gap-4 mb-4">
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-green-600">{(analytics as any).dataStatus?.realContent || 0}</div>
+                    <div className="text-xs text-muted-foreground">Real Content</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-blue-600">{(analytics as any).dataStatus?.aiGenerated || 0}</div>
+                    <div className="text-xs text-muted-foreground">AI Generated</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-yellow-600">{(analytics as any).dataStatus?.sampleContent || 0}</div>
+                    <div className="text-xs text-muted-foreground">Demo Content</div>
+                  </div>
+                </div>
+                
+                <div className="flex gap-2 mb-2">
+                  <Badge variant={(analytics as any).apiStatus?.perplexity ? "default" : "destructive"} className="text-xs">
+                    Perplexity {(analytics as any).apiStatus?.perplexity ? "✓" : "✗"}
+                  </Badge>
+                  <Badge variant={(analytics as any).apiStatus?.gemini ? "default" : "destructive"} className="text-xs">
+                    Gemini {(analytics as any).apiStatus?.gemini ? "✓" : "✗"}
+                  </Badge>
+                  <Badge variant={(analytics as any).apiStatus?.firecrawl ? "default" : "destructive"} className="text-xs">
+                    Firecrawl {(analytics as any).apiStatus?.firecrawl ? "✓" : "✗"}
+                  </Badge>
+                </div>
+                
+                {(analytics as any).warnings && (analytics as any).warnings.length > 0 && (
+                  <div className="space-y-1">
+                    {(analytics as any).warnings.map((warning: string, index: number) => (
+                      <div key={index} className="text-xs text-orange-600 bg-orange-50 dark:bg-orange-950/30 px-2 py-1 rounded">
+                        {warning}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                <div className="text-xs text-muted-foreground mt-2">
+                  Last updated: {new Date((analytics as any).lastUpdated).toLocaleString()}
+                </div>
               </div>
             </div>
           )}

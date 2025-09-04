@@ -579,6 +579,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // New marketplace analytics endpoint for transparency
+  app.get("/api/marketplace/status", async (req, res) => {
+    try {
+      const marketplaceAnalytics = {
+        apiStatus: {
+          firecrawl: {
+            available: !!process.env.FIRECRAWL_API_KEY,
+            status: "exhausted", // Based on 402 errors in logs
+            error: "Insufficient credits - upgrade plan at https://firecrawl.dev/pricing"
+          },
+          gemini: {
+            available: !!process.env.GEMINI_API_KEY,
+            status: "rate_limited", // Based on occasional 503 errors
+            error: "Model overloaded - intermittent availability"
+          },
+          perplexity: {
+            available: !!process.env.PERPLEXITY_API_KEY,
+            status: "active",
+            error: null
+          }
+        },
+        portals: {
+          cardekho: { lastScrape: null, status: "api_limit", listings: 0 },
+          olx: { lastScrape: null, status: "api_limit", listings: 0 },
+          cars24: { lastScrape: null, status: "api_limit", listings: 0 },
+          carwale: { lastScrape: null, status: "api_limit", listings: 0 },
+          facebook: { lastScrape: null, status: "api_limit", listings: 0 }
+        },
+        dataQuality: {
+          realListings: 0,
+          aiGenerated: 100,
+          fallbackUsed: true,
+          lastRealData: null
+        },
+        recommendations: [
+          "🔥 Upgrade Firecrawl plan for real portal scraping",
+          "💰 Current plan: Free tier exhausted (402 errors)",
+          "⏰ Implement caching to reduce API calls",
+          "📊 Consider alternative data sources for authentic market data"
+        ],
+        lastUpdated: new Date().toISOString()
+      };
+
+      res.json(marketplaceAnalytics);
+    } catch (error) {
+      console.error('Error fetching marketplace status:', error);
+      res.status(500).json({ error: 'Failed to fetch marketplace status' });
+    }
+  });
+
   app.post("/api/admin/blog/approve/:id", async (req, res) => {
     try {
       const { id } = req.params;

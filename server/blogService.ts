@@ -446,13 +446,46 @@ The pre-owned car market has seen significant price corrections across all segme
 
   getAnalytics() {
     const articles = this.getAllArticles();
+    
+    // Check API status for transparency
+    const apiStatus = {
+      perplexity: !!process.env.PERPLEXITY_API_KEY,
+      gemini: !!process.env.GEMINI_API_KEY,
+      firecrawl: !!process.env.FIRECRAWL_API_KEY
+    };
+
+    // Determine data authenticity
+    const realArticles = articles.filter(a => a.sources && a.sources.length > 0);
+    const sampleArticles = articles.filter(a => a.id.startsWith('sample-'));
+    
     return {
+      // Basic metrics
       total: articles.length,
       published: articles.filter(a => a.status === 'published').length,
       pending: articles.filter(a => a.status === 'pending_approval').length,
       shared: articles.filter(a => a.socialMediaShared).length,
       categories: this.getCategoryStats(articles),
-      recentActivity: articles.slice(0, 5)
+      recentActivity: articles.slice(0, 5),
+      
+      // Transparency metrics
+      dataStatus: {
+        realContent: realArticles.length,
+        sampleContent: sampleArticles.length,
+        aiGenerated: articles.length - realArticles.length - sampleArticles.length
+      },
+      
+      // API availability
+      apiStatus,
+      
+      // Data source warnings
+      warnings: [
+        ...(apiStatus.perplexity ? [] : ['⚠️ Perplexity API unavailable - using cached trending topics']),
+        ...(apiStatus.gemini ? [] : ['⚠️ Gemini API unavailable - limited content generation']),
+        ...(apiStatus.firecrawl ? [] : ['⚠️ Firecrawl API unavailable - no real-time portal scraping'])
+      ],
+      
+      // Last updated timestamp
+      lastUpdated: new Date().toISOString()
     };
   }
 
