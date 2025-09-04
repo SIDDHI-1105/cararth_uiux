@@ -198,26 +198,58 @@ export default function BlogPage() {
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-bold mb-4" data-testid="text-blog-title">
             <Car className="inline w-8 h-8 mr-2" />
-            Pre-owned Cars News
+            Latest Automotive News
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Stay updated with the latest automotive insights, market trends, and expert advice for smart car buying and selling decisions.
+            Real-time updates on automotive trends, market analysis, and expert insights for smart car buying decisions in India.
           </p>
           <div className="flex items-center justify-center gap-2 mt-4">
             <Badge variant="outline" className="text-blue-600">
-              #themobilityhub
+              #live-updates
             </Badge>
             <Badge variant="outline" className="text-green-600">
-              #automotiveindia
+              #market-trends
             </Badge>
             <Badge variant="outline" className="text-purple-600">
-              #preownedcars
+              #india-automotive
             </Badge>
           </div>
         </div>
+
+        {/* Trending Topics Section */}
+        {trendingTopics.length > 0 && (
+          <div className="mb-8">
+            <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-xl p-6 border">
+              <div className="flex items-center gap-2 mb-4">
+                <TrendingUp className="w-5 h-5 text-blue-600" />
+                <h2 className="text-xl font-semibold text-gray-900">🔥 Trending Now</h2>
+                <Badge variant="secondary" className="ml-2">Live</Badge>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {trendingTopics.slice(0, 8).map((topic: string, index: number) => (
+                  <Button
+                    key={index}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleGenerateArticle(topic)}
+                    disabled={generateArticle.isPending}
+                    className="hover:bg-blue-50 border-blue-200 text-blue-700 hover:text-blue-800"
+                    data-testid={`button-trending-${index}`}
+                  >
+                    <Zap className="w-3 h-3 mr-1" />
+                    {topic}
+                  </Button>
+                ))}
+              </div>
+              <p className="text-sm text-muted-foreground mt-3">
+                💡 Click any topic to generate fresh automotive insights instantly
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Controls */}
         <div className="flex flex-col md:flex-row gap-4 mb-8">

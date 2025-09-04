@@ -25,56 +25,41 @@ export default function SocialMediaLinks({
 
   return (
     <div className={`flex space-x-3 ${className}`}>
-      <a 
-        href="https://facebook.com/themobilityhub" 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className={baseStyles}
+      <span 
+        className="text-muted-foreground/50 cursor-not-allowed"
         data-testid="social-facebook"
-        title="Follow us on Facebook"
+        title="Coming Soon - Follow us on Facebook"
       >
         <Facebook className={iconSize} />
-      </a>
-      <a 
-        href="https://twitter.com/mobilityhubin" 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className={baseStyles}
+      </span>
+      <span 
+        className="text-muted-foreground/50 cursor-not-allowed"
         data-testid="social-twitter"
-        title="Follow us on Twitter"
+        title="Coming Soon - Follow us on Twitter"
       >
         <Twitter className={iconSize} />
-      </a>
-      <a 
-        href="https://instagram.com/themobilityhub" 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className={baseStyles}
+      </span>
+      <span 
+        className="text-muted-foreground/50 cursor-not-allowed"
         data-testid="social-instagram"
-        title="Follow us on Instagram"
+        title="Coming Soon - Follow us on Instagram"
       >
         <Instagram className={iconSize} />
-      </a>
-      <a 
-        href="https://youtube.com/@themobilityhub" 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className={baseStyles}
+      </span>
+      <span 
+        className="text-muted-foreground/50 cursor-not-allowed"
         data-testid="social-youtube"
-        title="Subscribe to our YouTube"
+        title="Coming Soon - Subscribe to our YouTube"
       >
         <Youtube className={iconSize} />
-      </a>
-      <a 
-        href="https://linkedin.com/company/themobilityhub" 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className={baseStyles}
+      </span>
+      <span 
+        className="text-muted-foreground/50 cursor-not-allowed"
         data-testid="social-linkedin"
-        title="Connect on LinkedIn"
+        title="Coming Soon - Connect on LinkedIn"
       >
         <Linkedin className={iconSize} />
-      </a>
+      </span>
     </div>
   );
 }

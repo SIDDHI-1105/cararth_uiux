@@ -35,7 +35,7 @@ export default function HeroSection({ onSearch }: HeroSearchProps) {
         <div className="mb-6">
           <div className="inline-flex items-center px-4 py-2 bg-green-50 border border-green-200 rounded-full text-sm font-medium text-green-700">
             <span className="mr-2">🔒</span>
-            <span>100% Legal Compliance • Verified APIs Only • Contact: kritarth@themobilityhub.in</span>
+            <span>100% Legal Compliance • Verified APIs Only</span>
           </div>
         </div>
         

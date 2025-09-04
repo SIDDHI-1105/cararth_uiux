@@ -124,6 +124,8 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-sm text-muted-foreground mb-4 md:mb-0">
               © 2025 The Mobility Hub. All rights reserved. | Compliant with Indian IT Act 2000 & Copyright Act 1957
+              <br />
+              <span className="text-xs">Contact: kritarth@themobilityhub.in</span>
             </div>
             <div className="flex items-center space-x-4 text-xs text-muted-foreground">
               <span>🔒 Secure Platform</span>
