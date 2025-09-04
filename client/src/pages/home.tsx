@@ -88,34 +88,36 @@ export default function Home() {
     handleMarketplaceSearch(marketplaceFilters);
   };
 
-  const handleFilterChange = (filterData: any) => {
-    const newFilters: Record<string, any> = { ...filters };
+  const handleFilterChange = (filterData: {
+    model: string;
+    fuelType: string;
+    transmission: string;
+    location: string;
+    budgetRange: [number, number];
+  }) => {
+    const newFilters: Record<string, any> = {};
     
-    // Handle price ranges
-    if (filterData.priceRanges.length > 0) {
-      const prices = filterData.priceRanges.map((range: string) => {
-        const [min, max] = range.split("-").map(Number);
-        return { min: min / 100000, max: max / 100000 };
-      });
-      newFilters.priceMin = Math.min(...prices.map((p: {min: number; max: number}) => p.min));
-      newFilters.priceMax = Math.max(...prices.map((p: {min: number; max: number}) => p.max));
+    // Handle budget range
+    if (filterData.budgetRange[0] > 0 || filterData.budgetRange[1] < 2000000) {
+      newFilters.priceMin = filterData.budgetRange[0];
+      newFilters.priceMax = filterData.budgetRange[1];
     }
     
-    // Handle brands
-    if (filterData.brands.length > 0) {
-      newFilters.brand = filterData.brands[0]; // For simplicity, use first brand
+    // Handle other filters
+    if (filterData.model) {
+      newFilters.model = filterData.model;
+    }
+    if (filterData.fuelType) {
+      newFilters.fuelType = filterData.fuelType;
+    }
+    if (filterData.transmission) {
+      newFilters.transmission = filterData.transmission;
+    }
+    if (filterData.location) {
+      newFilters.city = filterData.location;
     }
     
-    // Handle years
-    if (filterData.years.length > 0) {
-      const yearRanges = filterData.years.map((range: string) => {
-        const [min, max] = range.split("-").map(Number);
-        return { min, max };
-      });
-      newFilters.yearMin = Math.min(...yearRanges.map((y: {min: number; max: number}) => y.min));
-      newFilters.yearMax = Math.max(...yearRanges.map((y: {min: number; max: number}) => y.max));
-    }
-    
+    console.log('🔍 Simplified filters applied:', newFilters);
     setFilters(newFilters);
   };
 

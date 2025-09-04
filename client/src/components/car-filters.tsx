@@ -1,159 +1,174 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 
 interface CarFiltersProps {
   onApplyFilters: (filters: {
-    priceRanges: string[];
-    brands: string[];
-    years: string[];
-    transmissions: string[];
+    model: string;
+    fuelType: string;
+    transmission: string;
+    location: string;
+    budgetRange: [number, number];
   }) => void;
 }
 
 export default function CarFilters({ onApplyFilters }: CarFiltersProps) {
-  const [priceRanges, setPriceRanges] = useState<string[]>([]);
-  const [brands, setBrands] = useState<string[]>([]);
-  const [years, setYears] = useState<string[]>([]);
-  const [transmissions, setTransmissions] = useState<string[]>([]);
+  const [model, setModel] = useState<string>("");
+  const [fuelType, setFuelType] = useState<string>("");
+  const [transmission, setTransmission] = useState<string>("");
+  const [location, setLocation] = useState<string>("");
+  const [budgetRange, setBudgetRange] = useState<[number, number]>([0, 2000000]);
 
-  const handlePriceChange = (price: string, checked: boolean) => {
-    if (checked) {
-      setPriceRanges([...priceRanges, price]);
-    } else {
-      setPriceRanges(priceRanges.filter(p => p !== price));
-    }
-  };
-
-  const handleBrandChange = (brand: string, checked: boolean) => {
-    if (checked) {
-      setBrands([...brands, brand]);
-    } else {
-      setBrands(brands.filter(b => b !== brand));
-    }
-  };
-
-  const handleYearChange = (year: string, checked: boolean) => {
-    if (checked) {
-      setYears([...years, year]);
-    } else {
-      setYears(years.filter(y => y !== year));
-    }
-  };
-
-  const handleTransmissionChange = (transmission: string, checked: boolean) => {
-    if (checked) {
-      setTransmissions([...transmissions, transmission]);
-    } else {
-      setTransmissions(transmissions.filter(t => t !== transmission));
-    }
+  const formatPrice = (value: number) => {
+    if (value >= 10000000) return `₹${(value / 10000000).toFixed(1)}Cr`;
+    if (value >= 100000) return `₹${(value / 100000).toFixed(1)}L`;
+    if (value >= 1000) return `₹${(value / 1000).toFixed(0)}k`;
+    return `₹${value}`;
   };
 
   const handleApplyFilters = () => {
-    onApplyFilters({ priceRanges, brands, years, transmissions });
+    onApplyFilters({ 
+      model, 
+      fuelType, 
+      transmission, 
+      location, 
+      budgetRange 
+    });
+  };
+
+  const handleClearFilters = () => {
+    setModel("");
+    setFuelType("");
+    setTransmission("");
+    setLocation("");
+    setBudgetRange([0, 2000000]);
   };
 
   return (
     <aside className="lg:w-1/4">
       <div className="bg-card rounded-lg border border-border p-6 filter-sidebar">
-        <h3 className="text-lg font-semibold mb-4">Filters</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Find Your Car</h3>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleClearFilters}
+            className="text-muted-foreground hover:text-primary"
+            data-testid="button-clear-filters"
+          >
+            Clear All
+          </Button>
+        </div>
         
-        {/* Price Filter */}
+        {/* Budget Slider */}
         <div className="mb-6">
-          <h4 className="font-medium mb-3">Price Range</h4>
-          <div className="space-y-2">
-            {[
-              { label: "Under ₹2 Lakh", value: "0-200000" },
-              { label: "₹2-5 Lakh", value: "200000-500000" },
-              { label: "₹5-10 Lakh", value: "500000-1000000" },
-              { label: "₹10-15 Lakh", value: "1000000-1500000" }
-            ].map((price) => (
-              <div key={price.value} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`price-${price.value}`}
-                  checked={priceRanges.includes(price.value)}
-                  onCheckedChange={(checked) => handlePriceChange(price.value, checked as boolean)}
-                  data-testid={`checkbox-price-${price.value}`}
-                />
-                <label htmlFor={`price-${price.value}`} className="text-sm cursor-pointer">
-                  {price.label}
-                </label>
-              </div>
-            ))}
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="font-medium">Budget</h4>
+            <span className="text-sm text-muted-foreground">
+              {formatPrice(budgetRange[0])} - {formatPrice(budgetRange[1])}
+            </span>
+          </div>
+          <div className="px-2">
+            <Slider
+              value={budgetRange}
+              onValueChange={(value) => setBudgetRange(value as [number, number])}
+              max={2000000}
+              min={0}
+              step={50000}
+              className="w-full"
+              data-testid="slider-budget"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground mt-1">
+              <span>₹0</span>
+              <span>₹20L+</span>
+            </div>
           </div>
         </div>
         
-        {/* Brand Filter */}
-        <div className="mb-6">
-          <h4 className="font-medium mb-3">Brand</h4>
-          <div className="space-y-2">
-            {["Maruti Suzuki", "Hyundai", "Tata", "Mahindra"].map((brand) => (
-              <div key={brand} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`brand-${brand}`}
-                  checked={brands.includes(brand)}
-                  onCheckedChange={(checked) => handleBrandChange(brand, checked as boolean)}
-                  data-testid={`checkbox-brand-${brand.toLowerCase().replace(' ', '-')}`}
-                />
-                <label htmlFor={`brand-${brand}`} className="text-sm cursor-pointer">
-                  {brand}
-                </label>
-              </div>
-            ))}
-          </div>
+        {/* Model Filter */}
+        <div className="mb-4">
+          <h4 className="font-medium mb-2">Model</h4>
+          <Select value={model} onValueChange={setModel}>
+            <SelectTrigger data-testid="select-model">
+              <SelectValue placeholder="Select model" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="swift">Maruti Swift</SelectItem>
+              <SelectItem value="baleno">Maruti Baleno</SelectItem>
+              <SelectItem value="i20">Hyundai i20</SelectItem>
+              <SelectItem value="creta">Hyundai Creta</SelectItem>
+              <SelectItem value="nexon">Tata Nexon</SelectItem>
+              <SelectItem value="harrier">Tata Harrier</SelectItem>
+              <SelectItem value="xuv300">Mahindra XUV300</SelectItem>
+              <SelectItem value="city">Honda City</SelectItem>
+              <SelectItem value="civic">Honda Civic</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         
-        {/* Year Filter */}
-        <div className="mb-6">
-          <h4 className="font-medium mb-3">Year</h4>
-          <div className="space-y-2">
-            {[
-              { label: "2020 & Above", value: "2020-2024" },
-              { label: "2015-2019", value: "2015-2019" },
-              { label: "2010-2014", value: "2010-2014" }
-            ].map((year) => (
-              <div key={year.value} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`year-${year.value}`}
-                  checked={years.includes(year.value)}
-                  onCheckedChange={(checked) => handleYearChange(year.value, checked as boolean)}
-                  data-testid={`checkbox-year-${year.value}`}
-                />
-                <label htmlFor={`year-${year.value}`} className="text-sm cursor-pointer">
-                  {year.label}
-                </label>
-              </div>
-            ))}
-          </div>
+        {/* Fuel Type Filter */}
+        <div className="mb-4">
+          <h4 className="font-medium mb-2">Fuel Type</h4>
+          <Select value={fuelType} onValueChange={setFuelType}>
+            <SelectTrigger data-testid="select-fuel-type">
+              <SelectValue placeholder="Select fuel type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="petrol">Petrol</SelectItem>
+              <SelectItem value="diesel">Diesel</SelectItem>
+              <SelectItem value="cng">CNG</SelectItem>
+              <SelectItem value="electric">Electric</SelectItem>
+              <SelectItem value="hybrid">Hybrid</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         
         {/* Transmission Filter */}
-        <div className="mb-6">
-          <h4 className="font-medium mb-3">Transmission</h4>
-          <div className="space-y-2">
-            {["Manual", "Automatic"].map((transmission) => (
-              <div key={transmission} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`transmission-${transmission}`}
-                  checked={transmissions.includes(transmission)}
-                  onCheckedChange={(checked) => handleTransmissionChange(transmission, checked as boolean)}
-                  data-testid={`checkbox-transmission-${transmission.toLowerCase()}`}
-                />
-                <label htmlFor={`transmission-${transmission}`} className="text-sm cursor-pointer">
-                  {transmission}
-                </label>
-              </div>
-            ))}
-          </div>
+        <div className="mb-4">
+          <h4 className="font-medium mb-2">Transmission</h4>
+          <Select value={transmission} onValueChange={setTransmission}>
+            <SelectTrigger data-testid="select-transmission">
+              <SelectValue placeholder="Select transmission" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="manual">Manual</SelectItem>
+              <SelectItem value="automatic">Automatic</SelectItem>
+              <SelectItem value="cvt">CVT</SelectItem>
+              <SelectItem value="amt">AMT</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         
-        <Button 
-          onClick={handleApplyFilters}
-          className="w-full bg-primary text-primary-foreground py-2 px-4 rounded-md font-medium hover:bg-primary/90 transition-colors"
-          data-testid="button-apply-filters"
-        >
-          Apply Filters
-        </Button>
+        {/* Location Filter */}
+        <div className="mb-6">
+          <h4 className="font-medium mb-2">Location</h4>
+          <Select value={location} onValueChange={setLocation}>
+            <SelectTrigger data-testid="select-location">
+              <SelectValue placeholder="Select location" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="mumbai">Mumbai</SelectItem>
+              <SelectItem value="delhi">Delhi</SelectItem>
+              <SelectItem value="bangalore">Bangalore</SelectItem>
+              <SelectItem value="pune">Pune</SelectItem>
+              <SelectItem value="hyderabad">Hyderabad</SelectItem>
+              <SelectItem value="chennai">Chennai</SelectItem>
+              <SelectItem value="kolkata">Kolkata</SelectItem>
+              <SelectItem value="ahmedabad">Ahmedabad</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-2">
+          <Button 
+            onClick={handleApplyFilters}
+            className="w-full bg-primary text-primary-foreground py-2.5 px-4 rounded-md font-medium hover:bg-primary/90 transition-colors"
+            data-testid="button-apply-filters"
+          >
+            Search Cars
+          </Button>
+        </div>
       </div>
     </aside>
   );
