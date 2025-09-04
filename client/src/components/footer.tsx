@@ -6,6 +6,17 @@ import logoImage from "@/assets/logo.png";
 export default function Footer() {
   return (
     <footer className="bg-muted border-t border-border">
+      {/* Legal Disclaimer Banner */}
+      <div className="bg-primary/10 border-b border-primary/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex items-center justify-center text-center">
+            <div className="text-sm text-primary">
+              <span className="font-medium">🔒 Legal Compliance:</span> All vehicle data is sourced exclusively through verified APIs and publicly available market listings. We comply with all applicable data protection and privacy laws.
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           {/* Brand Section */}
@@ -86,15 +97,15 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Support & Legal */}
+          {/* Legal & Compliance */}
           <div>
-            <h4 className="font-semibold mb-4">Support</h4>
+            <h4 className="font-semibold mb-4">Legal & Support</h4>
             <div className="space-y-2 text-sm">
               <a href="#" className="block text-muted-foreground hover:text-accent transition-colors">
-                Help Center
+                Data Sources Policy
               </a>
-              <a href="mailto:kritarth@themobilityhub.in" className="block text-muted-foreground hover:text-accent transition-colors">
-                Contact Us
+              <a href="#" className="block text-muted-foreground hover:text-accent transition-colors">
+                API Compliance
               </a>
               <a href="#" className="block text-muted-foreground hover:text-accent transition-colors">
                 Privacy Policy
@@ -102,8 +113,8 @@ export default function Footer() {
               <a href="#" className="block text-muted-foreground hover:text-accent transition-colors">
                 Terms of Service
               </a>
-              <a href="#" className="block text-muted-foreground hover:text-accent transition-colors">
-                Legal Compliance
+              <a href="mailto:kritarth@themobilityhub.in" className="block text-muted-foreground hover:text-accent transition-colors">
+                Contact Support
               </a>
             </div>
           </div>
