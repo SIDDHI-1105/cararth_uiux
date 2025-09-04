@@ -9,6 +9,7 @@ import MarketplaceListing from "./pages/marketplace-listing";
 import SellCar from "./pages/sell-car";
 import Blog from "./pages/blog";
 import AdminBlog from "./pages/admin-blog";
+import FinancingPage from "./pages/financing";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -21,6 +22,7 @@ function Router() {
       <Route path="/sell-car" component={SellCar} />
       <Route path="/blog" component={Blog} />
       <Route path="/admin/blog" component={AdminBlog} />
+      <Route path="/financing" component={FinancingPage} />
       <Route component={NotFound} />
     </Switch>
   );
