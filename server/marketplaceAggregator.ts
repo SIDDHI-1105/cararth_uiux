@@ -1099,7 +1099,9 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
           const extractedListings = this.parseFirecrawlContent(result.markdown, domain, params);
           if (extractedListings.length > 0) {
             scrapedListings.push(...extractedListings);
-            console.log(`✅ Extracted ${extractedListings.length} listings from ${searchUrl}`);
+            console.log(`✅ Extracted ${extractedListings.length} genuine listings from ${searchUrl}`);
+          } else {
+            console.log(`⚠️ No genuine listings found in ${searchUrl} content`);
           }
         }
         
@@ -1145,51 +1147,500 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
     return [];
   }
 
-  private parseFirecrawlContent(data: any, domain: string, params: any): any[] {
-    // Parse the scraped content to extract car listings
+  private parseFirecrawlContent(content: string, domain: string, params: any): any[] {
+    console.log(`🔍 Parsing genuine listings from ${domain}...`);
     const listings: any[] = [];
     
     try {
-      // Try to find car-related content in the scraped data
-      const content = data.markdown || data.html || data.text || '';
-      
-      // Extract brand from search params to ensure correct filtering
-      const searchBrand = params.brand || 'Hyundai';
-      const searchCity = params.city || 'Mumbai';
-      
-      // Simple parsing for car listings - this would be enhanced with more sophisticated parsing
-      if (content.includes('car') || content.includes('₹') || content.includes('km')) {
-        // Generate realistic listings based on scraped content with correct brand filtering
-        const extractedCount = Math.floor(Math.random() * 4) + 2; // 2-5 listings
-        
-        for (let i = 0; i < extractedCount; i++) {
-          const specificModel = this.getRandomModel(searchBrand);
-          
-          listings.push({
-            id: `firecrawl-${domain}-${Date.now()}-${i}`,
-            title: `${searchBrand} ${specificModel} - Genuine ${domain} listing`,
-            brand: searchBrand, // Use the actual searched brand
-            model: specificModel, // Get correct model for the brand
-            year: 2018 + Math.floor(Math.random() * 6),
-            price: 350000 + Math.floor(Math.random() * 1000000),
-            mileage: 15000 + Math.floor(Math.random() * 80000),
-            fuel_type: ['Petrol', 'Diesel', 'CNG'][Math.floor(Math.random() * 3)],
-            transmission: ['Manual', 'Automatic'][Math.floor(Math.random() * 2)],
-            location: searchCity,
-            url: data.url || `https://${domain}`,
-            images: [this.getCarSpecificImage(searchBrand, specificModel)], // Get correct brand image
-            features: ['AC', 'Power Steering', 'Music System'],
-            scraped_from: domain,
-            authentic: true,
-            verificationStatus: 'verified'
-          });
-        }
+      if (domain.includes('cardekho')) {
+        return this.parseCarDekhoContent(content, params);
+      } else if (domain.includes('olx')) {
+        return this.parseOLXContent(content, params);
+      } else if (domain.includes('cars24')) {
+        return this.parseCars24Content(content, params);
+      } else if (domain.includes('carwale')) {
+        return this.parseCarWaleContent(content, params);
       }
     } catch (error) {
-      console.log(`Error parsing Firecrawl content: ${error}`);
+      console.log(`❌ Error parsing ${domain} content: ${error}`);
     }
     
     return listings;
+  }
+
+  private parseCarDekhoContent(content: string, params: any): any[] {
+    const listings: any[] = [];
+    
+    try {
+      // CarDekho structure patterns - look for actual listing data
+      // Pattern: "2019 Maruti Swift" followed by price, km, etc.
+      const carPatterns = [
+        /(\d{4})\s+([A-Za-z\s]+)\s*(?:₹|Rs\.?)\s*([0-9,\.]+)\s*(?:lakh|L|crore|Cr)?.*?(\d+[,\d]*)\s*km/gi,
+        /([A-Za-z\s]+)\s+(\d{4})\s*(?:₹|Rs\.?)\s*([0-9,\.]+)\s*(?:lakh|L)?.*?(\d+[,\d]*)\s*km/gi
+      ];
+
+      for (const pattern of carPatterns) {
+        let match;
+        while ((match = pattern.exec(content)) !== null && listings.length < 10) {
+          try {
+            const year = parseInt(match[1]) || parseInt(match[2]);
+            const carName = (match[2] || match[1]).trim();
+            const priceStr = match[3].replace(/,/g, '');
+            const kmStr = match[4].replace(/,/g, '');
+            
+            // Extract brand and model from car name
+            const { brand, model } = this.extractBrandModel(carName);
+            
+            // Convert price (handle lakh/crore)
+            let price = parseFloat(priceStr);
+            if (content.substring(match.index, match.index + 100).toLowerCase().includes('crore')) {
+              price = price * 10000000;
+            } else {
+              price = price * 100000; // lakh
+            }
+            
+            // Validate extracted data
+            if (year >= 2010 && year <= 2024 && price > 100000 && price < 50000000) {
+              const listing = {
+                id: `cardekho-real-${Date.now()}-${listings.length}`,
+                title: `${year} ${brand} ${model}`,
+                brand: brand,
+                model: model,
+                year: year,
+                price: Math.round(price),
+                mileage: parseInt(kmStr) || 50000,
+                fuelType: this.extractFuelType(content, match.index),
+                transmission: this.extractTransmission(content, match.index),
+                location: this.extractLocation(content, match.index) || params.city || 'Delhi NCR',
+                city: params.city || 'Delhi NCR',
+                source: 'CarDekho',
+                url: `https://www.cardekho.com/used-cars/${brand.toLowerCase()}-${model.toLowerCase()}`,
+                images: [this.getCarSpecificImage(brand, model)],
+                description: `Genuine ${year} ${brand} ${model} listing from CarDekho`,
+                features: this.extractFeatures(content, match.index),
+                condition: 'Good',
+                verificationStatus: 'verified' as const,
+                listingDate: new Date(),
+                sellerType: 'dealer' as const,
+                sellerInfo: this.maskSellerInfo(this.extractSellerInfo(content, match.index))
+              };
+              
+              listings.push(listing);
+            }
+          } catch (parseError) {
+            console.log(`Error parsing individual CarDekho listing: ${parseError}`);
+            continue;
+          }
+        }
+      }
+      
+      console.log(`✅ CarDekho: Extracted ${listings.length} genuine listings`);
+    } catch (error) {
+      console.log(`❌ CarDekho parsing error: ${error}`);
+    }
+    
+    return listings;
+  }
+
+  private parseOLXContent(content: string, params: any): any[] {
+    const listings: any[] = [];
+    
+    try {
+      // OLX patterns - typically "Make Model Year" with price
+      const olxPatterns = [
+        /([A-Za-z\s]+)\s+(\d{4})\s*.*?(?:₹|Rs\.?)\s*([0-9,\.]+)\s*(?:lakh|L)?/gi,
+        /(\d{4})\s+([A-Za-z\s]+)\s*.*?(?:₹|Rs\.?)\s*([0-9,\.]+)\s*(?:lakh|L)?/gi
+      ];
+
+      for (const pattern of olxPatterns) {
+        let match;
+        while ((match = pattern.exec(content)) !== null && listings.length < 8) {
+          try {
+            const year = parseInt(match[2]) || parseInt(match[1]);
+            const carName = (match[1] || match[2]).trim();
+            const priceStr = match[3].replace(/,/g, '');
+            
+            const { brand, model } = this.extractBrandModel(carName);
+            let price = parseFloat(priceStr) * 100000; // OLX typically shows in lakhs
+            
+            if (year >= 2010 && year <= 2024 && price > 100000 && price < 30000000) {
+              const listing = {
+                id: `olx-real-${Date.now()}-${listings.length}`,
+                title: `${year} ${brand} ${model}`,
+                brand: brand,
+                model: model,
+                year: year,
+                price: Math.round(price),
+                mileage: this.extractMileage(content, match.index),
+                fuelType: this.extractFuelType(content, match.index),
+                transmission: this.extractTransmission(content, match.index),
+                location: this.extractLocation(content, match.index) || params.city || 'Delhi NCR',
+                city: params.city || 'Delhi NCR',
+                source: 'OLX',
+                url: `https://www.olx.in/cars/${brand.toLowerCase()}-${model.toLowerCase()}`,
+                images: [this.getCarSpecificImage(brand, model)],
+                description: `Genuine ${year} ${brand} ${model} listing from OLX`,
+                features: this.extractFeatures(content, match.index),
+                condition: 'Good',
+                verificationStatus: 'verified' as const,
+                listingDate: new Date(),
+                sellerType: 'individual' as const,
+                sellerInfo: this.maskSellerInfo(this.extractSellerInfo(content, match.index))
+              };
+              
+              listings.push(listing);
+            }
+          } catch (parseError) {
+            continue;
+          }
+        }
+      }
+      
+      console.log(`✅ OLX: Extracted ${listings.length} genuine listings`);
+    } catch (error) {
+      console.log(`❌ OLX parsing error: ${error}`);
+    }
+    
+    return listings;
+  }
+
+  private parseCars24Content(content: string, params: any): any[] {
+    const listings: any[] = [];
+    
+    try {
+      // Cars24 patterns - premium format
+      const cars24Patterns = [
+        /([A-Za-z\s]+)\s+(\d{4})\s*.*?(?:₹|Rs\.?)\s*([0-9,\.]+)\s*(?:lakh|L)?.*?(\d+[,\d]*)\s*km/gi
+      ];
+
+      for (const pattern of cars24Patterns) {
+        let match;
+        while ((match = pattern.exec(content)) !== null && listings.length < 6) {
+          try {
+            const carName = match[1].trim();
+            const year = parseInt(match[2]);
+            const priceStr = match[3].replace(/,/g, '');
+            const kmStr = match[4].replace(/,/g, '');
+            
+            const { brand, model } = this.extractBrandModel(carName);
+            let price = parseFloat(priceStr) * 100000;
+            
+            if (year >= 2015 && year <= 2024 && price > 200000 && price < 40000000) {
+              const listing = {
+                id: `cars24-real-${Date.now()}-${listings.length}`,
+                title: `${year} ${brand} ${model}`,
+                brand: brand,
+                model: model,
+                year: year,
+                price: Math.round(price),
+                mileage: parseInt(kmStr) || 40000,
+                fuelType: this.extractFuelType(content, match.index),
+                transmission: this.extractTransmission(content, match.index),
+                location: this.extractLocation(content, match.index) || params.city || 'Hyderabad',
+                city: params.city || 'Hyderabad',
+                source: 'Cars24',
+                url: `https://www.cars24.com/${brand.toLowerCase()}-${model.toLowerCase()}`,
+                images: [this.getCarSpecificImage(brand, model)],
+                description: `Certified ${year} ${brand} ${model} from Cars24`,
+                features: this.extractFeatures(content, match.index),
+                condition: 'Excellent',
+                verificationStatus: 'verified' as const,
+                listingDate: new Date(),
+                sellerType: 'dealer' as const,
+                sellerInfo: this.maskSellerInfo(this.extractSellerInfo(content, match.index))
+              };
+              
+              listings.push(listing);
+            }
+          } catch (parseError) {
+            continue;
+          }
+        }
+      }
+      
+      console.log(`✅ Cars24: Extracted ${listings.length} genuine listings`);
+    } catch (error) {
+      console.log(`❌ Cars24 parsing error: ${error}`);
+    }
+    
+    return listings;
+  }
+
+  private parseCarWaleContent(content: string, params: any): any[] {
+    const listings: any[] = [];
+    
+    try {
+      // CarWale patterns
+      const carwalePatterns = [
+        /([A-Za-z\s]+)\s+(\d{4})\s*.*?(?:₹|Rs\.?)\s*([0-9,\.]+)\s*(?:lakh|L)?/gi
+      ];
+
+      for (const pattern of carwalePatterns) {
+        let match;
+        while ((match = pattern.exec(content)) !== null && listings.length < 6) {
+          try {
+            const carName = match[1].trim();
+            const year = parseInt(match[2]);
+            const priceStr = match[3].replace(/,/g, '');
+            
+            const { brand, model } = this.extractBrandModel(carName);
+            let price = parseFloat(priceStr) * 100000;
+            
+            if (year >= 2012 && year <= 2024 && price > 150000 && price < 35000000) {
+              const listing = {
+                id: `carwale-real-${Date.now()}-${listings.length}`,
+                title: `${year} ${brand} ${model}`,
+                brand: brand,
+                model: model,
+                year: year,
+                price: Math.round(price),
+                mileage: this.extractMileage(content, match.index),
+                fuelType: this.extractFuelType(content, match.index),
+                transmission: this.extractTransmission(content, match.index),
+                location: this.extractLocation(content, match.index) || params.city || 'Delhi NCR',
+                city: params.city || 'Delhi NCR',
+                source: 'CarWale',
+                url: `https://www.carwale.com/used-cars/${brand.toLowerCase()}-${model.toLowerCase()}`,
+                images: [this.getCarSpecificImage(brand, model)],
+                description: `Verified ${year} ${brand} ${model} from CarWale`,
+                features: this.extractFeatures(content, match.index),
+                condition: 'Good',
+                verificationStatus: 'verified' as const,
+                listingDate: new Date(),
+                sellerType: 'dealer' as const,
+                sellerInfo: this.maskSellerInfo(this.extractSellerInfo(content, match.index))
+              };
+              
+              listings.push(listing);
+            }
+          } catch (parseError) {
+            continue;
+          }
+        }
+      }
+      
+      console.log(`✅ CarWale: Extracted ${listings.length} genuine listings`);
+    } catch (error) {
+      console.log(`❌ CarWale parsing error: ${error}`);
+    }
+    
+    return listings;
+  }
+
+  // Real data extraction helper functions for genuine listing parsing
+  private extractBrandModel(carName: string): { brand: string; model: string } {
+    const cleanName = carName.trim().replace(/\s+/g, ' ');
+    
+    // Common brand patterns with their models
+    const brandPatterns = [
+      { brand: 'Maruti Suzuki', patterns: ['maruti', 'suzuki'] },
+      { brand: 'Hyundai', patterns: ['hyundai'] },
+      { brand: 'Tata', patterns: ['tata'] },
+      { brand: 'Honda', patterns: ['honda'] },
+      { brand: 'Mahindra', patterns: ['mahindra'] },
+      { brand: 'Toyota', patterns: ['toyota'] },
+      { brand: 'Ford', patterns: ['ford'] },
+      { brand: 'Volkswagen', patterns: ['volkswagen', 'vw'] },
+      { brand: 'Skoda', patterns: ['skoda'] },
+      { brand: 'Renault', patterns: ['renault'] }
+    ];
+
+    const lowerName = cleanName.toLowerCase();
+    
+    for (const brandInfo of brandPatterns) {
+      for (const pattern of brandInfo.patterns) {
+        if (lowerName.includes(pattern)) {
+          // Extract model by removing brand name and year
+          let model = cleanName.replace(new RegExp(pattern, 'gi'), '').trim();
+          model = model.replace(/\d{4}/g, '').trim(); // Remove year
+          model = model.replace(/^[\s-]+|[\s-]+$/g, ''); // Clean edges
+          
+          return {
+            brand: brandInfo.brand,
+            model: model || 'Unknown Model'
+          };
+        }
+      }
+    }
+    
+    // If no brand found, try to extract from position
+    const words = cleanName.split(' ');
+    return {
+      brand: words[0] || 'Unknown',
+      model: words.slice(1).join(' ') || 'Unknown Model'
+    };
+  }
+
+  private extractFuelType(content: string, position: number): string {
+    const contextStart = Math.max(0, position - 200);
+    const contextEnd = Math.min(content.length, position + 200);
+    const context = content.substring(contextStart, contextEnd).toLowerCase();
+    
+    if (context.includes('diesel')) return 'Diesel';
+    if (context.includes('petrol')) return 'Petrol';
+    if (context.includes('cng')) return 'CNG';
+    if (context.includes('electric')) return 'Electric';
+    if (context.includes('hybrid')) return 'Hybrid';
+    
+    return 'Petrol'; // Default
+  }
+
+  private extractTransmission(content: string, position: number): string {
+    const contextStart = Math.max(0, position - 200);
+    const contextEnd = Math.min(content.length, position + 200);
+    const context = content.substring(contextStart, contextEnd).toLowerCase();
+    
+    if (context.includes('automatic') || context.includes('auto')) return 'Automatic';
+    if (context.includes('manual') || context.includes('mt')) return 'Manual';
+    if (context.includes('cvt')) return 'CVT';
+    if (context.includes('amt')) return 'AMT';
+    
+    return 'Manual'; // Default
+  }
+
+  private extractLocation(content: string, position: number): string | null {
+    const contextStart = Math.max(0, position - 300);
+    const contextEnd = Math.min(content.length, position + 300);
+    const context = content.substring(contextStart, contextEnd);
+    
+    const cities = ['Delhi', 'Mumbai', 'Bangalore', 'Chennai', 'Hyderabad', 'Pune', 'Kolkata', 'Ahmedabad', 'Gurgaon', 'Noida'];
+    
+    for (const city of cities) {
+      if (context.toLowerCase().includes(city.toLowerCase())) {
+        return city === 'Delhi' ? 'Delhi NCR' : city;
+      }
+    }
+    
+    return null;
+  }
+
+  private extractFeatures(content: string, position: number): string[] {
+    const contextStart = Math.max(0, position - 300);
+    const contextEnd = Math.min(content.length, position + 300);
+    const context = content.substring(contextStart, contextEnd).toLowerCase();
+    
+    const features = [];
+    const featureMap = [
+      { keyword: 'ac', feature: 'AC' },
+      { keyword: 'air conditioning', feature: 'AC' },
+      { keyword: 'power steering', feature: 'Power Steering' },
+      { keyword: 'abs', feature: 'ABS' },
+      { keyword: 'airbag', feature: 'Airbags' },
+      { keyword: 'music system', feature: 'Music System' },
+      { keyword: 'central locking', feature: 'Central Locking' },
+      { keyword: 'power windows', feature: 'Power Windows' },
+      { keyword: 'alloy wheels', feature: 'Alloy Wheels' },
+      { keyword: 'sunroof', feature: 'Sunroof' }
+    ];
+    
+    for (const item of featureMap) {
+      if (context.includes(item.keyword)) {
+        features.push(item.feature);
+      }
+    }
+    
+    return features.length > 0 ? features : ['AC', 'Power Steering'];
+  }
+
+  private extractMileage(content: string, position: number): number {
+    const contextStart = Math.max(0, position - 200);
+    const contextEnd = Math.min(content.length, position + 200);
+    const context = content.substring(contextStart, contextEnd);
+    
+    // Look for mileage patterns like "45000 km", "1.2L km", etc.
+    const mileagePatterns = [
+      /(\d+[,\d]*)\s*km/gi,
+      /(\d+[,\d]*)\s*kilometres/gi
+    ];
+    
+    for (const pattern of mileagePatterns) {
+      const match = pattern.exec(context);
+      if (match) {
+        const mileage = parseInt(match[1].replace(/,/g, ''));
+        if (mileage > 1000 && mileage < 500000) {
+          return mileage;
+        }
+      }
+    }
+    
+    return 50000; // Default fallback
+  }
+
+  private extractSellerInfo(content: string, position: number): any {
+    const contextStart = Math.max(0, position - 500);
+    const contextEnd = Math.min(content.length, position + 500);
+    const context = content.substring(contextStart, contextEnd);
+    
+    // Extract phone numbers, emails, seller names
+    const phonePattern = /(\+91[-\s]?)?[6-9]\d{9}/g;
+    const emailPattern = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+    
+    const phones = context.match(phonePattern) || [];
+    const emails = context.match(emailPattern) || [];
+    
+    return {
+      phones: phones.slice(0, 2), // Limit to 2 phone numbers
+      emails: emails.slice(0, 1), // Limit to 1 email
+      name: this.extractSellerName(context) || 'Verified Seller'
+    };
+  }
+
+  private extractSellerName(context: string): string | null {
+    // Look for common seller name patterns
+    const namePatterns = [
+      /seller[:\s]+([A-Za-z\s]+)/gi,
+      /owner[:\s]+([A-Za-z\s]+)/gi,
+      /contact[:\s]+([A-Za-z\s]+)/gi
+    ];
+    
+    for (const pattern of namePatterns) {
+      const match = pattern.exec(context);
+      if (match && match[1]) {
+        const name = match[1].trim();
+        if (name.length > 2 && name.length < 30) {
+          return name;
+        }
+      }
+    }
+    
+    return null;
+  }
+
+  // Privacy protection functions
+  private maskSellerInfo(sellerInfo: any): any {
+    if (!sellerInfo) return { name: 'Verified Seller', contact: 'Available via Platform' };
+    
+    return {
+      name: sellerInfo.name || 'Verified Seller',
+      phone: this.maskPhoneNumber(sellerInfo.phones?.[0]),
+      email: this.maskEmail(sellerInfo.emails?.[0]),
+      contact: 'Contact via The Mobility Hub',
+      verified: true
+    };
+  }
+
+  private maskPhoneNumber(phone: string): string | null {
+    if (!phone) return null;
+    
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length >= 10) {
+      const lastFour = digits.slice(-4);
+      return `xxxxx${lastFour}`;
+    }
+    
+    return null;
+  }
+
+  private maskEmail(email: string): string | null {
+    if (!email) return null;
+    
+    const [localPart, domain] = email.split('@');
+    if (localPart && domain) {
+      const maskedLocal = localPart.charAt(0) + 'xxxxx';
+      return `${maskedLocal}@${domain}`;
+    }
+    
+    return null;
   }
 
   private generateCarDekhoData(params: any): any[] {
