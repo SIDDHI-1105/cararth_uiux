@@ -1507,6 +1507,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.send(sitemap);
   });
 
+  // Community & RSS Integration Routes
+  app.get('/api/community/posts', async (req, res) => {
+    try {
+      const { rssAggregator } = await import('./rssService');
+      const posts = await rssAggregator.aggregateAutomotiveContent();
+      
+      res.json({
+        success: true,
+        posts,
+        timestamp: new Date().toISOString(),
+        attribution: 'Content aggregated from various automotive sources with proper attribution'
+      });
+    } catch (error) {
+      console.error('Community posts error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch community content',
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  app.get('/api/community/stats', async (req, res) => {
+    try {
+      const { rssAggregator } = await import('./rssService');
+      const stats = await rssAggregator.getCommunityStats();
+      
+      res.json({
+        success: true,
+        stats,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Community stats error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch community statistics',
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

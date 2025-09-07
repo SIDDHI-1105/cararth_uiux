@@ -57,8 +57,25 @@ export default function ThrottleTalkPage() {
     refetchInterval: 300000, // Refresh every 5 minutes
   });
 
-  // Mock community stats (in real app, fetch from API)
-  const communityStats: CommunityStats = {
+  // Fetch community posts from RSS aggregation
+  const { data: communityData, isLoading: isCommunityLoading } = useQuery({
+    queryKey: ['/api/community/posts'],
+    refetchInterval: 600000, // Refresh every 10 minutes
+  });
+
+  // Fetch community stats
+  const { data: statsData } = useQuery({
+    queryKey: ['/api/community/stats'],
+    refetchInterval: 300000, // Refresh every 5 minutes
+  });
+
+  // Use real community stats from API or fallback to defaults
+  const communityStats: CommunityStats = statsData?.success ? {
+    totalMembers: statsData.stats.totalPosts,
+    activeToday: statsData.stats.activeMembersToday,
+    postsToday: statsData.stats.discussionsToday,
+    hotThreads: statsData.stats.sourceFeeds
+  } : {
     totalMembers: 142857,
     activeToday: 3421,
     postsToday: 892,
@@ -140,7 +157,7 @@ export default function ThrottleTalkPage() {
     { id: 'chennai', name: 'Chennai', count: 137 }
   ];
 
-  if (isNewsLoading) {
+  if (isNewsLoading || isCommunityLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="container mx-auto px-4 py-8">
