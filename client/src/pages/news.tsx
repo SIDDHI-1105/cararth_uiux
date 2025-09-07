@@ -87,7 +87,7 @@ export default function NewsPage() {
             Live Intelligence
           </Badge>
           <Badge variant="outline" className="text-xs">
-            Updated {newsData?.meta?.lastUpdated ? new Date(newsData.meta.lastUpdated).toLocaleTimeString() : 'recently'}
+            Updated {(newsData as any)?.meta?.lastUpdated ? new Date((newsData as any).meta.lastUpdated).toLocaleTimeString() : 'recently'}
           </Badge>
         </div>
       </div>
@@ -130,7 +130,7 @@ export default function NewsPage() {
             </div>
           ) : (
             <div className="grid gap-4" data-testid="news-articles-list">
-              {newsData?.articles?.map((article: NewsArticle, index: number) => (
+              {(newsData as any)?.articles?.map((article: NewsArticle, index: number) => (
                 <Card key={index} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
                     <div className="flex items-start justify-between gap-4">
@@ -200,7 +200,7 @@ export default function NewsPage() {
             </div>
           ) : (
             <div className="grid gap-4" data-testid="market-insights-list">
-              {marketInsights?.insights?.map((insight: MarketInsight, index: number) => (
+              {(marketInsights as any)?.insights?.map((insight: MarketInsight, index: number) => (
                 <Card key={index} className="hover:shadow-md transition-shadow">
                   <CardHeader>
                     <div className="flex items-center justify-between">
@@ -292,7 +292,7 @@ export default function NewsPage() {
                 </p>
               </div>
 
-              {brandInsights?.insights?.map((insight: MarketInsight, index: number) => (
+              {(brandInsights as any)?.insights?.map((insight: MarketInsight, index: number) => (
                 <Card key={index} className="hover:shadow-md transition-shadow">
                   <CardHeader>
                     <div className="flex items-center justify-between">
