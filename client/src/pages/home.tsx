@@ -25,6 +25,7 @@ export default function Home() {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState("local");
   const [marketplaceResult, setMarketplaceResult] = useState<any>(null);
+  const [marketplaceError, setMarketplaceError] = useState<any>(null);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showFeaturedModal, setShowFeaturedModal] = useState(false);
   const [selectedCarForFeatured, setSelectedCarForFeatured] = useState<{id: string, title: string} | null>(null);
@@ -147,10 +148,34 @@ export default function Home() {
     onSuccess: (data) => {
       console.log('Marketplace search success:', data);
       setMarketplaceResult(data);
+      setMarketplaceError(null); // Clear any previous error
       setActiveTab("marketplace");
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Marketplace search error:', error);
+      
+      // Check if it's an authentication error
+      if (error.message && error.message.includes('401')) {
+        setMarketplaceError({
+          type: 'auth',
+          message: 'Please log in to search across all car portals',
+          action: 'Login Required'
+        });
+      } else {
+        setMarketplaceError({
+          type: 'general',
+          message: 'Search failed. Please try again.',
+          action: 'Retry Search'
+        });
+      }
+      
+      // Set empty result to trigger the error display
+      setMarketplaceResult({ 
+        listings: [], 
+        analytics: null, 
+        recommendations: null 
+      });
+      setActiveTab("marketplace");
     }
   });
 
@@ -368,6 +393,7 @@ export default function Home() {
               <MarketplaceResults 
                 searchResult={marketplaceResult}
                 isLoading={marketplaceSearch.isPending}
+                error={marketplaceError}
               />
             ) : (
               <div className="text-center py-12">

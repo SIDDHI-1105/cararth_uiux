@@ -59,9 +59,10 @@ interface SearchResult {
 interface MarketplaceResultsProps {
   searchResult: SearchResult;
   isLoading: boolean;
+  error?: any;
 }
 
-export default function MarketplaceResults({ searchResult, isLoading }: MarketplaceResultsProps) {
+export default function MarketplaceResults({ searchResult, isLoading, error }: MarketplaceResultsProps) {
   const [selectedTab, setSelectedTab] = useState("all");
   const [sortBy, setSortBy] = useState("relevance");
   const [selectedCar, setSelectedCar] = useState<MarketplaceListing | null>(null);
@@ -91,11 +92,32 @@ export default function MarketplaceResults({ searchResult, isLoading }: Marketpl
       <Card>
         <CardContent className="pt-6">
           <div className="text-center">
-            <Filter className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Results Found</h3>
-            <p className="text-muted-foreground">
-              Try adjusting your search filters to see more results.
-            </p>
+            {error?.type === 'auth' ? (
+              <>
+                <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">🔐</span>
+                </div>
+                <h3 className="text-lg font-semibold mb-2">Login Required</h3>
+                <p className="text-muted-foreground mb-4">
+                  Please log in to search across all car portals and access thousands of listings.
+                </p>
+                <Button 
+                  onClick={() => window.location.href = '/api/login'}
+                  className="btn-metallic"
+                  data-testid="button-login-required"
+                >
+                  Login to Search
+                </Button>
+              </>
+            ) : (
+              <>
+                <Filter className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No Results Found</h3>
+                <p className="text-muted-foreground">
+                  {error?.message || 'Try adjusting your search filters to see more results.'}
+                </p>
+              </>
+            )}
           </div>
         </CardContent>
       </Card>
