@@ -49,6 +49,21 @@ export interface AggregatedSearchResult {
   };
 }
 
+// Supported cities - focused approach for better data quality and authentic listings
+const SUPPORTED_CITIES = [
+  'delhi', 'new delhi', 'delhi ncr', 'gurgaon', 'noida', 'faridabad', 'ghaziabad',
+  'hyderabad', 'secunderabad', 'telangana'
+];
+
+// Check if city is supported for authentic car listings
+export function isCitySupported(city: string): boolean {
+  if (!city) return false;
+  const normalizedCity = city.toLowerCase().trim();
+  return SUPPORTED_CITIES.some(supportedCity => 
+    normalizedCity.includes(supportedCity) || supportedCity.includes(normalizedCity)
+  );
+}
+
 export interface DetailedFilters {
   // Basic filters
   brand?: string;
@@ -98,11 +113,57 @@ export class MarketplaceAggregator {
   ];
 
   async searchAcrossPortals(filters: DetailedFilters): Promise<AggregatedSearchResult> {
-    console.log('🔍 Searching genuine car portals with filters:', filters);
+    console.log('🔍 Searching used car portals with filters:', filters);
     
-    // First priority: Try to get real listings from actual car portals
+    // Location validation - only serve supported cities
+    if (filters.city && !isCitySupported(filters.city)) {
+      console.log(`⏳ City '${filters.city}' not yet supported - returning coming soon message`);
+      return {
+        listings: [{
+          id: 'coming-soon',
+          title: `Used Cars Coming Soon to ${filters.city}`,
+          brand: 'Service Update',
+          model: 'Expansion',
+          year: 2024,
+          price: 0,
+          mileage: 0,
+          fuelType: 'All Types',
+          transmission: 'All Types',
+          location: filters.city,
+          city: filters.city,
+          source: 'The Mobility Hub',
+          url: '#',
+          images: [],
+          description: `We're expanding our pre-owned car aggregation service to ${filters.city} soon! Currently serving Delhi NCR and Hyderabad with authentic listings from CarDekho, OLX, Cars24, and more verified platforms.`,
+          features: ['Coming Soon', 'Authentic Listings', 'Verified Sources'],
+          condition: 'Expansion In Progress',
+          verificationStatus: 'certified' as const,
+          listingDate: new Date(),
+          sellerType: 'dealer' as const
+        }],
+        analytics: {
+          totalListings: 1,
+          avgPrice: 0,
+          priceRange: { min: 0, max: 0 },
+          mostCommonFuelType: 'All Types',
+          avgMileage: 0,
+          sourcesCount: { 'The Mobility Hub': 1 },
+          locationDistribution: { [filters.city]: 1 },
+          priceByLocation: { [filters.city]: 0 },
+          historicalTrend: 'stable' as const
+        },
+        recommendations: {
+          bestDeals: [],
+          overpriced: [],
+          newListings: [],
+          certified: []
+        }
+      };
+    }
+    
+    // First priority: Try to get real listings from actual used car portals
     try {
-      console.log('🌐 Fetching authentic listings from real car marketplaces...');
+      console.log('🌐 Fetching authentic used car listings from real marketplaces...');
       
       const realResults = await Promise.allSettled([
         this.searchCarDekho(filters),
@@ -130,8 +191,9 @@ export class MarketplaceAggregator {
         // CRITICAL: Apply brand filtering to real results too!
         if (filters.brand && filters.brand.trim() !== '') {
           console.log(`🔍 Filtering real results for brand: ${filters.brand}`);
+          const brandFilter = filters.brand;
           allListings = allListings.filter(listing => 
-            listing.brand === filters.brand || listing.title.includes(filters.brand)
+            listing.brand === brandFilter || listing.title.includes(brandFilter)
           );
           console.log(`✅ After brand filtering: ${allListings.length} listings`);
         }
@@ -677,7 +739,7 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
     };
     
     // Get models for the target brand only
-    const availableModels = modelMap[targetBrand] || ['i20', 'Creta', 'Verna'];
+    const availableModels = (targetBrand && modelMap[targetBrand]) || ['i20', 'Creta', 'Verna'];
     // LEGALLY COMPLIANT SOURCES ONLY - Authorized business listings and public data
     const sources = ['CarDekho Dealer', 'OLX Verified', 'Cars24 Outlet', 'CarWale Partner', 'AutoTrader Pro', 'Spinny Hub', 'CARS24 Store', 'Mahindra First Choice', 'Maruti True Value', 'Hyundai Promise', 'Facebook Marketplace'];
     const cities = ['Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Hyderabad', 'Pune', 'Kolkata', 'Ahmedabad', 'Jaipur', 'Lucknow', 'Kanpur', 'Nagpur', 'Indore', 'Bhopal', 'Visakhapatnam', 'Patna'];

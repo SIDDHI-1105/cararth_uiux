@@ -26,16 +26,16 @@ export default function HeroSection({ onSearch }: HeroSearchProps) {
   return (
     <section className="bg-gradient-to-br from-chrome-primary via-chrome-secondary to-white py-20 px-4">
       <div className="max-w-6xl mx-auto text-center">
-        <h1 className="text-5xl md:text-7xl font-bold mb-4 text-foreground">All the cars. One search.</h1>
+        <h1 className="text-5xl md:text-7xl font-bold mb-4 text-foreground">Best Used Cars. One Search.</h1>
         <p className="text-xl md:text-2xl mb-6 text-muted-foreground max-w-4xl mx-auto">
-          Browse listings from all the major used car sites in India, including:
+          Compare pre-owned cars from verified dealers across India's most trusted platforms:
         </p>
         
         {/* Legal Compliance Badge */}
         <div className="mb-6">
           <div className="inline-flex items-center px-4 py-2 bg-green-50 border border-green-200 rounded-full text-sm font-medium text-green-700">
             <span className="mr-2">🔒</span>
-            <span>100% Legal Compliance • Verified APIs Only</span>
+            <span>Authentic Listings • Verified by Source Platforms</span>
           </div>
         </div>
         
@@ -84,7 +84,12 @@ export default function HeroSection({ onSearch }: HeroSearchProps) {
                   <SelectItem value="200000-500000">₹2-5 Lakh</SelectItem>
                   <SelectItem value="500000-1000000">₹5-10 Lakh</SelectItem>
                   <SelectItem value="1000000-1500000">₹10-15 Lakh</SelectItem>
-                  <SelectItem value="1500000-99999999">Above ₹15 Lakh</SelectItem>
+                  <SelectItem value="1500000-2000000">₹15-20 Lakh</SelectItem>
+                  <SelectItem value="2000000-3000000">₹20-30 Lakh</SelectItem>
+                  <SelectItem value="3000000-5000000">₹30-50 Lakh</SelectItem>
+                  <SelectItem value="5000000-7500000">₹50-75 Lakh</SelectItem>
+                  <SelectItem value="7500000-10000000">₹75 Lakh-1 Cr</SelectItem>
+                  <SelectItem value="10000000-99999999">Above ₹1 Cr</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -96,13 +101,13 @@ export default function HeroSection({ onSearch }: HeroSearchProps) {
                   <SelectValue placeholder="Select City" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Select City</SelectItem>
-                  <SelectItem value="Mumbai">Mumbai</SelectItem>
-                  <SelectItem value="Delhi">Delhi</SelectItem>
-                  <SelectItem value="Bangalore">Bangalore</SelectItem>
-                  <SelectItem value="Chennai">Chennai</SelectItem>
-                  <SelectItem value="Hyderabad">Hyderabad</SelectItem>
-                  <SelectItem value="Pune">Pune</SelectItem>
+                  <SelectItem value="Delhi NCR">🟢 Delhi NCR - Available Now</SelectItem>
+                  <SelectItem value="Hyderabad">🟢 Hyderabad - Available Now</SelectItem>
+                  <SelectItem value="Mumbai">🔄 Mumbai - Coming Soon</SelectItem>
+                  <SelectItem value="Bangalore">🔄 Bangalore - Coming Soon</SelectItem>
+                  <SelectItem value="Chennai">🔄 Chennai - Coming Soon</SelectItem>
+                  <SelectItem value="Pune">🔄 Pune - Coming Soon</SelectItem>
+                  <SelectItem value="Kolkata">🔄 Kolkata - Coming Soon</SelectItem>
                 </SelectContent>
               </Select>
             </div>

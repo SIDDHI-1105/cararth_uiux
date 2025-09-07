@@ -30,7 +30,7 @@ export default function Navbar() {
                     The Mobility Hub
                   </h1>
                   <p className="text-xs text-muted-foreground font-medium">
-                    Your Journey. Simplified.
+                    Used Cars. Verified Sources.
                   </p>
                 </div>
               </div>
@@ -48,7 +48,7 @@ export default function Navbar() {
                 }`}
                 data-testid="link-buy-cars"
               >
-                Buy Cars
+                Buy Used Cars
               </Link>
               <Link 
                 href="/sell-car" 

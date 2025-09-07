@@ -18,7 +18,7 @@ export default function CarFilters({ onApplyFilters }: CarFiltersProps) {
   const [fuelType, setFuelType] = useState<string>("");
   const [transmission, setTransmission] = useState<string>("");
   const [location, setLocation] = useState<string>("");
-  const [budgetRange, setBudgetRange] = useState<[number, number]>([0, 2000000]);
+  const [budgetRange, setBudgetRange] = useState<[number, number]>([0, 10000000]);
 
   const formatPrice = (value: number) => {
     if (value >= 10000000) return `₹${(value / 10000000).toFixed(1)}Cr`;
@@ -42,14 +42,14 @@ export default function CarFilters({ onApplyFilters }: CarFiltersProps) {
     setFuelType("");
     setTransmission("");
     setLocation("");
-    setBudgetRange([0, 2000000]);
+    setBudgetRange([0, 10000000]);
   };
 
   return (
     <aside className="lg:w-1/4">
       <div className="bg-card rounded-lg border border-border p-6 filter-sidebar">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Find Your Car</h3>
+          <h3 className="text-lg font-semibold">Find Your Used Car</h3>
           <Button 
             variant="ghost" 
             size="sm" 
@@ -73,15 +73,15 @@ export default function CarFilters({ onApplyFilters }: CarFiltersProps) {
             <Slider
               value={budgetRange}
               onValueChange={(value) => setBudgetRange(value as [number, number])}
-              max={2000000}
+              max={10000000}
               min={0}
-              step={50000}
+              step={500000}
               className="w-full"
               data-testid="slider-budget"
             />
             <div className="flex justify-between text-xs text-muted-foreground mt-1">
               <span>₹0</span>
-              <span>₹20L+</span>
+              <span>₹1Cr+</span>
             </div>
           </div>
         </div>
@@ -148,14 +148,13 @@ export default function CarFilters({ onApplyFilters }: CarFiltersProps) {
               <SelectValue placeholder="Select location" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="mumbai">Mumbai</SelectItem>
-              <SelectItem value="delhi">Delhi</SelectItem>
-              <SelectItem value="bangalore">Bangalore</SelectItem>
-              <SelectItem value="pune">Pune</SelectItem>
-              <SelectItem value="hyderabad">Hyderabad</SelectItem>
-              <SelectItem value="chennai">Chennai</SelectItem>
-              <SelectItem value="kolkata">Kolkata</SelectItem>
-              <SelectItem value="ahmedabad">Ahmedabad</SelectItem>
+              <SelectItem value="Delhi NCR">🟢 Delhi NCR - Available</SelectItem>
+              <SelectItem value="Hyderabad">🟢 Hyderabad - Available</SelectItem>
+              <SelectItem value="Mumbai">🔄 Mumbai - Coming Soon</SelectItem>
+              <SelectItem value="Bangalore">🔄 Bangalore - Coming Soon</SelectItem>
+              <SelectItem value="Chennai">🔄 Chennai - Coming Soon</SelectItem>
+              <SelectItem value="Pune">🔄 Pune - Coming Soon</SelectItem>
+              <SelectItem value="Kolkata">🔄 Kolkata - Coming Soon</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -166,7 +165,7 @@ export default function CarFilters({ onApplyFilters }: CarFiltersProps) {
             className="w-full bg-primary text-primary-foreground py-2.5 px-4 rounded-md font-medium hover:bg-primary/90 transition-colors"
             data-testid="button-apply-filters"
           >
-            Search Cars
+            Search Used Cars
           </Button>
         </div>
       </div>
