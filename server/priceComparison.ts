@@ -25,7 +25,7 @@ export interface CarPriceData {
 export class PriceComparisonService {
   private async searchCarPrices(carData: CarPriceData): Promise<any[]> {
     if (!process.env.GEMINI_API_KEY) {
-      return this.generateMockPriceData(carData);
+      throw new Error('Price analysis service unavailable - please ensure API configuration is complete');
     }
 
     try {
@@ -77,39 +77,9 @@ Base prices on current Indian market conditions for ${carData.year} ${carData.br
       console.error('Gemini price search error:', error);
     }
 
-    return this.generateMockPriceData(carData);
+    throw new Error('Unable to fetch real market data - please try again later');
   }
 
-  private generateMockPriceData(carData: CarPriceData): any[] {
-    let basePrice = 400000;
-    if (carData.brand.toLowerCase().includes('toyota')) basePrice = 800000;
-    else if (carData.brand.toLowerCase().includes('honda')) basePrice = 600000;
-    else if (carData.brand.toLowerCase().includes('hyundai')) basePrice = 500000;
-    
-    const ageDiscount = (2024 - carData.year) * 0.12;
-    const adjustedPrice = basePrice * (1 - ageDiscount);
-    
-    return [
-      {
-        title: `${carData.year} ${carData.brand} ${carData.model} price in ${carData.city}`,
-        content: `Current market price ranges from ₹${((adjustedPrice * 0.8)/100000).toFixed(1)} to ₹${((adjustedPrice * 1.2)/100000).toFixed(1)} lakhs`,
-        source: 'CarDekho',
-        price: adjustedPrice
-      },
-      {
-        title: `Used ${carData.brand} ${carData.model} ${carData.year} - ${carData.city}`,
-        content: `Well maintained car available for ₹${(adjustedPrice/100000).toFixed(1)} lakhs`,
-        source: 'OLX',
-        price: adjustedPrice * 0.95
-      },
-      {
-        title: `${carData.brand} ${carData.model} ${carData.year} - Best Price`,
-        content: `Verified car with warranty starting from ₹${((adjustedPrice * 0.9)/100000).toFixed(1)} lakhs`,
-        source: 'Cars24',
-        price: adjustedPrice * 0.9
-      }
-    ];
-  }
 
   private extractPricesFromText(text: string): number[] {
     const pricePatterns = [
