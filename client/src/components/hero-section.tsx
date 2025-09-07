@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search } from "lucide-react";
 import logoImage from "@/assets/logo.png";
+import { TooltipWrapper } from "@/components/tooltip-wrapper";
 
 interface HeroSearchProps {
   onSearch: (filters: {
@@ -52,8 +53,9 @@ export default function HeroSection({ onSearch }: HeroSearchProps) {
           <div className="text-sm font-medium text-muted-foreground font-bold">& More!</div>
         </div>
         
-        <div className="bg-white/90 backdrop-blur-sm rounded-xl p-8 border shadow-lg max-w-4xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+        <TooltipWrapper trigger="hero-search-form">
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl p-8 border shadow-lg max-w-4xl mx-auto" data-testid="hero-search-form">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
             <div>
               <label className="block text-gray-700 text-sm font-medium mb-2">Brand</label>
               <Select value={brand} onValueChange={setBrand}>
@@ -137,7 +139,8 @@ export default function HeroSection({ onSearch }: HeroSearchProps) {
             <Search className="mr-2 h-5 w-5" />
             Search Cars
           </Button>
-        </div>
+          </div>
+        </TooltipWrapper>
         
         <p className="text-sm text-muted-foreground mt-8 max-w-3xl mx-auto">
           We aggregate millions of listings from dealers and private sellers across India. 

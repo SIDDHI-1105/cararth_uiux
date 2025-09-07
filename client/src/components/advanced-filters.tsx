@@ -9,6 +9,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { ChevronDown, Filter, X, Search } from "lucide-react";
+import { TooltipWrapper } from "@/components/tooltip-wrapper";
 
 interface AdvancedFiltersProps {
   onSearch: (filters: any) => void;
@@ -201,14 +202,16 @@ export default function AdvancedFilters({ onSearch, isLoading }: AdvancedFilters
                 Clear
               </Button>
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsOpen(!isOpen)}
-              data-testid="button-toggle-filters"
-            >
-              <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-            </Button>
+            <TooltipWrapper trigger="advanced-filters-toggle">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsOpen(!isOpen)}
+                data-testid="button-toggle-filters"
+              >
+                <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+              </Button>
+            </TooltipWrapper>
           </div>
         </div>
       </CardHeader>

@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { MessageCircle, Phone, Mail, Shield, Crown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { TooltipWrapper } from '@/components/tooltip-wrapper';
 
 interface ContactSellerProps {
   carId: string;
@@ -161,16 +162,18 @@ export function ContactSeller({ carId, carTitle, sellerId, sellerName, price, on
               View All Messages
             </Button>
             
-            <Button 
-              variant="outline" 
-              className="w-full"
-              onClick={() => requestContactMutation.mutate('demo-conversation-id')}
-              disabled={requestContactMutation.isPending}
-              data-testid="button-get-contact-premium"
-            >
-              <Crown className="h-4 w-4 mr-2 text-yellow-500" />
-              Get Direct Contact (Premium)
-            </Button>
+            <TooltipWrapper trigger="button-get-contact-premium">
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => requestContactMutation.mutate('demo-conversation-id')}
+                disabled={requestContactMutation.isPending}
+                data-testid="button-get-contact-premium"
+              >
+                <Crown className="h-4 w-4 mr-2 text-yellow-500" />
+                Get Direct Contact (Premium)
+              </Button>
+            </TooltipWrapper>
           </div>
         </CardContent>
       </Card>

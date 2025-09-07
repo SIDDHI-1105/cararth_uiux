@@ -6,6 +6,7 @@ import ThemeToggle from "@/components/theme-toggle";
 import SocialMediaLinks from "@/components/social-media-links";
 import logoImage from "@/assets/logo.png";
 import { useAuth } from "@/hooks/useAuth";
+import { TooltipWrapper } from "@/components/tooltip-wrapper";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -58,17 +59,19 @@ export default function Navbar() {
               >
                 Buy Used Cars
               </Link>
-              <Link 
-                href="/sell-car" 
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                  location === "/sell-car" || location === "/sell"
-                    ? "text-accent-foreground bg-accent shadow-metallic" 
-                    : "text-muted-foreground hover:text-accent hover:bg-accent/10"
-                }`}
-                data-testid="link-sell-car"
-              >
-                Sell Your Car
-              </Link>
+              <TooltipWrapper trigger="sell-car-link">
+                <Link 
+                  href="/sell-car" 
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                    location === "/sell-car" || location === "/sell"
+                      ? "text-accent-foreground bg-accent shadow-metallic" 
+                      : "text-muted-foreground hover:text-accent hover:bg-accent/10"
+                  }`}
+                  data-testid="link-sell-car"
+                >
+                  Sell Your Car
+                </Link>
+              </TooltipWrapper>
               <Link 
                 href="/blog" 
                 className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
