@@ -280,70 +280,74 @@ export class AutomotiveNewsService {
   }
 
   private generateImpactStatement(impact: string, category: NewsArticle['category']): string {
-    const statements = {
-      market: 'Market dynamics shifting - monitor pricing trends',
-      pricing: 'Direct pricing impact expected for affected segments', 
-      technology: 'Technology adoption affecting vehicle valuations',
-      regulatory: 'Regulatory changes requiring operational adjustments',
-      industry: 'Industry developments impacting marketplace operations'
+    const wittyStatements = {
+      market: 'Market doing interesting things - time to pay attention',
+      pricing: 'Wallet implications incoming - prepare accordingly', 
+      technology: 'Tech disruption alert - adaptation required',
+      regulatory: 'Rule changes ahead - compliance dance begins',
+      industry: 'Industry plot twist - strategic pivoting recommended'
     };
     
     if (impact.toLowerCase().includes('increase') || impact.toLowerCase().includes('growth')) {
-      return 'Positive market trend - potential value appreciation';
+      return 'Upward trajectory confirmed - opportunity knocking rather loudly';
     } else if (impact.toLowerCase().includes('decrease') || impact.toLowerCase().includes('decline')) {
-      return 'Market correction anticipated - pricing pressure expected';
+      return 'Downward pressure detected - defensive strategies advisable';
+    } else if (impact.toLowerCase().includes('celebration') || impact.toLowerCase().includes('happy')) {
+      return 'Market sentiment surprisingly optimistic - cautious celebration warranted';
+    } else if (impact.toLowerCase().includes('crisis') || impact.toLowerCase().includes('trouble')) {
+      return 'Challenges identified - creative problem-solving time';
     }
     
-    return statements[category];
+    return wittyStatements[category];
   }
 
   private generateEngagingFallbackNews(): NewsArticle[] {
     const currentDate = new Date();
     return [
       {
-        title: 'Used Car Prices Surge 8% in September 2024 Amid Festive Season Demand',
-        summary: 'Pre-owned vehicle prices witness sharp uptick as consumers prepare for Diwali purchases. Compact SUVs and premium sedans leading the price rally, with Maruti, Hyundai, and Tata models seeing strongest demand in Hyderabad and NCR markets.',
+        title: 'Festive Season Turns Used Car Market into Sellers\' Paradise - And Buyers Are Actually Happy About It',
+        summary: 'September has delivered an 8% price surge that would make even the most hardened car dealer blush. Compact SUVs are flying off forecourts faster than samosas at a wedding, while premium sedans are commanding prices that suggest they might actually be made of gold. The Maruti, Hyundai, and Tata brigade are leading this delightfully chaotic charge across Hyderabad and NCR, proving that Indians really do love their four-wheeled festivities.',
         source: 'Market Intelligence',
         relevance: 'high',
         category: 'pricing',
         publishedAt: currentDate,
-        impact: 'Immediate pricing pressure - sellers market conditions strengthening'
+        impact: 'Sellers dancing jigs while buyers surprisingly cheerful about premium pricing'
       },
       {
-        title: 'Delhi NCR Air Quality Regulations Drive Diesel Car Resale Value Crash',
-        summary: 'New air quality mandates in Delhi NCR are accelerating the decline in diesel vehicle resale values. Cars older than 8 years experiencing 20-25% value erosion as buyers shift to petrol and CNG alternatives.',
+        title: 'Delhi\'s Air Quality Regulations Just Made Diesel Cars Less Popular Than Expired Milk',
+        summary: 'In a plot twist that nobody saw coming (except everyone who lives in Delhi), new air quality mandates have turned diesel cars into automotive pariahs. Vehicles older than 8 years are experiencing a 20-25% value drop faster than you can say "particulate matter." Meanwhile, petrol and CNG alternatives are smugly enjoying their moment in the spotlight, like the nerdy kid who suddenly became class president.',
         source: 'Regulatory Intelligence',
         relevance: 'high',
         category: 'regulatory',
         publishedAt: new Date(currentDate.getTime() - 24 * 60 * 60 * 1000),
-        impact: 'Regulatory impact - diesel vehicle segment under severe pressure'
+        impact: 'Diesel segment experiencing existential crisis while alternatives celebrate'
       },
       {
-        title: 'Hyundai Creta Emerges as Top Performing Used Car Investment',
-        summary: 'Analysis reveals Hyundai Creta retains 68% of its value after 3 years, outperforming traditional resale champions. Strong demand in secondary markets driving premium pricing for well-maintained units across all model years.',
+        title: 'Hyundai Creta Officially Becomes India\'s Golden Child of Resale Value',
+        summary: 'In automotive news that surprises absolutely no one who\'s driven one, the Hyundai Creta has emerged as the undisputed champion of value retention, holding onto 68% of its worth after three years. That\'s better performance than most investment portfolios and considerably more fun to drive. Secondary markets are treating well-maintained Cretas like vintage wine - the older they get, the more everyone seems to want them.',
         source: 'Investment Analysis',
         relevance: 'high',  
         category: 'market',
         publishedAt: new Date(currentDate.getTime() - 12 * 60 * 60 * 1000),
-        impact: 'Investment opportunity - Creta models showing strong appreciation'
+        impact: 'Creta owners quietly becoming automotive aristocracy'
       },
       {
-        title: 'Digital Vehicle Verification Mandate to Transform Used Car Sales',
-        summary: 'Government announces mandatory digital verification for all used car transactions starting October 2024. New blockchain-based system promises to eliminate title fraud and boost buyer confidence in pre-owned vehicle purchases.',
+        title: 'Government Declares War on Used Car Fraud with Blockchain Tech (Yes, Really)',
+        summary: 'Starting October 2024, every used car transaction will require digital verification through what can only be described as the automotive equivalent of a very sophisticated truth serum. The new blockchain-based system promises to make title fraud about as extinct as the Ambassador taxi. Buyers can finally sleep peacefully knowing their pre-owned treasure isn\'t actually someone else\'s stolen pride and joy.',
         source: 'Policy Update',
         relevance: 'medium',
         category: 'technology',
         publishedAt: new Date(currentDate.getTime() - 6 * 60 * 60 * 1000),
-        impact: 'Technology advancement - enhanced transaction security and transparency'
+        impact: 'Fraudsters everywhere updating their CVs for new career paths'
       },
       {
-        title: 'Rural India Drives 35% Growth in Budget Used Car Segment',
-        summary: 'Tier-2 and Tier-3 cities emerge as growth engines for affordable pre-owned vehicles. Cars priced under ₹5 lakhs witnessing unprecedented demand as rural purchasing power strengthens post-monsoon harvest season.',
+        title: 'Rural India Discovers Used Cars and Decides They\'re Rather Brilliant',
+        summary: 'While urban India was busy obsessing over the latest SUV launches, rural markets quietly triggered a 35% growth explosion in the budget used car segment. Tier-2 and Tier-3 cities have embraced pre-owned vehicles with the enthusiasm of someone discovering chocolate for the first time. Cars under ₹5 lakhs are disappearing faster than free samples, powered by post-monsoon prosperity and the universal truth that everyone needs a good set of wheels.',
         source: 'Market Research',
         relevance: 'medium',
         category: 'market',
         publishedAt: new Date(currentDate.getTime() - 18 * 60 * 60 * 1000),
-        impact: 'Market expansion - budget segment experiencing strong tailwinds'
+        impact: 'Budget segment experiencing unexpected renaissance and loving every minute'
       }
     ];
   }
