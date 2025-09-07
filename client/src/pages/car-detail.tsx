@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/navbar";
 import ContactModal from "@/components/contact-modal";
-import { ContactSeller } from "@/components/contact-seller";
+import { CarConversation } from "@/components/car-conversation";
 import PriceInsights from "@/components/price-insights";
 import LoanWidget from "@/components/loan-widget";
 import Footer from "@/components/footer";
@@ -160,13 +160,6 @@ export default function CarDetail() {
               </div>
               
               <div className="space-y-3">
-                <ContactSeller
-                  carId={car.id}
-                  carTitle={car.title}
-                  sellerId={car.sellerId}
-                  sellerName={seller?.name || 'Car Owner'}
-                  price={formatPrice(car.price)}
-                />
                 <Button 
                   variant="outline" 
                   className="w-full"
@@ -202,6 +195,15 @@ export default function CarDetail() {
           </div>
           
           <div className="space-y-6">
+            {/* Messaging & Contact */}
+            <CarConversation
+              carId={car.id}
+              carTitle={car.title}
+              sellerId={car.sellerId}
+              sellerName={seller?.name || 'Car Owner'}
+              price={formatPrice(car.price)}
+            />
+            
             {/* Loan Widget */}
             <LoanWidget 
               carPrice={parseFloat(car.price) * 100000} 

@@ -15,9 +15,10 @@ interface ContactSellerProps {
   sellerId: string;
   sellerName: string;
   price: string;
+  onConversationStarted?: (conversationId: string) => void;
 }
 
-export function ContactSeller({ carId, carTitle, sellerId, sellerName, price }: ContactSellerProps) {
+export function ContactSeller({ carId, carTitle, sellerId, sellerName, price, onConversationStarted }: ContactSellerProps) {
   const [message, setMessage] = useState(`Hi! I'm interested in your ${carTitle}. Is it still available?`);
   const [buyerName, setBuyerName] = useState('');
   const [buyerPhone, setBuyerPhone] = useState('');
@@ -41,6 +42,8 @@ export function ContactSeller({ carId, carTitle, sellerId, sellerName, price }: 
         content: message,
         senderId: 'demo-buyer-123', // In real app, get from auth context
       });
+      // Notify parent component about new conversation
+      onConversationStarted?.(conversation.id);
     },
     onError: () => {
       toast({

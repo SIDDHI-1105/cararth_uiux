@@ -62,18 +62,6 @@ export default function Navbar() {
                 Sell Your Car
               </Link>
               <Link 
-                href="/messages" 
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                  location === "/messages" 
-                    ? "text-accent-foreground bg-accent shadow-metallic" 
-                    : "text-muted-foreground hover:text-accent hover:bg-accent/10"
-                }`}
-                data-testid="link-messages"
-              >
-                <MessageCircle className="h-4 w-4 mr-1 inline" />
-                Messages
-              </Link>
-              <Link 
                 href="/blog" 
                 className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
                   location === "/blog" 
