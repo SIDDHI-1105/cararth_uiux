@@ -20,6 +20,8 @@ interface NewsArticle {
   category: 'market' | 'pricing' | 'industry' | 'technology' | 'regulatory';
   publishedAt: string;
   impact: string;
+  image?: string;
+  hasVideo?: boolean;
 }
 
 interface MarketInsight {
@@ -63,13 +65,30 @@ export default function ThrottleTalkPage() {
     { id: 'discussions', name: 'Community Buzz', icon: <MessageSquare className="h-4 w-4" />, color: 'green' },
   ];
 
-  // Mock engagement stats for articles
+  // Enhanced engagement stats and visual content for articles
   const getEngagementStats = (index: number): EngagementStats => ({
     views: Math.floor(Math.random() * 5000) + 1000,
     likes: Math.floor(Math.random() * 200) + 50,
     shares: Math.floor(Math.random() * 50) + 10,
     comments: Math.floor(Math.random() * 30) + 5,
   });
+
+  // Get featured image for article based on category and index
+  const getArticleImage = (category: string, index: number): string => {
+    const images = {
+      pricing: '/attached_assets/generated_images/Dynamic_sports_car_mountain_road_5267e5a6.png',
+      market: '/attached_assets/generated_images/Car_enthusiasts_community_gathering_46d58c97.png',
+      technology: '/attached_assets/generated_images/Business_presentation_dashboard_slide_4797876d.png',
+      regulatory: '/attached_assets/generated_images/Chrome_SUV_car_silhouette_7820aecb.png',
+      industry: '/attached_assets/generated_images/Classic_meets_modern_Indian_cars_2c8c3217.png'
+    };
+    return images[category as keyof typeof images] || images.market;
+  };
+
+  // Determine if article should have video content
+  const hasVideoContent = (index: number): boolean => {
+    return index % 3 === 0; // Every 3rd article has video content
+  };
 
   const handleLike = (articleIndex: number) => {
     const newLiked = new Set(likedArticles);
@@ -268,12 +287,77 @@ export default function ThrottleTalkPage() {
               ))}
             </div>
           ) : (
-            <div className="grid gap-6" data-testid="stories-list">
+            <div className="space-y-8" data-testid="stories-list">
+              {/* Hero Feature Story */}
+              {(newsData as any)?.articles?.length > 0 && (
+                <div className="relative rounded-xl overflow-hidden bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 text-white">
+                  <img 
+                    src="/attached_assets/generated_images/Dynamic_sports_car_mountain_road_5267e5a6.png"
+                    alt="Hero Story"
+                    className="absolute inset-0 w-full h-full object-cover opacity-30"
+                  />
+                  <div className="relative p-8 z-10">
+                    <div className="flex items-center gap-3 mb-4">
+                      <Badge className="bg-white/20 text-white font-bold px-3 py-1">
+                        🔥 TRENDING NOW
+                      </Badge>
+                      <Badge className="bg-red-500 text-white font-bold px-3 py-1">
+                        BREAKING
+                      </Badge>
+                    </div>
+                    <h2 className="text-3xl font-bold mb-4 leading-tight">
+                      {(newsData as any).articles[0].title}
+                    </h2>
+                    <p className="text-lg opacity-90 mb-6 line-clamp-2">
+                      {(newsData as any).articles[0].summary}
+                    </p>
+                    <div className="flex items-center gap-4 text-sm opacity-80">
+                      <span>🔥 {Math.floor(Math.random() * 50) + 100}K views</span>
+                      <span>💬 {Math.floor(Math.random() * 200) + 50} comments</span>
+                      <span>⚡ Just now</span>
+                    </div>
+                  </div>
+                </div>
+              )}
               {(newsData as any)?.articles?.map((article: NewsArticle, index: number) => {
                 const stats = getEngagementStats(index);
                 const isLiked = likedArticles.has(index);
+                const articleImage = getArticleImage(article.category, index);
+                const hasVideo = hasVideoContent(index);
                 return (
-                  <Card key={index} className="hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-gradient-to-r from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
+                  <Card key={index} className="hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-gradient-to-r from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 overflow-hidden">
+                    
+                    {/* Featured Image/Video */}
+                    <div className="relative h-48 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700">
+                      <img 
+                        src={articleImage} 
+                        alt={article.title}
+                        className="w-full h-full object-cover"
+                        data-testid={`img-story-featured-${index}`}
+                      />
+                      {hasVideo && (
+                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                          <div className="bg-red-600 hover:bg-red-700 rounded-full p-4 cursor-pointer transition-colors group">
+                            <div className="w-6 h-6 border-l-8 border-l-white border-y-4 border-y-transparent ml-1"></div>
+                          </div>
+                          <Badge className="absolute top-3 left-3 bg-red-600 text-white font-semibold">
+                            VIDEO
+                          </Badge>
+                        </div>
+                      )}
+                      <div className="absolute bottom-3 left-3">
+                        <Badge className={cn("text-xs font-semibold border-white/20",
+                          article.category === 'pricing' && 'bg-green-500/90 text-white',
+                          article.category === 'market' && 'bg-blue-500/90 text-white',
+                          article.category === 'technology' && 'bg-orange-500/90 text-white',
+                          article.category === 'regulatory' && 'bg-red-500/90 text-white',
+                          article.category === 'industry' && 'bg-purple-500/90 text-white'
+                        )}>
+                          {article.category.toUpperCase()}
+                        </Badge>
+                      </div>
+                    </div>
+
                     <CardHeader className="pb-4">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
