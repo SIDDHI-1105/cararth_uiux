@@ -17,7 +17,11 @@ import {
   type MessageInteraction,
   type InsertMessageInteraction,
   type ConversationBlock,
-  type InsertConversationBlock
+  type InsertConversationBlock,
+  type UserSearchActivity,
+  type InsertUserSearchActivity,
+  type PhoneVerification,
+  type InsertPhoneVerification
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -75,6 +79,19 @@ export interface IStorage {
   
   // Enhanced user operations for messaging
   getSellerContactInfo(sellerId: string): Promise<any>;
+  
+  // Subscription tier management
+  checkUserSearchLimit(userId: string): Promise<{ canSearch: boolean; searchesLeft: number; resetDate: Date }>;
+  incrementUserSearchCount(userId: string): Promise<void>;
+  updateUserSubscriptionTier(userId: string, tier: 'free' | 'pro_seller' | 'pro_buyer' | 'superhero'): Promise<User>;
+  
+  // Phone verification operations
+  createPhoneVerification(verification: InsertPhoneVerification): Promise<PhoneVerification>;
+  verifyPhoneCode(userId: string, code: string): Promise<boolean>;
+  markPhoneAsVerified(userId: string): Promise<void>;
+  
+  // Search activity tracking
+  logUserSearchActivity(activity: InsertUserSearchActivity): Promise<UserSearchActivity>;
 }
 
 export class MemStorage implements IStorage {
@@ -87,6 +104,8 @@ export class MemStorage implements IStorage {
   private messages: Map<string, Message>;
   private messageInteractions: Map<string, MessageInteraction>;
   private conversationBlocks: Map<string, ConversationBlock>;
+  private userSearchActivity: Map<string, UserSearchActivity>;
+  private phoneVerifications: Map<string, PhoneVerification>;
 
   constructor() {
     this.users = new Map();
@@ -98,6 +117,8 @@ export class MemStorage implements IStorage {
     this.messages = new Map();
     this.messageInteractions = new Map();
     this.conversationBlocks = new Map();
+    this.userSearchActivity = new Map();
+    this.phoneVerifications = new Map();
     
     // Clear any existing data and reinitialize
     this.cars.clear();
@@ -113,6 +134,13 @@ export class MemStorage implements IStorage {
       lastName: "Kumar",
       profileImageUrl: null,
       phone: "+91 98765 43210",
+      phoneVerified: true,
+      phoneVerifiedAt: new Date(),
+      subscriptionTier: "free",
+      subscriptionStatus: "active",
+      subscriptionExpiresAt: null,
+      searchCount: 0,
+      searchCountResetAt: new Date(),
       isPremium: false,
       premiumExpiresAt: null,
       createdAt: new Date(),
@@ -295,6 +323,13 @@ export class MemStorage implements IStorage {
     const user: User = { 
       ...insertUser, 
       id,
+      phoneVerified: false,
+      phoneVerifiedAt: null,
+      subscriptionTier: "free",
+      subscriptionStatus: "active", 
+      subscriptionExpiresAt: null,
+      searchCount: 0,
+      searchCountResetAt: new Date(),
       isPremium: false,
       premiumExpiresAt: null,
       createdAt: new Date(),
@@ -320,6 +355,13 @@ export class MemStorage implements IStorage {
       const newUser: User = {
         ...userData,
         phone: null,
+        phoneVerified: false,
+        phoneVerifiedAt: null,
+        subscriptionTier: "free",
+        subscriptionStatus: "active",
+        subscriptionExpiresAt: null,
+        searchCount: 0,
+        searchCountResetAt: new Date(),
         isPremium: false,
         premiumExpiresAt: null,
         createdAt: new Date(),
@@ -616,6 +658,115 @@ export class MemStorage implements IStorage {
       return `${localPart.charAt(0)}xxxxx@${domain}`;
     }
     return 'xxxxx@example.com';
+  }
+
+  // Subscription tier management implementation
+  async checkUserSearchLimit(userId: string): Promise<{ canSearch: boolean; searchesLeft: number; resetDate: Date }> {
+    const user = this.users.get(userId);
+    if (!user) {
+      return { canSearch: false, searchesLeft: 0, resetDate: new Date() };
+    }
+
+    // Premium users have unlimited searches
+    if (user.subscriptionTier !== 'free') {
+      return { canSearch: true, searchesLeft: -1, resetDate: new Date() };
+    }
+
+    // Check if 30 days have passed since last reset
+    const now = new Date();
+    const resetDate = user.searchCountResetAt;
+    const daysSinceReset = Math.floor((now.getTime() - resetDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysSinceReset >= 30) {
+      // Reset the search count
+      user.searchCount = 0;
+      user.searchCountResetAt = now;
+      this.users.set(userId, user);
+    }
+
+    const searchesLeft = Math.max(0, 5 - user.searchCount);
+    const canSearch = searchesLeft > 0;
+    const nextResetDate = new Date(resetDate.getTime() + (30 * 24 * 60 * 60 * 1000));
+
+    return { canSearch, searchesLeft, resetDate: nextResetDate };
+  }
+
+  async incrementUserSearchCount(userId: string): Promise<void> {
+    const user = this.users.get(userId);
+    if (user && user.subscriptionTier === 'free') {
+      user.searchCount = (user.searchCount || 0) + 1;
+      user.updatedAt = new Date();
+      this.users.set(userId, user);
+    }
+  }
+
+  async updateUserSubscriptionTier(userId: string, tier: 'free' | 'pro_seller' | 'pro_buyer' | 'superhero'): Promise<User> {
+    const user = this.users.get(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    user.subscriptionTier = tier;
+    user.subscriptionStatus = 'active';
+    user.updatedAt = new Date();
+    
+    // Reset search count for tier changes
+    if (tier !== 'free') {
+      user.searchCount = 0;
+    }
+
+    this.users.set(userId, user);
+    return user;
+  }
+
+  // Phone verification implementation
+  async createPhoneVerification(verification: InsertPhoneVerification): Promise<PhoneVerification> {
+    const id = randomUUID();
+    const phoneVerification: PhoneVerification = {
+      id,
+      ...verification,
+      verified: false,
+      createdAt: new Date(),
+    };
+    this.phoneVerifications.set(id, phoneVerification);
+    return phoneVerification;
+  }
+
+  async verifyPhoneCode(userId: string, code: string): Promise<boolean> {
+    // Find verification record for this user
+    for (const verification of this.phoneVerifications.values()) {
+      if (verification.userId === userId && verification.verificationCode === code) {
+        const now = new Date();
+        if (now <= verification.expiresAt && !verification.verified) {
+          verification.verified = true;
+          this.phoneVerifications.set(verification.id, verification);
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  async markPhoneAsVerified(userId: string): Promise<void> {
+    const user = this.users.get(userId);
+    if (user) {
+      user.phoneVerified = true;
+      user.phoneVerifiedAt = new Date();
+      user.updatedAt = new Date();
+      this.users.set(userId, user);
+    }
+  }
+
+  // Search activity tracking implementation
+  async logUserSearchActivity(activity: InsertUserSearchActivity): Promise<UserSearchActivity> {
+    const id = randomUUID();
+    const searchActivity: UserSearchActivity = {
+      id,
+      ...activity,
+      createdAt: new Date(),
+    };
+    this.userSearchActivity.set(id, searchActivity);
+    return searchActivity;
   }
 }
 

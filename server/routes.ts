@@ -9,12 +9,69 @@ import {
   insertConversationSchema,
   insertMessageSchema,
   insertMessageInteractionSchema,
-  insertConversationBlockSchema
+  insertConversationBlockSchema,
+  insertUserSearchActivitySchema,
+  insertPhoneVerificationSchema
 } from "@shared/schema";
 import { priceComparisonService } from "./priceComparison";
 import { marketplaceAggregator } from "./marketplaceAggregator";
 import { z } from "zod";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+
+// Subscription middleware to check search limits
+const checkSearchLimit = async (req: any, res: any, next: any) => {
+  try {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required for searches" });
+    }
+
+    const userId = req.user.claims.sub;
+    const user = await storage.getUser(userId);
+    
+    if (!user) {
+      return res.status(401).json({ error: "User not found" });
+    }
+
+    // Free tier users need phone verification
+    if (user.subscriptionTier === 'free' && !user.phoneVerified) {
+      return res.status(403).json({ 
+        error: "Phone verification required",
+        requiresPhoneVerification: true,
+        userTier: user.subscriptionTier 
+      });
+    }
+
+    // Check search limits for free tier
+    const searchLimitInfo = await storage.checkUserSearchLimit(userId);
+    if (!searchLimitInfo.canSearch) {
+      return res.status(429).json({ 
+        error: "Search limit exceeded",
+        searchesLeft: searchLimitInfo.searchesLeft,
+        resetDate: searchLimitInfo.resetDate,
+        userTier: user.subscriptionTier
+      });
+    }
+
+    // Log the search activity
+    await storage.logUserSearchActivity({
+      userId,
+      searchType: 'marketplace_search',
+      searchFilters: req.body || req.query,
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent') || null
+    });
+
+    // Increment search count for free users
+    if (user.subscriptionTier === 'free') {
+      await storage.incrementUserSearchCount(userId);
+    }
+
+    next();
+  } catch (error) {
+    console.error("Search limit check error:", error);
+    res.status(500).json({ error: "Failed to check search limits" });
+  }
+};
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -29,6 +86,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Phone verification endpoints
+  app.post('/api/auth/verify-phone/send', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { phoneNumber } = req.body;
+      
+      if (!phoneNumber) {
+        return res.status(400).json({ error: "Phone number required" });
+      }
+
+      // Generate random 6-digit code
+      const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+      await storage.createPhoneVerification({
+        userId,
+        phoneNumber,
+        verificationCode,
+        expiresAt
+      });
+
+      // In a real app, send SMS here
+      console.log(`SMS Verification Code for ${phoneNumber}: ${verificationCode}`);
+      
+      res.json({ message: "Verification code sent", codeForDemo: verificationCode });
+    } catch (error) {
+      console.error("Phone verification error:", error);
+      res.status(500).json({ error: "Failed to send verification code" });
+    }
+  });
+
+  app.post('/api/auth/verify-phone/confirm', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { code } = req.body;
+      
+      if (!code) {
+        return res.status(400).json({ error: "Verification code required" });
+      }
+
+      const isValid = await storage.verifyPhoneCode(userId, code);
+      if (isValid) {
+        await storage.markPhoneAsVerified(userId);
+        const user = await storage.getUser(userId);
+        res.json({ message: "Phone verified successfully", user });
+      } else {
+        res.status(400).json({ error: "Invalid or expired verification code" });
+      }
+    } catch (error) {
+      console.error("Phone verification error:", error);
+      res.status(500).json({ error: "Failed to verify phone" });
+    }
+  });
+
+  // Subscription management endpoints
+  app.get('/api/subscription/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      const searchLimitInfo = await storage.checkUserSearchLimit(userId);
+      
+      res.json({
+        tier: user?.subscriptionTier,
+        status: user?.subscriptionStatus,
+        phoneVerified: user?.phoneVerified,
+        searchInfo: searchLimitInfo
+      });
+    } catch (error) {
+      console.error("Subscription status error:", error);
+      res.status(500).json({ error: "Failed to get subscription status" });
+    }
+  });
+
+  app.post('/api/subscription/upgrade', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { tier } = req.body;
+      
+      if (!['pro_seller', 'pro_buyer', 'superhero'].includes(tier)) {
+        return res.status(400).json({ error: "Invalid subscription tier" });
+      }
+
+      const updatedUser = await storage.updateUserSubscriptionTier(userId, tier);
+      res.json({ message: "Subscription upgraded successfully", user: updatedUser });
+    } catch (error) {
+      console.error("Subscription upgrade error:", error);
+      res.status(500).json({ error: "Failed to upgrade subscription" });
     }
   });
   // Get all cars with optional filters
@@ -79,8 +226,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Search cars (alternative endpoint)
-  app.post("/api/cars/search", async (req, res) => {
+  // Search cars (alternative endpoint) - with subscription limits
+  app.post("/api/cars/search", checkSearchLimit, async (req, res) => {
     try {
       const searchSchema = z.object({
         brand: z.string().optional(),
@@ -95,7 +242,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const filters = searchSchema.parse(req.body);
       const cars = await storage.searchCars(filters);
-      res.json(cars);
+      
+      // Include search limit info in response for free users
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      const searchLimitInfo = await storage.checkUserSearchLimit(userId);
+      
+      res.json({
+        cars,
+        searchInfo: {
+          userTier: user?.subscriptionTier,
+          searchesLeft: searchLimitInfo.searchesLeft,
+          resetDate: searchLimitInfo.resetDate
+        }
+      });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ error: "Invalid search parameters", details: error.errors });
@@ -201,8 +361,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Advanced marketplace search across portals
-  app.post("/api/marketplace/search", async (req, res) => {
+  // Advanced marketplace search across portals - with subscription limits
+  app.post("/api/marketplace/search", checkSearchLimit, async (req, res) => {
     try {
       const searchSchema = z.object({
         brand: z.string().optional(),
@@ -235,7 +395,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Marketplace search filters:', filters);
 
       const searchResult = await marketplaceAggregator.searchAcrossPortals(filters as any);
-      res.json(searchResult);
+      
+      // Include search limit info in response
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      const searchLimitInfo = await storage.checkUserSearchLimit(userId);
+      
+      res.json({
+        ...searchResult,
+        searchInfo: {
+          userTier: user?.subscriptionTier,
+          searchesLeft: searchLimitInfo.searchesLeft,
+          resetDate: searchLimitInfo.resetDate
+        }
+      });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ error: "Invalid search parameters", details: error.errors });
