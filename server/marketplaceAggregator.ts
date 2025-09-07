@@ -1,6 +1,7 @@
 import { webSearch } from "../shared/webSearch.js";
 import { GoogleGenAI } from "@google/genai";
 import FirecrawlApp from '@mendable/firecrawl-js';
+import { GeographicIntelligenceService, type LocationData, type GeoSearchContext } from './geoService.js';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 const firecrawl = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY || "" });
@@ -112,14 +113,50 @@ export class MarketplaceAggregator {
     'Classified Ads', 'Dealer Networks', 'Partner APIs', 'CarTrade',
     'Mahindra First Choice', 'Maruti True Value', 'Truebil'
   ];
+  
+  private geoService: GeographicIntelligenceService;
+  
+  constructor() {
+    this.geoService = new GeographicIntelligenceService();
+  }
 
   async searchAcrossPortals(filters: DetailedFilters): Promise<AggregatedSearchResult> {
     console.log('🔍 Searching used car portals with filters:', filters);
     
-    // Location validation - only serve supported cities with real data
-    if (filters.city && !isCitySupported(filters.city)) {
-      console.log(`❌ City '${filters.city}' not supported - no real listings available`);
-      throw new Error(`We currently serve Delhi NCR and Hyderabad only with authentic verified listings. Expansion to ${filters.city} coming soon!`);
+    // Enhanced location validation with Geographic Intelligence Service
+    let locationData: LocationData | null = null;
+    let geoContext: GeoSearchContext | null = null;
+    
+    if (filters.city) {
+      try {
+        // Get enhanced location context from Gemini + Google Maps
+        locationData = await this.geoService.enrichLocationContext(filters.city);
+        console.log(`🗺️ Location Analysis: ${locationData.city}, ${locationData.state} (Zone: ${locationData.marketZone})`);
+        
+        // Check if location is currently supported for authentic data
+        if (!this.geoService.isLocationActiveForSearch(locationData)) {
+          const errorMessage = locationData.marketZone === 'delhi-ncr' 
+            ? `Delhi NCR expansion launches September 9th, 2024! Currently serving Hyderabad with 100% authentic listings.`
+            : `We currently serve Hyderabad (live now) and Delhi NCR (Sept 9th launch) with authentic verified listings. Expansion to ${locationData.city} coming soon!`;
+          
+          console.log(`❌ Location '${filters.city}' not yet supported - ${errorMessage}`);
+          throw new Error(errorMessage);
+        }
+        
+        // Generate geographic search context for optimized results
+        geoContext = await this.geoService.generateGeoSearchContext(locationData, filters);
+        console.log(`🎯 Geographic context: ${geoContext.marketDensity} density market with ${geoContext.searchRadius}km radius`);
+        
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('serve')) {
+          throw error; // Re-throw user-facing messages
+        }
+        console.error('🚫 Geographic intelligence error:', error);
+        // Fallback to original validation
+        if (!isCitySupported(filters.city)) {
+          throw new Error(`Location service temporarily unavailable. We currently serve Hyderabad with authentic listings, Delhi NCR launching Sept 9th.`);
+        }
+      }
     }
     
     // First priority: Try to get real listings from actual used car portals
