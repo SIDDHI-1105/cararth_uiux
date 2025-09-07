@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/navbar";
 import ContactModal from "@/components/contact-modal";
+import { ContactSeller } from "@/components/contact-seller";
 import PriceInsights from "@/components/price-insights";
 import LoanWidget from "@/components/loan-widget";
 import Footer from "@/components/footer";
-import { Phone, Calendar, MapPin, User, Star, Check, ArrowLeft } from "lucide-react";
+import { Phone, Calendar, MapPin, User, Star, Check, ArrowLeft, MessageCircle } from "lucide-react";
 import { Link } from "wouter";
 import { type Car, type User as UserType } from "@shared/schema";
 import logoImage from "@/assets/logo.png";
@@ -159,14 +160,13 @@ export default function CarDetail() {
               </div>
               
               <div className="space-y-3">
-                <Button 
-                  onClick={() => setContactModalOpen(true)}
-                  className="w-full btn-metallic py-3 font-semibold"
-                  data-testid="button-contact-seller"
-                >
-                  <Phone className="mr-2 h-4 w-4" />
-                  Contact Seller
-                </Button>
+                <ContactSeller
+                  carId={car.id}
+                  carTitle={car.title}
+                  sellerId={car.sellerId}
+                  sellerName={seller?.name || 'Car Owner'}
+                  price={formatPrice(car.price)}
+                />
                 <Button 
                   variant="outline" 
                   className="w-full"
