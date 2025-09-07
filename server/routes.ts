@@ -18,9 +18,36 @@ import { marketplaceAggregator } from "./marketplaceAggregator";
 import { z } from "zod";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 
+// Developer mode check
+const isDeveloperMode = (req: any) => {
+  // Check if running in development environment
+  if (process.env.NODE_ENV === 'development') {
+    return true;
+  }
+  
+  // Check for developer user (if authenticated)
+  if (req.isAuthenticated && req.isAuthenticated()) {
+    const userEmail = req.user?.claims?.email;
+    // Add your developer email here or check for admin status
+    return userEmail && (
+      userEmail.includes('@replit.com') || 
+      userEmail.includes('developer') ||
+      process.env.DEVELOPER_EMAIL === userEmail
+    );
+  }
+  
+  return false;
+};
+
 // Subscription middleware to check search limits
 const checkSearchLimit = async (req: any, res: any, next: any) => {
   try {
+    // Developer mode bypass
+    if (isDeveloperMode(req)) {
+      console.log('🚀 Developer mode active - bypassing all restrictions');
+      return next();
+    }
+
     if (!req.isAuthenticated()) {
       return res.status(401).json({ error: "Authentication required for searches" });
     }
@@ -307,6 +334,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch seller information" });
     }
+  });
+
+  // Developer bypass endpoint for testing
+  app.get("/api/developer/status", async (req, res) => {
+    const devMode = isDeveloperMode(req);
+    res.json({
+      isDeveloper: devMode,
+      environment: process.env.NODE_ENV,
+      authenticated: req.isAuthenticated ? req.isAuthenticated() : false,
+      userEmail: req.user?.claims?.email || null
+    });
   });
 
   // Get price insights for a car
