@@ -210,11 +210,19 @@ export class MarketplaceAggregator {
           console.log(`✅ After brand filtering: ${allListings.length} listings`);
         }
         
-        const analytics = this.generateAnalytics(allListings);
-        const recommendations = this.generateRecommendations(allListings, analytics);
+        // 🧠 Apply AI-powered historical intelligence and recency bias
+        console.log('🧠 Applying historical intelligence and recency bias...');
+        const enhancedListings = await this.enhanceWithHistoricalIntelligence(allListings, locationData?.city || filters.city || '');
+        
+        // ⏰ Apply recency bias sorting
+        const sortedListings = this.historicalService.applyRecencyBias(enhancedListings);
+        console.log(`✅ Enhanced ${sortedListings.length} listings with AI intelligence and recency scoring`);
+        
+        const analytics = this.generateEnhancedAnalytics(sortedListings);
+        const recommendations = this.generateEnhancedRecommendations(sortedListings, analytics);
         
         return {
-          listings: allListings.slice(0, filters.limit || 50),
+          listings: sortedListings.slice(0, filters.limit || 50),
           analytics,
           recommendations
         };
@@ -623,6 +631,33 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
     };
   }
 
+  // 🧠 Enhanced analytics with AI intelligence
+  private generateEnhancedAnalytics(listings: EnhancedMarketplaceListing[]) {
+    const basicAnalytics = this.generateAnalytics(listings);
+    
+    const listingsWithAnalysis = listings.filter(l => l.historicalAnalysis);
+    if (listingsWithAnalysis.length === 0) {
+      return { ...basicAnalytics, avgAuthenticityRating: 7.5, avgSalesVelocity: 35, marketHealth: 'good' };
+    }
+    
+    const avgAuthenticityRating = listingsWithAnalysis.reduce((sum, l) => 
+      sum + (l.historicalAnalysis?.authenticityRating || 7), 0) / listingsWithAnalysis.length;
+    
+    const avgSalesVelocity = listingsWithAnalysis.reduce((sum, l) => 
+      sum + (l.historicalAnalysis?.salesVelocity.avgDaysToSell || 35), 0) / listingsWithAnalysis.length;
+    
+    const marketHealth = avgAuthenticityRating >= 8 ? 'excellent' :
+                        avgAuthenticityRating >= 6.5 ? 'good' :
+                        avgAuthenticityRating >= 5 ? 'average' : 'poor';
+    
+    return {
+      ...basicAnalytics,
+      avgAuthenticityRating: Math.round(avgAuthenticityRating * 10) / 10,
+      avgSalesVelocity: Math.round(avgSalesVelocity),
+      marketHealth
+    };
+  }
+
   private generateRecommendations(listings: MarketplaceListing[], analytics: any) {
     const sortedByPrice = [...listings].sort((a, b) => a.price - b.price);
     const recent = listings.filter(l => {
@@ -636,6 +671,71 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
       newListings: recent.slice(0, 5),
       certified: listings.filter(l => l.verificationStatus === 'certified').slice(0, 5)
     };
+  }
+
+  // 🚀 Enhanced recommendations with AI intelligence
+  private generateEnhancedRecommendations(listings: EnhancedMarketplaceListing[], analytics: any) {
+    const basic = this.generateRecommendations(listings, analytics);
+    
+    // High authenticity listings (8+ rating)
+    const highAuthenticity = listings
+      .filter(l => (l.historicalAnalysis?.authenticityRating || 0) >= 8)
+      .slice(0, 5);
+    
+    // Fast selling vehicles (≤ 25 days average)
+    const fastSelling = listings
+      .filter(l => (l.historicalAnalysis?.salesVelocity.avgDaysToSell || 100) <= 25)
+      .slice(0, 5);
+    
+    return {
+      ...basic,
+      highAuthenticity,
+      fastSelling
+    };
+  }
+
+  // 🧠 Enhance listings with historical intelligence
+  private async enhanceWithHistoricalIntelligence(listings: MarketplaceListing[], city: string): Promise<EnhancedMarketplaceListing[]> {
+    console.log(`🧠 Analyzing ${listings.length} listings with historical intelligence...`);
+    
+    const enhancedListings = await Promise.all(
+      listings.map(async (listing) => {
+        try {
+          const vehicleProfile = {
+            brand: listing.brand,
+            model: listing.model,
+            year: listing.year,
+            fuelType: listing.fuelType,
+            transmission: listing.transmission,
+            city: city,
+            mileage: listing.mileage,
+            price: listing.price,
+            listingDate: listing.listingDate
+          };
+          
+          const historicalAnalysis = await this.historicalService.analyzeHistoricalData(vehicleProfile);
+          
+          return {
+            ...listing,
+            historicalAnalysis,
+            recencyScore: historicalAnalysis.recencyScore,
+            authenticityRating: historicalAnalysis.authenticityRating
+          };
+        } catch (error) {
+          console.warn(`⚠️ Failed to analyze ${listing.brand} ${listing.model}:`, error);
+          return {
+            ...listing,
+            recencyScore: this.historicalService.calculateRecencyScore(listing.listingDate),
+            authenticityRating: 7.5 // Default rating
+          };
+        }
+      })
+    );
+    
+    const analyzedCount = enhancedListings.filter(l => l.historicalAnalysis).length;
+    console.log(`✅ Successfully analyzed ${analyzedCount}/${listings.length} listings with AI intelligence`);
+    
+    return enhancedListings;
   }
 
   // Helper methods
