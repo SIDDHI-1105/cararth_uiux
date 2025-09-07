@@ -20,7 +20,12 @@ export default function Navbar() {
   const { user, isLoading, isAuthenticated } = useAuth();
 
   return (
-    <nav className="nav-carbon carbon-fiber sticky top-0 z-50">
+    <>
+      {/* Pilot Phase Banner */}
+      <div className="bg-gradient-to-r from-green-500 to-blue-600 text-white py-2 px-4 text-center text-sm font-medium">
+        🚀 <strong>Live in Hyderabad!</strong> Authentic car listings now available | 🔄 <strong>Delhi NCR</strong> launching soon
+      </div>
+      <nav className="nav-carbon carbon-fiber sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           <div className="flex items-center">
@@ -280,5 +285,6 @@ export default function Navbar() {
         )}
       </div>
     </nav>
+    </>
   );
 }

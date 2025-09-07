@@ -148,8 +148,8 @@ export default function CarFilters({ onApplyFilters }: CarFiltersProps) {
               <SelectValue placeholder="Select location" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Delhi NCR">🟢 Delhi NCR - Available</SelectItem>
-              <SelectItem value="Hyderabad">🟢 Hyderabad - Available</SelectItem>
+              <SelectItem value="Hyderabad">🚀 Hyderabad - Live Now!</SelectItem>
+              <SelectItem value="Delhi NCR">🔄 Delhi NCR - Coming Soon</SelectItem>
               <SelectItem value="Mumbai">🔄 Mumbai - Coming Soon</SelectItem>
               <SelectItem value="Bangalore">🔄 Bangalore - Coming Soon</SelectItem>
               <SelectItem value="Chennai">🔄 Chennai - Coming Soon</SelectItem>

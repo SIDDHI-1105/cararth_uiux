@@ -64,8 +64,12 @@ export default function AdvancedFilters({ onSearch, isLoading }: AdvancedFilters
   ];
 
   const cities = [
-    "Mumbai", "Delhi", "Bangalore", "Chennai", "Hyderabad", "Pune",
-    "Ahmedabad", "Kolkata", "Surat", "Jaipur", "Lucknow", "Kanpur"
+    "🚀 Hyderabad - Live Now!",
+    "🔄 Delhi NCR - Coming Soon", 
+    "🔄 Mumbai - Coming Soon",
+    "🔄 Bangalore - Coming Soon", 
+    "🔄 Chennai - Coming Soon", 
+    "🔄 Pune - Coming Soon"
   ];
 
   const states = [
