@@ -1458,6 +1458,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // SEO-friendly community routes for backlinks
+  app.get("/community/guidelines", (req, res) => {
+    res.redirect('/community?tab=resources');
+  });
+
+  app.get("/community/events", (req, res) => {
+    res.redirect('/community?tab=events');
+  });
+
+  app.get("/community/members", (req, res) => {
+    res.redirect('/community');
+  });
+
+  app.get("/community/:brand", (req, res) => {
+    const { brand } = req.params;
+    res.redirect(`/?brand=${brand}`);
+  });
+
+  app.get("/guides/:type", (req, res) => {
+    const { type } = req.params;
+    if (type === 'buying') {
+      res.redirect('/news?category=market');
+    } else if (type === 'maintenance') {
+      res.redirect('/news?category=technology');
+    } else if (type === 'finance') {
+      res.redirect('/finance');
+    } else {
+      res.redirect('/news');
+    }
+  });
+
+  // Sitemap for SEO
+  app.get("/sitemap.xml", (req, res) => {
+    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+      <url><loc>${req.protocol}://${req.get('host')}/</loc><priority>1.0</priority></url>
+      <url><loc>${req.protocol}://${req.get('host')}/community</loc><priority>0.9</priority></url>
+      <url><loc>${req.protocol}://${req.get('host')}/news</loc><priority>0.9</priority></url>
+      <url><loc>${req.protocol}://${req.get('host')}/sell</loc><priority>0.8</priority></url>
+      <url><loc>${req.protocol}://${req.get('host')}/finance</loc><priority>0.7</priority></url>
+      <url><loc>${req.protocol}://${req.get('host')}/community/maruti</loc><priority>0.6</priority></url>
+      <url><loc>${req.protocol}://${req.get('host')}/community/hyundai</loc><priority>0.6</priority></url>
+      <url><loc>${req.protocol}://${req.get('host')}/community/tata</loc><priority>0.6</priority></url>
+    </urlset>`;
+    
+    res.set('Content-Type', 'text/xml');
+    res.send(sitemap);
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

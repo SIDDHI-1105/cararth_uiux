@@ -12,6 +12,7 @@ import MessagesPage from "./pages/messages";
 import Blog from "./pages/blog";
 import AdminBlog from "./pages/admin-blog";
 import News from "./pages/news";
+import Community from "./pages/community";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -26,6 +27,7 @@ function Router() {
       <Route path="/blog" component={Blog} />
       <Route path="/admin/blog" component={AdminBlog} />
       <Route path="/news" component={News} />
+      <Route path="/community" component={Community} />
       <Route component={NotFound} />
     </Switch>
   );
