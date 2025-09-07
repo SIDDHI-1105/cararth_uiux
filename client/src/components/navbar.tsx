@@ -78,15 +78,15 @@ export default function Navbar() {
                 </Link>
               </TooltipWrapper>
               <Link 
-                href="/blog" 
+                href="/news" 
                 className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                  location === "/blog" 
+                  location === "/news" 
                     ? "text-accent-foreground bg-accent shadow-metallic" 
                     : "text-muted-foreground hover:text-accent hover:bg-accent/10"
                 }`}
-                data-testid="link-blog"
+                data-testid="link-throttle-talk"
               >
-                Auto News
+                Throttle Talk
               </Link>
               <a href="#" className="text-muted-foreground hover:text-accent hover:bg-accent/10 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300">
                 Analytics
@@ -202,16 +202,16 @@ export default function Navbar() {
                 Sell Your Car
               </Link>
               <Link 
-                href="/blog" 
+                href="/news" 
                 className={`block px-3 py-2 rounded-lg text-base font-semibold transition-all duration-300 ${
-                  location === "/blog" 
+                  location === "/news" 
                     ? "text-accent-foreground bg-accent" 
                     : "text-muted-foreground hover:text-accent hover:bg-accent/10"
                 }`}
-                data-testid="mobile-link-blog"
+                data-testid="mobile-link-throttle-talk"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Auto News
+                Throttle Talk
               </Link>
               <a 
                 href="#" 
