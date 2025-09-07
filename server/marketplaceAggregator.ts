@@ -2,6 +2,7 @@ import { webSearch } from "../shared/webSearch.js";
 import { GoogleGenAI } from "@google/genai";
 import FirecrawlApp from '@mendable/firecrawl-js';
 import { GeographicIntelligenceService, type LocationData, type GeoSearchContext } from './geoService.js';
+import { HistoricalIntelligenceService, type HistoricalAnalysis } from './historicalIntelligence.js';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 const firecrawl = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY || "" });
@@ -29,8 +30,14 @@ export interface MarketplaceListing {
   sellerType: 'individual' | 'dealer' | 'oem';
 }
 
+export interface EnhancedMarketplaceListing extends MarketplaceListing {
+  historicalAnalysis?: HistoricalAnalysis;
+  recencyScore?: number;
+  authenticityRating?: number;
+}
+
 export interface AggregatedSearchResult {
-  listings: MarketplaceListing[];
+  listings: EnhancedMarketplaceListing[];
   analytics: {
     totalListings: number;
     avgPrice: number;
@@ -41,12 +48,17 @@ export interface AggregatedSearchResult {
     locationDistribution: Record<string, number>;
     priceByLocation: Record<string, number>;
     historicalTrend: 'rising' | 'falling' | 'stable';
+    avgAuthenticityRating?: number;
+    avgSalesVelocity?: number;
+    marketHealth?: string;
   };
   recommendations: {
-    bestDeals: MarketplaceListing[];
-    overpriced: MarketplaceListing[];
-    newListings: MarketplaceListing[];
-    certified: MarketplaceListing[];
+    bestDeals: EnhancedMarketplaceListing[];
+    overpriced: EnhancedMarketplaceListing[];
+    newListings: EnhancedMarketplaceListing[];
+    certified: EnhancedMarketplaceListing[];
+    highAuthenticity: EnhancedMarketplaceListing[];
+    fastSelling: EnhancedMarketplaceListing[];
   };
 }
 
@@ -115,9 +127,11 @@ export class MarketplaceAggregator {
   ];
   
   private geoService: GeographicIntelligenceService;
+  private historicalService: HistoricalIntelligenceService;
   
   constructor() {
     this.geoService = new GeographicIntelligenceService();
+    this.historicalService = new HistoricalIntelligenceService();
   }
 
   async searchAcrossPortals(filters: DetailedFilters): Promise<AggregatedSearchResult> {
