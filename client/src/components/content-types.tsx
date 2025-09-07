@@ -127,6 +127,18 @@ export function PriceCalculator({ title, basePrices }: {
     return Math.round(basePrice);
   };
 
+  const formatPrice = (price: number) => {
+    if (price >= 10000000) { // 1 Crore and above
+      return `₹${(price / 10000000).toFixed(2)} Cr`;
+    } else if (price >= 100000) { // 1 Lakh and above
+      return `₹${(price / 100000).toFixed(2)} L`;
+    } else if (price >= 1000) { // 1 Thousand and above
+      return `₹${(price / 1000).toFixed(0)}K`;
+    } else {
+      return `₹${price.toLocaleString()}`;
+    }
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -192,15 +204,17 @@ export function PriceCalculator({ title, basePrices }: {
           </div>
         </div>
         
-        <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-4 rounded-lg border">
-          <div className="flex items-center justify-between">
-            <span className="text-lg font-semibold">Estimated Price:</span>
-            <div className="flex items-center gap-1 text-2xl font-bold text-blue-600">
-              <IndianRupee className="w-6 h-6" />
-              {calculatePrice().toLocaleString()}
+        <div className="bg-gradient-to-r from-primary/10 to-accent/10 dark:from-primary/20 dark:to-accent/20 p-6 rounded-lg border border-primary/20 dark:border-primary/30">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <span className="text-lg font-semibold text-foreground">Estimated Price:</span>
+            <div className="flex items-center justify-center gap-2 px-4 py-2 bg-background/80 dark:bg-card/80 rounded-lg border">
+              <IndianRupee className="w-5 h-5 text-primary" />
+              <span className="text-2xl font-bold text-primary">
+                {formatPrice(calculatePrice())}
+              </span>
             </div>
           </div>
-          <p className="text-sm text-muted-foreground mt-2">
+          <p className="text-sm text-muted-foreground mt-3 text-center sm:text-left">
             *Estimate based on market trends and vehicle condition
           </p>
         </div>
