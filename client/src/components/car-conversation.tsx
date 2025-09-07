@@ -44,10 +44,19 @@ export function CarConversation({
   // Check for existing conversation
   const { data: existingConversation } = useQuery({
     queryKey: ['/api/conversations', { carId, userId: currentUserId }],
-    queryFn: () => 
-      fetch(`/api/conversations?userId=${currentUserId}&userType=${userType}`)
-        .then(res => res.json())
-        .then(conversations => conversations.find((conv: any) => conv.carId === carId)),
+    queryFn: async () => {
+      try {
+        const res = await fetch(`/api/conversations?userId=${currentUserId}&userType=${userType}`);
+        if (!res.ok) return null;
+        const conversations = await res.json();
+        return Array.isArray(conversations) ? 
+          conversations.find((conv: any) => conv.carId === carId) || null : 
+          null;
+      } catch (error) {
+        console.log('No existing conversations found');
+        return null;
+      }
+    },
   });
 
   // Set conversation ID when found
@@ -62,7 +71,8 @@ export function CarConversation({
     queryKey: ['/api/conversations', conversationId, 'messages'],
     queryFn: () => conversationId ? 
       fetch(`/api/conversations/${conversationId}/messages?userId=${currentUserId}`)
-        .then(res => res.json()) : 
+        .then(res => res.json())
+        .catch(() => []) : 
       Promise.resolve([]),
     enabled: !!conversationId,
     refetchInterval: 5000, // Poll for new messages every 5 seconds
