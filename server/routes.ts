@@ -15,6 +15,7 @@ import {
 } from "@shared/schema";
 import { priceComparisonService } from "./priceComparison";
 import { marketplaceAggregator } from "./marketplaceAggregator";
+import { AutomotiveNewsService } from "./automotiveNews";
 import { z } from "zod";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 
@@ -101,6 +102,9 @@ const checkSearchLimit = async (req: any, res: any, next: any) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize services
+  const automotiveNewsService = new AutomotiveNewsService();
+
   // Auth middleware
   await setupAuth(app);
 
@@ -1370,6 +1374,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error searching for public object:", error);
       return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Automotive News and Market Intelligence API
+  app.get("/api/news/automotive", async (req, res) => {
+    try {
+      console.log('📰 Fetching latest automotive news and market intelligence...');
+      const news = await automotiveNewsService.getLatestAutomotiveNews();
+      
+      res.json({
+        success: true,
+        timestamp: new Date().toISOString(),
+        articles: news,
+        meta: {
+          count: news.length,
+          source: 'Perplexity Market Intelligence',
+          lastUpdated: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      console.error('❌ News service error:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch automotive news',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Market insights for specific locations
+  app.get("/api/news/market-insights", async (req, res) => {
+    try {
+      const { location } = req.query;
+      console.log(`🔍 Fetching market insights for ${location || 'India'}...`);
+      
+      const insights = await automotiveNewsService.getMarketInsights(location as string);
+      
+      res.json({
+        success: true,
+        timestamp: new Date().toISOString(),
+        insights,
+        location: location || 'India',
+        meta: {
+          count: insights.length,
+          source: 'Perplexity Market Intelligence',
+          analysisDepth: 'comprehensive'
+        }
+      });
+    } catch (error) {
+      console.error('❌ Market insights error:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch market insights',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Brand-specific market insights
+  app.get("/api/news/brand-insights/:brand", async (req, res) => {
+    try {
+      const { brand } = req.params;
+      console.log(`🏷️ Fetching ${brand} brand insights...`);
+      
+      const insights = await automotiveNewsService.getBrandInsights(brand);
+      
+      res.json({
+        success: true,
+        timestamp: new Date().toISOString(),
+        brand,
+        insights,
+        meta: {
+          count: insights.length,
+          source: 'Perplexity Market Intelligence',
+          analysisType: 'brand-specific'
+        }
+      });
+    } catch (error) {
+      console.error(`❌ ${req.params.brand} insights error:`, error);
+      res.status(500).json({ 
+        error: `Failed to fetch ${req.params.brand} insights`,
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
