@@ -1,14 +1,22 @@
 import { Link, useLocation } from "wouter";
-import { Car, Heart, Menu, X, MessageCircle } from "lucide-react";
+import { Car, Heart, Menu, X, MessageCircle, User, LogOut } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "@/components/theme-toggle";
 import SocialMediaLinks from "@/components/social-media-links";
 import logoImage from "@/assets/logo.png";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Navbar() {
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, isLoading, isAuthenticated } = useAuth();
 
   return (
     <nav className="nav-carbon carbon-fiber sticky top-0 z-50">
@@ -95,12 +103,55 @@ export default function Navbar() {
             
             <ThemeToggle />
             
-            <Button 
-              className="hidden sm:inline-flex btn-metallic px-6 py-2 text-sm font-semibold"
-              data-testid="button-login"
-            >
-              Login
-            </Button>
+            {/* Authentication Section - Desktop */}
+            {isLoading ? (
+              <div className="hidden sm:flex h-9 w-20 bg-muted animate-pulse rounded-lg"></div>
+            ) : isAuthenticated && user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className="hidden sm:flex items-center space-x-2 hover:bg-accent/10"
+                    data-testid="button-user-menu"
+                  >
+                    {user.profileImageUrl ? (
+                      <img 
+                        src={user.profileImageUrl} 
+                        alt="Profile" 
+                        className="w-6 h-6 rounded-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-4 h-4" />
+                    )}
+                    <span className="text-sm font-medium">
+                      {user.firstName || user.email?.split('@')[0] || 'User'}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="flex items-center">
+                      <User className="w-4 h-4 mr-2" />
+                      Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <a href="/api/logout" className="flex items-center">
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Logout
+                    </a>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button 
+                asChild
+                className="hidden sm:inline-flex btn-metallic px-6 py-2 text-sm font-semibold"
+                data-testid="button-login"
+              >
+                <a href="/api/login">Login</a>
+              </Button>
+            )}
             
             <Button 
               variant="ghost"
@@ -168,13 +219,58 @@ export default function Navbar() {
                   <SocialMediaLinks size="sm" variant="header" />
                 </div>
                 
-                <Button
-                  className="w-full btn-metallic py-3 text-base font-semibold"
-                  data-testid="mobile-button-login"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Login
-                </Button>
+                {/* Authentication Section - Mobile */}
+                {isLoading ? (
+                  <div className="w-full h-12 bg-muted animate-pulse rounded-lg"></div>
+                ) : isAuthenticated && user ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-3 px-3 py-2 rounded-lg bg-accent/10">
+                      {user.profileImageUrl ? (
+                        <img 
+                          src={user.profileImageUrl} 
+                          alt="Profile" 
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <User className="w-6 h-6" />
+                      )}
+                      <div>
+                        <p className="text-sm font-medium">
+                          {user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'User'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {user.email}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Link href="/profile">View Profile</Link>
+                    </Button>
+                    <Button
+                      asChild
+                      variant="destructive"
+                      className="w-full"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      data-testid="mobile-button-logout"
+                    >
+                      <a href="/api/logout">Logout</a>
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    asChild
+                    className="w-full btn-metallic py-3 text-base font-semibold"
+                    data-testid="mobile-button-login"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <a href="/api/login">Login</a>
+                  </Button>
+                )}
               </div>
             </div>
           </div>

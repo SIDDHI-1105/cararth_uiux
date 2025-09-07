@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { MessageCircle, Send, DollarSign, Check, X, Clock } from 'lucide-react';
 import { ContactSeller } from './contact-seller';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Message {
   id: string;
@@ -24,8 +25,6 @@ interface CarConversationProps {
   sellerId: string;
   sellerName: string;
   price: string;
-  currentUserId?: string;
-  userType?: 'buyer' | 'seller';
 }
 
 export function CarConversation({ 
@@ -33,13 +32,34 @@ export function CarConversation({
   carTitle, 
   sellerId, 
   sellerName, 
-  price,
-  currentUserId = 'demo-buyer-123',
-  userType = 'buyer'
+  price
 }: CarConversationProps) {
+  const { user, isAuthenticated } = useAuth();
   const [newMessage, setNewMessage] = useState('');
   const [conversationId, setConversationId] = useState<string | null>(null);
   const queryClient = useQueryClient();
+
+  // Authentication check
+  if (!isAuthenticated || !user) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MessageCircle className="w-5 h-5" />
+            Contact Seller
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-muted-foreground text-center py-8">
+            Please <a href="/api/login" className="text-accent hover:underline font-medium">login</a> to contact the seller and start a conversation.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const currentUserId = user.id;
+  const userType = currentUserId === sellerId ? 'seller' : 'buyer';
 
   // Check for existing conversation
   const { data: existingConversation } = useQuery({
