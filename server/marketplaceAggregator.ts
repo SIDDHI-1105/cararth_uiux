@@ -115,50 +115,10 @@ export class MarketplaceAggregator {
   async searchAcrossPortals(filters: DetailedFilters): Promise<AggregatedSearchResult> {
     console.log('🔍 Searching used car portals with filters:', filters);
     
-    // Location validation - only serve supported cities
+    // Location validation - only serve supported cities with real data
     if (filters.city && !isCitySupported(filters.city)) {
-      console.log(`⏳ City '${filters.city}' not yet supported - returning coming soon message`);
-      return {
-        listings: [{
-          id: 'coming-soon',
-          title: `Used Cars Coming Soon to ${filters.city}`,
-          brand: 'Service Update',
-          model: 'Expansion',
-          year: 2024,
-          price: 0,
-          mileage: 0,
-          fuelType: 'All Types',
-          transmission: 'All Types',
-          location: filters.city,
-          city: filters.city,
-          source: 'The Mobility Hub',
-          url: '#',
-          images: [],
-          description: `We're expanding our pre-owned car aggregation service to ${filters.city} soon! Currently serving Delhi NCR and Hyderabad with authentic listings from CarDekho, OLX, Cars24, and more verified platforms.`,
-          features: ['Coming Soon', 'Authentic Listings', 'Verified Sources'],
-          condition: 'Expansion In Progress',
-          verificationStatus: 'certified' as const,
-          listingDate: new Date(),
-          sellerType: 'dealer' as const
-        }],
-        analytics: {
-          totalListings: 1,
-          avgPrice: 0,
-          priceRange: { min: 0, max: 0 },
-          mostCommonFuelType: 'All Types',
-          avgMileage: 0,
-          sourcesCount: { 'The Mobility Hub': 1 },
-          locationDistribution: { [filters.city]: 1 },
-          priceByLocation: { [filters.city]: 0 },
-          historicalTrend: 'stable' as const
-        },
-        recommendations: {
-          bestDeals: [],
-          overpriced: [],
-          newListings: [],
-          certified: []
-        }
-      };
+      console.log(`❌ City '${filters.city}' not supported - no real listings available`);
+      throw new Error(`We currently serve Delhi NCR and Hyderabad only with authentic verified listings. Expansion to ${filters.city} coming soon!`);
     }
     
     // First priority: Try to get real listings from actual used car portals
