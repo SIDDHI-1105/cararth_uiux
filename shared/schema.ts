@@ -22,8 +22,22 @@ export const users = pgTable("users", {
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
   phone: text("phone"),
+  phoneVerified: boolean("phone_verified").default(false),
+  phoneVerifiedAt: timestamp("phone_verified_at"),
+  
+  // Subscription management
+  subscriptionTier: text("subscription_tier").default('free'), // free, pro_seller, pro_buyer, superhero
+  subscriptionStatus: text("subscription_status").default('active'), // active, expired, cancelled
+  subscriptionExpiresAt: timestamp("subscription_expires_at"),
+  
+  // Search usage tracking for free tier
+  searchCount: integer("search_count").default(0),
+  searchCountResetAt: timestamp("search_count_reset_at").defaultNow(),
+  
+  // Legacy fields for compatibility
   isPremium: boolean("is_premium").default(false),
   premiumExpiresAt: timestamp("premium_expires_at"),
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -102,12 +116,28 @@ export type Contact = typeof contacts.$inferSelect;
 export const subscriptions = pgTable("subscriptions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull(),
-  plan: text("plan").notNull(), // premium_buyer, premium_seller
-  status: text("status").notNull(), // active, expired, cancelled
+  tier: text("tier").notNull(), // pro_seller, pro_buyer, superhero
+  status: text("status").notNull(), // active, expired, cancelled, pending
+  
+  // Pricing
   amount: decimal("amount", { precision: 8, scale: 2 }).notNull(),
+  currency: text("currency").default('INR'),
+  billingCycle: text("billing_cycle").notNull(), // monthly, yearly
+  
+  // Dates
   startDate: timestamp("start_date").defaultNow(),
   endDate: timestamp("end_date").notNull(),
+  nextBillingDate: timestamp("next_billing_date"),
+  
+  // Payment integration
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  stripeCustomerId: text("stripe_customer_id"),
+  
+  // Superhero location restriction
+  locationRestriction: text("location_restriction"), // City name for superhero tier
+  
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Featured listings table
@@ -123,9 +153,33 @@ export const featuredListings = pgTable("featured_listings", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// User search activity tracking
+export const userSearchActivity = pgTable("user_search_activity", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  searchType: text("search_type").notNull(), // marketplace_search, car_detail_view, filter_search
+  searchFilters: jsonb("search_filters"), // Store search parameters as JSON
+  resultsCount: integer("results_count").default(0),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Phone verification table
+export const phoneVerifications = pgTable("phone_verifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  phoneNumber: text("phone_number").notNull(),
+  verificationCode: text("verification_code").notNull(),
+  verified: boolean("verified").default(false),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({
   id: true,
   createdAt: true,
+  updatedAt: true,
 });
 
 export const insertFeaturedListingSchema = createInsertSchema(featuredListings).omit({
@@ -133,8 +187,22 @@ export const insertFeaturedListingSchema = createInsertSchema(featuredListings).
   createdAt: true,
 });
 
+export const insertUserSearchActivitySchema = createInsertSchema(userSearchActivity).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPhoneVerificationSchema = createInsertSchema(phoneVerifications).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
 export type Subscription = typeof subscriptions.$inferSelect;
+export type InsertUserSearchActivity = z.infer<typeof insertUserSearchActivitySchema>;
+export type UserSearchActivity = typeof userSearchActivity.$inferSelect;
+export type InsertPhoneVerification = z.infer<typeof insertPhoneVerificationSchema>;
+export type PhoneVerification = typeof phoneVerifications.$inferSelect;
 export type InsertFeaturedListing = z.infer<typeof insertFeaturedListingSchema>;
 export type FeaturedListing = typeof featuredListings.$inferSelect;
 
