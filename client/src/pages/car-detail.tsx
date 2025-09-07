@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/navbar";
 import ContactModal from "@/components/contact-modal";
 import PriceInsights from "@/components/price-insights";
+import LoanWidget from "@/components/loan-widget";
 import Footer from "@/components/footer";
 import { Phone, Calendar, MapPin, User, Star, Check, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
@@ -200,6 +201,16 @@ export default function CarDetail() {
             <PriceInsights car={car} />
           </div>
           
+          <div className="space-y-6">
+            {/* Loan Widget */}
+            <LoanWidget 
+              carPrice={parseFloat(car.price) * 100000} 
+              carTitle={car.title}
+            />
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
           <div>
             <h3 className="text-lg font-semibold mb-4">Seller Information</h3>
             <div className="bg-muted rounded-lg p-4">

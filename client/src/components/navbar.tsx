@@ -72,17 +72,6 @@ export default function Navbar() {
               >
                 Auto News
               </Link>
-              <Link 
-                href="/financing" 
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                  location === "/financing" 
-                    ? "text-accent-foreground bg-accent shadow-metallic" 
-                    : "text-muted-foreground hover:text-accent hover:bg-accent/10"
-                }`}
-                data-testid="link-financing"
-              >
-                Car Loans
-              </Link>
               <a href="#" className="text-muted-foreground hover:text-accent hover:bg-accent/10 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300">
                 Analytics
               </a>
@@ -164,18 +153,6 @@ export default function Navbar() {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Auto News
-              </Link>
-              <Link 
-                href="/financing" 
-                className={`block px-3 py-2 rounded-lg text-base font-semibold transition-all duration-300 ${
-                  location === "/financing" 
-                    ? "text-accent-foreground bg-accent" 
-                    : "text-muted-foreground hover:text-accent hover:bg-accent/10"
-                }`}
-                data-testid="mobile-link-financing"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Car Loans
               </Link>
               <a 
                 href="#" 
