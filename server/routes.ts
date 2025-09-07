@@ -434,19 +434,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const searchResult = await marketplaceAggregator.searchAcrossPortals(filters as any);
       
-      // Include search limit info in response
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      const searchLimitInfo = await storage.checkUserSearchLimit(userId);
-      
-      res.json({
-        ...searchResult,
-        searchInfo: {
-          userTier: user?.subscriptionTier,
-          searchesLeft: searchLimitInfo.searchesLeft,
-          resetDate: searchLimitInfo.resetDate
-        }
-      });
+      // Include search limit info in response (skip for developer mode)
+      if (isDeveloperMode(req)) {
+        res.json({
+          ...searchResult,
+          searchInfo: {
+            userTier: 'developer',
+            searchesLeft: 9999,
+            resetDate: null,
+            isDeveloper: true
+          }
+        });
+      } else {
+        const userId = req.user.claims.sub;
+        const user = await storage.getUser(userId);
+        const searchLimitInfo = await storage.checkUserSearchLimit(userId);
+        
+        res.json({
+          ...searchResult,
+          searchInfo: {
+            userTier: user?.subscriptionTier,
+            searchesLeft: searchLimitInfo.searchesLeft,
+            resetDate: searchLimitInfo.resetDate
+          }
+        });
+      }
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ error: "Invalid search parameters", details: error.errors });
