@@ -49,10 +49,11 @@ export interface AggregatedSearchResult {
   };
 }
 
-// Supported cities - focused approach for better data quality and authentic listings
+// PILOT PHASE: Hyderabad focus for quality assurance before Delhi NCR expansion
 const SUPPORTED_CITIES = [
-  'delhi', 'new delhi', 'delhi ncr', 'gurgaon', 'noida', 'faridabad', 'ghaziabad',
   'hyderabad', 'secunderabad', 'telangana'
+  // Delhi NCR cities will be enabled after successful Hyderabad pilot (Sept 9th presentation)
+  // 'delhi', 'new delhi', 'delhi ncr', 'gurgaon', 'noida', 'faridabad', 'ghaziabad'
 ];
 
 // Check if city is supported for authentic car listings
