@@ -58,7 +58,11 @@ export default function MessagesPage() {
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: (messageData: { content: string; senderId: string }) =>
-      apiRequest(`/api/conversations/${activeConversation}/messages`, messageData),
+      fetch(`/api/conversations/${activeConversation}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(messageData),
+      }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/conversations', activeConversation, 'messages'] });
       queryClient.invalidateQueries({ queryKey: ['/api/conversations'] });
@@ -69,7 +73,11 @@ export default function MessagesPage() {
   // Make offer mutation
   const makeOfferMutation = useMutation({
     mutationFn: (offerData: { senderId: string; offerAmount: number }) =>
-      apiRequest(`/api/conversations/${activeConversation}/offers`, offerData),
+      fetch(`/api/conversations/${activeConversation}/offers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(offerData),
+      }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/conversations', activeConversation, 'messages'] });
     },

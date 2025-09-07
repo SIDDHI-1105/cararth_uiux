@@ -29,7 +29,11 @@ export function ContactSeller({ carId, carTitle, sellerId, sellerName, price }: 
   // Start conversation mutation
   const startConversationMutation = useMutation({
     mutationFn: (conversationData: any) =>
-      apiRequest('/api/conversations', conversationData),
+      fetch('/api/conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(conversationData),
+      }).then(res => res.json()),
     onSuccess: (conversation) => {
       // Send initial message
       sendMessageMutation.mutate({
@@ -50,7 +54,11 @@ export function ContactSeller({ carId, carTitle, sellerId, sellerName, price }: 
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: ({ conversationId, content, senderId }: any) =>
-      apiRequest(`/api/conversations/${conversationId}/messages`, { content, senderId }),
+      fetch(`/api/conversations/${conversationId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content, senderId }),
+      }).then(res => res.json()),
     onSuccess: () => {
       setConversationStarted(true);
       queryClient.invalidateQueries({ queryKey: ['/api/conversations'] });
@@ -71,7 +79,11 @@ export function ContactSeller({ carId, carTitle, sellerId, sellerName, price }: 
   // Request contact details mutation (Premium feature)
   const requestContactMutation = useMutation({
     mutationFn: (conversationId: string) =>
-      apiRequest(`/api/conversations/${conversationId}/request-contact`, { userId: 'demo-buyer-123' }),
+      fetch(`/api/conversations/${conversationId}/request-contact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: 'demo-buyer-123' }),
+      }).then(res => res.json()),
     onSuccess: (response) => {
       if (response.contactShared) {
         toast({
