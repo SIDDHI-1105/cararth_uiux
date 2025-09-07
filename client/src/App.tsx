@@ -11,6 +11,7 @@ import SellCar from "./pages/sell-car";
 import MessagesPage from "./pages/messages";
 import Blog from "./pages/blog";
 import AdminBlog from "./pages/admin-blog";
+import News from "./pages/news";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -24,6 +25,7 @@ function Router() {
       <Route path="/messages" component={MessagesPage} />
       <Route path="/blog" component={Blog} />
       <Route path="/admin/blog" component={AdminBlog} />
+      <Route path="/news" component={News} />
       <Route component={NotFound} />
     </Switch>
   );
