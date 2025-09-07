@@ -241,3 +241,104 @@ export type InsertSellerInquiry = z.infer<typeof insertSellerInquirySchema>;
 export type SellerInquiry = typeof sellerInquiries.$inferSelect;
 export type InsertPlatformPostingLog = z.infer<typeof insertPlatformPostingLogSchema>;
 export type PlatformPostingLog = typeof platformPostingLogs.$inferSelect;
+
+// Conversations for two-way messaging between buyers and sellers
+export const conversations = pgTable("conversations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  carId: varchar("car_id").notNull(), // The car listing being discussed
+  buyerId: varchar("buyer_id").notNull(), // User who initiated conversation
+  sellerId: varchar("seller_id").notNull(), // Car owner
+  
+  // Conversation metadata
+  subject: text("subject"), // Usually the car title
+  status: text("status").default('active'), // active, closed, archived
+  
+  // Privacy protection
+  buyerDisplayName: text("buyer_display_name").notNull(), // Masked name for privacy
+  sellerDisplayName: text("seller_display_name").notNull(), // Masked name for privacy
+  
+  // Tracking
+  lastMessageAt: timestamp("last_message_at"),
+  isRead: boolean("is_read").default(false), // Has seller read latest buyer message
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Individual messages within conversations
+export const messages = pgTable("messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  conversationId: varchar("conversation_id").notNull(),
+  senderId: varchar("sender_id").notNull(), // User ID of message sender
+  senderType: text("sender_type").notNull(), // 'buyer' or 'seller'
+  
+  // Message content
+  content: text("content").notNull(),
+  messageType: text("message_type").default('text'), // text, system, offer
+  
+  // For offer messages
+  offerAmount: decimal("offer_amount", { precision: 10, scale: 2 }),
+  offerStatus: text("offer_status"), // pending, accepted, rejected, countered
+  
+  // Privacy & Security
+  isSystemMessage: boolean("is_system_message").default(false),
+  isModerated: boolean("is_moderated").default(false),
+  moderationStatus: text("moderation_status").default('approved'), // approved, flagged, removed
+  
+  // Tracking
+  isRead: boolean("is_read").default(false),
+  readAt: timestamp("read_at"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Message reactions and interactions
+export const messageInteractions = pgTable("message_interactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  messageId: varchar("message_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  
+  interactionType: text("interaction_type").notNull(), // like, report, bookmark
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Blocked users and conversation management
+export const conversationBlocks = pgTable("conversation_blocks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  blockerId: varchar("blocker_id").notNull(), // User who blocked
+  blockedId: varchar("blocked_id").notNull(), // User who was blocked
+  reason: text("reason"), // spam, inappropriate, etc.
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertConversationSchema = createInsertSchema(conversations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertMessageSchema = createInsertSchema(messages).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertMessageInteractionSchema = createInsertSchema(messageInteractions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertConversationBlockSchema = createInsertSchema(conversationBlocks).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertConversation = z.infer<typeof insertConversationSchema>;
+export type Conversation = typeof conversations.$inferSelect;
+export type InsertMessage = z.infer<typeof insertMessageSchema>;
+export type Message = typeof messages.$inferSelect;
+export type InsertMessageInteraction = z.infer<typeof insertMessageInteractionSchema>;
+export type MessageInteraction = typeof messageInteractions.$inferSelect;
+export type InsertConversationBlock = z.infer<typeof insertConversationBlockSchema>;
+export type ConversationBlock = typeof conversationBlocks.$inferSelect;

@@ -1,7 +1,16 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertCarSchema, insertContactSchema, insertSubscriptionSchema, insertFeaturedListingSchema } from "@shared/schema";
+import { 
+  insertCarSchema, 
+  insertContactSchema, 
+  insertSubscriptionSchema, 
+  insertFeaturedListingSchema,
+  insertConversationSchema,
+  insertMessageSchema,
+  insertMessageInteractionSchema,
+  insertConversationBlockSchema
+} from "@shared/schema";
 import { priceComparisonService } from "./priceComparison";
 import { marketplaceAggregator } from "./marketplaceAggregator";
 import { z } from "zod";
@@ -351,84 +360,231 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Messaging system endpoints
-  app.get("/api/conversations/:listingId", async (req, res) => {
+  // Real database-backed messaging system
+  
+  // Create a new conversation or get existing one
+  app.post("/api/conversations", async (req, res) => {
     try {
-      const { listingId } = req.params;
+      const conversationData = insertConversationSchema.parse(req.body);
       
-      // Generate demo conversation for listing
-      const messages = [
-        {
-          id: 'msg-1',
-          senderId: 'buyer-123',
-          senderType: 'buyer',
-          senderName: 'Interested Buyer',
-          content: 'Hi, I\'m interested in this car. Is it still available?',
-          timestamp: new Date(Date.now() - 3600000), // 1 hour ago
-          isRead: true
-        },
-        {
-          id: 'msg-2', 
-          senderId: 'seller-456',
-          senderType: 'seller',
-          senderName: 'Car Owner',
-          content: 'Yes, the car is available. Would you like to schedule a test drive?',
-          timestamp: new Date(Date.now() - 1800000), // 30 minutes ago
-          isRead: true
-        }
-      ];
+      // Check if conversation already exists
+      const existing = await storage.getConversationByCarAndBuyer(
+        conversationData.carId, 
+        conversationData.buyerId
+      );
+      
+      if (existing) {
+        return res.json(existing);
+      }
+      
+      // Create new conversation with privacy protection
+      const conversation = await storage.createConversation({
+        ...conversationData,
+        buyerDisplayName: `Buyer ${conversationData.buyerId.slice(-4)}`,
+        sellerDisplayName: `Seller ${conversationData.sellerId.slice(-4)}`
+      });
+      
+      res.status(201).json(conversation);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid conversation data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create conversation" });
+    }
+  });
+
+  // Get all conversations for a user
+  app.get("/api/conversations", async (req, res) => {
+    try {
+      const { userId, userType } = req.query;
+      
+      if (!userId || !userType) {
+        return res.status(400).json({ error: "Missing userId or userType" });
+      }
+      
+      const conversations = await storage.getConversationsForUser(
+        userId as string, 
+        userType as 'buyer' | 'seller'
+      );
+      
+      res.json(conversations);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch conversations" });
+    }
+  });
+
+  // Get messages in a conversation
+  app.get("/api/conversations/:conversationId/messages", async (req, res) => {
+    try {
+      const { conversationId } = req.params;
+      const { userId } = req.query;
+      
+      if (!userId) {
+        return res.status(400).json({ error: "Missing userId" });
+      }
+      
+      // Verify user has access to this conversation
+      const conversation = await storage.getConversation(conversationId);
+      if (!conversation || (conversation.buyerId !== userId && conversation.sellerId !== userId)) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      const messages = await storage.getMessagesInConversation(conversationId);
+      
+      // Mark messages as read for this user
+      await storage.markMessagesAsRead(conversationId, userId as string);
       
       res.json(messages);
     } catch (error) {
-      console.error('Get conversation error:', error);
-      res.status(500).json({ error: 'Failed to fetch conversation' });
+      res.status(500).json({ error: "Failed to fetch messages" });
     }
   });
 
-  app.post("/api/conversations/:listingId/messages", async (req, res) => {
+  // Send a message in conversation
+  app.post("/api/conversations/:conversationId/messages", async (req, res) => {
     try {
-      const { listingId } = req.params;
-      const { content, senderType, listingTitle } = req.body;
+      const { conversationId } = req.params;
+      const messageData = insertMessageSchema.parse({
+        ...req.body,
+        conversationId
+      });
       
-      if (!content || !senderType) {
-        return res.status(400).json({ error: 'Missing required fields' });
+      // Verify user has access to this conversation
+      const conversation = await storage.getConversation(conversationId);
+      if (!conversation || (conversation.buyerId !== messageData.senderId && conversation.sellerId !== messageData.senderId)) {
+        return res.status(403).json({ error: "Access denied" });
       }
-
-      const newMessage = {
-        id: `msg-${Date.now()}`,
-        senderId: `${senderType}-${Math.random().toString(36).substr(2, 9)}`,
-        senderType,
-        senderName: senderType === 'buyer' ? 'Interested Buyer' : 'Car Owner',
-        content,
-        timestamp: new Date(),
-        isRead: false
-      };
       
-      // In production, save to database
-      console.log(`💬 New message in ${listingTitle}: ${content} (from ${senderType})`);
+      // Determine sender type
+      const senderType = conversation.buyerId === messageData.senderId ? 'buyer' : 'seller';
       
-      res.json({ success: true, message: newMessage });
+      const message = await storage.createMessage({
+        ...messageData,
+        senderType
+      });
+      
+      // Update conversation last message time
+      await storage.updateConversationLastMessage(conversationId);
+      
+      res.status(201).json(message);
     } catch (error) {
-      console.error('Send message error:', error);
-      res.status(500).json({ error: 'Failed to send message' });
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid message data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to send message" });
     }
   });
 
-  app.post("/api/conversations/:listingId/request-contact", async (req, res) => {
+  // Make an offer on a car
+  app.post("/api/conversations/:conversationId/offers", async (req, res) => {
     try {
-      const { listingId } = req.params;
-      const { senderType } = req.body;
+      const { conversationId } = req.params;
+      const { senderId, offerAmount } = req.body;
       
-      // Pro feature - share contact details
-      console.log(`📞 Contact details requested for listing ${listingId} by ${senderType}`);
+      if (!senderId || !offerAmount) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+      
+      // Verify user has access to this conversation
+      const conversation = await storage.getConversation(conversationId);
+      if (!conversation || (conversation.buyerId !== senderId && conversation.sellerId !== senderId)) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      const senderType = conversation.buyerId === senderId ? 'buyer' : 'seller';
+      
+      const offerMessage = await storage.createMessage({
+        conversationId,
+        senderId,
+        senderType,
+        content: `Offer: ₹${offerAmount.toLocaleString()}`,
+        messageType: 'offer',
+        offerAmount,
+        offerStatus: 'pending'
+      });
+      
+      await storage.updateConversationLastMessage(conversationId);
+      
+      res.status(201).json(offerMessage);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to make offer" });
+    }
+  });
+
+  // Respond to an offer
+  app.patch("/api/messages/:messageId/offer", async (req, res) => {
+    try {
+      const { messageId } = req.params;
+      const { userId, response } = req.body; // response: 'accepted', 'rejected', 'countered'
+      
+      if (!userId || !response) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+      
+      const updatedMessage = await storage.updateOfferStatus(messageId, response, userId);
+      
+      if (!updatedMessage) {
+        return res.status(404).json({ error: "Offer not found or access denied" });
+      }
+      
+      res.json(updatedMessage);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to respond to offer" });
+    }
+  });
+
+  // Request seller contact details (Premium feature)
+  app.post("/api/conversations/:conversationId/request-contact", async (req, res) => {
+    try {
+      const { conversationId } = req.params;
+      const { userId } = req.body;
+      
+      // Verify user has access to this conversation
+      const conversation = await storage.getConversation(conversationId);
+      if (!conversation || conversation.buyerId !== userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      // Check if user has premium access
+      const user = await storage.getUser(userId);
+      if (!user?.isPremium) {
+        return res.status(402).json({ 
+          error: "Premium subscription required",
+          feature: "contact_sharing"
+        });
+      }
+      
+      // Get seller contact information (masked for privacy)
+      const sellerInfo = await storage.getSellerContactInfo(conversation.sellerId);
       
       res.json({ 
         success: true, 
         contactShared: true,
-        message: 'Contact details shared successfully' 
+        sellerInfo: {
+          name: sellerInfo.buyerDisplayName,
+          phone: sellerInfo.maskedPhone,
+          email: sellerInfo.maskedEmail,
+          note: "Contact via The Mobility Hub for privacy protection"
+        }
       });
     } catch (error) {
-      console.error('Request contact error:', error);
-      res.status(500).json({ error: 'Failed to request contact details' });
+      res.status(500).json({ error: "Failed to request contact details" });
+    }
+  });
+
+  // Block a user from messaging
+  app.post("/api/conversations/block", async (req, res) => {
+    try {
+      const blockData = insertConversationBlockSchema.parse(req.body);
+      
+      const block = await storage.createConversationBlock(blockData);
+      
+      res.status(201).json({ success: true, block });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid block data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to block user" });
     }
   });
 

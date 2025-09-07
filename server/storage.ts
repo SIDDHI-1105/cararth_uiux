@@ -1,4 +1,23 @@
-import { type User, type InsertUser, type Car, type InsertCar, type Contact, type InsertContact, type Subscription, type InsertSubscription, type FeaturedListing, type InsertFeaturedListing } from "@shared/schema";
+import { 
+  type User, 
+  type InsertUser, 
+  type Car, 
+  type InsertCar, 
+  type Contact, 
+  type InsertContact, 
+  type Subscription, 
+  type InsertSubscription, 
+  type FeaturedListing, 
+  type InsertFeaturedListing,
+  type Conversation,
+  type InsertConversation,
+  type Message,
+  type InsertMessage,
+  type MessageInteraction,
+  type InsertMessageInteraction,
+  type ConversationBlock,
+  type InsertConversationBlock
+} from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -36,6 +55,23 @@ export interface IStorage {
   // Featured listing operations
   createFeaturedListing(featured: InsertFeaturedListing): Promise<FeaturedListing>;
   updateCarFeatured(carId: string, isFeatured: boolean, expiresAt?: Date): Promise<void>;
+  
+  // Messaging operations
+  createConversation(conversation: InsertConversation): Promise<Conversation>;
+  getConversation(id: string): Promise<Conversation | undefined>;
+  getConversationByCarAndBuyer(carId: string, buyerId: string): Promise<Conversation | undefined>;
+  getConversationsForUser(userId: string, userType: 'buyer' | 'seller'): Promise<Conversation[]>;
+  updateConversationLastMessage(conversationId: string): Promise<void>;
+  
+  createMessage(message: InsertMessage): Promise<Message>;
+  getMessagesInConversation(conversationId: string): Promise<Message[]>;
+  markMessagesAsRead(conversationId: string, userId: string): Promise<void>;
+  updateOfferStatus(messageId: string, status: string, userId: string): Promise<Message | undefined>;
+  
+  createConversationBlock(block: InsertConversationBlock): Promise<ConversationBlock>;
+  
+  // Enhanced user operations for messaging
+  getSellerContactInfo(sellerId: string): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
@@ -44,6 +80,10 @@ export class MemStorage implements IStorage {
   private contacts: Map<string, Contact>;
   private subscriptions: Map<string, Subscription>;
   private featuredListings: Map<string, FeaturedListing>;
+  private conversations: Map<string, Conversation>;
+  private messages: Map<string, Message>;
+  private messageInteractions: Map<string, MessageInteraction>;
+  private conversationBlocks: Map<string, ConversationBlock>;
 
   constructor() {
     this.users = new Map();
@@ -51,6 +91,10 @@ export class MemStorage implements IStorage {
     this.contacts = new Map();
     this.subscriptions = new Map();
     this.featuredListings = new Map();
+    this.conversations = new Map();
+    this.messages = new Map();
+    this.messageInteractions = new Map();
+    this.conversationBlocks = new Map();
     
     // Clear any existing data and reinitialize
     this.cars.clear();
@@ -400,6 +444,146 @@ export class MemStorage implements IStorage {
       car.featuredExpiresAt = expiresAt ?? null;
       this.cars.set(carId, car);
     }
+  }
+
+  // Messaging operations implementation
+  async createConversation(conversation: InsertConversation): Promise<Conversation> {
+    const id = randomUUID();
+    const newConversation: Conversation = {
+      id,
+      ...conversation,
+      lastMessageAt: new Date(),
+      isRead: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.conversations.set(id, newConversation);
+    return newConversation;
+  }
+
+  async getConversation(id: string): Promise<Conversation | undefined> {
+    return this.conversations.get(id);
+  }
+
+  async getConversationByCarAndBuyer(carId: string, buyerId: string): Promise<Conversation | undefined> {
+    for (const conversation of this.conversations.values()) {
+      if (conversation.carId === carId && conversation.buyerId === buyerId) {
+        return conversation;
+      }
+    }
+    return undefined;
+  }
+
+  async getConversationsForUser(userId: string, userType: 'buyer' | 'seller'): Promise<Conversation[]> {
+    const conversations: Conversation[] = [];
+    for (const conversation of this.conversations.values()) {
+      if (
+        (userType === 'buyer' && conversation.buyerId === userId) ||
+        (userType === 'seller' && conversation.sellerId === userId)
+      ) {
+        conversations.push(conversation);
+      }
+    }
+    return conversations.sort((a, b) => 
+      (b.lastMessageAt?.getTime() || 0) - (a.lastMessageAt?.getTime() || 0)
+    );
+  }
+
+  async updateConversationLastMessage(conversationId: string): Promise<void> {
+    const conversation = this.conversations.get(conversationId);
+    if (conversation) {
+      conversation.lastMessageAt = new Date();
+      conversation.updatedAt = new Date();
+      this.conversations.set(conversationId, conversation);
+    }
+  }
+
+  async createMessage(message: InsertMessage): Promise<Message> {
+    const id = randomUUID();
+    const newMessage: Message = {
+      id,
+      ...message,
+      isRead: false,
+      readAt: null,
+      createdAt: new Date(),
+    };
+    this.messages.set(id, newMessage);
+    return newMessage;
+  }
+
+  async getMessagesInConversation(conversationId: string): Promise<Message[]> {
+    const messages: Message[] = [];
+    for (const message of this.messages.values()) {
+      if (message.conversationId === conversationId) {
+        messages.push(message);
+      }
+    }
+    return messages.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+  }
+
+  async markMessagesAsRead(conversationId: string, userId: string): Promise<void> {
+    for (const message of this.messages.values()) {
+      if (message.conversationId === conversationId && message.senderId !== userId && !message.isRead) {
+        message.isRead = true;
+        message.readAt = new Date();
+        this.messages.set(message.id, message);
+      }
+    }
+  }
+
+  async updateOfferStatus(messageId: string, status: string, userId: string): Promise<Message | undefined> {
+    const message = this.messages.get(messageId);
+    if (message && message.messageType === 'offer') {
+      // Verify user has permission to update this offer
+      const conversation = await this.getConversation(message.conversationId);
+      if (conversation && (conversation.buyerId === userId || conversation.sellerId === userId)) {
+        message.offerStatus = status;
+        this.messages.set(messageId, message);
+        return message;
+      }
+    }
+    return undefined;
+  }
+
+  async createConversationBlock(block: InsertConversationBlock): Promise<ConversationBlock> {
+    const id = randomUUID();
+    const newBlock: ConversationBlock = {
+      id,
+      ...block,
+      createdAt: new Date(),
+    };
+    this.conversationBlocks.set(id, newBlock);
+    return newBlock;
+  }
+
+  async getSellerContactInfo(sellerId: string): Promise<any> {
+    const seller = this.users.get(sellerId);
+    if (!seller) {
+      return null;
+    }
+
+    // Return masked contact info for privacy
+    return {
+      buyerDisplayName: `Seller ${sellerId.slice(-4)}`,
+      maskedPhone: this.maskPhone(seller.phone),
+      maskedEmail: this.maskEmail(seller.email),
+    };
+  }
+
+  private maskPhone(phone: string): string {
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length >= 10) {
+      return `xxxxx${digits.slice(-4)}`;
+    }
+    return 'xxxxx0000';
+  }
+
+  private maskEmail(email: string): string {
+    const [localPart, domain] = email.split('@');
+    if (localPart && domain) {
+      return `${localPart.charAt(0)}xxxxx@${domain}`;
+    }
+    return 'xxxxx@example.com';
   }
 }
 
