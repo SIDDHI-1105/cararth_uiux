@@ -1,6 +1,7 @@
 import { 
   type User, 
   type InsertUser, 
+  type UpsertUser,
   type Car, 
   type InsertCar, 
   type Contact, 
@@ -26,6 +27,8 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  // OAuth operations for authentication
+  upsertUser(user: UpsertUser): Promise<User>;
   
   // Car operations
   getCar(id: string): Promise<Car | undefined>;
@@ -105,14 +108,15 @@ export class MemStorage implements IStorage {
     // Sample user (seller)
     const sampleSeller: User = {
       id: "seller-1",
-      username: "rajesh_kumar",
       email: "rajesh@example.com",
+      firstName: "Rajesh",
+      lastName: "Kumar",
+      profileImageUrl: null,
       phone: "+91 98765 43210",
-      name: "Rajesh Kumar",
-      password: "hashed_password",
       isPremium: false,
       premiumExpiresAt: null,
       createdAt: new Date(),
+      updatedAt: new Date(),
     };
     this.users.set(sampleSeller.id, sampleSeller);
 
@@ -278,7 +282,8 @@ export class MemStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(user => user.username === username);
+    // Legacy support - search by first name for now
+    return Array.from(this.users.values()).find(user => user.firstName === username);
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
@@ -292,10 +297,37 @@ export class MemStorage implements IStorage {
       id,
       isPremium: false,
       premiumExpiresAt: null,
-      createdAt: new Date()
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
     this.users.set(id, user);
     return user;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const existingUser = this.users.get(userData.id);
+    if (existingUser) {
+      // Update existing user
+      const updatedUser: User = {
+        ...existingUser,
+        ...userData,
+        updatedAt: new Date(),
+      };
+      this.users.set(userData.id, updatedUser);
+      return updatedUser;
+    } else {
+      // Create new user
+      const newUser: User = {
+        ...userData,
+        phone: null,
+        isPremium: false,
+        premiumExpiresAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      this.users.set(userData.id, newUser);
+      return newUser;
+    }
   }
 
   async getCar(id: string): Promise<Car | undefined> {
