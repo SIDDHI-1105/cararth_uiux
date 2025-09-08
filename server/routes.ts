@@ -19,6 +19,15 @@ import { AutomotiveNewsService } from "./automotiveNews";
 import { z } from "zod";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { setupSocialAuth } from "./socialAuth";
+import { 
+  communityPosts, 
+  communityComments, 
+  userReputation, 
+  users,
+  insertCommunityPostSchema,
+  insertCommunityCommentSchema 
+} from "@shared/schema";
+import { desc, eq } from "drizzle-orm";
 
 // Developer mode check
 const isDeveloperMode = (req: any) => {
@@ -310,6 +319,207 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid contact data", details: error.errors });
       }
       res.status(500).json({ error: "Failed to create contact inquiry" });
+    }
+  });
+
+  // Community Posts API - Create new post
+  app.post('/api/community/posts', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validatedData = insertCommunityPostSchema.parse({
+        ...req.body,
+        authorId: userId,
+      });
+
+      // Create the post
+      const [newPost] = await db
+        .insert(communityPosts)
+        .values(validatedData)
+        .returning();
+
+      // Update user reputation
+      await db
+        .insert(userReputation)
+        .values({
+          userId: userId,
+          postsCount: 1,
+          postsScore: 10, // Base score for creating a post
+          totalReputation: 10,
+        })
+        .onConflictDoUpdate({
+          target: userReputation.userId,
+          set: {
+            postsCount: db.sql`${userReputation.postsCount} + 1`,
+            postsScore: db.sql`${userReputation.postsScore} + 10`,
+            totalReputation: db.sql`${userReputation.totalReputation} + 10`,
+            lastActiveAt: new Date(),
+          },
+        });
+
+      res.status(201).json(newPost);
+    } catch (error) {
+      console.error('Failed to create community post:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: 'Invalid data', details: error.errors });
+      }
+      res.status(500).json({ error: 'Failed to create post' });
+    }
+  });
+
+  // Get user-generated community posts with author info
+  app.get('/api/community/user-posts', async (req, res) => {
+    try {
+      const posts = await db
+        .select({
+          id: communityPosts.id,
+          title: communityPosts.title,
+          content: communityPosts.content,
+          category: communityPosts.category,
+          views: communityPosts.views,
+          upvotes: communityPosts.upvotes,
+          downvotes: communityPosts.downvotes,
+          status: communityPosts.status,
+          isPinned: communityPosts.isPinned,
+          isHot: communityPosts.isHot,
+          createdAt: communityPosts.createdAt,
+          updatedAt: communityPosts.updatedAt,
+          author: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            profileImageUrl: users.profileImageUrl,
+          },
+        })
+        .from(communityPosts)
+        .leftJoin(users, eq(communityPosts.authorId, users.id))
+        .where(eq(communityPosts.status, 'published'))
+        .orderBy(desc(communityPosts.createdAt))
+        .limit(20);
+
+      res.json({ posts });
+    } catch (error) {
+      console.error('Failed to fetch user posts:', error);
+      res.status(500).json({ error: 'Failed to fetch posts' });
+    }
+  });
+
+  // Get single community post with comments
+  app.get('/api/community/posts/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Get the post
+      const [post] = await db
+        .select({
+          id: communityPosts.id,
+          title: communityPosts.title,
+          content: communityPosts.content,
+          category: communityPosts.category,
+          views: communityPosts.views,
+          upvotes: communityPosts.upvotes,
+          downvotes: communityPosts.downvotes,
+          status: communityPosts.status,
+          isPinned: communityPosts.isPinned,
+          isHot: communityPosts.isHot,
+          createdAt: communityPosts.createdAt,
+          updatedAt: communityPosts.updatedAt,
+          author: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            profileImageUrl: users.profileImageUrl,
+          },
+        })
+        .from(communityPosts)
+        .leftJoin(users, eq(communityPosts.authorId, users.id))
+        .where(eq(communityPosts.id, id))
+        .limit(1);
+
+      if (!post) {
+        return res.status(404).json({ error: 'Post not found' });
+      }
+
+      // Increment view count
+      await db
+        .update(communityPosts)
+        .set({ views: db.sql`${communityPosts.views} + 1` })
+        .where(eq(communityPosts.id, id));
+
+      // Get comments for the post
+      const comments = await db
+        .select({
+          id: communityComments.id,
+          content: communityComments.content,
+          parentCommentId: communityComments.parentCommentId,
+          upvotes: communityComments.upvotes,
+          downvotes: communityComments.downvotes,
+          status: communityComments.status,
+          createdAt: communityComments.createdAt,
+          author: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            profileImageUrl: users.profileImageUrl,
+          },
+        })
+        .from(communityComments)
+        .leftJoin(users, eq(communityComments.authorId, users.id))
+        .where(eq(communityComments.postId, id))
+        .orderBy(communityComments.createdAt);
+
+      res.json({ 
+        post: { ...post, views: post.views + 1 }, 
+        comments 
+      });
+    } catch (error) {
+      console.error('Failed to fetch post:', error);
+      res.status(500).json({ error: 'Failed to fetch post' });
+    }
+  });
+
+  // Create comment on a post
+  app.post('/api/community/posts/:id/comments', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id: postId } = req.params;
+      const userId = req.user.claims.sub;
+      
+      const validatedData = insertCommunityCommentSchema.parse({
+        ...req.body,
+        postId,
+        authorId: userId,
+      });
+
+      const [newComment] = await db
+        .insert(communityComments)
+        .values(validatedData)
+        .returning();
+
+      // Update user reputation for commenting
+      await db
+        .insert(userReputation)
+        .values({
+          userId: userId,
+          commentsCount: 1,
+          commentsScore: 5, // Base score for creating a comment
+          totalReputation: 5,
+        })
+        .onConflictDoUpdate({
+          target: userReputation.userId,
+          set: {
+            commentsCount: db.sql`${userReputation.commentsCount} + 1`,
+            commentsScore: db.sql`${userReputation.commentsScore} + 5`,
+            totalReputation: db.sql`${userReputation.totalReputation} + 5`,
+            lastActiveAt: new Date(),
+          },
+        });
+
+      res.status(201).json(newComment);
+    } catch (error) {
+      console.error('Failed to create comment:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: 'Invalid data', details: error.errors });
+      }
+      res.status(500).json({ error: 'Failed to create comment' });
     }
   });
 

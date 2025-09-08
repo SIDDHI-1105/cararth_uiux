@@ -1,14 +1,24 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 import { 
   MessageSquare, Eye, Calendar, Plus, 
-  MessageCircle, Globe, ExternalLink
+  MessageCircle, Globe, ExternalLink, LogIn
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { apiRequest } from "@/lib/queryClient";
 
 interface ForumPost {
   id: string;
@@ -24,14 +34,74 @@ interface ForumPost {
   attribution?: string;
 }
 
+// Post creation form schema
+const postSchema = z.object({
+  title: z.string().min(5, "Title must be at least 5 characters"),
+  content: z.string().min(10, "Content must be at least 10 characters"),
+  category: z.string().min(1, "Please select a category"),
+});
+
+type PostFormData = z.infer<typeof postSchema>;
+
 // Clean, minimal community platform
 export default function ThrottleTalkPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Check if user is authenticated
+  const { data: user, isLoading: isUserLoading } = useQuery({
+    queryKey: ['/api/auth/user'],
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+
+  const isAuthenticated = !!user;
 
   // Fetch community posts from RSS aggregation
   const { data: communityData, isLoading: isCommunityLoading } = useQuery({
     queryKey: ['/api/community/posts'],
     refetchInterval: 600000, // Refresh every 10 minutes
+  });
+
+  // Fetch user-generated posts
+  const { data: userPostsData, isLoading: isUserPostsLoading } = useQuery({
+    queryKey: ['/api/community/user-posts'],
+    enabled: isAuthenticated,
+  });
+
+  // Post creation form
+  const form = useForm<PostFormData>({
+    resolver: zodResolver(postSchema),
+    defaultValues: {
+      title: "",
+      content: "",
+      category: "",
+    },
+  });
+
+  // Create post mutation
+  const createPostMutation = useMutation({
+    mutationFn: async (data: PostFormData) => {
+      return await apiRequest("POST", "/api/community/posts", data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Post created",
+        description: "Your post has been published successfully.",
+      });
+      setIsCreateDialogOpen(false);
+      form.reset();
+      queryClient.invalidateQueries({ queryKey: ['/api/community/user-posts'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create post",
+        variant: "destructive",
+      });
+    },
   });
 
   // Convert RSS data to forum post format
@@ -48,8 +118,18 @@ export default function ThrottleTalkPage() {
     attribution: post.attribution
   })) : [];
 
-  // Placeholder for user-generated posts (will be real data once auth is implemented)
-  const userPosts: ForumPost[] = [];
+  // Convert user posts data to forum post format
+  const userPosts: ForumPost[] = userPostsData?.posts?.map((post: any) => ({
+    id: post.id,
+    title: post.title,
+    author: post.author?.firstName || 'Anonymous',
+    authorImage: post.author?.profileImageUrl,
+    category: post.category,
+    replies: 0, // Will be implemented with comments
+    views: post.views || 0,
+    lastReply: new Date(post.createdAt).toLocaleDateString(),
+    isExternal: false,
+  })) || [];
 
   // Combine RSS and user content
   const allPosts = [...userPosts, ...rssContent].slice(0, 20);
@@ -88,10 +168,111 @@ export default function ThrottleTalkPage() {
                 Automotive community discussions
               </p>
             </div>
-            <Button className="bg-gray-900 text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100">
-              <Plus className="h-4 w-4 mr-2" />
-              New Post
-            </Button>
+            {isAuthenticated ? (
+              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-gray-900 text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100" data-testid="button-new-post">
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Post
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[600px]">
+                  <DialogHeader>
+                    <DialogTitle>Create New Post</DialogTitle>
+                    <DialogDescription>
+                      Share your thoughts with the automotive community
+                    </DialogDescription>
+                  </DialogHeader>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit((data) => createPostMutation.mutate(data))} className="space-y-6">
+                      <FormField
+                        control={form.control}
+                        name="title"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Title</FormLabel>
+                            <FormControl>
+                              <Input placeholder="What's on your mind?" {...field} data-testid="input-post-title" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="category"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Category</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger data-testid="select-post-category">
+                                  <SelectValue placeholder="Select a category" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="reviews">Reviews</SelectItem>
+                                <SelectItem value="questions">Questions</SelectItem>
+                                <SelectItem value="market-insights">Market Insights</SelectItem>
+                                <SelectItem value="discussion">Discussion</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="content"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Content</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Share your thoughts, experiences, or ask questions..."
+                                className="min-h-[120px]"
+                                {...field}
+                                data-testid="textarea-post-content"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <div className="flex justify-end gap-3">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => setIsCreateDialogOpen(false)}
+                          data-testid="button-cancel-post"
+                        >
+                          Cancel
+                        </Button>
+                        <Button 
+                          type="submit" 
+                          disabled={createPostMutation.isPending}
+                          data-testid="button-submit-post"
+                        >
+                          {createPostMutation.isPending ? "Publishing..." : "Publish Post"}
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+            ) : (
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => window.location.href = '/api/auth/google'}
+                  className="text-gray-700 border-gray-300 hover:bg-gray-50 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-800"
+                  data-testid="button-login-google"
+                >
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Sign in with Google
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
