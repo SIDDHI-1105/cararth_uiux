@@ -237,7 +237,7 @@ export function ContactSeller({ carId, carTitle, sellerId, sellerName, price, on
           <div>
             <label className="text-sm font-medium mb-1 block">Message</label>
             <Textarea
-              placeholder="Write your message to the seller..."
+              placeholder="Write your message to the seller... #themobilityhub.in"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={3}

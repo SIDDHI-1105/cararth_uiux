@@ -126,7 +126,7 @@ export default function ContactModal({ open, onOpenChange, carId, carTitle }: Co
             <Label htmlFor="message">Message</Label>
             <Textarea
               id="message"
-              placeholder="I'm interested in this car..."
+              placeholder="I'm interested in this car... #themobilityhub.in"
               value={formData.message}
               onChange={(e) => handleInputChange("message", e.target.value)}
               className="h-24"

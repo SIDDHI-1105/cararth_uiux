@@ -488,7 +488,7 @@ export default function SellCar() {
                             <FormLabel>Description</FormLabel>
                             <FormControl>
                               <Textarea 
-                                placeholder="Describe your car's condition, maintenance history..." 
+                                placeholder="Describe your car's condition, maintenance history... Share details with #themobilityhub.in community" 
                                 className="resize-none"
                                 {...field} 
                                 data-testid="textarea-description"
