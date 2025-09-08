@@ -123,40 +123,85 @@ export class RSSAggregatorService {
    * In production, replace this with actual RSS parsing library
    */
   private generateMockRSSData(source: typeof this.RSS_SOURCES[0]): RSSFeed {
-    const titles = {
+    const articlesData = {
       'TeamBHP': [
-        'New member review: Hyundai Creta after 50,000 km',
-        'Travelogue: Mumbai to Goa in my Mahindra Thar',
-        'Technical discussion: Best engine oil for Indian conditions',
-        'Used car buying guide: What to check before purchase',
-        'Road safety: Importance of defensive driving techniques'
+        {
+          title: 'New member review: Hyundai Creta after 50,000 km',
+          url: 'https://www.team-bhp.com/forum/official-new-car-reviews/234567-hyundai-creta-ownership-review-50000-km.html'
+        },
+        {
+          title: 'Travelogue: Mumbai to Goa in my Mahindra Thar',
+          url: 'https://www.team-bhp.com/forum/travelogues/234568-mumbai-goa-mahindra-thar-adventure.html'
+        },
+        {
+          title: 'Technical discussion: Best engine oil for Indian conditions',
+          url: 'https://www.team-bhp.com/forum/technical-stuff/234569-best-engine-oil-indian-driving-conditions.html'
+        },
+        {
+          title: 'Used car buying guide: What to check before purchase',
+          url: 'https://www.team-bhp.com/forum/car-care/234570-used-car-buying-guide-complete-checklist.html'
+        },
+        {
+          title: 'Road safety: Importance of defensive driving techniques',
+          url: 'https://www.team-bhp.com/forum/road-safety/234571-defensive-driving-techniques-indian-roads.html'
+        }
       ],
       'AutocarIndia': [
-        'Maruti Suzuki launches updated Baleno with new features',
-        'Tata Motors reveals electric vehicle roadmap for 2025',
-        'Government announces new vehicle safety norms',
-        'BMW introduces latest iX electric SUV in India',
-        'Hyundai Motor India reports record monthly sales'
+        {
+          title: 'Maruti Suzuki launches updated Baleno with new features',
+          url: 'https://www.autocarindia.com/car-news/maruti-suzuki-baleno-updated-new-features-launched-423456.aspx'
+        },
+        {
+          title: 'Tata Motors reveals electric vehicle roadmap for 2025',
+          url: 'https://www.autocarindia.com/car-news/tata-motors-electric-vehicle-roadmap-2025-announced-423457.aspx'
+        },
+        {
+          title: 'Government announces new vehicle safety norms',
+          url: 'https://www.autocarindia.com/car-news/government-announces-new-vehicle-safety-norms-india-423458.aspx'
+        },
+        {
+          title: 'BMW introduces latest iX electric SUV in India',
+          url: 'https://www.autocarindia.com/car-news/bmw-ix-electric-suv-launched-india-pricing-features-423459.aspx'
+        },
+        {
+          title: 'Hyundai Motor India reports record monthly sales',
+          url: 'https://www.autocarindia.com/car-news/hyundai-motor-india-record-monthly-sales-figures-423460.aspx'
+        }
       ],
       'CarAndBike': [
-        'Honda City Hybrid launched at competitive pricing',
-        'Bajaj Pulsar 250 review: Performance and efficiency',
-        'Electric vehicle infrastructure development updates',
-        'Mahindra XUV700 vs Tata Harrier comparison',
-        'Two-wheeler sales surge during festive season'
+        {
+          title: 'Honda City Hybrid launched at competitive pricing',
+          url: 'https://www.carandbike.com/news/honda-city-hybrid-launched-india-competitive-pricing-2734567'
+        },
+        {
+          title: 'Bajaj Pulsar 250 review: Performance and efficiency',
+          url: 'https://www.carandbike.com/reviews/bajaj-pulsar-250-review-performance-efficiency-detailed-2734568'
+        },
+        {
+          title: 'Electric vehicle infrastructure development updates',
+          url: 'https://www.carandbike.com/news/electric-vehicle-infrastructure-development-updates-india-2734569'
+        },
+        {
+          title: 'Mahindra XUV700 vs Tata Harrier comparison',
+          url: 'https://www.carandbike.com/reviews/mahindra-xuv700-vs-tata-harrier-detailed-comparison-2734570'
+        },
+        {
+          title: 'Two-wheeler sales surge during festive season',
+          url: 'https://www.carandbike.com/news/two-wheeler-sales-surge-festive-season-india-2734571'
+        }
       ]
     };
 
-    const sourceTitles = titles[source.name as keyof typeof titles] || titles['AutocarIndia'];
+    const sourceArticles = articlesData[source.name as keyof typeof articlesData] || articlesData['AutocarIndia'];
 
     return {
       title: `${source.name} Feed`,
       description: `Latest content from ${source.name}`,
       link: source.url,
-      items: sourceTitles.map((title, index) => ({
-        title,
-        description: `Preview content for: ${title}. Visit the original source for full article.`,
-        link: `https://example.com/article-${index}`,
+      items: sourceArticles.map((article, index) => ({
+        title: article.title,
+        description: `Preview content for: ${article.title}. Visit the original source for full article.`,
+        link: article.url,
         pubDate: new Date(Date.now() - (index * 3600000)).toISOString(), // Staggered times
         category: source.category,
         guid: `${source.name}-${index}-${Date.now()}`
