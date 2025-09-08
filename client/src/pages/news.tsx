@@ -261,7 +261,7 @@ export default function ThrottleTalkPage() {
                 </DialogContent>
               </Dialog>
             ) : (
-              <div className="flex flex-col gap-3 sm:flex-row sm:gap-2">
+              <div className="flex justify-center">
                 <Button 
                   variant="outline" 
                   onClick={() => window.location.href = '/api/auth/google'}
@@ -270,33 +270,6 @@ export default function ThrottleTalkPage() {
                 >
                   <LogIn className="h-4 w-4 mr-2" />
                   Sign in with Google
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => window.location.href = '/api/auth/facebook'}
-                  className="text-blue-700 border-blue-300 hover:bg-blue-50 dark:text-blue-300 dark:border-blue-600 dark:hover:bg-blue-800"
-                  data-testid="button-login-facebook"
-                >
-                  <LogIn className="h-4 w-4 mr-2" />
-                  Sign in with Facebook
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => window.location.href = '/api/auth/github'}
-                  className="text-gray-700 border-gray-300 hover:bg-gray-50 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-800"
-                  data-testid="button-login-github"
-                >
-                  <LogIn className="h-4 w-4 mr-2" />
-                  Sign in with GitHub
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => window.location.href = '/api/auth/linkedin'}
-                  className="text-blue-600 border-blue-300 hover:bg-blue-50 dark:text-blue-300 dark:border-blue-600 dark:hover:bg-blue-800"
-                  data-testid="button-login-linkedin"
-                >
-                  <LogIn className="h-4 w-4 mr-2" />
-                  Sign in with LinkedIn
                 </Button>
               </div>
             )}
