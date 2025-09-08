@@ -2,6 +2,7 @@ import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as FacebookStrategy } from "passport-facebook";
 import { Strategy as GitHubStrategy } from "passport-github2";
+import { Strategy as LinkedInStrategy } from "passport-linkedin-oauth2";
 import type { Express } from "express";
 import { db } from "./db";
 import { users, socialAccounts, userReputation } from "@shared/schema";
@@ -140,6 +141,42 @@ export function setupSocialAuth(app: Express) {
 
     app.get('/api/auth/github/callback',
       passport.authenticate('github', { failureRedirect: '/login' }),
+      (req, res) => {
+        res.redirect('/news');
+      }
+    );
+  }
+
+  // LinkedIn OAuth Strategy (if configured)
+  if (process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET) {
+    passport.use(new LinkedInStrategy({
+      clientID: process.env.LINKEDIN_CLIENT_ID,
+      clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
+      callbackURL: "/api/auth/linkedin/callback",
+      scope: ['r_emailaddress', 'r_liteprofile']
+    }, async (accessToken: string, refreshToken: string, profile: any, done: any) => {
+      try {
+        const socialProfile: SocialProfile = {
+          id: profile.id,
+          provider: 'linkedin',
+          email: profile.emails?.[0]?.value,
+          name: profile.displayName,
+          avatar: profile.photos?.[0]?.value
+        };
+        
+        const user = await handleSocialLogin(socialProfile, accessToken, refreshToken);
+        return done(null, user);
+      } catch (error) {
+        return done(error, false);
+      }
+    }));
+
+    app.get('/api/auth/linkedin',
+      passport.authenticate('linkedin')
+    );
+
+    app.get('/api/auth/linkedin/callback',
+      passport.authenticate('linkedin', { failureRedirect: '/login' }),
       (req, res) => {
         res.redirect('/news');
       }

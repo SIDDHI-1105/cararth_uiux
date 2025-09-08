@@ -289,6 +289,15 @@ export default function ThrottleTalkPage() {
                   <LogIn className="h-4 w-4 mr-2" />
                   Sign in with GitHub
                 </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => window.location.href = '/api/auth/linkedin'}
+                  className="text-blue-600 border-blue-300 hover:bg-blue-50 dark:text-blue-300 dark:border-blue-600 dark:hover:bg-blue-800"
+                  data-testid="button-login-linkedin"
+                >
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Sign in with LinkedIn
+                </Button>
               </div>
             )}
           </div>
