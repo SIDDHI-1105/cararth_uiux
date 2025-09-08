@@ -85,7 +85,7 @@ export default function Footer() {
                   className="text-muted-foreground hover:text-accent transition-colors"
                   data-testid="link-whatsapp"
                 >
-                  WhatsApp: +91 9573424321
+                  WhatsApp: +91 XXXXX XXX21
                 </a>
               </div>
               
