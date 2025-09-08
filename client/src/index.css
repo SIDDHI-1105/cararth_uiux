@@ -30,6 +30,33 @@
   --font-serif: Georgia, serif;
   --font-mono: 'Courier New', monospace;
   
+  /* Consistent spacing system */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+  --spacing-3xl: 4rem;
+  
+  /* Unified container sizes */
+  --container-xs: 100%;
+  --container-sm: 640px;
+  --container-md: 768px;
+  --container-lg: 1024px;
+  --container-xl: 1280px;
+  --container-2xl: 1536px;
+  --container-full: 100%;
+  
+  /* Page layout spacing */
+  --page-padding-x: 1rem;
+  --page-padding-y: 1.5rem;
+  --section-spacing: 2rem;
+  
+  /* Component consistent heights */
+  --navbar-height: 5rem;
+  --footer-height: auto;
+  
   /* Light Carbon Fiber & Chrome Highlights */
   --chrome-primary: hsl(210 30% 88%);
   --chrome-secondary: hsl(210 25% 94%);
@@ -77,6 +104,15 @@
   --shadow-carbon: 0 2px 12px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   --shadow-steel: 0 4px 20px rgba(0, 0, 0, 0.3), 0 1px 5px rgba(0, 0, 0, 0.2);
   --shadow-metallic: 0 8px 30px rgba(100, 116, 139, 0.3), 0 3px 12px rgba(100, 116, 139, 0.2);
+  
+  /* Dark Theme Spacing (same as light) */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+  --spacing-3xl: 4rem;
 }
 
 /* Dark Mode Carbon Fiber Pattern */
@@ -511,4 +547,62 @@ body {
 
 .steel-highlight {
   background: linear-gradient(135deg, var(--steel-highlight) 0%, var(--carbon-accent) 100%);
+}
+
+/* Unified Layout Utilities */
+@layer utilities {
+  .page-container {
+    max-width: var(--container-xl);
+    margin: 0 auto;
+    padding-left: var(--page-padding-x);
+    padding-right: var(--page-padding-x);
+  }
+  
+  .page-content {
+    padding-top: var(--page-padding-y);
+    padding-bottom: var(--page-padding-y);
+  }
+  
+  .section-spacing {
+    margin-bottom: var(--section-spacing);
+  }
+  
+  .content-wrapper {
+    min-height: calc(100vh - var(--navbar-height));
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Responsive container utilities */
+  .container-responsive {
+    width: 100%;
+    max-width: var(--container-xl);
+    margin: 0 auto;
+    padding: 0 var(--page-padding-x);
+  }
+  
+  @media (min-width: 640px) {
+    .container-responsive {
+      padding: 0 var(--spacing-lg);
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .container-responsive {
+      padding: 0 var(--spacing-xl);
+    }
+  }
+  
+  /* Theme-aware backgrounds */
+  .page-background {
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+  
+  .card-background {
+    background-color: var(--card);
+    color: var(--card-foreground);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
 }
