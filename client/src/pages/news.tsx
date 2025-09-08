@@ -19,6 +19,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
+import logoImage from "@/assets/logo.png";
 
 interface ForumPost {
   id: string;
@@ -160,13 +161,20 @@ export default function ThrottleTalkPage() {
       <div className="border-b border-gray-200 dark:border-gray-800">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
-                Throttle Talk
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">
-                Automotive community discussions
-              </p>
+            <div className="flex items-center gap-4">
+              <img 
+                src={logoImage} 
+                alt="The Mobility Hub" 
+                className="h-12 w-12"
+              />
+              <div>
+                <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+                  Throttle Talk
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">
+                  Automotive community discussions
+                </p>
+              </div>
             </div>
             {isAuthenticated ? (
               <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
