@@ -3,12 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import Navbar from "@/components/navbar";
+import Layout from "@/components/layout";
 import ContactModal from "@/components/contact-modal";
 import { CarConversation } from "@/components/car-conversation";
 import PriceInsights from "@/components/price-insights";
 import LoanWidget from "@/components/loan-widget";
-import Footer from "@/components/footer";
 import { Phone, Calendar, MapPin, User, Star, Check, ArrowLeft, MessageCircle } from "lucide-react";
 import { Link } from "wouter";
 import { type Car, type User as UserType } from "@shared/schema";
@@ -43,8 +42,7 @@ export default function CarDetail() {
 
   if (carLoading || !car) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
+      <Layout containerSize="lg">
         <div className="max-w-4xl mx-auto p-6">
           <div className="animate-pulse space-y-6">
             <div className="h-8 bg-muted rounded w-1/2"></div>
@@ -73,14 +71,12 @@ export default function CarDetail() {
             </div>
           </div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      
+    <Layout containerSize="lg">
       <div className="max-w-4xl mx-auto p-6">
         <Link href="/">
           <Button variant="ghost" className="mb-4" data-testid="button-back">
@@ -259,8 +255,6 @@ export default function CarDetail() {
         carId={car.id}
         carTitle={car.title}
       />
-      
-      <Footer />
-    </div>
+    </Layout>
   );
 }

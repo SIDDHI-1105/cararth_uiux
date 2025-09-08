@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import Navbar from "@/components/navbar";
+import { FullWidthLayout } from "@/components/layout";
 import HeroSection from "@/components/hero-section";
 import CarFilters from "@/components/car-filters";
 import CarCard from "@/components/car-card";
@@ -9,7 +9,6 @@ import MarketplaceResults from "@/components/marketplace-results";
 import PremiumUpgrade from "@/components/premium-upgrade";
 import FeaturedListingModal from "@/components/featured-listing-modal";
 import RecentlyViewed from "@/components/recently-viewed";
-import Footer from "@/components/footer";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -218,9 +217,7 @@ export default function Home() {
   });
 
   return (
-    <div className="min-h-screen bg-background carbon-fiber">
-      <Navbar />
-      
+    <FullWidthLayout>
       <HeroSection onSearch={handleHeroSearch} />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -411,74 +408,6 @@ export default function Home() {
         </Tabs>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-muted border-t border-border mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center mb-4">
-                <img 
-                  src={logoImage} 
-                  alt="The Mobility Hub" 
-                  className="h-8 w-8 mr-2"
-                />
-                <h3 className="text-lg font-bold text-primary">
-                  The Mobility Hub
-                </h3>
-              </div>
-              <p className="text-muted-foreground text-sm mb-4">
-                Your journey simplified. India's comprehensive car marketplace aggregator.
-              </p>
-              <div className="flex space-x-4">
-                <a href="#" className="text-muted-foreground hover:text-primary">📘</a>
-                <a href="#" className="text-muted-foreground hover:text-primary">🐦</a>
-                <a href="#" className="text-muted-foreground hover:text-primary">📷</a>
-                <a href="#" className="text-muted-foreground hover:text-primary">📺</a>
-              </div>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4">Popular Brands</h4>
-              <ul className="space-y-2 text-sm">
-                <li><a href="#" className="text-muted-foreground hover:text-primary">Maruti Suzuki</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary">Hyundai</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary">Tata</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary">Mahindra</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary">Honda</a></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4">Popular Cities</h4>
-              <ul className="space-y-2 text-sm">
-                <li><a href="#" className="text-muted-foreground hover:text-primary">Mumbai</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary">Delhi</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary">Bangalore</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary">Chennai</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary">Hyderabad</a></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4">Support</h4>
-              <ul className="space-y-2 text-sm">
-                <li><a href="#" className="text-muted-foreground hover:text-primary">Help Center</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary">Contact Us</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary">Privacy Policy</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary">Terms of Service</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary">Sell Your Car</a></li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="border-t border-border mt-8 pt-8 text-center">
-            <p className="text-muted-foreground text-sm">
-              © 2024 The Mobility Hub. All rights reserved. | Your Journey. Simplified.
-            </p>
-          </div>
-        </div>
-      </footer>
-
       {/* Featured Listing Modal */}
       {selectedCarForFeatured && (
         <FeaturedListingModal
@@ -491,6 +420,6 @@ export default function Home() {
           }}
         />
       )}
-    </div>
+    </FullWidthLayout>
   );
 }

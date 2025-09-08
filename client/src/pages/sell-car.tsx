@@ -21,7 +21,7 @@ import { insertSellerListingSchema } from "@shared/schema";
 import { z } from "zod";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import type { UploadResult } from '@uppy/core';
-import Navbar from "@/components/navbar";
+import Layout from "@/components/layout";
 
 const sellCarSchema = insertSellerListingSchema.extend({
   features: z.array(z.string()).optional(),
@@ -202,9 +202,7 @@ export default function SellCar() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      
+    <Layout containerSize="xl">
       <div className="container mx-auto px-4 py-8">
         <Card className="mx-auto max-w-6xl">
           <CardHeader className="text-center">
@@ -873,6 +871,6 @@ export default function SellCar() {
           </div>
         )}
       </div>
-    </div>
+    </Layout>
   );
 }
