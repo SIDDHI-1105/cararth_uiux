@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Car, Heart, Menu, X, MessageCircle, User, LogOut } from "lucide-react";
+import { Car, Heart, Menu, X, MessageCircle, User, LogOut, LogIn } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "@/components/theme-toggle";
@@ -152,13 +152,36 @@ export default function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button 
-                asChild
-                className="hidden sm:inline-flex btn-metallic px-6 py-2 text-sm font-semibold"
-                data-testid="button-login"
-              >
-                <a href="/api/login">Login</a>
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    className="hidden sm:inline-flex btn-metallic px-6 py-2 text-sm font-semibold"
+                    data-testid="button-login"
+                  >
+                    Login
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <a href="/api/auth/google" className="flex items-center">
+                      <LogIn className="w-4 h-4 mr-2" />
+                      Sign in with Google
+                    </a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <a href="/api/auth/facebook" className="flex items-center">
+                      <LogIn className="w-4 h-4 mr-2" />
+                      Sign in with Facebook
+                    </a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <a href="/api/auth/github" className="flex items-center">
+                      <LogIn className="w-4 h-4 mr-2" />
+                      Sign in with GitHub
+                    </a>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
             
             <Button 
@@ -270,14 +293,43 @@ export default function Navbar() {
                     </Button>
                   </div>
                 ) : (
-                  <Button
-                    asChild
-                    className="w-full btn-metallic py-3 text-base font-semibold"
-                    data-testid="mobile-button-login"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <a href="/api/login">Login</a>
-                  </Button>
+                  <div className="space-y-2">
+                    <Button
+                      asChild
+                      className="w-full btn-metallic py-3 text-base font-semibold"
+                      data-testid="mobile-button-login-google"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <a href="/api/auth/google" className="flex items-center justify-center">
+                        <LogIn className="w-4 h-4 mr-2" />
+                        Sign in with Google
+                      </a>
+                    </Button>
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="w-full py-3 text-base"
+                      data-testid="mobile-button-login-facebook"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <a href="/api/auth/facebook" className="flex items-center justify-center">
+                        <LogIn className="w-4 h-4 mr-2" />
+                        Sign in with Facebook
+                      </a>
+                    </Button>
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="w-full py-3 text-base"
+                      data-testid="mobile-button-login-github"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <a href="/api/auth/github" className="flex items-center justify-center">
+                        <LogIn className="w-4 h-4 mr-2" />
+                        Sign in with GitHub
+                      </a>
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>

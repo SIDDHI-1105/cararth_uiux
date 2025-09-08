@@ -119,7 +119,7 @@ export default function ThrottleTalkPage() {
   })) : [];
 
   // Convert user posts data to forum post format
-  const userPosts: ForumPost[] = userPostsData?.posts?.map((post: any) => ({
+  const userPosts: ForumPost[] = (userPostsData as any)?.posts?.map((post: any) => ({
     id: post.id,
     title: post.title,
     author: post.author?.firstName || 'Anonymous',
@@ -192,7 +192,7 @@ export default function ThrottleTalkPage() {
                           <FormItem>
                             <FormLabel>Title</FormLabel>
                             <FormControl>
-                              <Input placeholder="What's on your mind?" {...field} data-testid="input-post-title" />
+                              <Input placeholder="What's on your mind? #themobilityhub.in" {...field} data-testid="input-post-title" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -229,7 +229,7 @@ export default function ThrottleTalkPage() {
                             <FormLabel>Content</FormLabel>
                             <FormControl>
                               <Textarea 
-                                placeholder="Share your thoughts, experiences, or ask questions..."
+                                placeholder="Share your thoughts, experiences, or ask questions with #themobilityhub.in community..."
                                 className="min-h-[120px]"
                                 {...field}
                                 data-testid="textarea-post-content"
@@ -261,7 +261,7 @@ export default function ThrottleTalkPage() {
                 </DialogContent>
               </Dialog>
             ) : (
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-3 sm:flex-row sm:gap-2">
                 <Button 
                   variant="outline" 
                   onClick={() => window.location.href = '/api/auth/google'}
@@ -270,6 +270,24 @@ export default function ThrottleTalkPage() {
                 >
                   <LogIn className="h-4 w-4 mr-2" />
                   Sign in with Google
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => window.location.href = '/api/auth/facebook'}
+                  className="text-blue-700 border-blue-300 hover:bg-blue-50 dark:text-blue-300 dark:border-blue-600 dark:hover:bg-blue-800"
+                  data-testid="button-login-facebook"
+                >
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Sign in with Facebook
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => window.location.href = '/api/auth/github'}
+                  className="text-gray-700 border-gray-300 hover:bg-gray-50 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-800"
+                  data-testid="button-login-github"
+                >
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Sign in with GitHub
                 </Button>
               </div>
             )}
@@ -319,7 +337,16 @@ export default function ThrottleTalkPage() {
               </div>
             ) : (
               allPosts.map((post) => (
-                <Card key={post.id} className="hover:shadow-sm transition-shadow cursor-pointer border border-gray-200 dark:border-gray-800" data-testid={`card-post-${post.id}`}>
+                <Card 
+                  key={post.id} 
+                  className="hover:shadow-sm transition-shadow cursor-pointer border border-gray-200 dark:border-gray-800" 
+                  data-testid={`card-post-${post.id}`}
+                  onClick={() => {
+                    if (post.isExternal && post.sourceUrl) {
+                      window.open(post.sourceUrl, '_blank');
+                    }
+                  }}
+                >
                   <CardContent className="p-6">
                     <div className="flex items-start gap-4">
                       
