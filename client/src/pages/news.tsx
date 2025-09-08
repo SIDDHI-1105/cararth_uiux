@@ -35,7 +35,7 @@ export default function ThrottleTalkPage() {
   });
 
   // Convert RSS data to forum post format
-  const rssContent = communityData?.success ? communityData.posts.map((post: any) => ({
+  const rssContent = (communityData as any)?.success ? (communityData as any).posts.map((post: any) => ({
     id: post.id,
     title: post.title,
     author: post.author,

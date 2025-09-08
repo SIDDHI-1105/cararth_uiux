@@ -18,6 +18,7 @@ import { marketplaceAggregator } from "./marketplaceAggregator";
 import { AutomotiveNewsService } from "./automotiveNews";
 import { z } from "zod";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupSocialAuth } from "./socialAuth";
 
 // Developer mode check
 const isDeveloperMode = (req: any) => {
@@ -107,6 +108,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Auth middleware
   await setupAuth(app);
+  
+  // Social authentication
+  setupSocialAuth(app);
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {

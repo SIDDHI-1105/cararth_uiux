@@ -433,3 +433,135 @@ export type InsertMessageInteraction = z.infer<typeof insertMessageInteractionSc
 export type MessageInteraction = typeof messageInteractions.$inferSelect;
 export type InsertConversationBlock = z.infer<typeof insertConversationBlockSchema>;
 export type ConversationBlock = typeof conversationBlocks.$inferSelect;
+
+// Community posts for Throttle Talk
+export const communityPosts = pgTable("community_posts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  authorId: varchar("author_id").notNull(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  category: text("category").notNull(), // reviews, questions, market-insights, discussion
+  
+  // External content attribution
+  isExternal: boolean("is_external").default(false),
+  sourceUrl: text("source_url"),
+  sourceName: text("source_name"),
+  attribution: text("attribution"),
+  
+  // Engagement tracking
+  views: integer("views").default(0),
+  upvotes: integer("upvotes").default(0),
+  downvotes: integer("downvotes").default(0),
+  
+  // Status
+  status: text("status").default('published'), // draft, published, hidden, deleted
+  isPinned: boolean("is_pinned").default(false),
+  isHot: boolean("is_hot").default(false),
+  
+  // Moderation
+  isModerated: boolean("is_moderated").default(false),
+  moderatedBy: varchar("moderated_by"),
+  moderatedAt: timestamp("moderated_at"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Comments on community posts
+export const communityComments = pgTable("community_comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  postId: varchar("post_id").notNull(),
+  authorId: varchar("author_id").notNull(),
+  content: text("content").notNull(),
+  
+  // Threading support
+  parentCommentId: varchar("parent_comment_id"), // null for top-level comments
+  
+  // Engagement
+  upvotes: integer("upvotes").default(0),
+  downvotes: integer("downvotes").default(0),
+  
+  // Status
+  status: text("status").default('published'), // published, hidden, deleted
+  isModerated: boolean("is_moderated").default(false),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// User reputation system
+export const userReputation = pgTable("user_reputation", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().unique(),
+  
+  // Reputation scores
+  totalReputation: integer("total_reputation").default(0),
+  postsScore: integer("posts_score").default(0),
+  commentsScore: integer("comments_score").default(0),
+  upvotesReceived: integer("upvotes_received").default(0),
+  downvotesReceived: integer("downvotes_received").default(0),
+  
+  // Achievement levels
+  level: text("level").default('newcomer'), // newcomer, contributor, expert, guru
+  badges: text("badges").array().default([]),
+  
+  // Activity tracking
+  postsCount: integer("posts_count").default(0),
+  commentsCount: integer("comments_count").default(0),
+  lastActiveAt: timestamp("last_active_at").defaultNow(),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Social authentication providers
+export const socialAccounts = pgTable("social_accounts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  provider: text("provider").notNull(), // google, facebook, github, etc.
+  providerUserId: text("provider_user_id").notNull(),
+  
+  // Provider-specific data
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  tokenExpiresAt: timestamp("token_expires_at"),
+  
+  // Profile data from provider
+  providerEmail: text("provider_email"),
+  providerName: text("provider_name"),
+  providerAvatar: text("provider_avatar"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertCommunityPostSchema = createInsertSchema(communityPosts).omit({
+  id: true,
+  views: true,
+  upvotes: true,
+  downvotes: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCommunityCommentSchema = createInsertSchema(communityComments).omit({
+  id: true,
+  upvotes: true,
+  downvotes: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSocialAccountSchema = createInsertSchema(socialAccounts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertCommunityPost = z.infer<typeof insertCommunityPostSchema>;
+export type CommunityPost = typeof communityPosts.$inferSelect;
+export type InsertCommunityComment = z.infer<typeof insertCommunityCommentSchema>;
+export type CommunityComment = typeof communityComments.$inferSelect;
+export type InsertSocialAccount = z.infer<typeof insertSocialAccountSchema>;
+export type SocialAccount = typeof socialAccounts.$inferSelect;
+export type UserReputation = typeof userReputation.$inferSelect;
