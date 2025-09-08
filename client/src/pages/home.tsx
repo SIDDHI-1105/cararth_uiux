@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, Search, Globe, Star, Crown } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, Globe, Star, Crown, MessageSquare, Users } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { type Car } from "@shared/schema";
 import logoImage from "@/assets/logo.png";
@@ -258,6 +258,41 @@ export default function Home() {
                     <PremiumUpgrade onUpgrade={() => setShowPremiumModal(false)} />
                   </DialogContent>
                 </Dialog>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Community Section */}
+        <div className="mb-8">
+          <div className="bg-background/50 dark:bg-card/50 backdrop-blur-sm rounded-lg border border-border p-6 hover:bg-background/70 dark:hover:bg-card/70 transition-all duration-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full">
+                  <MessageSquare className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground">Join the Conversation</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Connect with fellow car enthusiasts in Throttle Talk - our automotive community
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground">
+                  <Users className="w-4 h-4" />
+                  <span>Active Community</span>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => window.location.href = '/throttle-talk'}
+                  className="text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-950"
+                  data-testid="button-throttle-talk"
+                >
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Throttle Talk
+                </Button>
               </div>
             </div>
           </div>
