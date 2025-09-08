@@ -101,18 +101,18 @@ export default function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Legal & Support</h4>
             <div className="space-y-2 text-sm">
-              <a href="#" className="block text-muted-foreground hover:text-accent transition-colors">
+              <Link href="/data-sources-policy" className="block text-muted-foreground hover:text-accent transition-colors">
                 Data Sources Policy
-              </a>
-              <a href="#" className="block text-muted-foreground hover:text-accent transition-colors">
+              </Link>
+              <Link href="/api-compliance" className="block text-muted-foreground hover:text-accent transition-colors">
                 API Compliance
-              </a>
-              <a href="#" className="block text-muted-foreground hover:text-accent transition-colors">
+              </Link>
+              <Link href="/privacy-policy" className="block text-muted-foreground hover:text-accent transition-colors">
                 Privacy Policy
-              </a>
-              <a href="#" className="block text-muted-foreground hover:text-accent transition-colors">
+              </Link>
+              <Link href="/terms-of-service" className="block text-muted-foreground hover:text-accent transition-colors">
                 Terms of Service
-              </a>
+              </Link>
               <a href="mailto:kritarth@themobilityhub.in" className="block text-muted-foreground hover:text-accent transition-colors">
                 Contact Support
               </a>

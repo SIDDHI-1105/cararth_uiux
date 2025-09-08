@@ -13,6 +13,10 @@ import Blog from "./pages/blog";
 import AdminBlog from "./pages/admin-blog";
 import ThrottleTalk from "./pages/news";
 import Community from "./pages/community";
+import PrivacyPolicy from "./pages/privacy-policy";
+import TermsOfService from "./pages/terms-of-service";
+import DataSourcesPolicy from "./pages/data-sources-policy";
+import ApiCompliance from "./pages/api-compliance";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -28,6 +32,10 @@ function Router() {
       <Route path="/admin/blog" component={AdminBlog} />
       <Route path="/news" component={ThrottleTalk} />
       <Route path="/community" component={Community} />
+      <Route path="/privacy-policy" component={PrivacyPolicy} />
+      <Route path="/terms-of-service" component={TermsOfService} />
+      <Route path="/data-sources-policy" component={DataSourcesPolicy} />
+      <Route path="/api-compliance" component={ApiCompliance} />
       <Route component={NotFound} />
     </Switch>
   );
