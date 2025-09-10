@@ -223,30 +223,30 @@ export default function Home() {
         <HeroSection onSearch={handleHeroSearch} />
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Advanced Search Section */}
-        <div className="mb-8">
-          <AdvancedFilters 
-            onSearch={handleMarketplaceSearch}
-            isLoading={marketplaceSearch.isPending}
-          />
-        </div>
-
-        {/* Throttle Talk Community Section */}
-        <div className="mb-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-4 text-white flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <MessageSquare className="w-6 h-6" />
-            <div>
-              <h3 className="font-bold">Throttle Talk</h3>
-              <p className="text-sm text-blue-100">Join India's automotive community</p>
-            </div>
+          {/* Advanced Search Section */}
+          <div className="mb-8">
+            <AdvancedFilters 
+              onSearch={handleMarketplaceSearch}
+              isLoading={marketplaceSearch.isPending}
+            />
           </div>
-          <Button asChild className="bg-white text-blue-600 hover:bg-blue-50">
-            <Link href="/news">Join Community</Link>
-          </Button>
-        </div>
 
-        {/* Premium Upgrade Banner */}
-        <div className="mb-8">
+          {/* Throttle Talk Community Section */}
+          <div className="mb-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-4 text-white flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <MessageSquare className="w-6 h-6" />
+              <div>
+                <h3 className="font-bold">Throttle Talk</h3>
+                <p className="text-sm text-blue-100">Join India's automotive community</p>
+              </div>
+            </div>
+            <Button asChild className="bg-white text-blue-600 hover:bg-blue-50">
+              <Link href="/news">Join Community</Link>
+            </Button>
+          </div>
+
+          {/* Premium Upgrade Banner */}
+          <div className="mb-8">
           <div className="steel-gradient rounded-lg border-2 border-yellow-500/50 p-6 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-amber-500/10"></div>
             <div className="relative z-10 flex flex-col md:flex-row items-center justify-between">
@@ -422,7 +422,7 @@ export default function Home() {
               </div>
             )}
           </TabsContent>
-        </Tabs>
+          </Tabs>
         </div>
         
         {/* Featured Listing Modal */}
