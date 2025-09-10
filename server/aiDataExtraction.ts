@@ -21,7 +21,7 @@ export class AIDataExtractionService {
     try {
       console.log(`🧠 LLM-Enhanced scraping: ${url}`);
       
-      // Use Firecrawl's LLM extraction capabilities
+      // Use Firecrawl's LLM extraction capabilities with optimized schema
       const result = await this.firecrawl.scrapeUrl(url, {
         formats: ['extract'],
         extract: {
@@ -29,31 +29,23 @@ export class AIDataExtractionService {
             type: "object",
             properties: {
               listings: {
-                type: "array",
+                type: "array", 
+                description: "Array of car listings found on the page",
                 items: {
                   type: "object",
                   properties: {
-                    title: { type: "string" },
-                    brand: { type: "string" },
-                    model: { type: "string" },
-                    year: { type: "number" },
-                    price: { type: "number" },
-                    mileage: { type: "number" },
-                    fuelType: { type: "string" },
-                    transmission: { type: "string" },
-                    location: { type: "string" },
-                    description: { type: "string" },
-                    features: { 
-                      type: "array",
-                      items: { type: "string" }
-                    },
-                    condition: { type: "string" },
-                    sellerType: { type: "string" },
-                    url: { type: "string" },
-                    images: {
-                      type: "array", 
-                      items: { type: "string" }
-                    }
+                    title: { type: "string", description: "Car title or name" },
+                    brand: { type: "string", description: "Car brand/manufacturer" },
+                    model: { type: "string", description: "Car model" },
+                    year: { type: "number", description: "Manufacturing year" },
+                    price: { type: "number", description: "Price in Indian Rupees" },
+                    mileage: { type: "number", description: "Mileage in kilometers" },
+                    fuelType: { type: "string", description: "Fuel type" },
+                    transmission: { type: "string", description: "Transmission type" },
+                    location: { type: "string", description: "Location or city" },
+                    condition: { type: "string", description: "Car condition" },
+                    sellerType: { type: "string", description: "Seller type" },
+                    url: { type: "string", description: "Direct listing URL" }
                   },
                   required: ["title", "brand", "model", "year", "price"]
                 }
@@ -61,24 +53,18 @@ export class AIDataExtractionService {
             },
             required: ["listings"]
           },
-          systemPrompt: extractionPrompt
+          prompt: extractionPrompt
         },
-        timeout: 30000,
-        waitFor: 3000
+        timeout: 60000,
+        waitFor: 8000
       });
 
-      if (result && result.data && result.data.extract) {
-        const extractedData = result.data.extract;
-        if (extractedData.listings && Array.isArray(extractedData.listings)) {
+      // Handle Firecrawl response with proper type checking
+      if (result && 'success' in result && result.success) {
+        const extractedData = (result as any).extract || (result as any).data?.extract;
+        if (extractedData?.listings && Array.isArray(extractedData.listings)) {
           const validListings = this.validateAndNormalizeListings(extractedData.listings, url);
-          console.log(`✅ Firecrawl LLM extracted ${validListings.length} genuine listings from ${url}`);
-          return validListings;
-        }
-      } else if (result && result.extract) {
-        const extractedData = result.extract;
-        if (extractedData.listings && Array.isArray(extractedData.listings)) {
-          const validListings = this.validateAndNormalizeListings(extractedData.listings, url);
-          console.log(`✅ Firecrawl LLM extracted ${validListings.length} genuine listings from ${url}`);
+          console.log(`✅ Firecrawl extract tokens used: ${validListings.length} genuine listings from ${url}`);
           return validListings;
         }
       }
