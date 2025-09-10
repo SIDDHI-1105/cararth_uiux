@@ -321,64 +321,61 @@ export default function MarketplaceResults({ searchResult, isLoading, error }: M
                   )}
                 </div>
               </div>
+
+              {/* Car Specifications Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-muted-foreground mb-3">
+                <div className="flex items-center">
+                  <Calendar className="w-4 h-4 mr-1" />
+                  <span>{listing.year}</span>
+                </div>
+                <div className="flex items-center">
+                  <Gauge className="w-4 h-4 mr-1" />
+                  <span>{formatMileage(listing.mileage)}</span>
+                </div>
+                <div className="flex items-center">
+                  <Fuel className="w-4 h-4 mr-1" />
+                  <span>{listing.fuelType}</span>
+                </div>
+                <div className="flex items-center">
+                  <Settings className="w-4 h-4 mr-1" />
+                  <span>{listing.transmission}</span>
+                </div>
+              </div>
+
+              {/* Location and Actions */}
+              <div className="flex justify-between items-center">
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <MapPin className="w-4 h-4 mr-1" />
+                  <span>{listing.location}</span>
+                  <Clock className="w-4 h-4 ml-3 mr-1" />
+                  <span>{Math.ceil((Date.now() - listing.listingDate.getTime()) / (1000 * 60 * 60 * 24))} days ago</span>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedCar(listing);
+                      setShowDetailModal(true);
+                    }}
+                  >
+                    <Eye className="w-4 h-4 mr-1" />
+                    View Details
+                  </Button>
+                  <Button size="sm" asChild>
+                    <a href={listing.url} target="_blank" rel="noopener noreferrer">
+                      <Phone className="w-4 h-4 mr-1" />
+                      Contact
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
       </CardContent>
     </Card>
     );
   };
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-muted-foreground mb-3">
-              <div className="flex items-center">
-                <Calendar className="w-4 h-4 mr-1" />
-                <span>{listing.year}</span>
-              </div>
-              <div className="flex items-center">
-                <Gauge className="w-4 h-4 mr-1" />
-                <span>{formatMileage(listing.mileage)}</span>
-              </div>
-              <div className="flex items-center">
-                <Fuel className="w-4 h-4 mr-1" />
-                <span>{listing.fuelType}</span>
-              </div>
-              <div className="flex items-center">
-                <Settings className="w-4 h-4 mr-1" />
-                <span>{listing.transmission}</span>
-              </div>
-            </div>
-
-            {/* Location and Actions */}
-            <div className="flex justify-between items-center">
-              <div className="flex items-center text-sm text-muted-foreground">
-                <MapPin className="w-4 h-4 mr-1" />
-                <span>{listing.location}</span>
-                <Clock className="w-4 h-4 ml-3 mr-1" />
-                <span>{Math.ceil((Date.now() - listing.listingDate.getTime()) / (1000 * 60 * 60 * 24))} days ago</span>
-              </div>
-              <div className="flex gap-2">
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => {
-                    setSelectedCar(listing);
-                    setShowDetailModal(true);
-                  }}
-                >
-                  <Eye className="w-4 h-4 mr-1" />
-                  View Details
-                </Button>
-                <Button size="sm" asChild>
-                  <a href={listing.url} target="_blank" rel="noopener noreferrer">
-                    <Phone className="w-4 h-4 mr-1" />
-                    Contact
-                  </a>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
 
   const renderAnalytics = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
