@@ -26,25 +26,40 @@ export class AIDataExtractionService {
         formats: ['extract'],
         extract: {
           schema: {
-            listings: {
-              items: {
-                title: 'string',
-                brand: 'string', 
-                model: 'string',
-                year: 'number',
-                price: 'number',
-                mileage: 'number',
-                fuelType: 'string',
-                transmission: 'string',
-                location: 'string',
-                description: 'string',
-                features: 'string[]',
-                condition: 'string',
-                sellerType: 'string',
-                url: 'string',
-                images: 'string[]'
+            type: "object",
+            properties: {
+              listings: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    title: { type: "string" },
+                    brand: { type: "string" },
+                    model: { type: "string" },
+                    year: { type: "number" },
+                    price: { type: "number" },
+                    mileage: { type: "number" },
+                    fuelType: { type: "string" },
+                    transmission: { type: "string" },
+                    location: { type: "string" },
+                    description: { type: "string" },
+                    features: { 
+                      type: "array",
+                      items: { type: "string" }
+                    },
+                    condition: { type: "string" },
+                    sellerType: { type: "string" },
+                    url: { type: "string" },
+                    images: {
+                      type: "array", 
+                      items: { type: "string" }
+                    }
+                  },
+                  required: ["title", "brand", "model", "year", "price"]
+                }
               }
-            }
+            },
+            required: ["listings"]
           },
           systemPrompt: extractionPrompt
         },
