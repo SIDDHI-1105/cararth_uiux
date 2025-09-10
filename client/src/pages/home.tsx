@@ -218,11 +218,10 @@ export default function Home() {
   });
 
   return (
-    <>
-      <FullWidthLayout>
-        <HeroSection onSearch={handleHeroSearch} />
-        
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <FullWidthLayout>
+      <HeroSection onSearch={handleHeroSearch} />
+      
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Advanced Search Section */}
         <div className="mb-8">
           <AdvancedFilters 
@@ -437,7 +436,6 @@ export default function Home() {
           }}
         />
       )}
-      </FullWidthLayout>
-    </>
+    </FullWidthLayout>
   );
 }
