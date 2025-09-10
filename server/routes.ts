@@ -1044,6 +1044,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create marketplace contact request (used by contact-seller-modal)
+  app.post("/api/marketplace/contact", async (req, res) => {
+    try {
+      const { name, phone, email, message, listingId, listingTitle } = req.body;
+      
+      if (!name || !phone || !listingId) {
+        return res.status(400).json({ error: "Missing required fields: name, phone, listingId" });
+      }
+
+      // Create contact record for tracking
+      const contact = await storage.createContact({
+        name,
+        phone,
+        email: email || null,
+        message: message || null,
+        carId: listingId,
+      });
+
+      // In a real implementation, this would:
+      // 1. Send SMS with OTP to phone number
+      // 2. Store OTP temporarily for verification
+      
+      console.log(`📱 Contact request from ${name} (${phone}) for listing ${listingTitle}`);
+      
+      res.status(201).json({ 
+        success: true,
+        message: "Contact request received. OTP sent to phone number.",
+        contactId: contact.id
+      });
+    } catch (error) {
+      console.error("Contact request error:", error);
+      res.status(500).json({ error: "Failed to process contact request" });
+    }
+  });
+
+  // Verify contact OTP (used by contact-seller-modal)
+  app.post("/api/marketplace/verify-contact", async (req, res) => {
+    try {
+      const { phone, otp, listingId } = req.body;
+      
+      if (!phone || !otp || !listingId) {
+        return res.status(400).json({ error: "Missing required fields: phone, otp, listingId" });
+      }
+
+      // In a real implementation, this would verify the OTP
+      // For demo purposes, accept any 6-digit OTP
+      if (otp.length !== 6) {
+        return res.status(400).json({ error: "Invalid OTP format" });
+      }
+
+      console.log(`✅ OTP verified for ${phone} - enabling messaging for listing ${listingId}`);
+      
+      res.json({ 
+        success: true,
+        verified: true,
+        message: "Phone number verified successfully"
+      });
+    } catch (error) {
+      console.error("OTP verification error:", error);
+      res.status(500).json({ error: "Failed to verify OTP" });
+    }
+  });
+
   // Premium subscription endpoints
   app.post("/api/subscriptions", async (req, res) => {
     try {

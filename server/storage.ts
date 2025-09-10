@@ -486,6 +486,7 @@ export class MemStorage implements IStorage {
       startDate: new Date(),
       endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
       createdAt: new Date(),
+      updatedAt: new Date(),
     };
     this.subscriptions.set(id, subscription);
     return subscription;
@@ -526,6 +527,8 @@ export class MemStorage implements IStorage {
     const newConversation: Conversation = {
       id,
       ...conversation,
+      status: conversation.status || null,
+      subject: conversation.subject || null,
       lastMessageAt: new Date(),
       isRead: false,
       createdAt: new Date(),
@@ -540,7 +543,7 @@ export class MemStorage implements IStorage {
   }
 
   async getConversationByCarAndBuyer(carId: string, buyerId: string): Promise<Conversation | undefined> {
-    for (const conversation of this.conversations.values()) {
+    for (const conversation of Array.from(this.conversations.values())) {
       if (conversation.carId === carId && conversation.buyerId === buyerId) {
         return conversation;
       }
@@ -550,7 +553,7 @@ export class MemStorage implements IStorage {
 
   async getConversationsForUser(userId: string, userType: 'buyer' | 'seller'): Promise<Conversation[]> {
     const conversations: Conversation[] = [];
-    for (const conversation of this.conversations.values()) {
+    for (const conversation of Array.from(this.conversations.values())) {
       if (
         (userType === 'buyer' && conversation.buyerId === userId) ||
         (userType === 'seller' && conversation.sellerId === userId)
@@ -577,6 +580,10 @@ export class MemStorage implements IStorage {
     const newMessage: Message = {
       id,
       ...message,
+      messageType: message.messageType || null,
+      offerAmount: message.offerAmount || null,
+      offerStatus: message.offerStatus || null,
+      attachments: message.attachments || null,
       isRead: false,
       readAt: null,
       createdAt: new Date(),
@@ -587,16 +594,20 @@ export class MemStorage implements IStorage {
 
   async getMessagesInConversation(conversationId: string): Promise<Message[]> {
     const messages: Message[] = [];
-    for (const message of this.messages.values()) {
+    for (const message of Array.from(this.messages.values())) {
       if (message.conversationId === conversationId) {
         messages.push(message);
       }
     }
-    return messages.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+    return messages.sort((a, b) => {
+      const aTime = a.createdAt?.getTime() || 0;
+      const bTime = b.createdAt?.getTime() || 0;
+      return aTime - bTime;
+    });
   }
 
   async markMessagesAsRead(conversationId: string, userId: string): Promise<void> {
-    for (const message of this.messages.values()) {
+    for (const message of Array.from(this.messages.values())) {
       if (message.conversationId === conversationId && message.senderId !== userId && !message.isRead) {
         message.isRead = true;
         message.readAt = new Date();
