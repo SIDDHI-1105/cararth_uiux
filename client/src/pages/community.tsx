@@ -56,23 +56,27 @@ export default function CommunityPage() {
   const { data: rssData, isLoading: rssLoading, error: rssError } = useQuery({
     queryKey: ['/api/community/posts'],
     select: (data: any) => {
+      console.log('RSS API Response:', data); // Debug logging
       // Transform RSS data to match frontend format
-      return data.posts?.map((post: any) => ({
-        ...post,
-        avatar: '/api/placeholder/32/32',
-        image: post.coverImage || post.image,
-        likes: Math.floor(Math.random() * 200) + 50,
-        comments: Math.floor(Math.random() * 50) + 10,
-        shares: Math.floor(Math.random() * 30) + 5,
-        tags: post.category ? [`#${post.category.replace(/\s+/g, '')}`] : ['#Automotive'],
-        timestamp: new Date(post.publishedAt).toLocaleDateString('en-IN', {
-          hour: '2-digit',
-          minute: '2-digit',
-          day: 'numeric',
-          month: 'short'
-        }),
-        featured: Math.random() > 0.7
-      })) || []
+      return data.posts?.map((post: any) => {
+        console.log('Processing post:', post.title, 'CoverImage:', post.coverImage); // Debug logging
+        return {
+          ...post,
+          avatar: '/api/placeholder/32/32',
+          image: post.coverImage || post.image,
+          likes: Math.floor(Math.random() * 200) + 50,
+          comments: Math.floor(Math.random() * 50) + 10,
+          shares: Math.floor(Math.random() * 30) + 5,
+          tags: post.category ? [`#${post.category.replace(/\s+/g, '')}`] : ['#Automotive'],
+          timestamp: new Date(post.publishedAt).toLocaleDateString('en-IN', {
+            hour: '2-digit',
+            minute: '2-digit',
+            day: 'numeric',
+            month: 'short'
+          }),
+          featured: Math.random() > 0.7
+        }
+      }) || []
     }
   });
 
@@ -258,12 +262,12 @@ export default function CommunityPage() {
 
             <div className="grid gap-6" data-testid="community-posts-list">
               {communityPosts.map((post: CommunityPost, index: number) => (
-                <Card key={post.id} className={cn("hover:shadow-lg transition-shadow", post.featured && "border-blue-200 dark:border-blue-800")}>
+                <Card key={post.id} className={cn("hover:shadow-lg transition-shadow bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700", post.featured && "border-blue-300 dark:border-blue-600 shadow-blue-100 dark:shadow-blue-900/20")}>
                   {post.featured && (
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 px-4 py-2 border-b">
-                      <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 px-4 py-2 border-b border-blue-200 dark:border-blue-700">
+                      <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300 font-medium">
                         <Award className="h-4 w-4" />
-                        <span>Featured Post</span>
+                        <span>Featured Content</span>
                       </div>
                     </div>
                   )}
@@ -276,27 +280,27 @@ export default function CommunityPage() {
                       </Avatar>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold" data-testid={`text-author-${index}`}>{post.author}</h3>
+                          <h3 className="font-semibold text-gray-900 dark:text-gray-100" data-testid={`text-author-${index}`}>{post.author}</h3>
                           {post.location && (
                             <>
-                              <span className="text-gray-400">•</span>
-                              <span className="text-sm text-gray-500 flex items-center gap-1">
+                              <span className="text-gray-400 dark:text-gray-500">•</span>
+                              <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
                                 <MapPin className="h-3 w-3" />
                                 {post.location}
                               </span>
                             </>
                           )}
                         </div>
-                        <p className="text-sm text-gray-500" data-testid={`text-timestamp-${index}`}>{post.timestamp}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400" data-testid={`text-timestamp-${index}`}>{post.timestamp}</p>
                       </div>
                     </div>
                   </CardHeader>
                   
                   <CardContent>
-                    <CardTitle className="text-lg mb-3" data-testid={`text-post-title-${index}`}>
+                    <CardTitle className="text-lg mb-3 text-gray-900 dark:text-gray-100 font-bold leading-tight" data-testid={`text-post-title-${index}`}>
                       {post.title}
                     </CardTitle>
-                    <CardDescription className="text-sm mb-4" data-testid={`text-post-content-${index}`}>
+                    <CardDescription className="text-sm mb-4 text-gray-700 dark:text-gray-300 leading-relaxed" data-testid={`text-post-content-${index}`}>
                       {post.content}
                     </CardDescription>
                     
@@ -325,12 +329,13 @@ export default function CommunityPage() {
                           variant="ghost" 
                           size="sm" 
                           onClick={() => handleLike(post.id)}
+                          className="text-gray-600 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400"
                           data-testid={`button-like-${index}`}
                         >
                           <Heart className="h-4 w-4 mr-1" />
                           {post.likes}
                         </Button>
-                        <Button variant="ghost" size="sm" data-testid={`button-comment-${index}`}>
+                        <Button variant="ghost" size="sm" className="text-gray-600 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400" data-testid={`button-comment-${index}`}>
                           <MessageCircle className="h-4 w-4 mr-1" />
                           {post.comments}
                         </Button>
@@ -338,6 +343,7 @@ export default function CommunityPage() {
                           variant="ghost" 
                           size="sm" 
                           onClick={() => handleShare(post.id)}
+                          className="text-gray-600 dark:text-gray-400 hover:text-green-500 dark:hover:text-green-400"
                           data-testid={`button-share-${index}`}
                         >
                           <Share2 className="h-4 w-4 mr-1" />
