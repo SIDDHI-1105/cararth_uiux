@@ -60,7 +60,7 @@ export class AIDataExtractionService {
       });
 
       // Handle Firecrawl response with proper type checking
-      if (result && 'success' in result && result.success) {
+      if (result && typeof result === 'object') {
         const extractedData = (result as any).extract || (result as any).data?.extract;
         if (extractedData?.listings && Array.isArray(extractedData.listings)) {
           const validListings = this.validateAndNormalizeListings(extractedData.listings, url);
@@ -147,6 +147,92 @@ Return only the JSON with genuine listings found. If no genuine listings are fou
   }
 
   /**
+   * Perplexity-powered primary extraction for unstructured sites
+   */
+  async extractWithPerplexity(url: string, domain: string): Promise<MarketplaceListing[]> {
+    if (!this.perplexityApiKey) {
+      return [];
+    }
+
+    try {
+      console.log(`🧠 Perplexity primary extraction: ${url}`);
+      
+      const extractionPrompt = `
+Extract genuine car listings from this ${domain} page: ${url}
+
+Focus on Indian automotive market with authentic listings only:
+1. Extract only real car listings with complete data
+2. Ignore ads, navigation, promotions
+3. Price in Indian Rupees (₹), mileage in kilometers  
+4. Year between 2010-2024, realistic market prices
+5. Standard Indian brands: Maruti Suzuki, Hyundai, Tata, etc.
+
+Return JSON format:
+{
+  "listings": [
+    {
+      "title": "2020 Maruti Swift VDI",
+      "brand": "Maruti Suzuki", 
+      "model": "Swift",
+      "year": 2020,
+      "price": 650000,
+      "mileage": 35000,
+      "fuelType": "Diesel",
+      "transmission": "Manual",
+      "location": "Mumbai, Maharashtra",
+      "condition": "Good",
+      "sellerType": "individual",
+      "url": "${url}"
+    }
+  ]
+}`;
+
+      const response = await fetch('https://api.perplexity.ai/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.perplexityApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'llama-3.1-sonar-small-128k-online',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are an expert car listing extractor with real-time access to current Indian automotive market data.'
+            },
+            {
+              role: 'user',
+              content: extractionPrompt
+            }
+          ],
+          max_tokens: 2000,
+          temperature: 0.1,
+          search_recency_filter: 'week'
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const content = result.choices?.[0]?.message?.content || '';
+        
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          if (parsed.listings && Array.isArray(parsed.listings)) {
+            const validListings = this.validateAndNormalizeListings(parsed.listings, url);
+            console.log(`✅ Perplexity extracted ${validListings.length} genuine listings from ${domain}`);
+            return validListings;
+          }
+        }
+      }
+    } catch (error) {
+      console.log(`⚠️ Perplexity extraction failed for ${url}: ${error}`);
+    }
+
+    return [];
+  }
+
+  /**
    * Perplexity-powered market validation and enhancement
    */
   async enhanceWithPerplexity(listings: MarketplaceListing[]): Promise<MarketplaceListing[]> {
@@ -220,23 +306,47 @@ Return enhanced listings with market validation scores (1-10) in JSON format.`;
   }
 
   /**
-   * Comprehensive car portal extraction with multiple AI fallbacks
+   * Smart cost-optimized extraction with LLM routing
    */
   async extractCarListings(url: string, domain: string): Promise<MarketplaceListing[]> {
     const extractionPrompt = this.buildExtractionPrompt(domain);
     
-    try {
-      // Primary: Firecrawl with LLM extraction
-      const firecrawlListings = await this.scrapeWithLLMExtraction(url, extractionPrompt);
-      if (firecrawlListings.length > 0) {
-        return await this.enhanceWithPerplexity(firecrawlListings);
+    // Smart routing based on site characteristics and cost-effectiveness
+    const structuredSites = ['cardekho', 'cars24', 'carwale', 'autotrader'];
+    const unstructuredSites = ['olx', 'facebook', 'droom'];
+    
+    const isStructured = structuredSites.some(site => domain.includes(site));
+    const isUnstructured = unstructuredSites.some(site => domain.includes(site));
+    
+    // Route 1: Structured sites → Firecrawl extract tokens (cheapest)
+    if (isStructured) {
+      try {
+        console.log(`📊 Using Firecrawl extract tokens for structured site: ${domain}`);
+        const firecrawlListings = await this.scrapeWithLLMExtraction(url, extractionPrompt);
+        if (firecrawlListings.length > 0) {
+          return await this.enhanceWithPerplexity(firecrawlListings);
+        }
+      } catch (error) {
+        console.log(`⚠️ Firecrawl failed for ${domain}, trying Perplexity...`);
       }
-    } catch (error) {
-      console.log(`⚠️ Firecrawl LLM extraction failed, trying Gemini backup...`);
+    }
+    
+    // Route 2: Unstructured sites → Perplexity primary (mid-cost, better for complex sites)  
+    if (isUnstructured) {
+      try {
+        console.log(`🧠 Using Perplexity primary extraction for unstructured site: ${domain}`);
+        const perplexityListings = await this.extractWithPerplexity(url, domain);
+        if (perplexityListings.length > 0) {
+          return perplexityListings; // Already optimized, no need for enhancement
+        }
+      } catch (error) {
+        console.log(`⚠️ Perplexity failed for ${domain}, trying Firecrawl backup...`);
+      }
     }
 
+    // Route 3: Fallback for any site → Firecrawl basic + Gemini (most expensive)
     try {
-      // Fallback: Basic scraping + Gemini extraction
+      console.log(`🔄 Using Firecrawl + Gemini fallback for: ${domain}`);
       const basicResult = await this.firecrawl.scrapeUrl(url, {
         formats: ['markdown'],
         onlyMainContent: true,
