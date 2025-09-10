@@ -171,49 +171,162 @@ export default function MarketplaceResults({ searchResult, isLoading, error }: M
     }
   };
 
-  const renderListingCard = (listing: MarketplaceListing, showSource = true) => (
-    <Card key={listing.id} className="hover:shadow-lg transition-shadow" data-testid={`listing-${listing.id}`}>
-      <CardContent className="p-4">
-        <div className="flex gap-4">
-          {/* Car Image */}
-          <div className="flex-shrink-0">
-            <img
-              src={listing.images[0] || "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=200"}
-              alt={listing.title}
-              className="w-32 h-24 object-cover rounded-lg"
-            />
-          </div>
+  const calculateReliabilityScore = (listing: MarketplaceListing) => {
+    let score = 50; // Base score
+    
+    // Platform reliability scores
+    const platformScores: Record<string, number> = {
+      'cars24': 15,
+      'carwale': 12,
+      'cardekho': 12,
+      'autotrader': 10,
+      'cartrade': 10,
+      'spinny': 15,
+      'olx': 5,
+      'facebook': 3,
+      'droom': 8,
+      'cargurus': 10
+    };
+    
+    score += platformScores[listing.source.toLowerCase()] || 5;
+    
+    // Verification status boost
+    if (listing.verificationStatus === 'certified') score += 20;
+    else if (listing.verificationStatus === 'verified') score += 10;
+    
+    // Seller type reliability
+    if (listing.sellerType === 'dealer') score += 15;
+    else if (listing.sellerType === 'oem') score += 20;
+    else score += 5; // individual
+    
+    // Age penalty (older listings may be stale)
+    const daysSince = Math.ceil((Date.now() - listing.listingDate.getTime()) / (1000 * 60 * 60 * 24));
+    if (daysSince > 30) score -= 10;
+    else if (daysSince > 7) score -= 5;
+    
+    return Math.min(100, Math.max(0, score));
+  };
 
-          {/* Car Details */}
-          <div className="flex-1 min-w-0">
-            <div className="flex justify-between items-start mb-2">
-              <div>
-                <h3 className="font-semibold text-lg truncate" data-testid="listing-title">
-                  {listing.title}
-                </h3>
-                <div className="flex items-center gap-2 mt-1">
-                  {showSource && (
-                    <Badge variant="outline" className="text-xs">
-                      {listing.source}
-                    </Badge>
-                  )}
-                  <Badge className={getConditionColor(listing.condition)}>
-                    {listing.condition}
-                  </Badge>
-                  {getVerificationIcon(listing.verificationStatus)}
-                </div>
+  const getReliabilityColor = (score: number) => {
+    if (score >= 80) return 'text-green-600';
+    if (score >= 60) return 'text-blue-600';
+    if (score >= 40) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
+  const calculatePriceAdvantage = (listing: MarketplaceListing) => {
+    const avgPrice = searchResult.analytics.avgPrice;
+    const advantage = ((avgPrice - listing.price) / avgPrice) * 100;
+    return advantage;
+  };
+
+  const getPriceAdvantageColor = (advantage: number) => {
+    if (advantage > 15) return 'bg-green-50 border-green-200 text-green-800';
+    if (advantage > 5) return 'bg-blue-50 border-blue-200 text-blue-800';
+    if (advantage < -10) return 'bg-red-50 border-red-200 text-red-800';
+    return 'bg-gray-50 border-gray-200 text-gray-800';
+  };
+
+  const findSimilarListings = (listing: MarketplaceListing) => {
+    return searchResult.listings.filter(l => 
+      l.id !== listing.id &&
+      l.brand === listing.brand &&
+      l.model === listing.model &&
+      Math.abs(l.year - listing.year) <= 1 &&
+      Math.abs(l.mileage - listing.mileage) < 20000
+    );
+  };
+
+  const renderListingCard = (listing: MarketplaceListing, showSource = true) => {
+    const reliabilityScore = calculateReliabilityScore(listing);
+    const priceAdvantage = calculatePriceAdvantage(listing);
+    const similarListings = findSimilarListings(listing);
+    
+    return (
+      <Card key={listing.id} className="hover:shadow-lg transition-shadow" data-testid={`listing-${listing.id}`}>
+        <CardContent className="p-4">
+          {/* Price Advantage Banner */}
+          {Math.abs(priceAdvantage) > 5 && (
+            <div className={`mb-3 p-2 rounded-lg border ${getPriceAdvantageColor(priceAdvantage)}`}>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">
+                  {priceAdvantage > 15 ? '🎯 Excellent Deal' : 
+                   priceAdvantage > 5 ? '💰 Good Price' : 
+                   '⚠️ Above Market'}
+                </span>
+                <span className="text-sm">
+                  {priceAdvantage > 0 ? `${priceAdvantage.toFixed(1)}% below market` : 
+                   `${Math.abs(priceAdvantage).toFixed(1)}% above market`}
+                </span>
               </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-accent" data-testid="listing-price">
-                  {formatPrice(listing.price)}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {listing.sellerType}
+            </div>
+          )}
+
+          <div className="flex gap-4">
+            {/* Car Image */}
+            <div className="flex-shrink-0 relative">
+              <img
+                src={listing.images[0] || "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=200"}
+                alt={listing.title}
+                className="w-32 h-24 object-cover rounded-lg"
+              />
+              {/* Reliability Score Badge */}
+              <div className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-lg border">
+                <div className={`text-xs font-bold ${getReliabilityColor(reliabilityScore)}`}>
+                  {reliabilityScore}%
                 </div>
               </div>
             </div>
 
-            {/* Car Specs */}
+            {/* Car Details */}
+            <div className="flex-1 min-w-0">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <h3 className="font-semibold text-lg truncate" data-testid="listing-title">
+                    {listing.title}
+                  </h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    {showSource && (
+                      <Badge variant="outline" className="text-xs">
+                        {listing.source}
+                      </Badge>
+                    )}
+                    <Badge className={getConditionColor(listing.condition)}>
+                      {listing.condition}
+                    </Badge>
+                    {getVerificationIcon(listing.verificationStatus)}
+                    {/* Trust Score */}
+                    <div className="flex items-center text-xs">
+                      <Star className={`w-3 h-3 mr-1 ${getReliabilityColor(reliabilityScore)}`} />
+                      <span className={getReliabilityColor(reliabilityScore)}>
+                        {reliabilityScore >= 80 ? 'Highly Trusted' :
+                         reliabilityScore >= 60 ? 'Trusted' :
+                         reliabilityScore >= 40 ? 'Moderate' : 'Basic'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-accent" data-testid="listing-price">
+                    {formatPrice(listing.price)}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {listing.sellerType}
+                  </div>
+                  {/* Cross-platform comparison */}
+                  {similarListings.length > 0 && (
+                    <div className="text-xs text-blue-600 mt-1">
+                      +{similarListings.length} similar on other platforms
+                    </div>
+                  )}
+                </div>
+              </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+    );
+  };
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-muted-foreground mb-3">
               <div className="flex items-center">
                 <Calendar className="w-4 h-4 mr-1" />
