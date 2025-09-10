@@ -218,16 +218,31 @@ export default function Home() {
   });
 
   return (
-    <FullWidthLayout>
-      <HeroSection onSearch={handleHeroSearch} />
-      
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <>
+      <FullWidthLayout>
+        <HeroSection onSearch={handleHeroSearch} />
+        
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Advanced Search Section */}
         <div className="mb-8">
           <AdvancedFilters 
             onSearch={handleMarketplaceSearch}
             isLoading={marketplaceSearch.isPending}
           />
+        </div>
+
+        {/* Throttle Talk Community Section */}
+        <div className="mb-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-4 text-white flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <MessageSquare className="w-6 h-6" />
+            <div>
+              <h3 className="font-bold">Throttle Talk</h3>
+              <p className="text-sm text-blue-100">Join India's automotive community</p>
+            </div>
+          </div>
+          <Button asChild className="bg-white text-blue-600 hover:bg-blue-50">
+            <Link href="/news">Join Community</Link>
+          </Button>
         </div>
 
         {/* Premium Upgrade Banner */}
@@ -409,7 +424,7 @@ export default function Home() {
           </TabsContent>
         </Tabs>
       </main>
-
+      
       {/* Featured Listing Modal */}
       {selectedCarForFeatured && (
         <FeaturedListingModal
@@ -422,6 +437,7 @@ export default function Home() {
           }}
         />
       )}
-    </FullWidthLayout>
+      </FullWidthLayout>
+    </>
   );
 }
