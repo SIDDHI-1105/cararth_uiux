@@ -3,6 +3,7 @@ import { GoogleGenAI } from "@google/genai";
 import FirecrawlApp from '@mendable/firecrawl-js';
 import { GeographicIntelligenceService, type LocationData, type GeoSearchContext } from './geoService.js';
 import { HistoricalIntelligenceService, type HistoricalAnalysis } from './historicalIntelligence.js';
+import { AIDataExtractionService } from './aiDataExtraction.js';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 const firecrawl = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY || "" });
@@ -119,6 +120,7 @@ export interface DetailedFilters {
 }
 
 export class MarketplaceAggregator {
+  private readonly aiExtractor: AIDataExtractionService;
   private readonly marketplaceSources = [
     // PRIMARY PORTALS (Active Integration)
     'CarDekho', 'OLX', 'Cars24', 'CarWale', 'Facebook Marketplace',
@@ -142,6 +144,7 @@ export class MarketplaceAggregator {
   private historicalService: HistoricalIntelligenceService;
   
   constructor() {
+    this.aiExtractor = new AIDataExtractionService();
     this.geoService = new GeographicIntelligenceService();
     this.historicalService = new HistoricalIntelligenceService();
   }
