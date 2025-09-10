@@ -85,7 +85,7 @@ Include nearby important areas for car market density analysis.`;
         if (locationData.marketZone === 'hyderabad') {
           locationData.isSupported = true;
         } else if (locationData.marketZone === 'delhi-ncr') {
-          locationData.isSupported = supportDate ? currentDate >= supportDate : false;
+          locationData.isSupported = true; // Delhi NCR is now LIVE!
         } else {
           locationData.isSupported = false;
         }

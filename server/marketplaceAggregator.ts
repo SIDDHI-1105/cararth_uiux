@@ -63,11 +63,12 @@ export interface AggregatedSearchResult {
   };
 }
 
-// PILOT PHASE: Hyderabad focus for quality assurance before Delhi NCR expansion
+// LIVE MARKETS: Hyderabad (live) + Delhi NCR (launching now!)
 const SUPPORTED_CITIES = [
-  'hyderabad', 'secunderabad', 'telangana'
-  // Delhi NCR cities will be enabled after successful Hyderabad pilot (Sept 9th presentation)
-  // 'delhi', 'new delhi', 'delhi ncr', 'gurgaon', 'noida', 'faridabad', 'ghaziabad'
+  // Hyderabad market (live and proven)
+  'hyderabad', 'secunderabad', 'telangana',
+  // Delhi NCR launch (September 10th, 2025)
+  'delhi', 'new delhi', 'delhi ncr', 'gurgaon', 'noida', 'faridabad', 'ghaziabad', 'gurugram'
 ];
 
 // Check if city is supported for authentic car listings

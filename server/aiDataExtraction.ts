@@ -67,7 +67,14 @@ export class AIDataExtractionService {
         waitFor: 3000
       });
 
-      if (result && result.success && result.extract) {
+      if (result && result.data && result.data.extract) {
+        const extractedData = result.data.extract;
+        if (extractedData.listings && Array.isArray(extractedData.listings)) {
+          const validListings = this.validateAndNormalizeListings(extractedData.listings, url);
+          console.log(`✅ Firecrawl LLM extracted ${validListings.length} genuine listings from ${url}`);
+          return validListings;
+        }
+      } else if (result && result.extract) {
         const extractedData = result.extract;
         if (extractedData.listings && Array.isArray(extractedData.listings)) {
           const validListings = this.validateAndNormalizeListings(extractedData.listings, url);
