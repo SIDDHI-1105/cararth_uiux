@@ -56,11 +56,8 @@ export default function CommunityPage() {
   const { data: rssData, isLoading: rssLoading, error: rssError } = useQuery({
     queryKey: ['/api/community/posts'],
     select: (data: any) => {
-      console.log('RSS API Response:', data); // Debug logging
       // Transform RSS data to match frontend format
-      return data.posts?.map((post: any) => {
-        console.log('Processing post:', post.title, 'CoverImage:', post.coverImage); // Debug logging
-        return {
+      return data.posts?.map((post: any) => ({
           ...post,
           avatar: '/api/placeholder/32/32',
           image: post.coverImage || post.image,
@@ -75,8 +72,7 @@ export default function CommunityPage() {
             month: 'short'
           }),
           featured: Math.random() > 0.7
-        }
-      }) || []
+        }))|| []
     }
   });
 
@@ -317,8 +313,6 @@ export default function CommunityPage() {
                           alt={post.title}
                           className="w-full h-64 object-cover hover:scale-105 transition-transform duration-300"
                           data-testid={`img-post-${index}`}
-                          onLoad={() => console.log('Image loaded:', post.title)}
-                          onError={(e) => console.error('Image failed to load:', post.title, e)}
                         />
                       </div>
                     )}
