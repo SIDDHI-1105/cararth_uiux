@@ -7,11 +7,35 @@ export class AIDataExtractionService {
   private gemini: GoogleGenAI;
   private firecrawl: FirecrawlApp;
   private perplexityApiKey: string;
+  private costMetrics: {
+    firecrawlExtractCalls: number;
+    firecrawlBasicCalls: number;
+    perplexityPrimaryCalls: number;
+    perplexityEnhanceCalls: number;
+    geminiCalls: number;
+    totalListingsExtracted: number;
+  };
 
   constructor() {
     this.gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
     this.firecrawl = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY || "" });
     this.perplexityApiKey = process.env.PERPLEXITY_API_KEY || "";
+    this.costMetrics = {
+      firecrawlExtractCalls: 0,
+      firecrawlBasicCalls: 0,
+      perplexityPrimaryCalls: 0,
+      perplexityEnhanceCalls: 0,
+      geminiCalls: 0,
+      totalListingsExtracted: 0
+    };
+  }
+
+  getCostMetrics() {
+    return {
+      ...this.costMetrics,
+      averageListingsPerCall: this.costMetrics.totalListingsExtracted / 
+        (this.costMetrics.firecrawlExtractCalls + this.costMetrics.perplexityPrimaryCalls + this.costMetrics.geminiCalls || 1)
+    };
   }
 
   /**
@@ -22,6 +46,7 @@ export class AIDataExtractionService {
       console.log(`🧠 LLM-Enhanced scraping: ${url}`);
       
       // Use Firecrawl's LLM extraction capabilities with optimized schema
+      this.costMetrics.firecrawlExtractCalls++;
       const result = await this.firecrawl.scrapeUrl(url, {
         formats: ['extract'],
         extract: {
@@ -64,6 +89,7 @@ export class AIDataExtractionService {
         const extractedData = (result as any).extract || (result as any).data?.extract;
         if (extractedData?.listings && Array.isArray(extractedData.listings)) {
           const validListings = this.validateAndNormalizeListings(extractedData.listings, url);
+          this.costMetrics.totalListingsExtracted += validListings.length;
           console.log(`✅ Firecrawl extract tokens used: ${validListings.length} genuine listings from ${url}`);
           return validListings;
         }
@@ -122,6 +148,7 @@ Extract car listings in this exact JSON format:
 
 Return only the JSON with genuine listings found. If no genuine listings are found, return {"listings": []}.`;
 
+      this.costMetrics.geminiCalls++;
       const response = await this.gemini.models.generateContent({
         model: "gemini-2.5-flash",
         contents: extractionPrompt,
@@ -156,6 +183,7 @@ Return only the JSON with genuine listings found. If no genuine listings are fou
 
     try {
       console.log(`🧠 Perplexity primary extraction: ${url}`);
+      this.costMetrics.perplexityPrimaryCalls++;
       
       const extractionPrompt = `
 Extract genuine car listings from this ${domain} page: ${url}
@@ -242,6 +270,7 @@ Return JSON format:
 
     try {
       console.log(`🔍 Perplexity market validation for ${listings.length} listings...`);
+      this.costMetrics.perplexityEnhanceCalls++;
       
       // Use Perplexity to validate and enhance listing data with real-time market context
       const validationPrompt = `
