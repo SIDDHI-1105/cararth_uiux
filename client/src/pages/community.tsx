@@ -182,7 +182,7 @@ export default function CommunityPage() {
       <div style={{ display: 'none' }}>
         <meta name="description" content="Join India's most passionate car enthusiasts community. Share experiences, discover amazing rides, and connect with fellow automotive lovers across the country." />
         <meta name="keywords" content="car enthusiasts, automotive community India, car lovers, vehicle enthusiasts, car meets, automotive passion" />
-        <meta property="og:title" content="Car Enthusiasts Community - The Mobility Hub" />
+        <meta property="og:title" content="Throttle Talk - The Mobility Hub" />
         <meta property="og:description" content="Connect with India's most passionate car community. Share rides, experiences, and automotive knowledge." />
         <meta property="og:image" content={communityImage} />
         <meta property="og:type" content="website" />
@@ -195,7 +195,7 @@ export default function CommunityPage() {
           <div className="flex items-center gap-3 mb-2">
             <Users className="h-8 w-8 text-blue-600" />
             <h1 className="text-3xl font-bold" data-testid="text-community-title">
-              Car Enthusiasts Hub
+              Throttle Talk
             </h1>
           </div>
           <p className="text-gray-600 dark:text-gray-300 mb-4" data-testid="text-community-description">
