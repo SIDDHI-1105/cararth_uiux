@@ -261,7 +261,13 @@ export default function CommunityPage() {
             </div>
 
             <div className="grid gap-6" data-testid="community-posts-list">
-              {communityPosts.map((post: CommunityPost, index: number) => (
+              {rssLoading && (
+                <div className="text-center py-8">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <p className="mt-2 text-gray-600 dark:text-gray-400">Loading authentic automotive content...</p>
+                </div>
+              )}
+              {!rssLoading && communityPosts.map((post: CommunityPost, index: number) => (
                 <Card key={post.id} className={cn("hover:shadow-lg transition-shadow bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700", post.featured && "border-blue-300 dark:border-blue-600 shadow-blue-100 dark:shadow-blue-900/20")}>
                   {post.featured && (
                     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 px-4 py-2 border-b border-blue-200 dark:border-blue-700">
@@ -305,12 +311,14 @@ export default function CommunityPage() {
                     </CardDescription>
                     
                     {post.image && (
-                      <div className="rounded-lg overflow-hidden mb-4">
+                      <div className="rounded-lg overflow-hidden mb-4 bg-gray-100 dark:bg-gray-800">
                         <img 
                           src={post.image} 
                           alt={post.title}
                           className="w-full h-64 object-cover hover:scale-105 transition-transform duration-300"
                           data-testid={`img-post-${index}`}
+                          onLoad={() => console.log('Image loaded:', post.title)}
+                          onError={(e) => console.error('Image failed to load:', post.title, e)}
                         />
                       </div>
                     )}
