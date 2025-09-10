@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import Parser from 'rss-parser';
-import { PerplexityService } from './perplexityService';
+import PerplexityService from './perplexityService';
 
 // RSS Feed Item Schema for validation
 const RSSItemSchema = z.object({
@@ -262,7 +262,7 @@ export class RSSAggregatorService {
       const topics = await this.perplexityService.getTrendingTopics();
       
       // Generate posts using trending topics
-      return topics.slice(0, 3).map((topic, index) => ({
+      return topics.slice(0, 3).map((topic: string, index: number) => ({
         id: `perplexity-${source.name.toLowerCase()}-${Date.now()}-${index}`,
         title: topic,
         content: `Latest insights on: ${topic}. Stay updated with trending automotive discussions and market developments.`,
