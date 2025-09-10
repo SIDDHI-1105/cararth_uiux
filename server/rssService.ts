@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import Parser from 'rss-parser';
-import PerplexityService from './perplexityService';
 
 // RSS Feed Item Schema for validation
 const RSSItemSchema = z.object({
@@ -38,11 +37,9 @@ export interface CommunityPost {
 
 export class RSSAggregatorService {
   private parser: Parser;
-  private perplexityService: PerplexityService;
 
   constructor() {
     this.parser = new Parser();
-    this.perplexityService = new PerplexityService();
   }
 
   private readonly RSS_SOURCES = [
@@ -117,14 +114,9 @@ export class RSSAggregatorService {
       
     } catch (error: any) {
       console.error(`❌ RSS fetch failed for ${source.name}:`, error.message);
+      console.log(`⏭️ Skipping ${source.name} and continuing with other sources...`);
       
-      // Use Perplexity fallback only for 404 or network errors
-      if (error.code === 'ENOTFOUND' || error.status === 404 || error.message.includes('404')) {
-        console.log(`🔄 RSS 404 detected for ${source.name}, using Perplexity fallback...`);
-        return await this.perplexityFallback(source);
-      }
-      
-      // For other errors, return empty array to continue with other sources
+      // Skip this source and continue with others - quality over quantity
       return [];
     }
   }
@@ -251,36 +243,6 @@ export class RSSAggregatorService {
     return templates[Math.floor(Math.random() * templates.length)];
   }
 
-  /**
-   * Perplexity fallback for when RSS feeds return 404 or are unavailable
-   */
-  private async perplexityFallback(source: typeof this.RSS_SOURCES[0]): Promise<CommunityPost[]> {
-    try {
-      console.log(`🧠 Using Perplexity fallback for ${source.name}...`);
-      
-      // Get trending topics from Perplexity
-      const topics = await this.perplexityService.getTrendingTopics();
-      
-      // Generate posts using trending topics
-      return topics.slice(0, 3).map((topic: string, index: number) => ({
-        id: `perplexity-${source.name.toLowerCase()}-${Date.now()}-${index}`,
-        title: topic,
-        content: `Latest insights on: ${topic}. Stay updated with trending automotive discussions and market developments.`,
-        author: 'AI Editorial Team',
-        source: source.name,
-        sourceUrl: `#article-${Date.now()}-${index}`, // Internal link for AI content
-        publishedAt: new Date(Date.now() - (index * 3600000)), // Staggered times
-        category: source.category,
-        attribution: `${source.attribution} - Content generated via AI when RSS unavailable`,
-        isExternal: false,
-        coverImage: this.generateCoverImage(topic, source.category)
-      }));
-      
-    } catch (error) {
-      console.error(`❌ Perplexity fallback failed for ${source.name}:`, error);
-      return [];
-    }
-  }
 
   /**
    * Generate compelling cover images for articles based on title and category
