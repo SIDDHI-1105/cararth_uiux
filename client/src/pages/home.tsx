@@ -17,6 +17,7 @@ import { ChevronLeft, ChevronRight, Search, Globe, Star, Crown, MessageSquare, U
 import { apiRequest } from "@/lib/queryClient";
 import { type Car } from "@shared/schema";
 import logoImage from "@/assets/logo.png";
+import { Link } from "wouter";
 
 export default function Home() {
   const [filters, setFilters] = useState<Record<string, any>>({});
@@ -264,7 +265,7 @@ export default function Home() {
         </div>
 
 
-        {/* Results Tabs */}
+        {/* Results Tabs */
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="local" className="flex items-center gap-2">
