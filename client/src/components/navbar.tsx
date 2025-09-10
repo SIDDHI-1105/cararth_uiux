@@ -213,6 +213,18 @@ export default function Navbar() {
                 Buy Cars
               </Link>
               <Link 
+                href="/news" 
+                className={`block px-3 py-2 rounded-lg text-base font-semibold transition-all duration-300 ${
+                  location === "/news" 
+                    ? "text-accent-foreground bg-accent" 
+                    : "text-muted-foreground hover:text-accent hover:bg-accent/10"
+                }`}
+                data-testid="mobile-link-throttle-talk"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Throttle Talk
+              </Link>
+              <Link 
                 href="/sell-car" 
                 className={`block px-3 py-2 rounded-lg text-base font-semibold transition-all duration-300 ${
                   location === "/sell-car" || location === "/sell"
