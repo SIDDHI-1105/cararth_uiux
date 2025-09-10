@@ -27,9 +27,9 @@ export default function HeroSection({ onSearch }: HeroSearchProps) {
   return (
     <section className="bg-gradient-to-br from-chrome-primary via-chrome-secondary to-background dark:from-slate-800 dark:via-slate-700 dark:to-background py-16 md:py-20 px-4">
       <div className="max-w-6xl mx-auto text-center">
-        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 text-foreground leading-tight">Best Used Cars. One Search.</h1>
+        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 text-foreground leading-tight">Every car, every platform, one search.</h1>
         <p className="text-lg sm:text-xl md:text-2xl mb-6 text-muted-foreground max-w-4xl mx-auto leading-relaxed">
-          Compare pre-owned cars from verified dealers across India's most trusted platforms:
+          Find your perfect car from CarDekho, OLX, Cars24, CarWale & more - all in one place.
         </p>
         
         {/* Legal Compliance Badge */}
