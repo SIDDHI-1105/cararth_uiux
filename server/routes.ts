@@ -29,6 +29,7 @@ import {
 } from "@shared/schema";
 import { desc, eq } from "drizzle-orm";
 import { assistantService, type AssistantQuery } from "./assistantService";
+import { cacheManager, withCache, HyderabadCacheWarmer } from "./advancedCaching.js";
 
 // Developer mode check
 const isDeveloperMode = (req: any) => {
@@ -764,6 +765,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Advanced marketplace search across portals - with subscription limits
   app.post("/api/marketplace/search", checkSearchLimit, async (req, res) => {
     try {
+      const searchStart = Date.now();
+      
+      // Check cache first for instant response
+      const cachedResults = await cacheManager.search.getSearchResults(req.body);
+      if (cachedResults) {
+        console.log(`🚀 Cache hit! Returning results in ${Date.now() - searchStart}ms`);
+        return res.json(cachedResults);
+      }
+      
       const searchSchema = z.object({
         brand: z.string().optional(),
         model: z.string().optional(),
@@ -795,6 +805,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Marketplace search filters:', filters);
 
       const searchResult = await marketplaceAggregator.searchAcrossPortals(filters as any);
+      
+      // Cache the results for future requests
+      await cacheManager.search.setSearchResults(req.body, searchResult);
+      console.log(`💾 Cached search results (${Date.now() - searchStart}ms total)`);
       
       // Include search limit info in response (skip for developer mode)
       if (isDeveloperMode(req)) {
