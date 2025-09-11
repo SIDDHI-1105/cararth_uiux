@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "@/components/theme-toggle";
 import SocialMediaLinks from "@/components/social-media-links";
-import logoImage from "@assets/Gemini_Generated_Image_pqn5v6pqn5v6pqn5_1757601233537.png";
+import logoImage from "@assets/Gemini_Generated_Image_pkpwj9pkpwj9pkpw_1757603212664.png";
 import { useAuth } from "@/hooks/useAuth";
 import { TooltipWrapper } from "@/components/tooltip-wrapper";
 import {
