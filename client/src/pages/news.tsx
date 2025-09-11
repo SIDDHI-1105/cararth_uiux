@@ -19,7 +19,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
-import logoImage from "@assets/Gemini_Generated_Image_pqn5v6pqn5v6pqn5_1757601233537.png";
+import logoImage from "@assets/generated_images/CarArth_logo_with_asterisk_a6861ed0.png";
 
 interface ForumPost {
   id: string;
