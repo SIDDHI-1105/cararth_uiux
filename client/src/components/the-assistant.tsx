@@ -46,15 +46,36 @@ export default function TheAssistant({ onFiltersUpdate, onSearch, isLoading }: T
 
   const chatMutation = useMutation({
     mutationFn: async (message: string) => {
-      console.log('🤖 Sending message to The Assistant:', message);
-      
-      const response = await apiRequest('POST', '/api/assistant/chat', {
+      console.log('🤖 [Frontend] Starting Assistant request:', message);
+      console.log('🌐 [Frontend] Request payload:', {
         message,
         filters: {},
         context: messages.length > 1 ? 'Ongoing conversation' : 'First interaction'
       });
-
-      return response.json();
+      
+      try {
+        console.log('📡 [Frontend] Making API request to /api/assistant/chat...');
+        const response = await apiRequest('POST', '/api/assistant/chat', {
+          message,
+          filters: {},
+          context: messages.length > 1 ? 'Ongoing conversation' : 'First interaction'
+        });
+        
+        console.log('✅ [Frontend] Got response:', response.status, response.statusText);
+        console.log('📄 [Frontend] Response headers:', Object.fromEntries(response.headers.entries()));
+        
+        const data = await response.json();
+        console.log('📊 [Frontend] Response data:', data);
+        
+        return data;
+      } catch (error: any) {
+        console.error('❌ [Frontend] Request failed:', error);
+        console.error('❌ [Frontend] Error type:', typeof error);
+        console.error('❌ [Frontend] Error properties:', Object.keys(error));
+        console.error('❌ [Frontend] Error message:', error.message);
+        console.error('❌ [Frontend] Error stack:', error.stack);
+        throw error;
+      }
     },
     onSuccess: (data) => {
       console.log('✅ The Assistant response:', data);
@@ -83,11 +104,29 @@ export default function TheAssistant({ onFiltersUpdate, onSearch, isLoading }: T
     },
     onError: (error: any) => {
       console.error('❌ The Assistant error:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        status: error.status,
+        stack: error.stack
+      });
+      
+      // Show more specific error message based on error type
+      let errorContent = "I'm sorry, I'm having trouble right now. Could you try asking your question again?";
+      
+      if (error.message.includes('401')) {
+        errorContent = "🔑 Authentication required. Please log in to use The Assistant.";
+      } else if (error.message.includes('403')) {
+        errorContent = "📱 Phone verification required to use The Assistant.";
+      } else if (error.message.includes('429')) {
+        errorContent = "⏰ Too many requests. Please wait a moment and try again.";
+      } else if (error.message.includes('500')) {
+        errorContent = "🔧 Server error. Our team is working on it. Please try again in a few minutes.";
+      }
       
       const errorMessage: Message = {
         id: Date.now().toString() + '_error',
         type: 'assistant',
-        content: "I'm sorry, I'm having trouble right now. Could you try asking your question again?",
+        content: errorContent,
         timestamp: new Date()
       };
 
