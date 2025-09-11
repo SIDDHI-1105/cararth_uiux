@@ -31,21 +31,11 @@ export default function Navbar() {
           <div className="flex items-center space-x-6">
             <Link href="/" className="flex-shrink-0" data-testid="link-home">
               <div className="flex items-center group">
-                <div className="relative">
-                  <img 
-                    src={logoImage} 
-                    alt="CarArth" 
-                    className="h-14 w-auto sm:h-16 mr-4 max-w-none rounded-lg transition-all duration-300 group-hover:scale-105 drop-shadow-sm"
-                  />
-                </div>
-                <div>
-                  <h1 className="text-xl sm:text-2xl font-bold text-primary tracking-tight">
-                    CarArth
-                  </h1>
-                  <p className="text-xs text-muted-foreground font-medium">
-                    India's First Used Car Search Engine
-                  </p>
-                </div>
+                <img 
+                  src={logoImage} 
+                  alt="CarArth" 
+                  className="h-16 w-auto sm:h-18 max-w-none rounded-lg transition-all duration-300 group-hover:scale-105 drop-shadow-sm"
+                />
               </div>
             </Link>
           </div>

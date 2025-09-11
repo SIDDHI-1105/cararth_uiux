@@ -25,12 +25,8 @@ export default function Footer() {
               <img 
                 src={logoImage} 
                 alt="CarArth" 
-                className="h-16 w-auto mr-4 rounded-lg drop-shadow-sm"
+                className="h-16 w-auto rounded-lg drop-shadow-sm"
               />
-              <div>
-                <h3 className="text-xl font-bold text-primary">CarArth</h3>
-                <p className="text-sm text-muted-foreground">India's First Used Car Search Engine</p>
-              </div>
             </Link>
             <p className="text-muted-foreground text-sm mb-4 max-w-md">
               Discover cars from across platforms, compare smarter, and buy or sell with confidence. More than a marketplace — your guide, your community, your car's true value (arth).
