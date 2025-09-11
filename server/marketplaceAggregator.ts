@@ -4,9 +4,24 @@ import FirecrawlApp from '@mendable/firecrawl-js';
 import { GeographicIntelligenceService, type LocationData, type GeoSearchContext } from './geoService.js';
 import { HistoricalIntelligenceService, type HistoricalAnalysis } from './historicalIntelligence.js';
 import { AIDataExtractionService } from './aiDataExtraction.js';
+import { 
+  timeoutConfigs, 
+  retryConfigs, 
+  withRetry, 
+  withTimeout, 
+  CircuitBreaker,
+  isRetryableError,
+  performanceMonitor,
+  getOptimalTimeout
+} from './optimizedTimeouts.js';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 const firecrawl = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY || "" });
+
+// Circuit breakers for external services
+const firecrawlCircuit = new CircuitBreaker(3, 30000); // 3 failures, 30s reset
+const geminiCircuit = new CircuitBreaker(3, 20000);    // 3 failures, 20s reset
+const perplexityCircuit = new CircuitBreaker(5, 60000); // 5 failures, 1min reset
 
 export interface MarketplaceListing {
   id: string;
@@ -1546,15 +1561,29 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
       try {
         console.log(`🔥 Firecrawl scraping: ${searchUrl}`);
         
-        // Use Firecrawl's scrape endpoint with correct v1 API format
-        const result = await firecrawl.scrapeUrl(searchUrl, {
-          formats: ['markdown'],
-          onlyMainContent: true,
-          timeout: 15000,
-          waitFor: 2000
+        // Use Firecrawl's scrape endpoint with optimized timeouts and circuit breaker
+        const startTime = Date.now();
+        const result = await firecrawlCircuit.execute(async () => {
+          return await withRetry(
+            () => withTimeout(
+              () => firecrawl.scrapeUrl(searchUrl, {
+                formats: ['markdown'],
+                onlyMainContent: true,
+                timeout: getOptimalTimeout('firecrawl', 'standard'),
+                waitFor: 2000
+              }),
+              getOptimalTimeout('firecrawl', 'standard')
+            ),
+            retryConfigs.network,
+            isRetryableError.network
+          );
         });
+        const latency = Date.now() - startTime;
 
         if (result && result.success && result.markdown) {
+          // Record performance metrics
+          performanceMonitor.recordCall('firecrawl', latency, true);
+          
           // Parse the extracted content to find car listings
           const extractedListings = this.parseFirecrawlContent(result.markdown, domain, params);
           if (extractedListings.length > 0) {
