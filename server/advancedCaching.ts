@@ -21,7 +21,9 @@ export class CacheKeyGenerator {
 
   static searchResults(filters: any): string {
     const filterString = JSON.stringify(filters, Object.keys(filters).sort());
-    return `search:${Buffer.from(filterString).toString('base64').slice(0, 32)}`;
+    const crypto = require('crypto');
+    const hash = crypto.createHash('sha256').update(filterString).digest('base64url').slice(0, 32);
+    return `search:${hash}`;
   }
 }
 

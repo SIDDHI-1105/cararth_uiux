@@ -30,6 +30,7 @@ import {
 import { desc, eq } from "drizzle-orm";
 import { assistantService, type AssistantQuery } from "./assistantService";
 import { cacheManager, withCache, HyderabadCacheWarmer } from "./advancedCaching.js";
+import { enhanceHyderabadSearch, HyderabadMarketIntelligence } from "./hyderabadOptimizations.js";
 
 // Developer mode check
 const isDeveloperMode = (req: any) => {
@@ -803,8 +804,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const filters = searchSchema.parse(req.body);
       console.log('Marketplace search filters:', filters);
+      
+      // Apply Hyderabad-specific optimizations
+      const enhancedFilters = await enhanceHyderabadSearch(filters);
+      if (enhancedFilters !== filters) {
+        console.log('🏙️ Applied Hyderabad market intelligence');
+      }
 
-      const searchResult = await marketplaceAggregator.searchAcrossPortals(filters as any);
+      const searchResult = await marketplaceAggregator.searchAcrossPortals(enhancedFilters as any);
       
       // Cache the results for future requests
       await cacheManager.search.setSearchResults(req.body, searchResult);
