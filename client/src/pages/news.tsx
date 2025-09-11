@@ -19,7 +19,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
-import { BrandLogo } from "@/components/brand-logo";
+import { BrandWordmark } from "@/components/brand-wordmark";
 
 interface ForumPost {
   id: string;
@@ -162,7 +162,7 @@ export default function ThrottleTalkPage() {
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <BrandLogo variant="header" showTagline={false} className="scale-75" />
+              <BrandWordmark variant="header" showTagline={false} className="scale-75" />
               <div>
                 <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
                   Throttle Talk

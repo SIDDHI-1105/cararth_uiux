@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "@/components/theme-toggle";
 import SocialMediaLinks from "@/components/social-media-links";
-import { BrandLogo } from "@/components/brand-logo";
+import { BrandWordmark } from "@/components/brand-wordmark";
 import { useAuth } from "@/hooks/useAuth";
 import { TooltipWrapper } from "@/components/tooltip-wrapper";
 import {
@@ -31,7 +31,7 @@ export default function Navbar() {
           <div className="flex items-center space-x-6">
             <Link href="/" className="flex-shrink-0" data-testid="link-home">
               <div className="flex items-center group">
-                <BrandLogo variant="header" showTagline={true} className="transition-transform duration-300 hover:scale-105" />
+                <BrandWordmark variant="header" showTagline={true} className="transition-transform duration-300 hover:scale-105" />
               </div>
             </Link>
           </div>
