@@ -24,16 +24,16 @@ export default function Footer() {
             <Link href="/" className="flex items-center mb-4">
               <img 
                 src={logoImage} 
-                alt="The Mobility Hub" 
+                alt="Cararth" 
                 className="h-12 w-12 mr-3"
               />
               <div>
-                <h3 className="text-xl font-bold text-primary">The Mobility Hub</h3>
-                <p className="text-sm text-muted-foreground">Your Journey. Simplified.</p>
+                <h3 className="text-xl font-bold text-primary">Cararth</h3>
+                <p className="text-sm text-muted-foreground">India's First Used Car Search Engine</p>
               </div>
             </Link>
             <p className="text-muted-foreground text-sm mb-4 max-w-md">
-              India's premier car marketplace aggregator. Find the best deals across all major portals with complete legal compliance and transparency.
+              Discover cars from across platforms, compare smarter, and buy or sell with confidence. More than a marketplace — your guide, your community, your car's true value (arth).
             </p>
             <div className="text-xs text-muted-foreground">
               🇮🇳 Proudly Made in India
@@ -69,11 +69,11 @@ export default function Footer() {
               <div className="flex items-center space-x-2">
                 <Mail className="h-4 w-4 text-muted-foreground" />
                 <a 
-                  href="mailto:kritarth@themobilityhub.in" 
+                  href="mailto:connect@cararth.com" 
                   className="text-muted-foreground hover:text-accent transition-colors"
                   data-testid="link-email"
                 >
-                  kritarth@themobilityhub.in
+                  connect@cararth.com
                 </a>
               </div>
               <div className="flex items-center space-x-2">
@@ -113,7 +113,7 @@ export default function Footer() {
               <Link href="/terms-of-service" className="block text-muted-foreground hover:text-accent transition-colors">
                 Terms of Service
               </Link>
-              <a href="mailto:kritarth@themobilityhub.in" className="block text-muted-foreground hover:text-accent transition-colors">
+              <a href="mailto:connect@cararth.com" className="block text-muted-foreground hover:text-accent transition-colors">
                 Contact Support
               </a>
             </div>
@@ -123,9 +123,13 @@ export default function Footer() {
         <div className="border-t border-border mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-sm text-muted-foreground mb-4 md:mb-0">
-              © 2025 The Mobility Hub. All rights reserved. | Compliant with Indian IT Act 2000 & Copyright Act 1957
+              © 2025 Cararth. All rights reserved. | Compliant with Indian IT Act 2000 & Copyright Act 1957
               <br />
-              <span className="text-xs">Contact: kritarth@themobilityhub.in</span>
+              <span className="text-xs">Contact: connect@cararth.com</span>
+              <br />
+              <span className="text-xs mt-1">
+                * All listings subject to verification. Prices may vary. * Cararth aggregates data from multiple sources - verify independently.
+              </span>
             </div>
             <div className="flex items-center space-x-4 text-xs text-muted-foreground">
               <span>🔒 Secure Platform</span>

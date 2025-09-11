@@ -1,10 +1,22 @@
-# The Mobility Hub - Your Journey. Simplified.
+# Cararth - India's First Used Car Search Engine
 
 ## Overview
 
-The Mobility Hub is a comprehensive marketplace aggregator that revolutionizes how Indians buy and sell cars online. The platform scans multiple car portals (CarDekho, OLX, Cars24, CarWale, AutoTrader) to provide intelligent pricing insights, granular filtering capabilities, and market analytics with historical data for both buyers and sellers.
+Cararth is India's first comprehensive used car search engine that revolutionizes how Indians discover, compare, and buy cars online. The platform aggregates listings from multiple car portals (CarDekho, OLX, Cars24, CarWale, AutoTrader) to provide intelligent pricing insights, authentic verification, and AI-powered market analytics.
 
-The application follows a monorepo structure with shared TypeScript schemas, uses Drizzle ORM for database management, and implements a clean REST API architecture. It's designed as a production-ready marketplace aggregator with features like cross-portal scanning, intelligent price comparison, advanced filtering down to granular details, and comprehensive market analytics.
+**Brand Mission:** "Discover cars from across platforms, compare smarter, and buy or sell with confidence. More than a marketplace — your guide, your community, your car's true value (arth)."
+
+**Contact:** connect@cararth.com  
+**Domain:** cararth.com
+
+Cararth follows a monorepo structure with shared TypeScript schemas, uses Drizzle ORM with PostgreSQL for database management, and implements a clean REST API architecture. It's designed as a production-ready cross-platform search engine with features like:
+
+- **Multi-LLM AI Intelligence:** GPT-4o, Gemini, and Perplexity for market analysis
+- **Advanced Caching System:** Multi-tier caching with performance optimization  
+- **Smart Timeout Management:** Circuit breakers and retry logic for all external services
+- **Hyderabad Market Intelligence:** Local market data and area-specific pricing
+- **Real-time Aggregation:** Live data from 10+ automotive platforms
+- **Authentic Verification:** AI-powered listing validation and quality scoring
 
 ## User Preferences
 

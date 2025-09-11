@@ -34,17 +34,17 @@ export default function Navbar() {
                 <div className="relative">
                   <img 
                     src={logoImage} 
-                    alt="The Mobility Hub" 
+                    alt="Cararth" 
                     className="h-12 w-12 sm:h-14 sm:w-14 mr-3 transition-transform duration-300 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-metallic-accent/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </div>
                 <div>
                   <h1 className="text-xl sm:text-2xl font-bold text-primary font-heading tracking-tight">
-                    The Mobility Hub
+                    Cararth
                   </h1>
                   <p className="text-xs text-muted-foreground font-medium">
-                    Used Cars. Verified Sources.
+                    India's First Used Car Search Engine
                   </p>
                 </div>
               </div>
