@@ -40,7 +40,7 @@ const isDeveloperMode = (req: any) => {
   }
   
   // Check for developer user (if authenticated)
-  if (req.isAuthenticated && req.isAuthenticated()) {
+  if (req.isAuthenticated && typeof req.isAuthenticated === 'function' && req.isAuthenticated()) {
     const userEmail = req.user?.claims?.email;
     // Add your developer email here or check for admin status
     return userEmail && (
@@ -63,7 +63,7 @@ const checkSearchLimit = async (req: any, res: any, next: any) => {
     }
 
     // Handle anonymous users with 30-day rolling window
-    if (!req.isAuthenticated()) {
+    if (!req.isAuthenticated || typeof req.isAuthenticated !== 'function' || !req.isAuthenticated()) {
       // Get or generate visitor ID
       let visitorId = req.headers['x-visitor-id'] as string;
       if (!visitorId) {
@@ -86,7 +86,7 @@ const checkSearchLimit = async (req: any, res: any, next: any) => {
           limit: 10,
           window: "30d",
           searchesLeft: 0,
-          resetAt: new Date(thirtyDaysAgo.getTime() + (31 * 24 * 60 * 60 * 1000)) // Earliest search + 30 days
+          resetAt: new Date(Date.now() + (24 * 60 * 60 * 1000)) // Reset tomorrow (searches older than 30 days will be available)
         });
       }
 

@@ -13,6 +13,7 @@ import {
   conversationBlocks,
   userSearchActivity,
   phoneVerifications,
+  anonymousSearchActivity,
   type User, 
   type InsertUser, 
   type UpsertUser,
@@ -35,7 +36,9 @@ import {
   type UserSearchActivity,
   type InsertUserSearchActivity,
   type PhoneVerification,
-  type InsertPhoneVerification
+  type InsertPhoneVerification,
+  type AnonymousSearchActivity,
+  type InsertAnonymousSearchActivity
 } from "@shared/schema";
 import type { IStorage } from "./storage.js";
 
@@ -720,6 +723,32 @@ export class DatabaseStorage implements IStorage {
       .values(activity)
       .returning();
     return result[0];
+  }
+
+  // Anonymous search activity tracking for 30-day rolling window
+  async logAnonymousSearch(activity: InsertAnonymousSearchActivity): Promise<AnonymousSearchActivity> {
+    const result = await this.db
+      .insert(anonymousSearchActivity)
+      .values(activity)
+      .returning();
+    return result[0];
+  }
+
+  async getAnonymousSearchCountSince(visitorId: string, since: Date): Promise<number> {
+    const result = await this.db
+      .select({ count: count() })
+      .from(anonymousSearchActivity)
+      .where(and(
+        eq(anonymousSearchActivity.visitorId, visitorId),
+        gte(anonymousSearchActivity.createdAt, since)
+      ));
+    return result[0]?.count ?? 0;
+  }
+
+  async pruneAnonymousSearches(before: Date): Promise<void> {
+    await this.db
+      .delete(anonymousSearchActivity)
+      .where(lte(anonymousSearchActivity.createdAt, before));
   }
 
   // Performance monitoring

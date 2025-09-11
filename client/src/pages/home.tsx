@@ -177,8 +177,17 @@ export default function Home() {
     },
     onError: (error: any) => {
       console.error('❌ Marketplace search failed:', error);
-      setMarketplaceError(error.message || 'Failed to search marketplace');
-      setMarketplaceResult(null);
+      
+      // Handle search limit exceeded
+      if (error.isSearchLimitExceeded) {
+        console.log('🔥 Search limit exceeded in marketplace search');
+        setSearchLimitData(error.data);
+        setShowSearchLimitPopup(true);
+        setMarketplaceResult(null);
+      } else {
+        setMarketplaceError(error.message || 'Failed to search marketplace');
+        setMarketplaceResult(null);
+      }
     }
   });
 
