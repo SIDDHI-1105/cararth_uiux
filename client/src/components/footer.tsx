@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Mail, MessageCircle } from "lucide-react";
 import SocialMediaLinks from "@/components/social-media-links";
-import logoImage from "@assets/generated_images/CarArth_logo_with_correct_branding_9738ebbe.png";
+import logoImage from "@assets/generated_images/CarArth_logo_with_saffron_A_b33c38f0.png";
 
 export default function Footer() {
   return (

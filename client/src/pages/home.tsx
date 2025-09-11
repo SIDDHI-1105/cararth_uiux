@@ -18,7 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ChevronLeft, ChevronRight, Search, Globe, Star, Crown, MessageSquare, Users } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { type Car } from "@shared/schema";
-import logoImage from "@assets/generated_images/CarArth_logo_with_correct_branding_9738ebbe.png";
+import logoImage from "@assets/generated_images/CarArth_logo_with_saffron_A_b33c38f0.png";
 import { Link } from "wouter";
 
 export default function Home() {
