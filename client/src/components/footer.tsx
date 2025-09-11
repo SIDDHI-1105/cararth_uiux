@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Mail, MessageCircle } from "lucide-react";
 import SocialMediaLinks from "@/components/social-media-links";
-import logoImage from "@assets/generated_images/CarArth_logo_with_saffron_A_b33c38f0.png";
+import { BrandLogo } from "@/components/brand-logo";
 
 export default function Footer() {
   return (
@@ -22,11 +22,7 @@ export default function Footer() {
           {/* Brand Section */}
           <div className="col-span-1 md:col-span-2">
             <Link href="/" className="flex items-center mb-4">
-              <img 
-                src={logoImage} 
-                alt="CarArth" 
-                className="block h-24 w-auto max-w-[500px] object-contain object-left transition-opacity duration-300 hover:opacity-90"
-              />
+              <BrandLogo variant="footer" showTagline={true} className="transition-opacity duration-300 hover:opacity-90" />
             </Link>
             <p className="text-muted-foreground text-sm mb-4 max-w-md">
               Discover cars from across platforms, compare smarter, and buy or sell with confidence. More than a marketplace — your guide, your community, your car's true value (arth).

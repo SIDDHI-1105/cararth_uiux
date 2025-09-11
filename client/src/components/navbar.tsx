@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "@/components/theme-toggle";
 import SocialMediaLinks from "@/components/social-media-links";
-import logoImage from "@assets/generated_images/CarArth_logo_with_saffron_A_b33c38f0.png";
+import { BrandLogo } from "@/components/brand-logo";
 import { useAuth } from "@/hooks/useAuth";
 import { TooltipWrapper } from "@/components/tooltip-wrapper";
 import {
@@ -31,11 +31,7 @@ export default function Navbar() {
           <div className="flex items-center space-x-6">
             <Link href="/" className="flex-shrink-0" data-testid="link-home">
               <div className="flex items-center group">
-                <img 
-                  src={logoImage} 
-                  alt="CarArth" 
-                  className="block h-24 sm:h-28 w-auto max-w-[550px] object-contain object-left transition-transform duration-300 hover:scale-105"
-                />
+                <BrandLogo variant="header" showTagline={true} className="transition-transform duration-300 hover:scale-105" />
               </div>
             </Link>
           </div>
