@@ -347,8 +347,62 @@
   backdrop-filter: blur(10px);
 }
 
-/* Responsive Typography */
+/* Mobile Optimizations - Enhanced Visibility */
 @media (max-width: 768px) {
+  :root {
+    /* Enhanced mobile color contrast */
+    --muted-foreground: hsl(210 15% 35%);
+    --mobile-text-strong: hsl(210 15% 15%);
+    --mobile-nav-bg: hsl(0 0% 100%);
+    --mobile-border: hsl(210 20% 75%);
+  }
+  
+  .dark {
+    --muted-foreground: hsl(210 5% 75%);
+    --mobile-text-strong: hsl(0 0% 95%);
+    --mobile-nav-bg: hsl(210 8% 8%);
+    --mobile-border: hsl(210 10% 25%);
+  }
+  
+  /* Simplified navigation for mobile */
+  .nav-carbon {
+    background: var(--mobile-nav-bg);
+    backdrop-filter: none;
+    border-bottom: 1px solid var(--mobile-border);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Enhanced mobile touch targets */
+  [data-testid*="mobile-link"] {
+    min-height: 44px !important;
+    padding: 1rem !important;
+    font-size: 1.125rem !important;
+    font-weight: 600 !important;
+    color: var(--mobile-text-strong) !important;
+    border: 1px solid transparent;
+    margin-bottom: 0.5rem;
+  }
+  
+  [data-testid*="mobile-link"]:hover,
+  [data-testid*="mobile-link"]:focus {
+    background-color: var(--accent) !important;
+    color: var(--accent-foreground) !important;
+    border-color: var(--accent);
+  }
+  
+  /* Simplified card backgrounds for mobile */
+  .car-card {
+    background: var(--card);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--mobile-border);
+  }
+  
+  .car-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  /* Improved typography for mobile */
   .filter-sidebar {
     max-height: none;
   }
@@ -356,15 +410,48 @@
   h1 {
     font-size: 2rem;
     line-height: 1.2;
+    color: var(--mobile-text-strong);
   }
   
   h2 {
     font-size: 1.5rem;
     line-height: 1.3;
+    color: var(--mobile-text-strong);
   }
   
+  h3 {
+    font-size: 1.25rem;
+    color: var(--mobile-text-strong);
+  }
+  
+  /* Simplified hero for mobile */
   .hero-gradient {
-    background-size: 100% 100%, 20px 20px, 20px 20px, 10px 10px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    background-size: 100% 100%;
+  }
+  
+  /* Mobile-specific text improvements */
+  p, .text-muted-foreground {
+    color: var(--mobile-text-strong) !important;
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+  
+  /* Enhanced button visibility on mobile */
+  .btn-metallic {
+    font-size: 1rem;
+    padding: 0.875rem 1.5rem;
+    min-height: 44px;
+    font-weight: 600;
+  }
+  
+  /* Mobile menu improvements */
+  [data-testid="button-mobile-menu"] {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 

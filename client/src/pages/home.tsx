@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { FullWidthLayout } from "@/components/layout";
 import HeroSection from "@/components/hero-section";
@@ -145,10 +145,7 @@ export default function Home() {
     mutationFn: async (searchFilters: any) => {
       console.log('🌐 Marketplace search with filters:', searchFilters);
       
-      const response = await apiRequest('/api/marketplace/aggregated-search', {
-        method: 'POST',
-        body: JSON.stringify(searchFilters)
-      });
+      const response = await apiRequest('POST', '/api/marketplace/aggregated-search', searchFilters);
       
       if (!response.ok) {
         const errorText = await response.text();
@@ -187,20 +184,22 @@ export default function Home() {
     marketplaceSearch.mutate(cleanFilters);
   };
 
-  const sortedCars = [...cars].sort((a, b) => {
-    switch (sortBy) {
-      case "price-low":
-        return parseFloat(a.price) - parseFloat(b.price);
-      case "price-high":
-        return parseFloat(b.price) - parseFloat(a.price);
-      case "year-new":
-        return b.year - a.year;
-      case "mileage-low":
-        return a.mileage - b.mileage;
-      default:
-        return 0;
-    }
-  });
+  const sortedCars = useMemo(() => {
+    return [...cars].sort((a, b) => {
+      switch (sortBy) {
+        case "price-low":
+          return parseFloat(a.price) - parseFloat(b.price);
+        case "price-high":
+          return parseFloat(b.price) - parseFloat(a.price);
+        case "year-new":
+          return b.year - a.year;
+        case "mileage-low":
+          return a.mileage - b.mileage;
+        default:
+          return 0;
+      }
+    });
+  }, [cars, sortBy]);
 
   return (
     <FullWidthLayout>

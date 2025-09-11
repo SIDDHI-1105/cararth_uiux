@@ -49,17 +49,6 @@ export default function Navbar() {
                 </div>
               </div>
             </Link>
-            <Link 
-              href="/news" 
-              className={`hidden sm:block px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                location === "/news" 
-                  ? "text-accent-foreground bg-accent shadow-metallic" 
-                  : "text-muted-foreground hover:text-accent hover:bg-accent/10"
-              }`}
-              data-testid="link-throttle-talk-header"
-            >
-              Throttle Talk
-            </Link>
           </div>
           
           <div className="hidden lg:block">
@@ -68,29 +57,37 @@ export default function Navbar() {
                 href="/" 
                 className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
                   location === "/" 
-                    ? "text-accent-foreground bg-accent shadow-metallic" 
+                    ? "text-accent-foreground bg-accent" 
                     : "text-foreground hover:text-accent hover:bg-accent/10"
                 }`}
                 data-testid="link-buy-cars"
               >
-                Buy Used Cars
+                Buy
               </Link>
               <TooltipWrapper trigger="sell-car-link">
                 <Link 
                   href="/sell-car" 
                   className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
                     location === "/sell-car" || location === "/sell"
-                      ? "text-accent-foreground bg-accent shadow-metallic" 
-                      : "text-muted-foreground hover:text-accent hover:bg-accent/10"
+                      ? "text-accent-foreground bg-accent" 
+                      : "text-foreground hover:text-accent hover:bg-accent/10"
                   }`}
                   data-testid="link-sell-car"
                 >
-                  Sell Your Car
+                  Sell
                 </Link>
               </TooltipWrapper>
-              <a href="#" className="text-muted-foreground hover:text-accent hover:bg-accent/10 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300">
-                Analytics
-              </a>
+              <Link 
+                href="/news" 
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                  location === "/news" 
+                    ? "text-accent-foreground bg-accent" 
+                    : "text-foreground hover:text-accent hover:bg-accent/10"
+                }`}
+                data-testid="link-throttle-talk"
+              >
+                Throttle Talk
+              </Link>
             </div>
           </div>
           
@@ -199,10 +196,10 @@ export default function Navbar() {
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="lg:hidden border-t border-border">
-            <div className="px-2 pt-2 pb-3 space-y-1 bg-card/95 backdrop-blur-sm">
+            <div className="px-2 pt-2 pb-3 space-y-2 bg-card">
               <Link 
                 href="/" 
-                className={`block px-3 py-2 rounded-lg text-base font-semibold transition-all duration-300 ${
+                className={`block px-4 py-4 rounded-lg text-lg font-semibold transition-all duration-300 min-h-[44px] flex items-center ${
                   location === "/" 
                     ? "text-accent-foreground bg-accent" 
                     : "text-foreground hover:text-accent hover:bg-accent/10"
@@ -210,39 +207,32 @@ export default function Navbar() {
                 data-testid="mobile-link-buy-cars"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Buy Cars
+                Buy
+              </Link>
+              <Link 
+                href="/sell-car" 
+                className={`block px-4 py-4 rounded-lg text-lg font-semibold transition-all duration-300 min-h-[44px] flex items-center ${
+                  location === "/sell-car" || location === "/sell"
+                    ? "text-accent-foreground bg-accent" 
+                    : "text-foreground hover:text-accent hover:bg-accent/10"
+                }`}
+                data-testid="mobile-link-sell-car"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Sell
               </Link>
               <Link 
                 href="/news" 
-                className={`block px-3 py-2 rounded-lg text-base font-semibold transition-all duration-300 ${
+                className={`block px-4 py-4 rounded-lg text-lg font-semibold transition-all duration-300 min-h-[44px] flex items-center ${
                   location === "/news" 
                     ? "text-accent-foreground bg-accent" 
-                    : "text-muted-foreground hover:text-accent hover:bg-accent/10"
+                    : "text-foreground hover:text-accent hover:bg-accent/10"
                 }`}
                 data-testid="mobile-link-throttle-talk"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Throttle Talk
               </Link>
-              <Link 
-                href="/sell-car" 
-                className={`block px-3 py-2 rounded-lg text-base font-semibold transition-all duration-300 ${
-                  location === "/sell-car" || location === "/sell"
-                    ? "text-accent-foreground bg-accent" 
-                    : "text-muted-foreground hover:text-accent hover:bg-accent/10"
-                }`}
-                data-testid="mobile-link-sell-car"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Sell Your Car
-              </Link>
-              <a 
-                href="#" 
-                className="block text-muted-foreground hover:text-accent hover:bg-accent/10 px-3 py-2 rounded-lg text-base font-semibold transition-all duration-300"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Analytics
-              </a>
               <div className="pt-2 border-t border-border mt-2 space-y-3">
                 {/* Social Media Links - Mobile */}
                 <div className="px-3">
