@@ -144,7 +144,6 @@ export default function TheAssistant({ isAuthenticated = false, userEmail }: The
   };
 
   const suggestedQueries = [
-    "I need a family SUV under 15 lakhs",
     "Show me automatic Maruti cars in Hyderabad",
     "What's the best sedan for a first-time buyer?",
     "Find me fuel-efficient cars with good resale value"

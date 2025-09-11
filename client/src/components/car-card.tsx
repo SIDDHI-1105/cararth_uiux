@@ -79,7 +79,7 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
         </div>
         
         <p className="text-2xl font-bold text-accent mb-2" data-testid={`text-price-${car.id}`}>
-          {formatPrice(car.price)}
+          {formatPrice(car.price)}*
         </p>
         
         <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground mb-4">
