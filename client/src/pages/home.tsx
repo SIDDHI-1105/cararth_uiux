@@ -213,7 +213,7 @@ export default function Home() {
             Find your perfect car from CarDekho, OLX, Cars24, CarWale & more - all in one place.
           </p>
           
-          {/* Hybrid Interface: Filters + The Assistant */}
+          {/* Independent Search Options: Traditional Filters OR AI Assistant */}
           <div className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
               <AdvancedFilters 
@@ -223,16 +223,8 @@ export default function Home() {
             </div>
             <div className="flex justify-center lg:justify-end">
               <TheAssistant 
-                onFiltersUpdate={(assistantFilters) => {
-                  console.log('🤖 The Assistant updated filters:', assistantFilters);
-                  setFilters(assistantFilters);
-                }}
-                onSearch={(assistantFilters) => {
-                  console.log('🔍 The Assistant triggered search:', assistantFilters);
-                  setActiveTab("marketplace");
-                  handleMarketplaceSearch(assistantFilters);
-                }}
-                isLoading={marketplaceSearch.isPending}
+                isAuthenticated={false}
+                userEmail={null}
               />
             </div>
           </div>

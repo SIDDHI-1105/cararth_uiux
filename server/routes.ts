@@ -618,9 +618,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // The Assistant - Conversational Car Search with GPT - with subscription limits
-  app.post("/api/assistant/chat", checkSearchLimit, async (req, res) => {
+  // The Assistant - Conversational Car Search with GPT - with chat limits and auth
+  app.post("/api/assistant/chat", async (req, res) => {
     try {
+      // Chat limit enforcement - more restrictive than marketplace search
+      const MAX_FREE_CHATS = 5;
+      
+      // Check if user is authenticated
+      const isAuthenticated = req.isAuthenticated && req.isAuthenticated();
+      
+      if (!isAuthenticated) {
+        // For unauthenticated users, enforce chat limits via session
+        const session = req.session as any;
+        if (!session.assistantChatCount) {
+          session.assistantChatCount = 0;
+        }
+        
+        if (session.assistantChatCount >= MAX_FREE_CHATS) {
+          return res.status(401).json({ 
+            error: "Chat limit reached. Please log in to continue.",
+            code: "CHAT_LIMIT_REACHED",
+            maxChats: MAX_FREE_CHATS,
+            currentCount: session.assistantChatCount
+          });
+        }
+        
+        // Increment chat count for unauthenticated users
+        session.assistantChatCount += 1;
+      }
+
       const schema = z.object({
         message: z.string().min(1, "Message cannot be empty").max(500, "Message too long"),
         filters: z.object({}).optional(),
@@ -641,30 +667,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('✅ The Assistant response:', response.action, '-', response.message.substring(0, 100) + '...');
       
-      // Include search limit info in response (skip for developer mode)
+      // Include chat limit info in response
       if (isDeveloperMode(req)) {
         res.json({
           success: true,
           ...response,
-          searchInfo: {
+          chatInfo: {
             userTier: 'developer',
-            searchesLeft: 9999,
-            resetDate: null,
+            chatsLeft: 9999,
+            maxChats: 9999,
             isDeveloper: true
           }
         });
-      } else {
-        const userId = req.user.claims.sub;
-        const user = await storage.getUser(userId);
-        const searchLimitInfo = await storage.checkUserSearchLimit(userId);
-        
+      } else if (isAuthenticated) {
         res.json({
           success: true,
           ...response,
-          searchInfo: {
-            userTier: user?.subscriptionTier,
-            searchesLeft: searchLimitInfo.searchesLeft,
-            resetDate: searchLimitInfo.resetDate
+          chatInfo: {
+            userTier: 'premium',
+            chatsLeft: 'unlimited',
+            maxChats: 'unlimited',
+            isAuthenticated: true
+          }
+        });
+      } else {
+        // Unauthenticated user - include chat count info
+        const session = req.session as any;
+        res.json({
+          success: true,
+          ...response,
+          chatInfo: {
+            userTier: 'free',
+            chatsLeft: MAX_FREE_CHATS - (session.assistantChatCount || 0),
+            maxChats: MAX_FREE_CHATS,
+            currentCount: session.assistantChatCount || 0,
+            isAuthenticated: false
           }
         });
       }

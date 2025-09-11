@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, Send, Sparkles, Loader2, Bot, User } from "lucide-react";
+import { MessageSquare, Send, Sparkles, Loader2, Bot, User, Lock, LogIn } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 interface Message {
@@ -18,23 +18,28 @@ interface Message {
 }
 
 interface TheAssistantProps {
-  onFiltersUpdate?: (filters: any) => void;
-  onSearch?: (filters: any) => void;
-  isLoading?: boolean;
+  // No filter integration - The Assistant works independently
+  isAuthenticated?: boolean;
+  userEmail?: string | null;
 }
 
-export default function TheAssistant({ onFiltersUpdate, onSearch, isLoading }: TheAssistantProps) {
+export default function TheAssistant({ isAuthenticated = false, userEmail }: TheAssistantProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       type: 'assistant',
-      content: "Hi! I'm The Assistant 👋 I'm here to help you find the perfect car. Just tell me what you're looking for in plain English - like 'I need a family SUV under 15 lakhs' or 'Show me automatic Maruti cars'.",
+      content: "Hi, I'm your Assistant. How may I help you today?",
       timestamp: new Date()
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
+  const [chatCount, setChatCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Constants for chat limits
+  const MAX_FREE_CHATS = 5;
+  const isAtChatLimit = !isAuthenticated && chatCount >= MAX_FREE_CHATS;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -46,40 +51,25 @@ export default function TheAssistant({ onFiltersUpdate, onSearch, isLoading }: T
 
   const chatMutation = useMutation({
     mutationFn: async (message: string) => {
-      console.log('🤖 [Frontend] Starting Assistant request:', message);
-      console.log('🌐 [Frontend] Request payload:', {
+      // Check chat limits before making request
+      if (isAtChatLimit) {
+        throw new Error('Chat limit reached. Please log in to continue.');
+      }
+      
+      const response = await apiRequest('POST', '/api/assistant/chat', {
         message,
         filters: {},
         context: messages.length > 1 ? 'Ongoing conversation' : 'First interaction'
       });
-      
-      try {
-        console.log('📡 [Frontend] Making API request to /api/assistant/chat...');
-        const response = await apiRequest('POST', '/api/assistant/chat', {
-          message,
-          filters: {},
-          context: messages.length > 1 ? 'Ongoing conversation' : 'First interaction'
-        });
-        
-        console.log('✅ [Frontend] Got response:', response.status, response.statusText);
-        console.log('📄 [Frontend] Response headers:', Object.fromEntries(response.headers.entries()));
-        
-        const data = await response.json();
-        console.log('📊 [Frontend] Response data:', data);
-        
-        return data;
-      } catch (error: any) {
-        console.error('❌ [Frontend] Request failed:', error);
-        console.error('❌ [Frontend] Error type:', typeof error);
-        console.error('❌ [Frontend] Error properties:', Object.keys(error));
-        console.error('❌ [Frontend] Error message:', error.message);
-        console.error('❌ [Frontend] Error stack:', error.stack);
-        throw error;
-      }
+
+      return response.json();
     },
     onSuccess: (data) => {
-      console.log('✅ The Assistant response:', data);
-      
+      // Update chat count from server response
+      if (data.chatInfo && !isAuthenticated) {
+        setChatCount(data.chatInfo.currentCount || 0);
+      }
+
       // Add assistant response
       const assistantMessage: Message = {
         id: Date.now().toString() + '_assistant',
@@ -92,35 +82,34 @@ export default function TheAssistant({ onFiltersUpdate, onSearch, isLoading }: T
 
       setMessages(prev => [...prev, assistantMessage]);
 
-      // If assistant suggested filters and wants to search, trigger search
-      if (data.action === 'search' && data.suggestedFilters && Object.keys(data.suggestedFilters).length > 0) {
-        console.log('🔍 The Assistant triggering search with filters:', data.suggestedFilters);
-        onFiltersUpdate?.(data.suggestedFilters);
-        onSearch?.(data.suggestedFilters);
-      } else if (data.suggestedFilters && Object.keys(data.suggestedFilters).length > 0) {
-        // Just update filters without searching
-        onFiltersUpdate?.(data.suggestedFilters);
-      }
+      // The Assistant now works independently - no filter updates to Advanced Search
+      // Users see search results directly in the conversation or separate search page
     },
     onError: (error: any) => {
-      console.error('❌ The Assistant error:', error);
-      console.error('❌ Error details:', {
-        message: error.message,
-        status: error.status,
-        stack: error.stack
-      });
       
-      // Show more specific error message based on error type
+      // Handle specific error responses from backend
       let errorContent = "I'm sorry, I'm having trouble right now. Could you try asking your question again?";
       
-      if (error.message.includes('401')) {
-        errorContent = "🔑 Authentication required. Please log in to use The Assistant.";
-      } else if (error.message.includes('403')) {
-        errorContent = "📱 Phone verification required to use The Assistant.";
-      } else if (error.message.includes('429')) {
-        errorContent = "⏰ Too many requests. Please wait a moment and try again.";
-      } else if (error.message.includes('500')) {
-        errorContent = "🔧 Server error. Our team is working on it. Please try again in a few minutes.";
+      // Parse error response if available
+      try {
+        const errorResponse = JSON.parse(error.message.split(': ')[1] || '{}');
+        if (errorResponse.code === 'CHAT_LIMIT_REACHED') {
+          setChatCount(errorResponse.currentCount || MAX_FREE_CHATS);
+          errorContent = `🔒 You've used all ${errorResponse.maxChats || MAX_FREE_CHATS} free chats. Please log in to continue unlimited chatting!`;
+        } else if (errorResponse.error) {
+          errorContent = errorResponse.error;
+        }
+      } catch (parseError) {
+        // Fallback to original error message parsing
+        if (error.message.includes('401')) {
+          errorContent = "🔑 Authentication required. Please log in to use The Assistant.";
+        } else if (error.message.includes('403')) {
+          errorContent = "📱 Phone verification required to use The Assistant.";
+        } else if (error.message.includes('429')) {
+          errorContent = "⏰ Too many requests. Please wait a moment and try again.";
+        } else if (error.message.includes('500')) {
+          errorContent = "🔧 Server error. Our team is working on it. Please try again in a few minutes.";
+        }
       }
       
       const errorMessage: Message = {
@@ -164,33 +153,90 @@ export default function TheAssistant({ onFiltersUpdate, onSearch, isLoading }: T
   ];
 
   return (
-    <Card className="w-full max-w-md mx-auto bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-2 border-blue-200 dark:border-blue-800">
+    <Card className="w-full max-w-md mx-auto bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 dark:from-purple-950/30 dark:via-blue-950/30 dark:to-indigo-950/30 border-2 border-transparent bg-clip-border shadow-xl backdrop-blur-sm">
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-400/10 via-blue-400/10 to-indigo-500/10 rounded-lg"></div>
       <CardHeader 
-        className="cursor-pointer" 
+        className="cursor-pointer relative z-10" 
         onClick={() => setIsExpanded(!isExpanded)}
         data-testid="assistant-header"
       >
         <CardTitle className="flex items-center justify-between text-lg font-bold">
-          <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
-            <Bot className="w-5 h-5" />
-            <span>The Assistant</span>
-            <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" />
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg">
+                <Bot className="w-5 h-5 text-white" />
+              </div>
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center">
+                <Sparkles className="w-2 h-2 text-white animate-pulse" />
+              </div>
+            </div>
+            <div>
+              <div className="text-gray-800 dark:text-gray-200 font-bold">Assistant</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                {isAuthenticated 
+                  ? `Welcome back, ${userEmail?.split('@')[0] || 'User'}!` 
+                  : `${MAX_FREE_CHATS - chatCount} free chats left`
+                }
+              </div>
+            </div>
           </div>
-          <Badge variant="secondary" className="text-xs bg-blue-100 dark:bg-blue-900">
-            {isExpanded ? 'Click to minimize' : 'Click to chat'}
-          </Badge>
+          <div className="flex flex-col items-end gap-1">
+            <Badge 
+              variant="secondary" 
+              className={`text-xs px-2 py-1 ${
+                isAuthenticated 
+                  ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300' 
+                  : isAtChatLimit
+                    ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300'
+                    : 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+              }`}
+            >
+              {isAuthenticated ? '✓ Premium' : isAtChatLimit ? 'Login Required' : 'Free Trial'}
+            </Badge>
+            <span className="text-xs text-gray-400">
+              {isExpanded ? 'Tap to minimize' : 'Tap to chat'}
+            </span>
+          </div>
         </CardTitle>
         {!isExpanded && (
-          <p className="text-sm text-muted-foreground">
-            Ask me anything about cars - I'll help you find the perfect match!
-          </p>
+          <div className="mt-3 p-3 bg-white/50 dark:bg-gray-800/50 rounded-lg backdrop-blur-sm">
+            <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">
+              🚗 Find your perfect car with AI
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Natural language search • Instant results
+            </p>
+          </div>
         )}
       </CardHeader>
 
       {isExpanded && (
-        <CardContent className="space-y-4" data-testid="assistant-content">
+        <CardContent className="space-y-4 relative z-10" data-testid="assistant-content">
+          {/* Authentication Required Message */}
+          {isAtChatLimit && (
+            <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center">
+                  <Lock className="w-4 h-4 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-amber-800 dark:text-amber-200">Chat Limit Reached</h4>
+                  <p className="text-sm text-amber-700 dark:text-amber-300">You've used all 5 free chats. Log in to continue chatting!</p>
+                </div>
+                <Button 
+                  size="sm" 
+                  className="bg-amber-500 hover:bg-amber-600 text-white"
+                  onClick={() => window.location.href = '/login'}
+                >
+                  <LogIn className="w-4 h-4 mr-1" />
+                  Login
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Chat Messages */}
-          <ScrollArea className="h-80 w-full border rounded-lg p-3 bg-white/50 dark:bg-gray-900/50">
+          <ScrollArea className="h-80 w-full border-2 border-purple-100 dark:border-purple-800 rounded-lg p-3 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm">
             <div className="space-y-4">
               {messages.map((message) => (
                 <div
@@ -205,10 +251,10 @@ export default function TheAssistant({ onFiltersUpdate, onSearch, isLoading }: T
                     }`}
                   >
                     <div
-                      className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                      className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center shadow-md ${
                         message.type === 'user'
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white'
+                          ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
+                          : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
                       }`}
                     >
                       {message.type === 'user' ? (
@@ -218,10 +264,10 @@ export default function TheAssistant({ onFiltersUpdate, onSearch, isLoading }: T
                       )}
                     </div>
                     <div
-                      className={`rounded-2xl px-4 py-2 ${
+                      className={`rounded-2xl px-4 py-3 shadow-sm ${
                         message.type === 'user'
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
+                          ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
+                          : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-purple-100 dark:border-purple-700 shadow-md'
                       }`}
                     >
                       <p className="text-sm leading-relaxed">{message.content}</p>
@@ -284,33 +330,42 @@ export default function TheAssistant({ onFiltersUpdate, onSearch, isLoading }: T
           )}
 
           {/* Input Area */}
-          <div className="flex gap-2">
-            <Input
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Ask me about cars..."
-              className="flex-1 text-sm"
-              disabled={chatMutation.isPending || isLoading}
-              data-testid="assistant-input"
-            />
-            <Button
-              onClick={handleSendMessage}
-              disabled={!inputMessage.trim() || chatMutation.isPending || isLoading}
-              size="sm"
-              className="bg-blue-600 hover:bg-blue-700"
-              data-testid="assistant-send-button"
-            >
-              {chatMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Send className="w-4 h-4" />
-              )}
-            </Button>
-          </div>
+          <div className="space-y-3">
+            <div className="flex gap-2 p-3 bg-gradient-to-r from-white/80 to-gray-50/80 dark:from-gray-800/80 dark:to-gray-700/80 rounded-lg border border-purple-100 dark:border-purple-800 backdrop-blur-sm">
+              <Input
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder={isAtChatLimit ? "Login required to continue..." : "Ask me about cars..."}
+                className="flex-1 text-sm border-0 bg-transparent focus:ring-2 focus:ring-purple-400 focus:ring-offset-0"
+                disabled={chatMutation.isPending || isAtChatLimit}
+                data-testid="assistant-input"
+              />
+              <Button
+                onClick={handleSendMessage}
+                disabled={!inputMessage.trim() || chatMutation.isPending || isAtChatLimit}
+                size="sm"
+                className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white shadow-md"
+                data-testid="assistant-send-button"
+              >
+                {chatMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
+              </Button>
+            </div>
 
-          <div className="text-xs text-center text-muted-foreground">
-            Powered by GPT • Ask me anything about cars
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-gray-500 dark:text-gray-400">
+                🤖 Powered by AI • Independent search
+              </span>
+              {!isAuthenticated && (
+                <span className="text-purple-600 dark:text-purple-400 font-medium">
+                  {chatCount}/{MAX_FREE_CHATS} free chats used
+                </span>
+              )}
+            </div>
           </div>
         </CardContent>
       )}
