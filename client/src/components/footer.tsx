@@ -25,7 +25,7 @@ export default function Footer() {
               <img 
                 src={logoImage} 
                 alt="CarArth" 
-                className="h-16 w-auto rounded-lg drop-shadow-sm"
+                className="h-20 w-auto rounded-lg drop-shadow-sm"
               />
             </Link>
             <p className="text-muted-foreground text-sm mb-4 max-w-md">
