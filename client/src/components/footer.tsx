@@ -25,7 +25,7 @@ export default function Footer() {
               <img 
                 src={logoImage} 
                 alt="CarArth" 
-                className="h-12 w-12 mr-3"
+                className="h-16 w-auto mr-4 rounded-lg drop-shadow-sm"
               />
               <div>
                 <h3 className="text-xl font-bold text-primary">CarArth</h3>

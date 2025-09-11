@@ -35,9 +35,8 @@ export default function Navbar() {
                   <img 
                     src={logoImage} 
                     alt="CarArth" 
-                    className="h-12 w-12 sm:h-14 sm:w-14 mr-3 transition-transform duration-300 group-hover:scale-110"
+                    className="h-14 w-auto sm:h-16 mr-4 max-w-none rounded-lg transition-all duration-300 group-hover:scale-105 drop-shadow-sm"
                   />
-                  <div className="absolute inset-0 bg-primary/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </div>
                 <div>
                   <h1 className="text-xl sm:text-2xl font-bold text-primary tracking-tight">
