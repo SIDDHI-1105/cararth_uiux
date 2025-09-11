@@ -11,7 +11,7 @@ import LoanWidget from "@/components/loan-widget";
 import { Phone, Calendar, MapPin, User, Star, Check, ArrowLeft, MessageCircle } from "lucide-react";
 import { Link } from "wouter";
 import { type Car, type User as UserType } from "@shared/schema";
-import logoImage from "@assets/Gemini_Generated_Image_pqn5v6pqn5v6pqn5_1757601233537.png";
+import logoImage from "@assets/generated_images/CarArth_logo_with_asterisk_a6861ed0.png";
 
 export default function CarDetail() {
   const { id } = useParams<{ id: string }>();
