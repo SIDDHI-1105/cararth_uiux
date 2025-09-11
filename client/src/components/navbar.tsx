@@ -34,7 +34,7 @@ export default function Navbar() {
                 <img 
                   src={logoImage} 
                   alt="CarArth" 
-                  className="h-16 w-32 sm:h-18 sm:w-40 object-contain max-w-none rounded-lg transition-all duration-300 group-hover:scale-105 drop-shadow-sm"
+                  className="h-16 w-32 sm:h-18 sm:w-40 object-contain max-w-none opacity-90 hover:opacity-100 transition-all duration-300 filter contrast-75 brightness-95"
                 />
               </div>
             </Link>
