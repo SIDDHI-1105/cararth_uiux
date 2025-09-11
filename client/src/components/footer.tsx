@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Mail, MessageCircle } from "lucide-react";
 import SocialMediaLinks from "@/components/social-media-links";
-import logoImage from "@/assets/logo.png";
+import logoImage from "@assets/Gemini_Generated_Image_pqn5v6pqn5v6pqn5_1757601233537.png";
 
 export default function Footer() {
   return (

@@ -18,7 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ChevronLeft, ChevronRight, Search, Globe, Star, Crown, MessageSquare, Users } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { type Car } from "@shared/schema";
-import logoImage from "@/assets/logo.png";
+import logoImage from "@assets/Gemini_Generated_Image_pqn5v6pqn5v6pqn5_1757601233537.png";
 import { Link } from "wouter";
 
 export default function Home() {
@@ -277,9 +277,9 @@ export default function Home() {
               <TabsTrigger value="marketplace" className="flex items-center gap-2">
                 <Globe className="w-4 h-4" />
                 All Portals {marketplaceResult ? `(${marketplaceResult.analytics?.totalListings || 0})` : ''}
-                {usageStatusData && !usageStatusData.isAuthenticated && (
+                {usageStatusData && !(usageStatusData as any).isAuthenticated && (
                   <Badge variant="secondary" className="text-xs">
-                    {usageStatusData.searchesLeft}/{usageStatusData.totalLimit} in 30d
+                    {(usageStatusData as any).searchesLeft}/{(usageStatusData as any).totalLimit} in 30d
                   </Badge>
                 )}
               </TabsTrigger>
