@@ -90,26 +90,24 @@ export default function TheAssistant({ isAuthenticated = false, userEmail }: The
       // Handle specific error responses from backend
       let errorContent = "I'm sorry, I'm having trouble right now. Could you try asking your question again?";
       
-      // Parse error response if available
-      try {
-        const errorResponse = JSON.parse(error.message.split(': ')[1] || '{}');
-        if (errorResponse.code === 'CHAT_LIMIT_REACHED') {
-          setChatCount(errorResponse.currentCount || MAX_FREE_CHATS);
-          errorContent = `🔒 You've used all ${errorResponse.maxChats || MAX_FREE_CHATS} free chats. Please log in to continue unlimited chatting!`;
-        } else if (errorResponse.error) {
-          errorContent = errorResponse.error;
-        }
-      } catch (parseError) {
-        // Fallback to original error message parsing
-        if (error.message.includes('401')) {
-          errorContent = "🔑 Authentication required. Please log in to use The Assistant.";
-        } else if (error.message.includes('403')) {
-          errorContent = "📱 Phone verification required to use The Assistant.";
-        } else if (error.message.includes('429')) {
-          errorContent = "⏰ Too many requests. Please wait a moment and try again.";
-        } else if (error.message.includes('500')) {
-          errorContent = "🔧 Server error. Our team is working on it. Please try again in a few minutes.";
-        }
+      // Handle structured error responses properly
+      if (error.status === 401 && error.data?.code === 'CHAT_LIMIT_REACHED') {
+        // Chat limit reached - update count from server response
+        setChatCount(error.data.currentCount || MAX_FREE_CHATS);
+        errorContent = `🔒 You've used all ${error.data.maxChats || MAX_FREE_CHATS} free chats. Please log in to continue unlimited chatting!`;
+      } else if (error.status === 401) {
+        errorContent = "🔑 Authentication required. Please log in to use The Assistant.";
+      } else if (error.status === 403) {
+        errorContent = "📱 Phone verification required to use The Assistant.";
+      } else if (error.status === 429) {
+        errorContent = "⏰ Too many requests. Please wait a moment and try again.";
+      } else if (error.status >= 500) {
+        errorContent = "🔧 Server error. Our team is working on it. Please try again in a few minutes.";
+      } else if (error.data?.error) {
+        errorContent = error.data.error;
+      } else {
+        // Fallback for any unstructured errors
+        errorContent = "I'm sorry, I'm having trouble right now. Could you try asking your question again?";
       }
       
       const errorMessage: Message = {
