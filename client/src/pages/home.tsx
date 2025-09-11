@@ -9,6 +9,7 @@ import MarketplaceResults from "@/components/marketplace-results";
 import FeaturedListingModal from "@/components/featured-listing-modal";
 import PremiumUpgrade from "@/components/premium-upgrade";
 import RecentlyViewed from "@/components/recently-viewed";
+import SearchLimitPopup from "@/components/search-limit-popup";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +31,9 @@ export default function Home() {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showFeaturedModal, setShowFeaturedModal] = useState(false);
   const [selectedCarForFeatured, setSelectedCarForFeatured] = useState<{id: string, title: string} | null>(null);
+  const [showSearchLimitPopup, setShowSearchLimitPopup] = useState(false);
+  const [searchLimitData, setSearchLimitData] = useState<any>(null);
+  const [usageStatus, setUsageStatus] = useState<any>(null);
 
   const { data: cars = [], isLoading } = useQuery<Car[]>({
     queryKey: ["/api/marketplace/search", filters],
@@ -47,14 +51,19 @@ export default function Home() {
         limit: 10
       };
 
-      const response = await fetch('/api/marketplace/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(searchFilters)
-      });
-      
-      const result = await response.json();
-      return result.listings || [];
+      try {
+        const response = await apiRequest('POST', '/api/marketplace/search', searchFilters);
+        const result = await response.json();
+        return result.listings || [];
+      } catch (error: any) {
+        if (error.isSearchLimitExceeded) {
+          // Handle search limit exceeded - show popup
+          setSearchLimitData(error.data);
+          setShowSearchLimitPopup(true);
+          return []; // Return empty results
+        }
+        throw error; // Re-throw other errors
+      }
     },
   });
 
@@ -141,6 +150,12 @@ export default function Home() {
     setSelectedCarForFeatured({ id: car.id, title: car.title });
     setShowFeaturedModal(true);
   };
+
+  // Usage status query for showing remaining searches
+  const { data: usageStatusData } = useQuery({
+    queryKey: ["/api/usage/status"],
+    refetchInterval: 10000, // Refresh every 10 seconds
+  });
 
   const marketplaceSearch = useMutation({
     mutationFn: async (searchFilters: any) => {
@@ -253,7 +268,11 @@ export default function Home() {
               <TabsTrigger value="marketplace" className="flex items-center gap-2">
                 <Globe className="w-4 h-4" />
                 All Portals {marketplaceResult ? `(${marketplaceResult.analytics?.totalListings || 0})` : ''}
-                <Badge variant="secondary" className="text-xs">10 Results Max</Badge>
+                {usageStatusData && !usageStatusData.isAuthenticated && (
+                  <Badge variant="secondary" className="text-xs">
+                    {usageStatusData.searchesLeft}/{usageStatusData.totalLimit} in 30d
+                  </Badge>
+                )}
               </TabsTrigger>
             </TabsList>
 
@@ -344,6 +363,21 @@ export default function Home() {
           </Tabs>
         </div>
       </div>
+
+      {/* Search Limit Popup */}
+      <SearchLimitPopup
+        isOpen={showSearchLimitPopup}
+        onClose={() => setShowSearchLimitPopup(false)}
+        onSignUp={() => {
+          console.log('🚀 Sign up clicked from search limit popup');
+          // TODO: Implement sign up functionality
+        }}
+        onLogin={() => {
+          console.log('🔑 Login clicked from search limit popup');
+          // TODO: Implement login functionality
+        }}
+        data={searchLimitData}
+      />
     </FullWidthLayout>
   );
 }

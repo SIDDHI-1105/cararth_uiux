@@ -62,8 +62,41 @@ const checkSearchLimit = async (req: any, res: any, next: any) => {
       return next();
     }
 
-    // Allow 5-10 results for non-authenticated users (enterprise model)
+    // Handle anonymous users with 30-day rolling window
     if (!req.isAuthenticated()) {
+      // Get or generate visitor ID
+      let visitorId = req.headers['x-visitor-id'] as string;
+      if (!visitorId) {
+        visitorId = require('crypto').randomUUID();
+        res.setHeader('X-Visitor-ID', visitorId);
+      }
+
+      // Calculate 30 days ago
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      // Check search count in rolling 30-day window
+      const searchCount = await storage.getAnonymousSearchCountSince(visitorId, thirtyDaysAgo);
+      
+      if (searchCount >= 10) {
+        // Return 429 with popup trigger metadata
+        return res.status(429).json({
+          code: "search_limit_exceeded",
+          message: "🔥 You're on fire with searches! Ready to unlock unlimited car discoveries?",
+          limit: 10,
+          window: "30d",
+          searchesLeft: 0,
+          resetAt: new Date(thirtyDaysAgo.getTime() + (31 * 24 * 60 * 60 * 1000)) // Earliest search + 30 days
+        });
+      }
+
+      // Log the search activity
+      await storage.logAnonymousSearch({
+        visitorId,
+        ipHash: req.ip ? require('crypto').createHash('sha256').update(req.ip).digest('hex').substring(0, 32) : null,
+        userAgent: req.get('User-Agent') || null
+      });
+
       // Limit results to 10 for non-authenticated users
       if (req.body) {
         req.body.limit = Math.min(req.body.limit || 10, 10);
@@ -120,7 +153,7 @@ const checkSearchLimit = async (req: any, res: any, next: any) => {
     console.error("Search limit check error:", error);
     res.status(500).json({ error: "Failed to check search limits" });
   }
-};
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize services
@@ -141,6 +174,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Usage status endpoint for anonymous users
+  app.get('/api/usage/status', async (req: any, res) => {
+    try {
+      // If authenticated, unlimited searches
+      if (req.isAuthenticated && req.isAuthenticated()) {
+        return res.json({
+          isAuthenticated: true,
+          searchesLeft: -1, // unlimited
+          totalLimit: -1,
+          window: "unlimited"
+        });
+      }
+
+      // For anonymous users, check visitor ID and rolling window
+      const visitorId = req.headers['x-visitor-id'] as string;
+      if (!visitorId) {
+        return res.json({
+          isAuthenticated: false,
+          searchesLeft: 10,
+          totalLimit: 10,
+          window: "30d",
+          needsVisitorId: true
+        });
+      }
+
+      // Calculate 30 days ago
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      // Check search count in rolling 30-day window
+      const searchCount = await storage.getAnonymousSearchCountSince(visitorId, thirtyDaysAgo);
+      const searchesLeft = Math.max(0, 10 - searchCount);
+
+      res.json({
+        isAuthenticated: false,
+        searchesLeft,
+        totalLimit: 10,
+        window: "30d",
+        searchCount
+      });
+    } catch (error) {
+      console.error("Error fetching usage status:", error);
+      res.status(500).json({ error: "Failed to fetch usage status" });
     }
   });
 

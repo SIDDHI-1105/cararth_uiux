@@ -68,6 +68,21 @@ export const cars = pgTable("cars", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Anonymous visitor search tracking for 30-day rolling window
+export const anonymousSearchActivity = pgTable(
+  "anonymous_search_activity",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    visitorId: varchar("visitor_id").notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+    ipHash: varchar("ip_hash"),
+    userAgent: text("user_agent"),
+  },
+  (table) => [
+    index("idx_visitor_activity").on(table.visitorId, table.createdAt),
+  ],
+);
+
 export const contacts = pgTable("contacts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   carId: varchar("car_id").notNull(),
@@ -558,6 +573,11 @@ export const insertSocialAccountSchema = createInsertSchema(socialAccounts).omit
   updatedAt: true,
 });
 
+export const insertAnonymousSearchActivitySchema = createInsertSchema(anonymousSearchActivity).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertCommunityPost = z.infer<typeof insertCommunityPostSchema>;
 export type CommunityPost = typeof communityPosts.$inferSelect;
 export type InsertCommunityComment = z.infer<typeof insertCommunityCommentSchema>;
@@ -565,3 +585,5 @@ export type CommunityComment = typeof communityComments.$inferSelect;
 export type InsertSocialAccount = z.infer<typeof insertSocialAccountSchema>;
 export type SocialAccount = typeof socialAccounts.$inferSelect;
 export type UserReputation = typeof userReputation.$inferSelect;
+export type InsertAnonymousSearchActivity = z.infer<typeof insertAnonymousSearchActivitySchema>;
+export type AnonymousSearchActivity = typeof anonymousSearchActivity.$inferSelect;

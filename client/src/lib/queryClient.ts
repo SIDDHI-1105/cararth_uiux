@@ -1,7 +1,20 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { getVisitorId } from "./visitorId";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
+    // Handle search limit exceeded (429)
+    if (res.status === 429) {
+      const errorData = await res.json();
+      if (errorData.code === 'search_limit_exceeded') {
+        // Throw with specific error type for popup handling
+        const error = new Error(errorData.message) as any;
+        error.isSearchLimitExceeded = true;
+        error.data = errorData;
+        throw error;
+      }
+    }
+    
     const text = (await res.text()) || res.statusText;
     throw new Error(`${res.status}: ${text}`);
   }
@@ -12,9 +25,15 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  // Get visitor ID for anonymous tracking
+  const visitorId = await getVisitorId();
+  
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers: {
+      ...(data ? { "Content-Type": "application/json" } : {}),
+      "X-Visitor-ID": visitorId,
+    },
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
@@ -29,7 +48,13 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
+    // Get visitor ID for anonymous tracking
+    const visitorId = await getVisitorId();
+    
     const res = await fetch(queryKey.join("/") as string, {
+      headers: {
+        "X-Visitor-ID": visitorId,
+      },
       credentials: "include",
     });
 

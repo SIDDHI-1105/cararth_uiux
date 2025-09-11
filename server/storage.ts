@@ -21,7 +21,9 @@ import {
   type UserSearchActivity,
   type InsertUserSearchActivity,
   type PhoneVerification,
-  type InsertPhoneVerification
+  type InsertPhoneVerification,
+  type AnonymousSearchActivity,
+  type InsertAnonymousSearchActivity
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -80,6 +82,11 @@ export interface IStorage {
   // Enhanced user operations for messaging
   getSellerContactInfo(sellerId: string): Promise<any>;
   
+  // Anonymous search tracking for 30-day rolling window
+  logAnonymousSearch(activity: InsertAnonymousSearchActivity): Promise<AnonymousSearchActivity>;
+  getAnonymousSearchCountSince(visitorId: string, since: Date): Promise<number>;
+  pruneAnonymousSearches(before: Date): Promise<void>;
+  
   // Subscription tier management
   checkUserSearchLimit(userId: string): Promise<{ canSearch: boolean; searchesLeft: number; resetDate: Date }>;
   incrementUserSearchCount(userId: string): Promise<void>;
@@ -106,6 +113,7 @@ export class MemStorage implements IStorage {
   private conversationBlocks: Map<string, ConversationBlock>;
   private userSearchActivity: Map<string, UserSearchActivity>;
   private phoneVerifications: Map<string, PhoneVerification>;
+  private anonymousSearchActivity: Map<string, AnonymousSearchActivity>;
 
   constructor() {
     this.users = new Map();
@@ -119,6 +127,7 @@ export class MemStorage implements IStorage {
     this.conversationBlocks = new Map();
     this.userSearchActivity = new Map();
     this.phoneVerifications = new Map();
+    this.anonymousSearchActivity = new Map();
     
     // Clear any existing data and reinitialize
     this.cars.clear();
@@ -778,6 +787,36 @@ export class MemStorage implements IStorage {
     };
     this.userSearchActivity.set(id, searchActivity);
     return searchActivity;
+  }
+
+  // Anonymous search tracking for 30-day rolling window
+  async logAnonymousSearch(activity: InsertAnonymousSearchActivity): Promise<AnonymousSearchActivity> {
+    const id = randomUUID();
+    const newActivity: AnonymousSearchActivity = {
+      id,
+      ...activity,
+      createdAt: new Date(),
+    };
+    this.anonymousSearchActivity.set(id, newActivity);
+    return newActivity;
+  }
+
+  async getAnonymousSearchCountSince(visitorId: string, since: Date): Promise<number> {
+    let count = 0;
+    for (const activity of this.anonymousSearchActivity.values()) {
+      if (activity.visitorId === visitorId && activity.createdAt && activity.createdAt >= since) {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  async pruneAnonymousSearches(before: Date): Promise<void> {
+    for (const [id, activity] of this.anonymousSearchActivity.entries()) {
+      if (activity.createdAt && activity.createdAt < before) {
+        this.anonymousSearchActivity.delete(id);
+      }
+    }
   }
 }
 
