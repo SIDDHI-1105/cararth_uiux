@@ -25,7 +25,7 @@ export default function Footer() {
               <img 
                 src={logoImage} 
                 alt="CarArth" 
-                className="h-16 w-32 object-contain opacity-85 filter contrast-75 brightness-95 transition-opacity hover:opacity-100"
+                className="h-12 w-40 object-contain opacity-75 filter contrast-90 brightness-105 saturate-75 transition-opacity hover:opacity-100"
               />
             </Link>
             <p className="text-muted-foreground text-sm mb-4 max-w-md">
