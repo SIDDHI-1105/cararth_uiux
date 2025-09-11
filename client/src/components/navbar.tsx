@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "@/components/theme-toggle";
 import SocialMediaLinks from "@/components/social-media-links";
-import logoImage from "@assets/Gemini_Generated_Image_pkpwj9pkpwj9pkpw_1757603212664.png";
+import logoImage from "@assets/generated_images/CarArth_professional_circular_logo_c7b0becc.png";
 import { useAuth } from "@/hooks/useAuth";
 import { TooltipWrapper } from "@/components/tooltip-wrapper";
 import {
