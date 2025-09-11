@@ -28,6 +28,7 @@ import {
   insertCommunityCommentSchema 
 } from "@shared/schema";
 import { desc, eq } from "drizzle-orm";
+import { assistantService, type AssistantQuery } from "./assistantService";
 
 // Developer mode check
 const isDeveloperMode = (req: any) => {
@@ -614,6 +615,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid request data", details: error.errors });
       }
       res.status(500).json({ error: "Failed to compare price" });
+    }
+  });
+
+  // The Assistant - Conversational Car Search with GPT - with subscription limits
+  app.post("/api/assistant/chat", checkSearchLimit, async (req, res) => {
+    try {
+      const schema = z.object({
+        message: z.string().min(1, "Message cannot be empty").max(500, "Message too long"),
+        filters: z.object({}).optional(),
+        context: z.string().optional().refine(val => !val || val.length <= 1000, "Context too long")
+      });
+
+      const { message, filters, context } = schema.parse(req.body);
+      
+      console.log('🤖 The Assistant query:', message);
+      
+      const assistantQuery: AssistantQuery = {
+        message,
+        filters: filters || {},
+        context: context || 'New conversation'
+      };
+
+      const response = await assistantService.processQuery(assistantQuery);
+      
+      console.log('✅ The Assistant response:', response.action, '-', response.message.substring(0, 100) + '...');
+      
+      // Include search limit info in response (skip for developer mode)
+      if (isDeveloperMode(req)) {
+        res.json({
+          success: true,
+          ...response,
+          searchInfo: {
+            userTier: 'developer',
+            searchesLeft: 9999,
+            resetDate: null,
+            isDeveloper: true
+          }
+        });
+      } else {
+        const userId = req.user.claims.sub;
+        const user = await storage.getUser(userId);
+        const searchLimitInfo = await storage.checkUserSearchLimit(userId);
+        
+        res.json({
+          success: true,
+          ...response,
+          searchInfo: {
+            userTier: user?.subscriptionTier,
+            searchesLeft: searchLimitInfo.searchesLeft,
+            resetDate: searchLimitInfo.resetDate
+          }
+        });
+      }
+    } catch (error: any) {
+      console.error('❌ The Assistant error:', error);
+      
+      // Determine appropriate error response based on error type
+      let errorMessage = "I'm having trouble understanding your request. Could you try rephrasing it?";
+      let statusCode = 500;
+      
+      if (error instanceof z.ZodError) {
+        errorMessage = "Please provide a valid message to help you find a car.";
+        statusCode = 400;
+      } else if (error.message?.includes('timeout')) {
+        errorMessage = "I'm taking longer than usual to respond. Please try again in a moment.";
+        statusCode = 503;
+      } else if (error.message?.includes('rate limit') || error.message?.includes('quota')) {
+        errorMessage = "I'm currently busy helping other users. Please try again shortly.";
+        statusCode = 429;
+      }
+      
+      // Always include search info even in error responses (for authenticated users)
+      let searchInfo = null;
+      try {
+        if (req.user && req.user.claims && req.user.claims.sub && !isDeveloperMode(req)) {
+          const userId = req.user.claims.sub;
+          const user = await storage.getUser(userId);
+          const searchLimitInfo = await storage.checkUserSearchLimit(userId);
+          searchInfo = {
+            userTier: user?.subscriptionTier,
+            searchesLeft: searchLimitInfo.searchesLeft,
+            resetDate: searchLimitInfo.resetDate
+          };
+        } else if (isDeveloperMode(req)) {
+          searchInfo = {
+            userTier: 'developer',
+            searchesLeft: 9999,
+            resetDate: null,
+            isDeveloper: true
+          };
+        }
+      } catch (searchInfoError) {
+        // Ignore search info errors in error responses
+        console.warn('Failed to get search info in error response:', searchInfoError);
+      }
+      
+      const errorResponse: any = { 
+        error: errorMessage,
+        success: false 
+      };
+      
+      if (searchInfo) {
+        errorResponse.searchInfo = searchInfo;
+      }
+      
+      res.status(statusCode).json(errorResponse);
     }
   });
 

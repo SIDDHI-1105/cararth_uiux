@@ -4,6 +4,7 @@ import { FullWidthLayout } from "@/components/layout";
 import HeroSection from "@/components/hero-section";
 import AdvancedFilters from "@/components/advanced-filters";
 import CarFilters from "@/components/car-filters";
+import TheAssistant from "@/components/the-assistant";
 import CarCard from "@/components/car-card";
 import MarketplaceResults from "@/components/marketplace-results";
 import FeaturedListingModal from "@/components/featured-listing-modal";
@@ -212,11 +213,28 @@ export default function Home() {
             Find your perfect car from CarDekho, OLX, Cars24, CarWale & more - all in one place.
           </p>
           
-          <div className="mb-8">
-            <AdvancedFilters 
-              onSearch={handleMarketplaceSearch}
-              isLoading={marketplaceSearch.isPending}
-            />
+          {/* Hybrid Interface: Filters + The Assistant */}
+          <div className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2">
+              <AdvancedFilters 
+                onSearch={handleMarketplaceSearch}
+                isLoading={marketplaceSearch.isPending}
+              />
+            </div>
+            <div className="flex justify-center lg:justify-end">
+              <TheAssistant 
+                onFiltersUpdate={(assistantFilters) => {
+                  console.log('🤖 The Assistant updated filters:', assistantFilters);
+                  setFilters(assistantFilters);
+                }}
+                onSearch={(assistantFilters) => {
+                  console.log('🔍 The Assistant triggered search:', assistantFilters);
+                  setActiveTab("marketplace");
+                  handleMarketplaceSearch(assistantFilters);
+                }}
+                isLoading={marketplaceSearch.isPending}
+              />
+            </div>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
