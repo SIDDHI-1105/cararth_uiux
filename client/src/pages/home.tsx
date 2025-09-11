@@ -242,11 +242,11 @@ export default function Home() {
             <div className="text-center">
               <h3 className="text-2xl font-bold text-blue-800 dark:text-blue-200 mb-3">Enterprise Partnerships & Subscriptions</h3>
               <p className="text-blue-700 dark:text-blue-300 mb-4 max-w-2xl mx-auto">
-                Looking for bulk car data, API access, or custom automotive solutions? Partner with Cararth for enterprise-level services.
+                Looking for bulk car data, API access, or custom automotive solutions? Partner with CarArth for enterprise-level services.
               </p>
               <Button 
                 onClick={() => {
-                  const message = encodeURIComponent("Hi! I'm interested in enterprise partnerships and subscriptions with Cararth. Please share more details about your enterprise services.");
+                  const message = encodeURIComponent("Hi! I'm interested in enterprise partnerships and subscriptions with CarArth. Please share more details about your enterprise services.");
                   window.open(`https://wa.me/919573424321?text=${message}`, '_blank');
                 }}
                 className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold"

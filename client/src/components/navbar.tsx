@@ -25,7 +25,7 @@ export default function Navbar() {
       <div className="bg-gradient-to-r from-green-500 to-blue-600 text-white py-2 px-4 text-center text-sm font-medium">
         🚀 <strong>Live in Hyderabad!</strong> Authentic car listings now available | 🔄 <strong>Delhi NCR</strong> launching soon
       </div>
-      <nav className="nav-carbon carbon-fiber sticky top-0 z-50">
+      <nav className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           <div className="flex items-center space-x-6">
@@ -34,14 +34,14 @@ export default function Navbar() {
                 <div className="relative">
                   <img 
                     src={logoImage} 
-                    alt="Cararth" 
+                    alt="CarArth" 
                     className="h-12 w-12 sm:h-14 sm:w-14 mr-3 transition-transform duration-300 group-hover:scale-110"
                   />
-                  <div className="absolute inset-0 bg-metallic-accent/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="absolute inset-0 bg-primary/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </div>
                 <div>
-                  <h1 className="text-xl sm:text-2xl font-bold text-primary font-heading tracking-tight">
-                    Cararth
+                  <h1 className="text-xl sm:text-2xl font-bold text-primary tracking-tight">
+                    CarArth
                   </h1>
                   <p className="text-xs text-muted-foreground font-medium">
                     India's First Used Car Search Engine

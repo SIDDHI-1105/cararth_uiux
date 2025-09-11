@@ -24,11 +24,11 @@ export default function Footer() {
             <Link href="/" className="flex items-center mb-4">
               <img 
                 src={logoImage} 
-                alt="Cararth" 
+                alt="CarArth" 
                 className="h-12 w-12 mr-3"
               />
               <div>
-                <h3 className="text-xl font-bold text-primary">Cararth</h3>
+                <h3 className="text-xl font-bold text-primary">CarArth</h3>
                 <p className="text-sm text-muted-foreground">India's First Used Car Search Engine</p>
               </div>
             </Link>
@@ -123,12 +123,12 @@ export default function Footer() {
         <div className="border-t border-border mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-sm text-muted-foreground mb-4 md:mb-0">
-              © 2025 Cararth. All rights reserved. | Compliant with Indian IT Act 2000 & Copyright Act 1957
+              © 2025 CarArth. All rights reserved. | Compliant with Indian IT Act 2000 & Copyright Act 1957
               <br />
               <span className="text-xs">Contact: connect@cararth.com</span>
               <br />
               <span className="text-xs mt-1">
-                * All listings subject to verification. Prices may vary. * Cararth aggregates data from multiple sources - verify independently.
+                * All listings subject to verification. Prices may vary. * CarArth aggregates data from multiple sources - verify independently.
               </span>
             </div>
             <div className="flex items-center space-x-4 text-xs text-muted-foreground">

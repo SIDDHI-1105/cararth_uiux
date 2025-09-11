@@ -28,7 +28,7 @@ export default function TheAssistant({ isAuthenticated = false, userEmail }: The
     {
       id: '1',
       type: 'assistant',
-      content: "Hi, I'm your Cararth Assistant. How may I help you find the perfect car today?",
+      content: "Hi, I'm your CarArth Assistant. How may I help you find the perfect car today?",
       timestamp: new Date()
     }
   ]);
