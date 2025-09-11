@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search } from "lucide-react";
-import logoImage from "@assets/Gemini_Generated_Image_pkpwj9pkpwj9pkpw_1757603212664.png";
+import logoImage from "@assets/generated_images/CarArth_logo_with_correct_branding_9738ebbe.png";
 import { TooltipWrapper } from "@/components/tooltip-wrapper";
 
 interface HeroSearchProps {
