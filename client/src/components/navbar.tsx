@@ -22,7 +22,7 @@ export default function Navbar() {
   return (
     <>
       {/* Pilot Phase Banner */}
-      <div className="bg-gradient-to-r from-green-500 to-blue-600 text-white py-2 px-4 text-center text-sm font-medium">
+      <div className="bg-gradient-to-r from-primary/80 to-secondary/80 text-white py-2 px-4 text-center text-sm font-medium">
         🚀 <strong>Live in Hyderabad!</strong> Authentic car listings now available | 🔄 <strong>Delhi NCR</strong> launching soon
       </div>
       <nav className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">

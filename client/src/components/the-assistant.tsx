@@ -150,8 +150,8 @@ export default function TheAssistant({ isAuthenticated = false, userEmail }: The
   ];
 
   return (
-    <Card className="w-full max-w-md mx-auto bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 dark:from-purple-950/30 dark:via-blue-950/30 dark:to-indigo-950/30 border-2 border-transparent bg-clip-border shadow-xl backdrop-blur-sm">
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-400/10 via-blue-400/10 to-indigo-500/10 rounded-lg"></div>
+    <Card className="w-full max-w-md mx-auto bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/10 dark:from-primary/10 dark:via-secondary/10 dark:to-accent/20 border-2 border-transparent bg-clip-border shadow-xl backdrop-blur-sm">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/10 rounded-lg"></div>
       <CardHeader 
         className="cursor-pointer relative z-10" 
         onClick={() => setIsExpanded(!isExpanded)}
@@ -160,7 +160,7 @@ export default function TheAssistant({ isAuthenticated = false, userEmail }: The
         <CardTitle className="flex items-center justify-between text-lg font-bold">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg">
+              <div className="w-10 h-10 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center shadow-lg">
                 <Bot className="w-5 h-5 text-white" />
               </div>
               <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center">
@@ -342,7 +342,7 @@ export default function TheAssistant({ isAuthenticated = false, userEmail }: The
                 onClick={handleSendMessage}
                 disabled={!inputMessage.trim() || chatMutation.isPending || isAtChatLimit}
                 size="sm"
-                className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white shadow-md"
+                className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white shadow-md"
                 data-testid="assistant-send-button"
               >
                 {chatMutation.isPending ? (
