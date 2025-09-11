@@ -68,10 +68,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
-        heading: ["Orbitron", "system-ui", "sans-serif"],
-        serif: ["Georgia", "serif"],
-        mono: ["Courier New", "monospace"],
+        sans: ["Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
+        mono: ["SF Mono", "Monaco", "Cascadia Code", "Roboto Mono", "monospace"],
       },
       keyframes: {
         "accordion-down": {

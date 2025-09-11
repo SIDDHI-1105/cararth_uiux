@@ -209,8 +209,9 @@
 
 /* Navigation - Clean and Minimal */
 .nav {
-  @apply bg-background/95 backdrop-blur-sm border-b border-border;
+  @apply bg-background border-b border-border;
   @apply sticky top-0 z-50;
+  backdrop-filter: blur(8px);
 }
 
 /* Mobile-First Responsive Design */
