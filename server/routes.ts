@@ -62,8 +62,16 @@ const checkSearchLimit = async (req: any, res: any, next: any) => {
       return next();
     }
 
+    // Allow 5-10 results for non-authenticated users (enterprise model)
     if (!req.isAuthenticated()) {
-      return res.status(401).json({ error: "Authentication required for searches" });
+      // Limit results to 10 for non-authenticated users
+      if (req.body) {
+        req.body.limit = Math.min(req.body.limit || 10, 10);
+      }
+      if (req.query) {
+        req.query.limit = Math.min(req.query.limit || 10, 10);
+      }
+      return next();
     }
 
     const userId = req.user.claims.sub;

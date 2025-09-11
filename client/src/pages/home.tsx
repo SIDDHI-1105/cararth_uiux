@@ -2,7 +2,6 @@ import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { FullWidthLayout } from "@/components/layout";
 import HeroSection from "@/components/hero-section";
-import AdvancedFilters from "@/components/advanced-filters";
 import CarFilters from "@/components/car-filters";
 import TheAssistant from "@/components/the-assistant";
 import CarCard from "@/components/car-card";
@@ -44,7 +43,7 @@ export default function Home() {
         city: filters.city,
         sortBy: "price",
         sortOrder: "asc",
-        limit: 50
+        limit: 10
       };
 
       const response = await fetch('/api/marketplace/search', {
@@ -213,20 +212,35 @@ export default function Home() {
             Find your perfect car from CarDekho, OLX, Cars24, CarWale & more - all in one place.
           </p>
           
-          {/* Independent Search Options: Traditional Filters OR AI Assistant */}
-          <div className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
-              <AdvancedFilters 
-                onSearch={handleMarketplaceSearch}
-                isLoading={marketplaceSearch.isPending}
-              />
+          {/* Enterprise Partnership Section */}
+          <div className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
+            <div className="text-center">
+              <h3 className="text-2xl font-bold text-blue-800 dark:text-blue-200 mb-3">Enterprise Partnerships & Subscriptions</h3>
+              <p className="text-blue-700 dark:text-blue-300 mb-4 max-w-2xl mx-auto">
+                Looking for bulk car data, API access, or custom automotive solutions? Partner with Cararth for enterprise-level services.
+              </p>
+              <Button 
+                onClick={() => {
+                  const message = encodeURIComponent("Hi! I'm interested in enterprise partnerships and subscriptions with Cararth. Please share more details about your enterprise services.");
+                  window.open(`https://wa.me/919573424321?text=${message}`, '_blank');
+                }}
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold"
+                data-testid="button-enterprise-contact"
+              >
+                💼 Contact for Enterprise Partnership
+              </Button>
+              <p className="text-sm text-blue-600 dark:text-blue-400 mt-2">
+                Get instant response on WhatsApp
+              </p>
             </div>
-            <div className="flex justify-center lg:justify-end">
-              <TheAssistant 
-                isAuthenticated={false}
-                userEmail={null}
-              />
-            </div>
+          </div>
+
+          {/* Search Options: AI Assistant */}
+          <div className="mb-8 flex justify-center">
+            <TheAssistant 
+              isAuthenticated={false}
+              userEmail={null}
+            />
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
@@ -238,6 +252,7 @@ export default function Home() {
               <TabsTrigger value="marketplace" className="flex items-center gap-2">
                 <Globe className="w-4 h-4" />
                 All Portals {marketplaceResult ? `(${marketplaceResult.analytics?.totalListings || 0})` : ''}
+                <Badge variant="secondary" className="text-xs">10 Results Max</Badge>
               </TabsTrigger>
             </TabsList>
 

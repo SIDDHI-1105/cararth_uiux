@@ -1,5 +1,6 @@
 // Advanced caching system for marketplace optimization
 import { storage } from './storage.js';
+import { createHash } from 'crypto';
 
 // Cache key generators
 export class CacheKeyGenerator {
@@ -21,8 +22,7 @@ export class CacheKeyGenerator {
 
   static searchResults(filters: any): string {
     const filterString = JSON.stringify(filters, Object.keys(filters).sort());
-    const crypto = require('crypto');
-    const hash = crypto.createHash('sha256').update(filterString).digest('base64url').slice(0, 32);
+    const hash = createHash('sha256').update(filterString).digest('base64url').slice(0, 32);
     return `search:${hash}`;
   }
 }
