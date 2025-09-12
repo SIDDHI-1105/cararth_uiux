@@ -587,3 +587,61 @@ export type SocialAccount = typeof socialAccounts.$inferSelect;
 export type UserReputation = typeof userReputation.$inferSelect;
 export type InsertAnonymousSearchActivity = z.infer<typeof insertAnonymousSearchActivitySchema>;
 export type AnonymousSearchActivity = typeof anonymousSearchActivity.$inferSelect;
+
+// Cached portal listings for 24-hour data storage
+export const cachedPortalListings = pgTable(
+  "cached_portal_listings",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    portal: text("portal").notNull(), // CarDekho, OLX, Cars24, etc.
+    externalId: text("external_id").notNull(), // Original listing ID from portal
+    url: text("url").notNull(),
+    
+    // Car details
+    title: text("title").notNull(),
+    brand: text("brand").notNull(),
+    model: text("model").notNull(),
+    year: integer("year").notNull(),
+    price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+    mileage: integer("mileage"),
+    fuelType: text("fuel_type"),
+    transmission: text("transmission"),
+    owners: integer("owners").default(1),
+    
+    // Location
+    location: text("location").notNull(),
+    city: text("city").notNull(),
+    state: text("state"),
+    
+    // Additional data
+    description: text("description"),
+    features: jsonb("features").default([]),
+    images: jsonb("images").default([]),
+    sellerType: text("seller_type"), // individual, dealer, oem
+    verificationStatus: text("verification_status").default("unverified"),
+    condition: text("condition"), // excellent, good, fair
+    
+    // Cache metadata
+    listingDate: timestamp("listing_date").notNull(),
+    fetchedAt: timestamp("fetched_at").defaultNow(),
+    sourceMeta: jsonb("source_meta").default({}),
+    hash: text("hash").notNull().unique(), // For deduplication
+    
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_cached_city_brand_date").on(table.city, table.brand, table.listingDate),
+    index("idx_cached_listing_date").on(table.listingDate),
+    index("idx_cached_portal_external").on(table.portal, table.externalId),
+  ],
+);
+
+export const insertCachedPortalListingSchema = createInsertSchema(cachedPortalListings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertCachedPortalListing = z.infer<typeof insertCachedPortalListingSchema>;
+export type CachedPortalListing = typeof cachedPortalListings.$inferSelect;
