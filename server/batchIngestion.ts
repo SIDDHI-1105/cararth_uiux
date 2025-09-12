@@ -16,6 +16,7 @@ import { MarketplaceAggregator } from './marketplaceAggregator.js';
 import { storage } from './storage.js';
 import type { InsertCachedPortalListing } from '@shared/schema.js';
 import crypto from 'crypto';
+import { enrichmentService } from './enrichmentService.js';
 
 export class BatchIngestionService {
   private marketplaceAggregator: MarketplaceAggregator;
@@ -56,6 +57,25 @@ export class BatchIngestionService {
           // Normalize and store listings
           const normalizedListings = this.normalizeListings(result.listings, []);
           
+          // Optional GPT-5 enrichment if OpenAI API key is available
+          if (process.env.OPENAI_API_KEY && normalizedListings.length > 0) {
+            console.log(`🧠 GPT-5 enriching ${normalizedListings.length} listings...`);
+            const enrichments = await enrichmentService.enrichListings(normalizedListings);
+            
+            // Apply enrichments to listings
+            for (const listing of normalizedListings) {
+              const enrichment = enrichments.get(listing.externalId);
+              if (enrichment) {
+                listing.description = enrichment.summary;
+                listing.sourceMeta = {
+                  ...listing.sourceMeta,
+                  aiEnrichment: enrichment
+                };
+              }
+            }
+            console.log(`✅ Applied GPT-5 enrichment to ${enrichments.size} listings`);
+          }
+
           for (const listing of normalizedListings) {
             try {
               await this.storeListing(listing);

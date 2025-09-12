@@ -176,6 +176,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Social authentication
   setupSocialAuth(app);
 
+  // Batch ingestion endpoint for external cron jobs (cron-job.org, GitHub Actions, Railway)
+  app.post('/api/run_ingestion', async (req, res) => {
+    try {
+      console.log('🚀 Manual ingestion triggered via API endpoint');
+      
+      // Import batch ingestion service
+      const { batchIngestionService } = await import('./batchIngestion.js');
+      
+      // Get ingestion status
+      const status = batchIngestionService.getStatus();
+      if (status.isIngesting) {
+        return res.status(429).json({ 
+          error: 'Ingestion already in progress',
+          isIngesting: true 
+        });
+      }
+      
+      // Start ingestion in background
+      const cities = req.body.cities || ['hyderabad', 'bangalore', 'mumbai', 'delhi', 'pune', 'chennai'];
+      batchIngestionService.runIngestion(cities).catch(error => {
+        console.error('Background ingestion failed:', error);
+      });
+      
+      res.json({ 
+        message: 'Batch ingestion started',
+        cities: cities,
+        isIngesting: true,
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error('Ingestion endpoint error:', error);
+      res.status(500).json({ error: 'Failed to start ingestion' });
+    }
+  });
+
+  // Ingestion status endpoint
+  app.get('/api/ingestion/status', async (req, res) => {
+    try {
+      const { batchIngestionService } = await import('./batchIngestion.js');
+      const status = batchIngestionService.getStatus();
+      
+      // Get search stats
+      const { fastSearchService } = await import('./fastSearch.js');
+      const stats = await fastSearchService.getSearchStats();
+      
+      res.json({
+        ...status,
+        ...stats,
+        lastCheck: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Status endpoint error:', error);
+      res.status(500).json({ error: 'Failed to get status' });
+    }
+  });
+
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
