@@ -52,26 +52,26 @@ export default function Navbar() {
               <TooltipWrapper trigger="sell-car-link">
                 <Link 
                   href="/sell-car" 
-                  className={`px-4 py-2 rounded-lg text-base md:text-lg font-semibold transition-all duration-300 ${
+                  className={`px-4 py-2 rounded-lg text-base md:text-lg font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 hover:shadow-lg ${
                     location === "/sell-car" || location === "/sell"
-                      ? "text-accent-foreground bg-accent" 
-                      : "text-foreground hover:text-accent hover:bg-accent/10"
+                      ? "text-white bg-gradient-to-r from-green-500 to-emerald-600 shadow-md" 
+                      : "text-foreground hover:text-white hover:bg-gradient-to-r hover:from-green-500 hover:to-emerald-600 hover:shadow-md border-2 border-green-500/20 hover:border-green-500"
                   }`}
                   data-testid="link-sell-car"
                 >
-                  Sell
+                  💰 Sell
                 </Link>
               </TooltipWrapper>
               <Link 
                 href="/news" 
-                className={`px-4 py-2 rounded-lg text-base md:text-lg font-semibold transition-all duration-300 ${
+                className={`px-4 py-2 rounded-lg text-base md:text-lg font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 hover:shadow-lg ${
                   location === "/news" 
-                    ? "text-accent-foreground bg-accent" 
-                    : "text-foreground hover:text-accent hover:bg-accent/10"
+                    ? "text-white bg-gradient-to-r from-blue-500 to-indigo-600 shadow-md" 
+                    : "text-foreground hover:text-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-600 hover:shadow-md border-2 border-blue-500/20 hover:border-blue-500"
                 }`}
                 data-testid="link-throttle-talk"
               >
-                Throttle Talk
+                🚗 Throttle Talk
               </Link>
             </div>
           </div>
@@ -196,27 +196,27 @@ export default function Navbar() {
               </Link>
               <Link 
                 href="/sell-car" 
-                className={`block px-4 py-4 rounded-lg text-lg font-semibold transition-all duration-300 min-h-[44px] flex items-center ${
+                className={`block px-4 py-4 rounded-lg text-lg font-semibold transition-all duration-300 min-h-[44px] flex items-center transform active:scale-95 ${
                   location === "/sell-car" || location === "/sell"
-                    ? "text-accent-foreground bg-accent" 
-                    : "text-foreground hover:text-accent hover:bg-accent/10"
+                    ? "text-white bg-gradient-to-r from-green-500 to-emerald-600 shadow-md" 
+                    : "text-foreground hover:text-white hover:bg-gradient-to-r hover:from-green-500 hover:to-emerald-600 hover:shadow-md border-2 border-green-500/20"
                 }`}
                 data-testid="mobile-link-sell-car"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Sell
+                💰 Sell
               </Link>
               <Link 
                 href="/news" 
-                className={`block px-4 py-4 rounded-lg text-lg font-semibold transition-all duration-300 min-h-[44px] flex items-center ${
+                className={`block px-4 py-4 rounded-lg text-lg font-semibold transition-all duration-300 min-h-[44px] flex items-center transform active:scale-95 ${
                   location === "/news" 
-                    ? "text-accent-foreground bg-accent" 
-                    : "text-foreground hover:text-accent hover:bg-accent/10"
+                    ? "text-white bg-gradient-to-r from-blue-500 to-indigo-600 shadow-md" 
+                    : "text-foreground hover:text-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-600 hover:shadow-md border-2 border-blue-500/20"
                 }`}
                 data-testid="mobile-link-throttle-talk"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Throttle Talk
+                🚗 Throttle Talk
               </Link>
               <div className="pt-2 border-t border-border mt-2 space-y-3">
                 {/* Social Media Links - Mobile */}
