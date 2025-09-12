@@ -161,14 +161,37 @@ export default function Home() {
     mutationFn: async (searchFilters: any) => {
       console.log('🌐 Marketplace search with filters:', searchFilters);
       
-      const response = await apiRequest('POST', '/api/marketplace/search', searchFilters);
+      // Create a timeout controller for the request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minutes timeout
       
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Search failed: ${errorText}`);
+      try {
+        const response = await fetch('/api/marketplace/search', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Visitor-ID': await (await import('@/lib/visitorId')).getVisitorId(),
+          },
+          body: JSON.stringify(searchFilters),
+          credentials: 'include',
+          signal: controller.signal,
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Search failed: ${errorText}`);
+        }
+        
+        return response.json();
+      } catch (error: any) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+          throw new Error('Search is taking longer than expected. Please try again with more specific filters.');
+        }
+        throw error;
       }
-      
-      return response.json();
     },
     onSuccess: (data) => {
       console.log('✅ Marketplace search successful:', data);
