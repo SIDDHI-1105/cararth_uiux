@@ -1,5 +1,5 @@
 // Unified Perplexity AI Service with Performance Optimization and Smart Caching
-import { CircuitBreaker, performanceMonitor, getOptimalTimeout, withRetry } from './optimizedTimeouts.js';
+import { CircuitBreaker, performanceMonitor, getOptimalTimeout, withRetry, retryConfigs, isRetryableError, withTimeout } from './optimizedTimeouts.js';
 import type { EnhancedMarketplaceListing, MarketplaceListing } from './marketplaceAggregator.js';
 
 // Enhanced interfaces for unified service
@@ -121,7 +121,8 @@ class PerplexityMetrics {
       errorRate: Math.round(this.errorRate * 100) / 100,
       averageResponseTime: Math.round(this.averageResponseTime),
       cacheHitRate: Math.round((this.cacheHits / this.totalRequests) * 100),
-      cacheSize: this.cache.getStats().size,\n      cacheHitRate: this.cache.getStats().hitRate
+      cacheSize: 0,
+      globalCacheHitRate: 0
     };
   }
 }
@@ -357,25 +358,49 @@ export class UnifiedPerplexityService {
       throw new Error('Perplexity API key not available');
     }
 
-    return await withRetry(async () => {
-      const response = await fetch(this.baseUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload)
+    // Queue request for rate limiting
+    return new Promise((resolve, reject) => {
+      this.requestQueue.push(async () => {
+        const startTime = Date.now();
+        
+        try {
+          const result = await withRetry(async () => {
+            return await withTimeout(
+              getOptimalTimeout('perplexity', 'standard'),
+              async () => {
+                const response = await fetch(this.baseUrl, {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${this.apiKey}`,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                  const errorText = await response.text();
+                  throw new Error(`Perplexity API error ${response.status}: ${errorText}`);
+                }
+
+                const data = await response.json();
+                return data.choices[0]?.message?.content || '';
+              }
+            );
+          }, retryConfigs.network, isRetryableError.network);
+          
+          const duration = Date.now() - startTime;
+          performanceMonitor.recordCall('perplexity', duration, true, 0, 0);
+          resolve(result);
+          
+        } catch (error) {
+          const duration = Date.now() - startTime;
+          performanceMonitor.recordCall('perplexity', duration, false, 1, 0);
+          reject(error);
+        }
       });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Perplexity API error ${response.status}: ${errorText}`);
-      }
-
-      const data = await response.json();
-      return data.choices[0]?.message?.content || '';
-
-    }, { maxAttempts: 3, delay: 1000 }); // 3 retries with 1s delay
+      
+      this.processQueue();
+    });
   }
 
   private async executeWithCircuitBreaker<T>(operation: () => Promise<T>): Promise<T> {
@@ -620,14 +645,44 @@ Provide data-driven insights with specific examples and market intelligence.`;
   }
 
   getServiceStatus() {
+    const cacheStats = this.cache.getStats();
     return {
       isConfigured: !!this.apiKey,
-      circuitBreakerStatus: 'operational', // Circuit breaker status
-      cacheStats: this.cache.getStats(),
-      performanceMetrics: this.metrics.getMetrics(),
+      circuitBreakerStatus: 'operational',
+      cacheStats,
+      performanceMetrics: {
+        ...this.metrics.getMetrics(),
+        cacheSize: cacheStats.size,
+        globalCacheHitRate: cacheStats.hitRate
+      },
       activeRequests: this.activeRequests,
-      queueSize: this.requestQueue.length
+      queueSize: this.requestQueue.length,
+      globalPerformanceMetrics: performanceMonitor.getMetrics()
     };
+  }
+
+  // 🚀 ENTERPRISE RATE LIMITING IMPLEMENTATION
+  private async processQueue(): Promise<void> {
+    if (this.isProcessingQueue || this.requestQueue.length === 0) {
+      return;
+    }
+
+    this.isProcessingQueue = true;
+
+    while (this.requestQueue.length > 0 && this.activeRequests < this.maxConcurrentRequests) {
+      const request = this.requestQueue.shift();
+      if (request) {
+        this.activeRequests++;
+        
+        request().finally(() => {
+          this.activeRequests--;
+          // Process next with delay to respect rate limits
+          setTimeout(() => this.processQueue(), 200); // 200ms between requests
+        });
+      }
+    }
+
+    this.isProcessingQueue = false;
   }
 }
 
