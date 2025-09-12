@@ -161,7 +161,7 @@ export default function Home() {
     mutationFn: async (searchFilters: any) => {
       console.log('🌐 Marketplace search with filters:', searchFilters);
       
-      const response = await apiRequest('POST', '/api/marketplace/aggregated-search', searchFilters);
+      const response = await apiRequest('POST', '/api/marketplace/search', searchFilters);
       
       if (!response.ok) {
         const errorText = await response.text();
