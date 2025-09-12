@@ -1,0 +1,148 @@
+"""
+Cararth.com – Cached Search System
+-----------------------------------
+This script shows how to:
+1. Run Firecrawl ingestion twice a day (cron/external trigger).
+2. Normalize and save listings into a local DB (SQLite for demo).
+3. Serve queries via a fast search endpoint (Flask).
+4. Support cross-filtering (any filter = valid search).
+5. Optional GPT-5 enrichment (summary extraction).
+"""
+
+import os
+import sqlite3
+from flask import Flask, request, jsonify
+from datetime import datetime
+
+# === DB Setup ===
+DB_NAME = "cararth.db"
+
+def init_db():
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS listings (
+        listing_id TEXT PRIMARY KEY,
+        source TEXT,
+        make TEXT,
+        model TEXT,
+        variant TEXT,
+        year INT,
+        price INT,
+        city TEXT,
+        fuel_type TEXT,
+        mileage_km INT,
+        transmission TEXT,
+        owner_count INT,
+        summary TEXT,
+        raw_url TEXT,
+        last_fetched_at TEXT
+    )
+    """)
+    conn.commit()
+    conn.close()
+
+init_db()
+
+# === Normalization Example ===
+def normalize_item(item, source):
+    """
+    item: raw dict from Firecrawl/perplexity/gemini
+    return: normalized dict
+    """
+    return {
+        "listing_id": f"{source}_{item.get('id', '')}",
+        "source": source,
+        "make": item.get("make", ""),
+        "model": item.get("model", ""),
+        "variant": item.get("variant", ""),
+        "year": int(item.get("year", 0) or 0),
+        "price": int(item.get("price", 0) or 0),
+        "city": item.get("city", ""),
+        "fuel_type": item.get("fuel_type", ""),
+        "mileage_km": int(item.get("mileage", 0) or 0),
+        "transmission": item.get("transmission", ""),
+        "owner_count": int(item.get("owners", 0) or 0),
+        "summary": "",  # can fill via GPT-5 enrichment
+        "raw_url": item.get("url", ""),
+        "last_fetched_at": datetime.utcnow().isoformat()
+    }
+
+# === DB Insert/Update ===
+def save_listing(listing):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("""
+    INSERT OR REPLACE INTO listings 
+    (listing_id, source, make, model, variant, year, price, city, fuel_type, 
+    mileage_km, transmission, owner_count, summary, raw_url, last_fetched_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, tuple(listing.values()))
+    conn.commit()
+    conn.close()
+
+# === Ingestion (Batch Job) ===
+def run_ingestion():
+    """
+    Example ingestion job.
+    Replace with Firecrawl/Perplexity/Gemini API calls.
+    For demo, we insert dummy cars.
+    """
+    dummy_data = [
+        {"id": "1", "make": "Hyundai", "model": "i20", "variant": "Sportz", "year": 2018, "price": 550000, "city": "Delhi", "fuel_type": "Petrol"},
+        {"id": "2", "make": "Maruti", "model": "Swift", "variant": "VXi", "year": 2017, "price": 450000, "city": "Mumbai", "fuel_type": "Petrol"},
+        {"id": "3", "make": "Honda", "model": "City", "variant": "VX", "year": 2019, "price": 900000, "city": "Bangalore", "fuel_type": "Diesel"},
+    ]
+    for item in dummy_data:
+        listing = normalize_item(item, source="demo")
+        save_listing(listing)
+
+# === Query Layer with Cross-Filters ===
+app = Flask(__name__)
+
+@app.route("/search", methods=["GET"])
+def search():
+    filters = {
+        "make": request.args.get("make"),
+        "model": request.args.get("model"),
+        "city": request.args.get("city"),
+        "fuel_type": request.args.get("fuel_type"),
+        "price_min": request.args.get("price_min"),
+        "price_max": request.args.get("price_max")
+    }
+
+    query = "SELECT * FROM listings WHERE 1=1"
+    params = []
+
+    if filters["make"]:
+        query += " AND make LIKE ?"
+        params.append(f"%{filters['make']}%")
+    if filters["model"]:
+        query += " AND model LIKE ?"
+        params.append(f"%{filters['model']}%")
+    if filters["city"]:
+        query += " AND city LIKE ?"
+        params.append(f"%{filters['city']}%")
+    if filters["fuel_type"]:
+        query += " AND fuel_type LIKE ?"
+        params.append(f"%{filters['fuel_type']}%")
+    if filters["price_min"]:
+        query += " AND price >= ?"
+        params.append(int(filters["price_min"]))
+    if filters["price_max"]:
+        query += " AND price <= ?"
+        params.append(int(filters["price_max"]))
+
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute(query, params)
+    results = [dict(zip([d[0] for d in c.description], row)) for row in c.fetchall()]
+    conn.close()
+
+    return jsonify(results)
+
+# === Run server ===
+if __name__ == "__main__":
+    # Run initial ingestion for demo
+    run_ingestion()
+    app.run(host="0.0.0.0", port=5000)

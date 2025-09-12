@@ -645,3 +645,7 @@ export const insertCachedPortalListingSchema = createInsertSchema(cachedPortalLi
 
 export type InsertCachedPortalListing = z.infer<typeof insertCachedPortalListingSchema>;
 export type CachedPortalListing = typeof cachedPortalListings.$inferSelect;
+
+// Use cached portal listings as normalized car listings for fast search
+export type CarListing = CachedPortalListing;
+export type InsertCarListing = InsertCachedPortalListing;
