@@ -315,11 +315,8 @@ export default function Home() {
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold"
                 data-testid="button-enterprise-contact"
               >
-                💼 Contact for Enterprise Partnership
+                📧 email us: connect@cararth.com
               </Button>
-              <p className="text-sm text-blue-600 dark:text-blue-400 mt-2">
-                Get professional response via email
-              </p>
             </div>
           </div>
 
