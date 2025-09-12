@@ -33,7 +33,8 @@ export function BrandWordmark({
         <span className="text-white" style={{
           WebkitTextStroke: '2px #1e40af',
           textStroke: '2px #1e40af',
-          fontWeight: 'bold'
+          fontWeight: 'bold',
+          letterSpacing: '0.15em'
         }}>
           rth
         </span>
