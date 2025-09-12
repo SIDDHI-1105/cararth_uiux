@@ -22,12 +22,12 @@ export default function Navbar() {
   return (
     <>
       {/* Launch Status Banner */}
-      <div className="bg-gradient-to-r from-green-600 to-blue-600 text-white py-3 px-4 text-center text-sm font-medium border-b shadow-sm">
+      <div className="bg-gradient-to-r from-green-600 to-blue-600 text-white py-3 px-4 text-center text-base md:text-lg font-semibold border-b shadow-sm">
         🚀 <strong>Hyderabad – Live Now!</strong> Authentic listings available | 🔄 <strong>Delhi NCR – Coming Soon</strong> | Expanding across India
       </div>
       <nav className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
+        <div className="flex justify-between items-center min-h-[90px] md:min-h-[112px] py-4">
           <div className="flex items-center space-x-6">
             <Link href="/" className="flex-shrink-0" data-testid="link-home">
               <div className="flex items-center group">
@@ -40,7 +40,7 @@ export default function Navbar() {
             <div className="ml-10 flex items-center space-x-1">
               <Link 
                 href="/" 
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                className={`px-4 py-2 rounded-lg text-base md:text-lg font-semibold transition-all duration-300 ${
                   location === "/" 
                     ? "text-accent-foreground bg-accent" 
                     : "text-foreground hover:text-accent hover:bg-accent/10"
@@ -52,7 +52,7 @@ export default function Navbar() {
               <TooltipWrapper trigger="sell-car-link">
                 <Link 
                   href="/sell-car" 
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                  className={`px-4 py-2 rounded-lg text-base md:text-lg font-semibold transition-all duration-300 ${
                     location === "/sell-car" || location === "/sell"
                       ? "text-accent-foreground bg-accent" 
                       : "text-foreground hover:text-accent hover:bg-accent/10"
@@ -64,7 +64,7 @@ export default function Navbar() {
               </TooltipWrapper>
               <Link 
                 href="/news" 
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                className={`px-4 py-2 rounded-lg text-base md:text-lg font-semibold transition-all duration-300 ${
                   location === "/news" 
                     ? "text-accent-foreground bg-accent" 
                     : "text-foreground hover:text-accent hover:bg-accent/10"
@@ -137,7 +137,7 @@ export default function Navbar() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 
-                    className="hidden sm:inline-flex btn-metallic px-6 py-2 text-sm font-semibold"
+                    className="hidden sm:inline-flex btn-metallic px-6 py-2 text-base md:text-lg font-semibold"
                     data-testid="button-login"
                   >
                     Login

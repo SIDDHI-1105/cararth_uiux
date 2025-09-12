@@ -12,18 +12,21 @@ export function BrandWordmark({
   showTagline = true, 
   className 
 }: BrandWordmarkProps) {
-  // Responsive CSS classes controlling only height for proper aspect ratio
-  const responsiveClasses = {
-    header: "h-16 sm:h-20 md:h-24 lg:h-28 w-auto max-w-full",
-    hero: "h-20 sm:h-24 md:h-28 lg:h-32 xl:h-36 w-auto max-w-full", 
-    footer: "h-12 sm:h-14 md:h-16 w-auto max-w-full"
+  // Use clamp-based sizing for better responsive scaling
+  const sizeStyles = {
+    header: { height: 'clamp(60px, 8vw, 100px)' },
+    hero: { height: 'clamp(80px, 12vw, 140px)' }, 
+    footer: { height: 'clamp(40px, 6vw, 80px)' }
   };
   
   return (
     <img 
       src={cararthLogo}
       alt="CarArth - India's First Used Car Search Engine"
-      className={cn("block object-contain", responsiveClasses[variant], className)}
+      className={cn("block object-contain drop-shadow-md dark:drop-shadow-[0_1px_1px_rgba(255,255,255,0.6)] w-auto max-w-full", className)}
+      style={sizeStyles[variant]}
+      fetchpriority="high"
+      loading="eager"
       data-testid="caararth-logo"
     />
   );
