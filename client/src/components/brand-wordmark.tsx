@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import cararthLogo from "@assets/generated_images/CarArth_logo_with_correct_branding_9738ebbe.png";
 
 interface BrandWordmarkProps {
   variant?: "header" | "hero" | "footer";
@@ -13,64 +14,17 @@ export function BrandWordmark({
 }: BrandWordmarkProps) {
   // Responsive CSS classes controlling only height for proper aspect ratio
   const responsiveClasses = {
-    header: showTagline 
-      ? "h-12 sm:h-14 md:h-16 w-auto max-w-full" 
-      : "h-9 sm:h-10 md:h-12 w-auto max-w-full",
-    hero: showTagline 
-      ? "h-12 sm:h-14 md:h-16 lg:h-20 w-auto max-w-full" 
-      : "h-10 sm:h-12 md:h-14 lg:h-16 w-auto max-w-full",
-    footer: showTagline 
-      ? "h-7 sm:h-8 md:h-9 w-auto max-w-full" 
-      : "h-6 sm:h-7 md:h-8 w-auto max-w-full"
+    header: "h-12 sm:h-14 md:h-16 w-auto max-w-full",
+    hero: "h-16 sm:h-20 md:h-24 lg:h-28 w-auto max-w-full", 
+    footer: "h-8 sm:h-10 md:h-12 w-auto max-w-full"
   };
   
-  // Use consistent viewBox that scales properly
-  const viewBoxWidth = 280;
-  const viewBoxHeight = showTagline ? 96 : 68;
-  
   return (
-    <svg
-      viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
-      preserveAspectRatio="xMidYMid meet"
-      className={cn("block", responsiveClasses[variant], className)}
-      shapeRendering="geometricPrecision"
-      style={{ vectorEffect: "non-scaling-stroke" }}
-    >
-      {/* CarArth wordmark with proper kerning */}
-      <text
-        x="0"
-        y="48"
-        fill="currentColor"
-        fontSize="44"
-        fontFamily="Inter, system-ui, sans-serif"
-        fontWeight="700"
-        letterSpacing="-0.025em"
-      >
-        Car
-        <tspan fill="#FF9933">A</tspan>
-        rth
-      </text>
-      
-      {/* Tagline with superscript asterisk */}
-      {showTagline && (
-        <text
-          x="0"
-          y="74"
-          fill="currentColor"
-          fontSize="16"
-          fontFamily="Inter, system-ui, sans-serif"
-          fontWeight="400"
-          opacity="0.7"
-        >
-          India's first used car search engine
-          <tspan
-            fontSize="14"
-            baselineShift="super"
-          >
-            *
-          </tspan>
-        </text>
-      )}
-    </svg>
+    <img 
+      src={cararthLogo}
+      alt="CarArth - India's First Used Car Search Engine"
+      className={cn("block object-contain", responsiveClasses[variant], className)}
+      data-testid="caararth-logo"
+    />
   );
 }
