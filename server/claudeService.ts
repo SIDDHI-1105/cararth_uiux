@@ -516,13 +516,17 @@ Evaluate for compliance with community guidelines and suggest appropriate modera
     return await claudeCircuit.execute(async () => {
       for (let attempt = 0; attempt <= retries; attempt++) {
         try {
+          // Extract system message and filter it out from messages array
+          const systemMessage = messages.find(m => m.role === 'system');
+          const userMessages = messages.filter(m => m.role !== 'system');
+          
           const completion = await Promise.race([
             anthropic.messages.create({
               model: DEFAULT_MODEL_STR, // claude-sonnet-4-20250514
-              messages,
+              messages: userMessages, // Only user/assistant messages
               max_tokens: 1500,
               temperature: 0.3,
-              system: messages.find(m => m.role === 'system')?.content
+              system: systemMessage?.content // Top-level system parameter
             }),
             new Promise((_, reject) => 
               setTimeout(() => reject(new Error('Claude API timeout')), 18000)

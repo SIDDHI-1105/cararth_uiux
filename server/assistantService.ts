@@ -20,7 +20,33 @@ export interface AssistantResponse {
   confidence?: number;
 }
 
+export interface AssistantMetrics {
+  totalRequests: number;
+  successfulRequests: number;
+  fallbackResponses: number;
+  averageProcessingTime: number;
+  averageConfidence: number;
+  errorRate: number;
+}
+
 export class AssistantService {
+  private metrics: AssistantMetrics;
+  
+  constructor() {
+    this.metrics = {
+      totalRequests: 0,
+      successfulRequests: 0,
+      fallbackResponses: 0,
+      averageProcessingTime: 0,
+      averageConfidence: 0,
+      errorRate: 0
+    };
+  }
+  
+  getMetrics(): AssistantMetrics {
+    return { ...this.metrics };
+  }
+
   private systemPrompt = `You are "The Assistant" for The Mobility Hub, India's premier car marketplace aggregator. You help users find the perfect used cars by understanding their natural language requests and converting them to precise search filters.
 
 CAPABILITIES:
@@ -123,7 +149,31 @@ Always be helpful, conversational, and focused on understanding the user's car b
            error.message?.includes('overloaded');
   }
 
+  private updateMetrics(startTime: number, confidence: number, success: boolean, fallbackUsed: boolean): void {
+    const processingTime = Date.now() - startTime;
+    this.metrics.totalRequests++;
+    
+    if (success && !fallbackUsed) {
+      this.metrics.successfulRequests++;
+    } else if (fallbackUsed) {
+      this.metrics.fallbackResponses++;
+    }
+    
+    // Update running averages
+    const totalResponses = this.metrics.successfulRequests + this.metrics.fallbackResponses;
+    if (totalResponses > 0) {
+      this.metrics.averageProcessingTime = 
+        (this.metrics.averageProcessingTime * (totalResponses - 1) + processingTime) / totalResponses;
+      this.metrics.averageConfidence = 
+        (this.metrics.averageConfidence * (totalResponses - 1) + confidence) / totalResponses;
+    }
+    
+    // Calculate error rate (fallbacks count as errors)
+    this.metrics.errorRate = ((this.metrics.fallbackResponses + (this.metrics.totalRequests - this.metrics.successfulRequests - this.metrics.fallbackResponses)) / this.metrics.totalRequests) * 100;
+  }
+
   async processQuery(query: AssistantQuery): Promise<AssistantResponse> {
+    const startTime = Date.now();
     let fallbackUsed = false;
     
     try {
@@ -164,6 +214,9 @@ Always be helpful, conversational, and focused on understanding the user's car b
       // Validate and sanitize response
       const sanitizedResponse = this.sanitizeResponse(parsedResponse);
       
+      // Track metrics - fallback usage counts as error
+      this.updateMetrics(startTime, sanitizedResponse.confidence || 0.5, !fallbackUsed, fallbackUsed);
+      
       console.log(`✅ Assistant response ${fallbackUsed ? '(fallback)' : ''}:`, sanitizedResponse.action, '-', sanitizedResponse.message.substring(0, 50) + '...');
       
       return sanitizedResponse;
@@ -173,6 +226,10 @@ Always be helpful, conversational, and focused on understanding the user's car b
       
       // Use rule-based fallback for better user experience
       const fallbackResponse = this.getRuleBasedResponse(query);
+      
+      // Track metrics - complete API failure counts as error with fallback
+      this.updateMetrics(startTime, fallbackResponse.confidence || 0.7, false, true);
+      
       console.log('🔄 Using rule-based fallback response');
       
       return fallbackResponse;

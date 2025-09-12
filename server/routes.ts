@@ -2798,8 +2798,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // 🚀 ENTERPRISE 5-AI PIPELINE E2E TESTING ENDPOINT (INVESTOR-GRADE)
   app.post("/api/enterprise/5ai-pipeline-test", async (req, res) => {
-    const demoMode = req.body.demoMode === true; // Opt-in demo mode only
     const traceId = `trace_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // 🔧 CANONICAL BOOLEAN PARSING (Architect Fix)
+    const parseBool = (v) => v === true || v === 'true' || v === '1' || v === 1;
+    const rawDemoMode = req.body?.demoMode ?? req.query?.demoMode ?? process.env.DEMO_MODE ?? 'false';
+    const demoMode = parseBool(rawDemoMode);
+    
+    console.log(`🔍 [${traceId}] DemoMode debug: raw='${rawDemoMode}' (${typeof rawDemoMode}), parsed=${demoMode}`);
     console.log(`🔬 [${traceId}] Starting 5-AI Pipeline E2E Test`);
     
     try {
@@ -2853,6 +2859,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const parallelStart = Date.now();
       
       // Define individual service promises with strict 2s timeouts
+      // 🏷️ BRANCH TRACING (Architect Fix)
+      console.log(`🔄 [${traceId}] Stage 2 (Claude): branch=${demoMode ? 'demo' : 'live'}`);
       const stage2Promise = demoMode ? 
         Promise.resolve({
           stage: 2,
@@ -2877,19 +2885,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error('Claude timeout')), 2000)
           )
-        ]).catch(() => ({
-          stage: 2,
-          service: "Claude",
-          latency: 2000,
-          success: true,
-          output: {
-            classification: "good",
-            confidence: 0.85,
-            authenticityScore: 88,
-            fallbackMode: true
-          }
-        }));
+        ]).catch((error) => {
+          console.log(`⚠️ [${traceId}] Claude failed: ${error.message}`);
+          return {
+            stage: 2,
+            service: "Claude",
+            latency: 2000,
+            success: false,
+            error: error.message,
+            fallbackUsed: true
+          };
+        });
       
+      console.log(`🔄 [${traceId}] Stage 3 (GPT-4o): branch=${demoMode ? 'demo' : 'live'}`);
       const stage3Promise = demoMode ?
         Promise.resolve({
           stage: 3,
@@ -3031,9 +3039,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add all results to pipeline
       pipelineResults.stages.push(stage2Result, stage3Result, stage4Result, stage5Result);
 
-      // Calculate accurate enterprise-grade pipeline metrics
+      // 🕐 ACCURATE WALL-CLOCK TIMING (Architect Fix)
       const parallelLatency = Date.now() - parallelStart;
-      pipelineResults.totalLatency = Date.now() - startTime;
+      const totalLatency = Date.now() - startTime;
+      pipelineResults.totalLatency = totalLatency;
+      pipelineResults.parallelLatency = parallelLatency;
+      
+      console.log(`⏱️ [${traceId}] Timing: parallel=${parallelLatency}ms, total=${totalLatency}ms`);
       
       const successfulStages = pipelineResults.stages.filter(s => s.success).length;
       const fallbackStages = pipelineResults.stages.filter(s => s.output?.fallbackMode).length;
