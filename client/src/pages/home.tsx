@@ -310,16 +310,15 @@ export default function Home() {
               </p>
               <Button 
                 onClick={() => {
-                  const message = encodeURIComponent("Hi! I'm interested in enterprise partnerships and subscriptions with CarArth. Please share more details about your enterprise services.");
-                  window.open(`https://wa.me/919573424321?text=${message}`, '_blank');
+                  window.location.href = 'mailto:connect@cararth.com?subject=Enterprise Partnership Inquiry&body=Hi! I\'m interested in enterprise partnerships and subscriptions with CarArth. Please share more details about your enterprise services.';
                 }}
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold"
                 data-testid="button-enterprise-contact"
               >
                 💼 Contact for Enterprise Partnership
               </Button>
               <p className="text-sm text-blue-600 dark:text-blue-400 mt-2">
-                Get instant response on WhatsApp
+                Get professional response via email
               </p>
             </div>
           </div>
