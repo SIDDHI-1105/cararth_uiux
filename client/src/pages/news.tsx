@@ -12,7 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { 
   MessageSquare, Eye, Calendar, Plus, 
-  MessageCircle, Globe, ExternalLink, LogIn
+  MessageCircle, Globe, ExternalLink, LogIn,
+  Heart, Bookmark, Share2, ThumbsUp, TrendingUp,
+  Image as ImageIcon, Play
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useForm } from "react-hook-form";
@@ -33,6 +35,12 @@ interface ForumPost {
   isExternal?: boolean;
   sourceUrl?: string;
   attribution?: string;
+  coverImage?: string;
+  likes?: number;
+  isLiked?: boolean;
+  isBookmarked?: boolean;
+  readTime?: string;
+  trending?: boolean;
 }
 
 // Post creation form schema
