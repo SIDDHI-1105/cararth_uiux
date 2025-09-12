@@ -299,7 +299,7 @@ export const sellerInquiries = pgTable("seller_inquiries", {
   message: text("message"),
   
   // Platform routing
-  source: text("source").notNull(), // themobilityhub, cars24, cardekho, facebook
+  source: text("source").notNull(), // cararth, cars24, cardekho, facebook
   isRouted: boolean("is_routed").default(false), // Whether forwarded to seller
   routedAt: timestamp("routed_at"),
   

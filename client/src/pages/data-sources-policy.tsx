@@ -135,8 +135,8 @@ export default function DataSourcesPolicy() {
               <p className="text-muted-foreground leading-relaxed">
                 If you encounter inaccurate, outdated, or inappropriate content, please report it to us immediately at:
                 <br />
-                <a href="mailto:kritarth@themobilityhub.in" className="text-primary hover:underline">
-                  kritarth@themobilityhub.in
+                <a href="mailto:connect@cararth.com" className="text-primary hover:underline">
+                  connect@cararth.com
                 </a>
               </p>
             </section>

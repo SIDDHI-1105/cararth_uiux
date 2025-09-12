@@ -174,8 +174,8 @@ export default function ApiCompliance() {
               <p className="text-muted-foreground leading-relaxed">
                 For compliance-related inquiries, concerns, or to report potential violations, please contact our legal compliance team at:
                 <br />
-                <a href="mailto:kritarth@themobilityhub.in" className="text-primary hover:underline">
-                  kritarth@themobilityhub.in
+                <a href="mailto:connect@cararth.com" className="text-primary hover:underline">
+                  connect@cararth.com
                 </a>
               </p>
             </section>

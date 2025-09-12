@@ -113,8 +113,8 @@ export default function PrivacyPolicy() {
               <p className="text-muted-foreground leading-relaxed">
                 If you have questions about this Privacy Policy, please contact us at:
                 <br />
-                <a href="mailto:kritarth@themobilityhub.in" className="text-primary hover:underline">
-                  kritarth@themobilityhub.in
+                <a href="mailto:connect@cararth.com" className="text-primary hover:underline">
+                  connect@cararth.com
                 </a>
               </p>
             </section>

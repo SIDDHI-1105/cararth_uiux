@@ -67,7 +67,7 @@ Structure the article with:
 4. Practical tips or advice
 5. Conclusion with key insights
 
-Include relevant hashtags like #themobilityhub #automotiveindia #preownedcars
+Include relevant hashtags like #cararth #automotiveindia #preownedcars
 
 Target length: 800-1200 words.`;
 
@@ -134,7 +134,7 @@ Target length: 800-1200 words.`;
         content,
         excerpt,
         category,
-        tags: ['#themobilityhub', '#automotiveindia', '#preownedcars', '#carmarket'],
+        tags: ['#cararth', '#automotiveindia', '#preownedcars', '#carmarket'],
         author: 'The Mobility Hub Editorial Team',
         publishedAt: new Date().toISOString(),
         readTime,

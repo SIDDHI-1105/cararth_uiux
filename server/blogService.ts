@@ -82,7 +82,7 @@ The pre-owned car segment has grown by 15% in 2024, with increasing demand for w
 **Final Verdict**: These vehicles offer the perfect balance of affordability, reliability, and features for budget-conscious Indian buyers.`,
         excerpt: 'Discover the best value-for-money pre-owned cars under ₹5 lakhs that offer reliability, fuel efficiency, and low maintenance costs. Complete with buying tips and market insights.',
         category: 'buying-guides',
-        tags: ['#themobilityhub', '#preownedcars', '#budget', '#india'],
+        tags: ['#cararth', '#preownedcars', '#budget', '#india'],
         author: 'The Mobility Hub Editorial Team',
         publishedAt: new Date().toISOString(),
         readTime: 8,
@@ -112,7 +112,7 @@ The rapid adoption of electric vehicles is reshaping the automotive landscape, c
 The transition period offers unique opportunities for smart buyers and sellers alike.`,
         excerpt: 'How the electric vehicle revolution is changing pre-owned car values and what it means for buyers and sellers in the Indian market.',
         category: 'market-trends',
-        tags: ['#themobilityhub', '#electricvehicles', '#markettrends', '#investment'],
+        tags: ['#cararth', '#electricvehicles', '#markettrends', '#investment'],
         author: 'The Mobility Hub Editorial Team',
         publishedAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
         readTime: 6,
@@ -181,7 +181,7 @@ Two of India's most trusted automotive brands go head-to-head. Here's everything
 - Both brands have strong EV roadmaps for 2024-2025`,
         excerpt: 'Detailed comparison between India\'s top two car brands - Maruti Suzuki and Hyundai. Find out which brand suits your needs and budget better.',
         category: 'buying-guides',
-        tags: ['#themobilityhub', '#marutisuzuki', '#hyundai', '#comparison'],
+        tags: ['#cararth', '#marutisuzuki', '#hyundai', '#comparison'],
         author: 'The Mobility Hub Editorial Team',
         publishedAt: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
         readTime: 7,
@@ -228,7 +228,7 @@ Two of India's most trusted automotive brands go head-to-head. Here's everything
 **Success Rate**: Following these tips increases approval chances by 85%!`,
         excerpt: 'Insider secrets and pro tips for getting your car loan approved at the best rates. Everything banks don\'t want you to know.',
         category: 'buying-guides',
-        tags: ['#themobilityhub', '#carloan', '#finance', '#tips'],
+        tags: ['#cararth', '#carloan', '#finance', '#tips'],
         author: 'The Mobility Hub Editorial Team',
         publishedAt: new Date(Date.now() - 259200000).toISOString(), // 3 days ago
         readTime: 4,
@@ -281,7 +281,7 @@ The pre-owned car market has seen significant price corrections across all segme
 **Bottom Line**: This is the best time in 3 years to buy a pre-owned car!`,
         excerpt: 'Pre-owned car prices have dropped significantly in Q1 2024. Here\'s your complete guide to the best buying opportunities and market predictions.',
         category: 'market-trends',
-        tags: ['#themobilityhub', '#marketreport', '#prices', '#trends'],
+        tags: ['#cararth', '#marketreport', '#prices', '#trends'],
         author: 'The Mobility Hub Editorial Team',
         publishedAt: new Date(Date.now() - 345600000).toISOString(), // 4 days ago
         readTime: 5,
@@ -359,10 +359,10 @@ The pre-owned car market has seen significant price corrections across all segme
     // For now, we'll simulate the sharing process
     
     const shareLinks = {
-      linkedin: `https://linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`https://themobilityhub.in/blog/${article.id}`)}`,
-      twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(posts.twitter.content)}&url=${encodeURIComponent(`https://themobilityhub.in/blog/${article.id}`)}`,
-      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`https://themobilityhub.in/blog/${article.id}`)}`,
-      whatsapp: `https://wa.me/?text=${encodeURIComponent(`${posts.whatsapp.content} https://themobilityhub.in/blog/${article.id}`)}`
+      linkedin: `https://linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`https://cararth.com/blog/${article.id}`)}`,
+      twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(posts.twitter.content)}&url=${encodeURIComponent(`https://cararth.com/blog/${article.id}`)}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`https://cararth.com/blog/${article.id}`)}`,
+      whatsapp: `https://wa.me/?text=${encodeURIComponent(`${posts.whatsapp.content} https://cararth.com/blog/${article.id}`)}`
     };
 
     article.status = 'shared';
@@ -374,8 +374,8 @@ The pre-owned car market has seen significant price corrections across all segme
   }
 
   private generateSocialMediaPosts(article: BlogArticle): Record<string, SocialMediaPost> {
-    const baseUrl = 'https://themobilityhub.in/blog/' + article.id;
-    const hashtags = ['#themobilityhub', '#preownedcars', '#automotiveindia'];
+    const baseUrl = 'https://cararth.com/blog/' + article.id;
+    const hashtags = ['#cararth', '#preownedcars', '#automotiveindia'];
 
     return {
       linkedin: {

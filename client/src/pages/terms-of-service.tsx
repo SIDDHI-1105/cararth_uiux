@@ -123,8 +123,8 @@ export default function TermsOfService() {
               <p className="text-muted-foreground leading-relaxed">
                 For questions about these Terms of Service, please contact us at:
                 <br />
-                <a href="mailto:kritarth@themobilityhub.in" className="text-primary hover:underline">
-                  kritarth@themobilityhub.in
+                <a href="mailto:connect@cararth.com" className="text-primary hover:underline">
+                  connect@cararth.com
                 </a>
               </p>
             </section>
