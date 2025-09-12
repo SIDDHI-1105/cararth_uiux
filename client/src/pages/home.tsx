@@ -19,6 +19,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ChevronLeft, ChevronRight, Search, Globe, Star, Crown, MessageSquare, Users } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { type Car } from "@shared/schema";
+
+// Type definition for usage status data
+interface UsageStatus {
+  isAuthenticated: boolean;
+  searchesLeft: number;
+  totalLimit: number;
+}
 import { BrandWordmark } from "@/components/brand-wordmark";
 import { Link } from "wouter";
 
@@ -136,10 +143,10 @@ export default function Home() {
   };
 
   const handleFilterChange = (filterData: {
-    model: string;
-    fuelType: string;
-    transmission: string;
-    location: string;
+    model?: string;
+    fuelType?: string;
+    transmission?: string;
+    location?: string;
     budgetRange: [number, number];
   }) => {
     const newFilters: Record<string, any> = {};
@@ -337,11 +344,14 @@ export default function Home() {
               <TabsTrigger value="marketplace" className="flex items-center gap-2">
                 <Globe className="w-4 h-4" />
                 All Portals {marketplaceResult ? `(${marketplaceResult.analytics?.totalListings || 0})` : ''}
-                {usageStatusData && !(usageStatusData as any).isAuthenticated && (
-                  <Badge variant="secondary" className="text-xs">
-                    {(usageStatusData as any).searchesLeft}/{(usageStatusData as any).totalLimit} in 30d
-                  </Badge>
-                )}
+                {(() => {
+                  const usage = usageStatusData as UsageStatus | undefined;
+                  return usage && !usage.isAuthenticated ? (
+                    <Badge variant="secondary" className="text-xs">
+                      {usage.searchesLeft}/{usage.totalLimit} in 30d
+                    </Badge>
+                  ) : null;
+                })()}
               </TabsTrigger>
             </TabsList>
 
