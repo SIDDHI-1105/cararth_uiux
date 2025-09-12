@@ -42,6 +42,7 @@ export default function Home() {
   const [showSearchLimitPopup, setShowSearchLimitPopup] = useState(false);
   const [searchLimitData, setSearchLimitData] = useState<any>(null);
   const [usageStatus, setUsageStatus] = useState<any>(null);
+  const [currentSearchQuery, setCurrentSearchQuery] = useState<string>('');
 
   // Dynamic SEO based on search filters
   const dynamicSEO = useMemo(() => {
@@ -111,6 +112,19 @@ export default function Home() {
   const handleHeroSearch = (searchFilters: any) => {
     console.log('🔍 Hero search called with:', searchFilters);
     setActiveTab("marketplace");
+    
+    // Create search query string for AI display
+    const queryParts = [];
+    if (searchFilters.brand && searchFilters.brand !== "all") queryParts.push(searchFilters.brand);
+    if (searchFilters.city && searchFilters.city !== "all") queryParts.push(searchFilters.city);
+    if (searchFilters.fuelType && searchFilters.fuelType !== "all") queryParts.push(searchFilters.fuelType);
+    if (searchFilters.budget && searchFilters.budget !== "all") {
+      const [min, max] = searchFilters.budget.split("-").map(Number);
+      if (min && max && max !== 99999999) {
+        queryParts.push(`₹${min/100000}L-${max/100000}L`);
+      }
+    }
+    setCurrentSearchQuery(queryParts.join(' ') || 'All Cars');
     
     // Convert hero search to marketplace search format
     const marketplaceFilters: any = {
@@ -257,6 +271,20 @@ export default function Home() {
 
   const handleMarketplaceSearch = (searchFilters: any) => {
     console.log('🔄 Starting marketplace search...');
+    
+    // Update search query if not already set
+    if (!currentSearchQuery) {
+      const queryParts = [];
+      if (searchFilters.brand) queryParts.push(searchFilters.brand);
+      if (searchFilters.city) queryParts.push(searchFilters.city);
+      if (searchFilters.fuelType) queryParts.push(searchFilters.fuelType);
+      if (searchFilters.priceMin || searchFilters.priceMax) {
+        const min = searchFilters.priceMin || 0;
+        const max = searchFilters.priceMax || 1000000;
+        queryParts.push(`₹${min/100000}L-${max/100000}L`);
+      }
+      setCurrentSearchQuery(queryParts.join(' ') || 'All Cars');
+    }
     
     // Clean up filters
     const cleanFilters = { ...searchFilters };
@@ -425,6 +453,14 @@ export default function Home() {
                   searchResult={marketplaceResult}
                   isLoading={marketplaceSearch.isPending}
                   error={marketplaceError}
+                  searchQuery={currentSearchQuery}
+                />
+              ) : marketplaceSearch.isPending ? (
+                <MarketplaceResults 
+                  searchResult={null as any}
+                  isLoading={true}
+                  error={null}
+                  searchQuery={currentSearchQuery}
                 />
               ) : (
                 <div className="text-center py-12">
