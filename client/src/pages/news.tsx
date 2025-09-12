@@ -196,7 +196,7 @@ export default function ThrottleTalkPage() {
                           <FormItem>
                             <FormLabel>Title</FormLabel>
                             <FormControl>
-                              <Input placeholder="What's on your mind? #themobilityhub.in" {...field} data-testid="input-post-title" />
+                              <Input placeholder="What's on your mind? #cararth.com" {...field} data-testid="input-post-title" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -233,7 +233,7 @@ export default function ThrottleTalkPage() {
                             <FormLabel>Content</FormLabel>
                             <FormControl>
                               <Textarea 
-                                placeholder="Share your thoughts, experiences, or ask questions with #themobilityhub.in community..."
+                                placeholder="Share your thoughts, experiences, or ask questions with #cararth.com community..."
                                 className="min-h-[120px]"
                                 {...field}
                                 data-testid="textarea-post-content"
