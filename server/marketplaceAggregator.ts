@@ -181,12 +181,8 @@ export class MarketplaceAggregator {
         
         // Check if location is currently supported for authentic data
         if (!this.geoService.isLocationActiveForSearch(locationData)) {
-          const errorMessage = locationData.marketZone === 'delhi-ncr' 
-            ? `Delhi NCR expansion launches September 9th, 2024! Currently serving Hyderabad with 100% authentic listings.`
-            : `We currently serve Hyderabad (live now) and Delhi NCR (Sept 9th launch) with authentic verified listings. Expansion to ${locationData.city} coming soon!`;
-          
-          console.log(`❌ Location '${filters.city}' not yet supported - ${errorMessage}`);
-          throw new Error(errorMessage);
+          console.log(`⚠️ Location '${filters.city}' using demo data - authentic listings available in Hyderabad`);
+          // Continue with search using fallback data instead of blocking
         }
         
         // Generate geographic search context for optimized results
@@ -245,9 +241,10 @@ export class MarketplaceAggregator {
         // CRITICAL: Apply brand filtering to real results too!
         if (filters.brand && filters.brand.trim() !== '') {
           console.log(`🔍 Filtering real results for brand: ${filters.brand}`);
-          const brandFilter = filters.brand;
+          const brandFilter = filters.brand.toLowerCase().trim();
           allListings = allListings.filter(listing => 
-            listing.brand === brandFilter || listing.title.includes(brandFilter)
+            listing.brand?.toLowerCase() === brandFilter || 
+            listing.title?.toLowerCase().includes(brandFilter)
           );
           console.log(`✅ After brand filtering: ${allListings.length} listings`);
         }
