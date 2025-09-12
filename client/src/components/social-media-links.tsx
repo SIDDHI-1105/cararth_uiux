@@ -1,4 +1,4 @@
-import { Facebook, Twitter, Instagram, Youtube, Linkedin } from "lucide-react";
+import { Facebook, X, Instagram, Youtube, Linkedin } from "lucide-react";
 
 interface SocialMediaLinksProps {
   className?: string;
@@ -34,10 +34,10 @@ export default function SocialMediaLinks({
       </span>
       <span 
         className="text-muted-foreground/50 cursor-not-allowed opacity-60"
-        data-testid="social-twitter"
-        title="Coming Soon - Follow us on Twitter"
+        data-testid="social-x"
+        title="Coming Soon - Follow us on X"
       >
-        <Twitter className={iconSize} />
+        <X className={iconSize} />
       </span>
       <span 
         className="text-muted-foreground/50 cursor-not-allowed opacity-60"
