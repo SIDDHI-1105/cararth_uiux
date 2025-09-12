@@ -158,6 +158,16 @@ const checkSearchLimit = async (req: any, res: any, next: any) => {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize services
   const automotiveNewsService = new AutomotiveNewsService();
+  
+  // Initialize MarketplaceAggregator with database storage for caching
+  if (process.env.DATABASE_URL) {
+    const { DatabaseStorage } = await import('./dbStorage.js');
+    const dbStorage = new DatabaseStorage();
+    initializeMarketplaceAggregator(dbStorage);
+    console.log('🚀 MarketplaceAggregator initialized with database caching');
+  } else {
+    console.log('⚠️ Using MarketplaceAggregator without database caching');
+  }
 
   // Auth middleware
   await setupAuth(app);
