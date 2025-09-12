@@ -1566,10 +1566,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     // Redirect to appropriate partner based on partnerId
     const redirectUrls = {
-      kuwy_partner: `https://www.kuwy.in/klass?ref=themobilityhub&amount=${amount}&tenure=${tenure}`,
-      dialabank_affiliate: `https://dialabank.com/car-loan/?ref=themobilityhub&amount=${amount}&tenure=${tenure}`,
-      sbi_partner: `https://www.sbi.co.in/web/personal-banking/loans/auto-loans/car-loan?ref=themobilityhub`,
-      hdfc_partner: `https://www.hdfcbank.com/personal/borrow/popular-loans/auto-loan?ref=themobilityhub`
+      kuwy_partner: `https://www.kuwy.in/klass?ref=cararth&amount=${amount}&tenure=${tenure}`,
+      dialabank_affiliate: `https://dialabank.com/car-loan/?ref=cararth&amount=${amount}&tenure=${tenure}`,
+      sbi_partner: `https://www.sbi.co.in/web/personal-banking/loans/auto-loans/car-loan?ref=cararth`,
+      hdfc_partner: `https://www.hdfcbank.com/personal/borrow/popular-loans/auto-loan?ref=cararth`
     };
     
     const redirectUrl = redirectUrls[partnerId as string] || 'https://www.kuwy.in/klass';
@@ -1665,7 +1665,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const imageConfigs = {
       'blog-image': {
         title: 'Automotive News',
-        subtitle: '#themobilityhub',
+        subtitle: '#cararth',
         icon: '🚗',
         gradient: ['#3b82f6', '#06b6d4'],
         bgColor: '#f1f5f9'
