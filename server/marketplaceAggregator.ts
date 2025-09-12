@@ -330,9 +330,9 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
     try {
       console.log('🔍 Making Gemini API call...');
       
-      // Optimized timeout to prevent hanging
+      // Faster timeout to prevent hanging
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Gemini API timeout')), 20000);
+        setTimeout(() => reject(new Error('Gemini API timeout')), 5000);
       });
       
       const apiPromise = ai.models.generateContent({
@@ -370,7 +370,8 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
       console.error('❌ Gemini marketplace error:', error);
     }
     
-    // Fallback to traditional search
+    // GUARANTEED fallback - always return results
+    console.log('🔄 Using guaranteed fallback results');
     return this.getFallbackResults(filters);
   }
   
