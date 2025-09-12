@@ -14,9 +14,9 @@ export function BrandWordmark({
 }: BrandWordmarkProps) {
   // Responsive CSS classes controlling only height for proper aspect ratio
   const responsiveClasses = {
-    header: "h-12 sm:h-14 md:h-16 w-auto max-w-full",
-    hero: "h-16 sm:h-20 md:h-24 lg:h-28 w-auto max-w-full", 
-    footer: "h-8 sm:h-10 md:h-12 w-auto max-w-full"
+    header: "h-16 sm:h-20 md:h-24 lg:h-28 w-auto max-w-full",
+    hero: "h-20 sm:h-24 md:h-28 lg:h-32 xl:h-36 w-auto max-w-full", 
+    footer: "h-12 sm:h-14 md:h-16 w-auto max-w-full"
   };
   
   return (
