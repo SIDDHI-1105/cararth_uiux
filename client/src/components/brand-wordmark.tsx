@@ -30,12 +30,11 @@ export function BrandWordmark({
       <div className={cn("font-bold tracking-tight leading-none relative", textSizes[variant])}>
         <span className="text-orange-600">Car</span>
         <span className="text-orange-500">A</span>
-        <span className="relative text-white" style={{
+        <span className="text-white" style={{
           WebkitTextStroke: '2px #1e40af',
           textStroke: '2px #1e40af',
           fontWeight: 'bold'
         }}>
-          <span className="absolute top-1/4 left-0 right-0 h-0.5 bg-navy-600" style={{backgroundColor: '#1e40af'}}></span>
           rth
         </span>
         <span className="text-green-600">.com</span>
