@@ -27,10 +27,13 @@ export function BrandWordmark({
   return (
     <div className={cn("flex flex-col", className)} data-testid="caararth-logo">
       {/* Main CarArth wordmark */}
-      <div className={cn("font-bold tracking-tight leading-none", textSizes[variant])}>
+      <div className={cn("font-bold tracking-tight leading-none relative", textSizes[variant])}>
         <span className="text-orange-600">Car</span>
         <span className="text-orange-500">A</span>
-        <span className="text-gray-300 dark:text-gray-400">rth</span>
+        <span className="text-gray-300 dark:text-gray-400 relative">
+          <span className="absolute -top-1 left-0 right-0 h-0.5 bg-navy-600" style={{backgroundColor: '#1e40af'}}></span>
+          rth
+        </span>
         <span className="text-green-600">.com</span>
       </div>
       
@@ -38,7 +41,7 @@ export function BrandWordmark({
       {showTagline && (
         <div className={cn("font-bold text-gray-800 dark:text-gray-200 mt-1", taglineSizes[variant])}>
           India's first used car search engine
-          <span className="text-blue-500 font-semibold">*</span>
+          <span className="text-black dark:text-white font-semibold">*</span>
         </div>
       )}
     </div>
