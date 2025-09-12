@@ -247,6 +247,10 @@ export class PerformanceMonitor {
     return Object.fromEntries(this.metrics.entries());
   }
   
+  getMetrics(service?: string) {
+    return this.getStats(service);
+  }
+  
   getRecommendations(): string[] {
     const recommendations: string[] = [];
     

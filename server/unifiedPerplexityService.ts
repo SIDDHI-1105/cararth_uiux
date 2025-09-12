@@ -366,7 +366,6 @@ export class UnifiedPerplexityService {
         try {
           const result = await withRetry(async () => {
             return await withTimeout(
-              getOptimalTimeout('perplexity', 'standard'),
               async () => {
                 const response = await fetch(this.baseUrl, {
                   method: 'POST',
@@ -384,7 +383,8 @@ export class UnifiedPerplexityService {
 
                 const data = await response.json();
                 return data.choices[0]?.message?.content || '';
-              }
+              },
+              getOptimalTimeout('perplexity', 'standard')
             );
           }, retryConfigs.network, isRetryableError.network);
           
