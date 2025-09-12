@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils";
-import cararthLogo from "@assets/generated_images/CarArth_logo_with_correct_branding_9738ebbe.png";
 
 interface BrandWordmarkProps {
   variant?: "header" | "hero" | "footer";
@@ -12,22 +11,35 @@ export function BrandWordmark({
   showTagline = true, 
   className 
 }: BrandWordmarkProps) {
-  // Use clamp-based sizing for better responsive scaling
-  const sizeStyles = {
-    header: { height: 'clamp(60px, 8vw, 100px)' },
-    hero: { height: 'clamp(80px, 12vw, 140px)' }, 
-    footer: { height: 'clamp(40px, 6vw, 80px)' }
+  // Large, visible text sizes for each variant
+  const textSizes = {
+    header: "text-2xl sm:text-3xl md:text-4xl lg:text-5xl",
+    hero: "text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl", 
+    footer: "text-xl sm:text-2xl md:text-3xl"
+  };
+  
+  const taglineSizes = {
+    header: "text-sm sm:text-base md:text-lg",
+    hero: "text-lg sm:text-xl md:text-2xl lg:text-3xl", 
+    footer: "text-xs sm:text-sm md:text-base"
   };
   
   return (
-    <img 
-      src={cararthLogo}
-      alt="CarArth - India's First Used Car Search Engine"
-      className={cn("block object-contain drop-shadow-md dark:drop-shadow-[0_1px_1px_rgba(255,255,255,0.6)] w-auto max-w-full", className)}
-      style={sizeStyles[variant]}
-      fetchpriority="high"
-      loading="eager"
-      data-testid="caararth-logo"
-    />
+    <div className={cn("flex flex-col", className)} data-testid="caararth-logo">
+      {/* Main CarArth wordmark */}
+      <div className={cn("font-bold tracking-tight leading-none", textSizes[variant])}>
+        <span className="text-foreground">Car</span>
+        <span className="text-orange-500">A</span>
+        <span className="text-foreground">rth</span>
+      </div>
+      
+      {/* Tagline */}
+      {showTagline && (
+        <div className={cn("font-medium text-muted-foreground mt-1", taglineSizes[variant])}>
+          India's first used car search engine
+          <span className="text-orange-500 font-semibold">*</span>
+        </div>
+      )}
+    </div>
   );
 }
