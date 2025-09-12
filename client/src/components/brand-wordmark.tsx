@@ -11,30 +11,37 @@ export function BrandWordmark({
   showTagline = true, 
   className 
 }: BrandWordmarkProps) {
-  // Size presets based on variant
-  const sizes = {
-    header: { width: 140, height: showTagline ? 40 : 28 },
-    hero: { width: 280, height: showTagline ? 80 : 56 },
-    footer: { width: 120, height: showTagline ? 36 : 24 }
+  // Responsive CSS classes controlling only height for proper aspect ratio
+  const responsiveClasses = {
+    header: showTagline 
+      ? "h-8 sm:h-10 md:h-11 w-auto max-w-full" 
+      : "h-6 sm:h-7 md:h-8 w-auto max-w-full",
+    hero: showTagline 
+      ? "h-12 sm:h-14 md:h-16 lg:h-20 w-auto max-w-full" 
+      : "h-10 sm:h-12 md:h-14 lg:h-16 w-auto max-w-full",
+    footer: showTagline 
+      ? "h-7 sm:h-8 md:h-9 w-auto max-w-full" 
+      : "h-6 sm:h-7 md:h-8 w-auto max-w-full"
   };
   
-  const size = sizes[variant];
+  // Use consistent viewBox that scales properly
+  const viewBoxWidth = 280;
+  const viewBoxHeight = showTagline ? 80 : 56;
   
   return (
     <svg
-      width={size.width}
-      height={size.height}
-      viewBox={`0 0 ${size.width} ${size.height}`}
-      className={cn("block", className)}
+      viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
+      preserveAspectRatio="xMidYMid meet"
+      className={cn("block", responsiveClasses[variant], className)}
       shapeRendering="geometricPrecision"
       style={{ vectorEffect: "non-scaling-stroke" }}
     >
       {/* CarArth wordmark with proper kerning */}
       <text
         x="0"
-        y={showTagline ? "20" : "18"}
+        y="36"
         fill="currentColor"
-        fontSize={variant === "hero" ? "24" : variant === "header" ? "20" : "16"}
+        fontSize="32"
         fontFamily="Inter, system-ui, sans-serif"
         fontWeight="700"
         letterSpacing="-0.025em"
@@ -48,16 +55,16 @@ export function BrandWordmark({
       {showTagline && (
         <text
           x="0"
-          y={variant === "hero" ? "36" : variant === "header" ? "32" : "28"}
+          y="58"
           fill="currentColor"
-          fontSize={variant === "hero" ? "10" : variant === "header" ? "9" : "8"}
+          fontSize="12"
           fontFamily="Inter, system-ui, sans-serif"
           fontWeight="400"
           opacity="0.7"
         >
           India's first used car search engine
           <tspan
-            fontSize={variant === "hero" ? "8" : variant === "header" ? "7" : "6"}
+            fontSize="10"
             baselineShift="super"
           >
             *
