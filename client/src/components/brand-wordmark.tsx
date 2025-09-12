@@ -31,7 +31,7 @@ export function BrandWordmark({
         <span className="text-orange-600">Car</span>
         <span className="text-orange-500">A</span>
         <span className="text-gray-300 dark:text-gray-400 relative">
-          <span className="absolute top-1/2 left-0 right-0 h-0.5 bg-navy-600" style={{backgroundColor: '#1e40af'}}></span>
+          <span className="absolute top-1/4 left-0 right-0 h-0.5 bg-navy-600" style={{backgroundColor: '#1e40af'}}></span>
           rth
         </span>
         <span className="text-green-600">.com</span>
