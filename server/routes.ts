@@ -38,6 +38,7 @@ import { cacheManager, withCache, HyderabadCacheWarmer } from "./advancedCaching
 import { enhanceHyderabadSearch, HyderabadMarketIntelligence } from "./hyderabadOptimizations.js";
 import { fastSearchService } from "./fastSearch.js";
 import { claudeService } from "./claudeService.js";
+import { unifiedPerplexityService } from "./unifiedPerplexityService.js";
 
 // Developer mode check
 const isDeveloperMode = (req: any) => {
@@ -2614,6 +2615,183 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'unhealthy',
         error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  // 🚀 ENTERPRISE UNIFIED PERPLEXITY SERVICE ENDPOINTS
+  // Enhanced market intelligence with enterprise-grade caching and rate limiting
+  
+  app.get('/api/perplexity/market-intelligence', async (req, res) => {
+    try {
+      const { location = 'India', brand, priceRange, segment } = req.query;
+      
+      console.log(`🧠 Unified Perplexity: Market intelligence for ${location}...`);
+      
+      const insights = await unifiedPerplexityService.getMarketIntelligence(
+        location as string, 
+        {
+          brand: brand as string,
+          priceRange: priceRange as string,
+          segment: segment as string
+        }
+      );
+      
+      res.json({
+        success: true,
+        service: 'unified-perplexity-v1',
+        location,
+        insights,
+        meta: {
+          count: insights.length,
+          cacheOptimized: true,
+          rateLimited: true,
+          timestamp: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      console.error('❌ Unified Perplexity market intelligence error:', error);
+      res.status(500).json({
+        error: 'Market intelligence service temporarily unavailable',
+        fallbackAvailable: true,
+        message: error instanceof Error ? error.message : 'Service error'
+      });
+    }
+  });
+
+  app.get('/api/perplexity/automotive-news', async (req, res) => {
+    try {
+      const { category, relevance = 'high', region } = req.query;
+      
+      console.log('📰 Unified Perplexity: Fetching automotive news...');
+      
+      const news = await unifiedPerplexityService.getAutomotiveNews({
+        category: category as string,
+        relevance: relevance as 'high' | 'medium' | 'low',
+        region: region as string
+      });
+      
+      res.json({
+        success: true,
+        service: 'unified-perplexity-v1',
+        news,
+        filters: { category, relevance, region },
+        meta: {
+          count: news.length,
+          smartCaching: '15min TTL',
+          enterpriseFeatures: true,
+          timestamp: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      console.error('❌ Unified Perplexity automotive news error:', error);
+      res.status(500).json({
+        error: 'Automotive news service temporarily unavailable', 
+        fallbackAvailable: true,
+        message: error instanceof Error ? error.message : 'Service error'
+      });
+    }
+  });
+
+  app.get('/api/perplexity/brand-analysis/:brand', async (req, res) => {
+    try {
+      const { brand } = req.params;
+      const { location } = req.query;
+      
+      console.log(`🎯 Unified Perplexity: Brand analysis for ${brand}...`);
+      
+      const analysis = await unifiedPerplexityService.getBrandAnalysis(
+        brand, 
+        location as string
+      );
+      
+      res.json({
+        success: true,
+        service: 'unified-perplexity-v1',
+        brand,
+        location: location || 'India',
+        analysis,
+        meta: {
+          cacheOptimized: '1hr TTL',
+          circuitBreakerProtected: true,
+          timestamp: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      console.error(`❌ Unified Perplexity brand analysis error for ${req.params.brand}:`, error);
+      res.status(500).json({
+        error: 'Brand analysis service temporarily unavailable',
+        brand: req.params.brand,
+        fallbackAvailable: true,
+        message: error instanceof Error ? error.message : 'Service error'
+      });
+    }
+  });
+
+  // Batch processing endpoint for 5-AI pipeline integration
+  app.post('/api/perplexity/batch-analysis', async (req, res) => {
+    try {
+      const { requests } = req.body;
+      
+      if (!Array.isArray(requests) || requests.length === 0) {
+        return res.status(400).json({
+          error: 'Invalid batch request format',
+          expected: 'Array of { type, params } objects'
+        });
+      }
+      
+      console.log(`📊 Unified Perplexity: Batch processing ${requests.length} requests...`);
+      
+      const results = await unifiedPerplexityService.batchProcess(requests);
+      
+      res.json({
+        success: true,
+        service: 'unified-perplexity-v1',
+        batchSize: requests.length,
+        results,
+        meta: {
+          processedAt: new Date().toISOString(),
+          rateLimited: true,
+          enterpriseGrade: true
+        }
+      });
+    } catch (error) {
+      console.error('❌ Unified Perplexity batch processing error:', error);
+      res.status(500).json({
+        error: 'Batch processing service temporarily unavailable',
+        fallbackAvailable: true,
+        message: error instanceof Error ? error.message : 'Service error'
+      });
+    }
+  });
+
+  // Performance and status monitoring endpoint
+  app.get('/api/perplexity/status', async (req, res) => {
+    try {
+      const serviceStatus = unifiedPerplexityService.getServiceStatus();
+      const performanceMetrics = unifiedPerplexityService.getPerformanceMetrics();
+      
+      res.json({
+        success: true,
+        service: 'unified-perplexity-v1',
+        status: 'operational',
+        serviceStatus,
+        performanceMetrics,
+        features: {
+          rateLimiting: true,
+          smartCaching: true,
+          circuitBreaker: true,
+          performanceMonitoring: true,
+          batchProcessing: true,
+          enterpriseGrade: true
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('❌ Unified Perplexity status check error:', error);
+      res.status(500).json({
+        error: 'Status service temporarily unavailable',
+        message: error instanceof Error ? error.message : 'Service error'
       });
     }
   });
