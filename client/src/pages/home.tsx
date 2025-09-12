@@ -285,6 +285,13 @@ export default function Home() {
 
   return (
     <FullWidthLayout>
+      <SEOHead 
+        title={dynamicSEO.title}
+        description={dynamicSEO.description}
+        keywords="used cars India, car search engine, compare cars, authentic car listings, AI car recommendations, cross-platform car search, car marketplace India, used car price comparison, CarDekho, OLX, Cars24"
+        structuredData={structuredData}
+        canonical="https://cararth.com/"
+      />
       <div>
         <HeroSection onSearch={handleHeroSearch} />
         

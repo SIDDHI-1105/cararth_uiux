@@ -146,7 +146,7 @@ export default function CommunityPage() {
       year: 2019,
       owner: 'SpeedyPriya',
       story: 'This little rocket has been my companion through 80,000km of pure joy. From daily commutes to weekend getaways, it\'s never let me down.',
-      image: '/api/placeholder/300/200',
+      image: swiftImage,
       specs: ['1.2L Petrol', 'Manual', '22 kmpl', '83 bhp'],
       rating: 4.8,
       category: 'modern'
@@ -158,7 +158,7 @@ export default function CommunityPage() {
       year: 2021,
       owner: 'AdventureAnil',
       story: 'Bought it for family needs, fell in love with its character. Perfect blend of comfort, style, and reliability for the Indian road conditions.',
-      image: '/api/placeholder/300/200', 
+      image: cretaImage, 
       specs: ['1.5L Petrol', 'CVT', '17 kmpl', '115 bhp'],
       rating: 4.6,
       category: 'modern'
