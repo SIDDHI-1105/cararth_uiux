@@ -34,7 +34,9 @@ export function BrandWordmark({
           WebkitTextStroke: '2px #1e40af',
           textStroke: '2px #1e40af',
           fontWeight: 'bold',
-          letterSpacing: '0.15em'
+          letterSpacing: '0.15em',
+          textShadow: '2px 2px 0px #1e40af, 4px 4px 0px #1a365d, 6px 6px 8px rgba(0,0,0,0.4)',
+          transform: 'translateZ(0)'
         }}>
           rth
         </span>
