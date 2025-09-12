@@ -207,7 +207,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
       // Check search count in rolling 30-day window
-      const searchCount = await storage.getAnonymousSearchCountSince(visitorId, thirtyDaysAgo);
+      let searchCount = 0;
+      try {
+        searchCount = await storage.getAnonymousSearchCountSince(visitorId, thirtyDaysAgo);
+      } catch (dbError: any) {
+        // If table doesn't exist, default to 0 searches
+        if (dbError.code === '42P01') {
+          console.warn('Anonymous search activity table not found, defaulting to 0 searches');
+          searchCount = 0;
+        } else {
+          throw dbError; // Re-throw other database errors
+        }
+      }
       const searchesLeft = Math.max(0, 10 - searchCount);
 
       res.json({
