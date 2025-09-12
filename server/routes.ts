@@ -14,7 +14,7 @@ import {
   insertPhoneVerificationSchema
 } from "@shared/schema";
 import { priceComparisonService } from "./priceComparison";
-import { marketplaceAggregator } from "./marketplaceAggregator";
+import { marketplaceAggregator, initializeMarketplaceAggregator } from "./marketplaceAggregator";
 import { AutomotiveNewsService } from "./automotiveNews";
 import { z } from "zod";
 import { setupAuth, isAuthenticated } from "./replitAuth";

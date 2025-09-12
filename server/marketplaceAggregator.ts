@@ -14,6 +14,8 @@ import {
   performanceMonitor,
   getOptimalTimeout
 } from './optimizedTimeouts.js';
+import { CacheManager } from './cacheManager.js';
+import type { DatabaseStorage, OptimizedSearchFilters } from './dbStorage.js';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 const firecrawl = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY || "" });
@@ -159,15 +161,93 @@ export class MarketplaceAggregator {
   
   private geoService: GeographicIntelligenceService;
   private historicalService: HistoricalIntelligenceService;
+  private cacheManager: CacheManager;
   
-  constructor() {
+  constructor(databaseStorage?: DatabaseStorage) {
     this.aiExtractor = new AIDataExtractionService();
     this.geoService = new GeographicIntelligenceService();
     this.historicalService = new HistoricalIntelligenceService();
+    
+    if (databaseStorage) {
+      this.cacheManager = new CacheManager(databaseStorage);
+    }
+  }
+
+  /**
+   * Background refresh method for stale-while-revalidate cache strategy
+   */
+  private async refreshCacheInBackground(filters: DetailedFilters, optimizedFilters: OptimizedSearchFilters): Promise<void> {
+    try {
+      console.log('🔄 Starting background cache refresh...');
+      
+      // Perform live search without using cache
+      const tempCacheManager = this.cacheManager;
+      this.cacheManager = undefined; // Temporarily disable cache for fresh data
+      
+      const freshResult = await this.searchAcrossPortals(filters);
+      
+      // Restore cache manager
+      this.cacheManager = tempCacheManager;
+      
+      console.log('✅ Background cache refresh completed');
+    } catch (error) {
+      console.error('❌ Background cache refresh failed:', error);
+    }
   }
 
   async searchAcrossPortals(filters: DetailedFilters): Promise<AggregatedSearchResult> {
     console.log('🔍 Searching used car portals with filters:', filters);
+    
+    // Convert DetailedFilters to OptimizedSearchFilters for cache compatibility
+    const optimizedFilters: OptimizedSearchFilters = {
+      brand: filters.brand,
+      model: filters.model,
+      priceMin: filters.priceMin,
+      priceMax: filters.priceMax,
+      city: filters.city,
+      state: filters.state,
+      fuelType: filters.fuelType,
+      transmission: filters.transmission,
+      yearMin: filters.yearMin,
+      yearMax: filters.yearMax,
+      mileageMax: filters.mileageMax,
+      owners: filters.owners,
+      condition: filters.condition,
+      hasImages: filters.hasImages,
+      hasWarranty: filters.hasWarranty,
+      sortBy: (filters.sortBy === 'date' || filters.sortBy === 'relevance') ? 'createdAt' : filters.sortBy,
+      sortOrder: filters.sortOrder,
+      limit: filters.limit,
+      offset: 0
+    };
+    
+    // 💾 CACHE FIRST: Check for cached results for instant response
+    if (this.cacheManager) {
+      console.log('⚡ Checking cache for instant results...');
+      const { result: cachedResult, metadata } = await this.cacheManager.getCachedSearch(optimizedFilters);
+      
+      if (cachedResult) {
+        console.log(`🎯 Cache HIT! Serving ${cachedResult.listings.length} cached listings (${metadata.servedFrom}, ${metadata.dataAgeMs}ms old)`);
+        
+        // If cache is fresh enough, return immediately
+        if (metadata.freshness === 'fresh' || metadata.dataAgeMs < 30 * 60 * 1000) { // < 30 minutes
+          console.log('✅ Cache data is fresh, serving immediately');
+          return cachedResult;
+        }
+        
+        // If cache is warm/stale, serve immediately but trigger background refresh
+        console.log(`♻️ Cache data is ${metadata.freshness}, serving stale data while refreshing in background`);
+        
+        // Start background refresh (don't await)
+        this.refreshCacheInBackground(filters, optimizedFilters).catch(error => {
+          console.error('❌ Background cache refresh failed:', error);
+        });
+        
+        return cachedResult;
+      } else {
+        console.log('💸 Cache MISS - proceeding with live search');
+      }
+    }
     
     // Enhanced location validation with Geographic Intelligence Service
     let locationData: LocationData | null = null;
@@ -260,11 +340,23 @@ export class MarketplaceAggregator {
         const analytics = this.generateEnhancedAnalytics(sortedListings);
         const recommendations = this.generateEnhancedRecommendations(sortedListings, analytics);
         
-        return {
+        const result = {
           listings: sortedListings.slice(0, filters.limit || 50),
           analytics,
           recommendations
         };
+        
+        // 💾 Cache the fresh search results for future fast access
+        if (this.cacheManager) {
+          try {
+            await this.cacheManager.cacheSearchResults(optimizedFilters, result, allListings);
+            console.log('💾 Cached search results for fast future access');
+          } catch (error) {
+            console.error('❌ Failed to cache search results:', error);
+          }
+        }
+        
+        return result;
       }
     } catch (error) {
       console.log(`❌ Real portal search failed: ${error}`);
@@ -2594,4 +2686,14 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
   }
 }
 
-export const marketplaceAggregator = new MarketplaceAggregator();
+// Create marketplace aggregator instance - will be initialized with database storage in routes
+export let marketplaceAggregator: MarketplaceAggregator;
+
+export function initializeMarketplaceAggregator(databaseStorage: DatabaseStorage): void {
+  marketplaceAggregator = new MarketplaceAggregator(databaseStorage);
+}
+
+// Fallback instance for when database storage is not available
+if (!marketplaceAggregator) {
+  marketplaceAggregator = new MarketplaceAggregator();
+}
