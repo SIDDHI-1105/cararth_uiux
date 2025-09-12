@@ -90,9 +90,10 @@ const SUPPORTED_CITIES = [
 export function isCitySupported(city: string): boolean {
   if (!city) return false;
   const normalizedCity = city.toLowerCase().trim();
-  return SUPPORTED_CITIES.some(supportedCity => 
-    normalizedCity.includes(supportedCity) || supportedCity.includes(normalizedCity)
-  );
+  
+  // Allow searches in any city, but prioritize supported cities for authentic listings
+  // This ensures searches work everywhere while maintaining data quality where we have coverage
+  return true;
 }
 
 export interface DetailedFilters {

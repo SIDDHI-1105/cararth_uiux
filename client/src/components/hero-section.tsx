@@ -7,10 +7,10 @@ import { TooltipWrapper } from "@/components/tooltip-wrapper";
 
 interface HeroSearchProps {
   onSearch: (filters: {
-    brand: string;
-    budget: string;
-    city: string;
-    fuelType: string;
+    brand?: string;
+    budget?: string;
+    city?: string;
+    fuelType?: string;
   }) => void;
 }
 
@@ -21,7 +21,12 @@ export default function HeroSection({ onSearch }: HeroSearchProps) {
   const [fuelType, setFuelType] = useState("");
 
   const handleSearch = () => {
-    onSearch({ brand, budget, city, fuelType });
+    onSearch({ 
+      brand: brand || undefined, 
+      budget: budget || undefined, 
+      city: city || undefined, 
+      fuelType: fuelType || undefined 
+    });
   };
 
   return (

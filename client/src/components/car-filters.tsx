@@ -5,10 +5,10 @@ import { Slider } from "@/components/ui/slider";
 
 interface CarFiltersProps {
   onApplyFilters: (filters: {
-    model: string;
-    fuelType: string;
-    transmission: string;
-    location: string;
+    model?: string;
+    fuelType?: string;
+    transmission?: string;
+    location?: string;
     budgetRange: [number, number];
   }) => void;
 }
@@ -29,10 +29,10 @@ export default function CarFilters({ onApplyFilters }: CarFiltersProps) {
 
   const handleApplyFilters = () => {
     onApplyFilters({ 
-      model, 
-      fuelType, 
-      transmission, 
-      location, 
+      model: model || undefined, 
+      fuelType: fuelType || undefined, 
+      transmission: transmission || undefined, 
+      location: location || undefined, 
       budgetRange 
     });
   };
