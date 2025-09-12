@@ -186,10 +186,23 @@ export class MarketplaceAggregator {
       
       const freshResult = await this.searchAcrossPortals(filters);
       
-      // Restore cache manager
+      // Restore cache manager and CRITICAL: Write fresh data back to cache
       this.cacheManager = tempCacheManager;
       
-      console.log('✅ Background cache refresh completed');
+      if (this.cacheManager && freshResult.listings.length > 0) {
+        console.log('💾 Writing fresh data back to cache...');
+        await this.cacheManager.cacheSearchResults(
+          optimizedFilters, 
+          freshResult, 
+          freshResult.listings.map(listing => ({
+            ...listing,
+            state: listing.state || 'Unknown',
+            owners: listing.owners || 1,
+            listingDate: listing.listingDate || new Date()
+          }))
+        );
+        console.log('✅ Background cache refresh and write completed');
+      }
     } catch (error) {
       console.error('❌ Background cache refresh failed:', error);
     }

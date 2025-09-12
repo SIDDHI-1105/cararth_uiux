@@ -1,4 +1,4 @@
-import { sql, eq, gte, lte, desc, asc } from "drizzle-orm";
+import { sql, eq, gte, lte, desc, asc, and } from "drizzle-orm";
 import { cachedPortalListings, type CachedPortalListing, type InsertCachedPortalListing } from "@shared/schema";
 import type { DatabaseStorage, OptimizedSearchFilters } from "./dbStorage";
 import type { MarketplaceListing, AggregatedSearchResult, EnhancedMarketplaceListing } from "./marketplaceAggregator";
@@ -182,7 +182,7 @@ export class CacheManager {
     let query = (this.storage as any).db
       .select()
       .from(cachedPortalListings)
-      .where(sql`${whereConditions.join(' AND ')}`)
+      .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
       .limit(filters.limit || 50);
     
     // Add sorting
