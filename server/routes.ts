@@ -31,6 +31,7 @@ import { desc, eq } from "drizzle-orm";
 import { assistantService, type AssistantQuery } from "./assistantService";
 import { cacheManager, withCache, HyderabadCacheWarmer } from "./advancedCaching.js";
 import { enhanceHyderabadSearch, HyderabadMarketIntelligence } from "./hyderabadOptimizations.js";
+import { fastSearchService } from "./fastSearch.js";
 
 // Developer mode check
 const isDeveloperMode = (req: any) => {
@@ -919,7 +920,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('🏙️ Applied Hyderabad market intelligence');
       }
 
-      const searchResult = await marketplaceAggregator.searchAcrossPortals(enhancedFilters as any);
+      // Try fast database search first
+      console.log('⚡ Attempting fast database search...');
+      const dbSearchFilters = {
+        make: enhancedFilters.brand,
+        model: enhancedFilters.model,
+        city: enhancedFilters.city,
+        fuelType: enhancedFilters.fuelType?.[0], // Take first fuel type if array
+        transmission: enhancedFilters.transmission?.[0], // Take first transmission if array
+        priceMin: enhancedFilters.priceMin,
+        priceMax: enhancedFilters.priceMax,
+        yearMin: enhancedFilters.yearMin,
+        yearMax: enhancedFilters.yearMax,
+        ownerCount: enhancedFilters.owners?.[0], // Take first owner count if array
+        mileageMax: enhancedFilters.mileageMax,
+        sortBy: enhancedFilters.sortBy || 'date',
+        sortOrder: enhancedFilters.sortOrder || 'desc',
+        limit: enhancedFilters.limit || 50,
+        offset: 0
+      };
+
+      const fastSearchResult = await fastSearchService.search(dbSearchFilters);
+      let searchResult;
+      
+      // If we have database results, use them for lightning-fast response
+      if (fastSearchResult.listings.length > 0) {
+        console.log(`🚀 Fast database search: ${fastSearchResult.listings.length} results in ${fastSearchResult.performance.queryTime}ms`);
+        searchResult = {
+          listings: fastSearchResult.listings.map((listing: any) => ({
+            id: listing.id,
+            title: listing.title,
+            brand: listing.brand,
+            model: listing.model,
+            year: listing.year,
+            price: parseInt(listing.price),
+            mileage: listing.mileage,
+            fuelType: listing.fuelType,
+            transmission: listing.transmission,
+            location: listing.location,
+            city: listing.city,
+            state: listing.state,
+            images: listing.images || [],
+            source: listing.portal,
+            url: listing.url,
+            condition: listing.condition,
+            sellerType: listing.sellerType,
+            verificationStatus: listing.verificationStatus,
+            listingDate: listing.listingDate,
+            owners: listing.owners
+          })),
+          total: fastSearchResult.total,
+          performance: {
+            queryTime: fastSearchResult.performance.queryTime,
+            source: 'database'
+          }
+        };
+      } else {
+        console.log('⚠️ No database results, falling back to MarketplaceAggregator...');
+        // Fallback to MarketplaceAggregator only if database is empty
+        searchResult = await marketplaceAggregator.searchAcrossPortals(enhancedFilters as any);
+      }
       
       // Cache the results for future requests
       await cacheManager.search.setSearchResults(req.body, searchResult);

@@ -54,7 +54,7 @@ export class BatchIngestionService {
         
         if (result.listings && result.listings.length > 0) {
           // Normalize and store listings
-          const normalizedListings = this.normalizeListings(result.listings, result.sourceListings || []);
+          const normalizedListings = this.normalizeListings(result.listings, []);
           
           for (const listing of normalizedListings) {
             try {
@@ -192,6 +192,3 @@ export class BatchIngestionService {
 
 // Global instance
 export const batchIngestionService = new BatchIngestionService();
-
-// Export for use in routes
-export { BatchIngestionService };

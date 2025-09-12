@@ -14,6 +14,7 @@ import {
   userSearchActivity,
   phoneVerifications,
   anonymousSearchActivity,
+  cachedPortalListings,
   type User, 
   type InsertUser, 
   type UpsertUser,
@@ -38,7 +39,9 @@ import {
   type PhoneVerification,
   type InsertPhoneVerification,
   type AnonymousSearchActivity,
-  type InsertAnonymousSearchActivity
+  type InsertAnonymousSearchActivity,
+  type CachedPortalListing,
+  type InsertCachedPortalListing
 } from "@shared/schema";
 import type { IStorage } from "./storage.js";
 
@@ -763,5 +766,457 @@ export class DatabaseStorage implements IStorage {
   clearCache(): void {
     this.cache.clear();
     console.log('🧹 Cache cleared');
+  }
+
+  // ================================
+  // Fast Search Methods for CachedPortalListings
+  // ================================
+
+  /**
+   * Search cached portal listings with advanced filtering and sorting
+   */
+  async searchCachedPortalListings(filters: {
+    make?: string;
+    model?: string;
+    city?: string;
+    fuelType?: string;
+    transmission?: string;
+    priceMin?: number;
+    priceMax?: number;
+    yearMin?: number;
+    yearMax?: number;
+    ownerCount?: number;
+    mileageMax?: number;
+    query?: string;
+    sortBy?: 'price' | 'year' | 'mileage' | 'date';
+    sortOrder?: 'asc' | 'desc';
+    limit?: number;
+    offset?: number;
+  }): Promise<CachedPortalListing[]> {
+    const cacheKey = `portal_search:${JSON.stringify(filters)}`;
+    const cached = this.getCached<CachedPortalListing[]>(cacheKey);
+    if (cached) return cached;
+
+    // Build WHERE conditions
+    const conditions = [];
+
+    if (filters.make) {
+      conditions.push(ilike(cachedPortalListings.brand, `%${filters.make}%`));
+    }
+
+    if (filters.model) {
+      conditions.push(ilike(cachedPortalListings.model, `%${filters.model}%`));
+    }
+
+    if (filters.city) {
+      conditions.push(ilike(cachedPortalListings.city, `%${filters.city}%`));
+    }
+
+    if (filters.fuelType) {
+      conditions.push(ilike(cachedPortalListings.fuelType, `%${filters.fuelType}%`));
+    }
+
+    if (filters.transmission) {
+      conditions.push(ilike(cachedPortalListings.transmission, `%${filters.transmission}%`));
+    }
+
+    if (filters.priceMin !== undefined) {
+      conditions.push(gte(cachedPortalListings.price, sql`${filters.priceMin}`));
+    }
+
+    if (filters.priceMax !== undefined) {
+      conditions.push(lte(cachedPortalListings.price, sql`${filters.priceMax}`));
+    }
+
+    if (filters.yearMin !== undefined) {
+      conditions.push(gte(cachedPortalListings.year, filters.yearMin));
+    }
+
+    if (filters.yearMax !== undefined) {
+      conditions.push(lte(cachedPortalListings.year, filters.yearMax));
+    }
+
+    if (filters.ownerCount !== undefined) {
+      conditions.push(eq(cachedPortalListings.owners, filters.ownerCount));
+    }
+
+    if (filters.mileageMax !== undefined && filters.mileageMax > 0) {
+      conditions.push(and(
+        sql`${cachedPortalListings.mileage} IS NOT NULL`,
+        lte(cachedPortalListings.mileage, filters.mileageMax)
+      ));
+    }
+
+    // Text search across title and description
+    if (filters.query) {
+      const searchTerm = `%${filters.query}%`;
+      conditions.push(
+        sql`(${cachedPortalListings.title} ILIKE ${searchTerm} OR ${cachedPortalListings.description} ILIKE ${searchTerm})`
+      );
+    }
+
+    // Determine sorting
+    let orderByClause;
+    const isDesc = filters.sortOrder === 'desc';
+    
+    switch (filters.sortBy) {
+      case 'price':
+        orderByClause = isDesc ? desc(cachedPortalListings.price) : asc(cachedPortalListings.price);
+        break;
+      case 'year':
+        orderByClause = isDesc ? desc(cachedPortalListings.year) : asc(cachedPortalListings.year);
+        break;
+      case 'mileage':
+        orderByClause = isDesc ? desc(cachedPortalListings.mileage) : asc(cachedPortalListings.mileage);
+        break;
+      case 'date':
+      default:
+        orderByClause = desc(cachedPortalListings.listingDate);
+        break;
+    }
+
+    // Build and execute query
+    let queryBuilder = this.db
+      .select()
+      .from(cachedPortalListings);
+
+    if (conditions.length > 0) {
+      queryBuilder = queryBuilder.where(and(...conditions)) as any;
+    }
+
+    queryBuilder = queryBuilder.orderBy(orderByClause) as any;
+
+    if (filters.limit) {
+      queryBuilder = queryBuilder.limit(filters.limit) as any;
+    }
+
+    if (filters.offset) {
+      queryBuilder = queryBuilder.offset(filters.offset) as any;
+    }
+
+    const result = await queryBuilder;
+
+    // Cache for 2 minutes
+    this.setCache(cacheKey, result, 120000);
+    
+    console.log(`🔍 Cached portal search: ${result.length} results for filters:`, filters);
+    return result;
+  }
+
+  /**
+   * Get count of matching listings for pagination
+   */
+  async getCachedPortalListingsCount(filters: {
+    make?: string;
+    model?: string;
+    city?: string;
+    fuelType?: string;
+    transmission?: string;
+    priceMin?: number;
+    priceMax?: number;
+    yearMin?: number;
+    yearMax?: number;
+    ownerCount?: number;
+    mileageMax?: number;
+    query?: string;
+  }): Promise<number> {
+    const cacheKey = `portal_count:${JSON.stringify(filters)}`;
+    const cached = this.getCached<number>(cacheKey);
+    if (cached !== null) return cached;
+
+    // Build same WHERE conditions as search
+    const conditions = [];
+
+    if (filters.make) {
+      conditions.push(ilike(cachedPortalListings.brand, `%${filters.make}%`));
+    }
+
+    if (filters.model) {
+      conditions.push(ilike(cachedPortalListings.model, `%${filters.model}%`));
+    }
+
+    if (filters.city) {
+      conditions.push(ilike(cachedPortalListings.city, `%${filters.city}%`));
+    }
+
+    if (filters.fuelType) {
+      conditions.push(ilike(cachedPortalListings.fuelType, `%${filters.fuelType}%`));
+    }
+
+    if (filters.transmission) {
+      conditions.push(ilike(cachedPortalListings.transmission, `%${filters.transmission}%`));
+    }
+
+    if (filters.priceMin !== undefined) {
+      conditions.push(gte(cachedPortalListings.price, sql`${filters.priceMin}`));
+    }
+
+    if (filters.priceMax !== undefined) {
+      conditions.push(lte(cachedPortalListings.price, sql`${filters.priceMax}`));
+    }
+
+    if (filters.yearMin !== undefined) {
+      conditions.push(gte(cachedPortalListings.year, filters.yearMin));
+    }
+
+    if (filters.yearMax !== undefined) {
+      conditions.push(lte(cachedPortalListings.year, filters.yearMax));
+    }
+
+    if (filters.ownerCount !== undefined) {
+      conditions.push(eq(cachedPortalListings.owners, filters.ownerCount));
+    }
+
+    if (filters.mileageMax !== undefined && filters.mileageMax > 0) {
+      conditions.push(and(
+        sql`${cachedPortalListings.mileage} IS NOT NULL`,
+        lte(cachedPortalListings.mileage, filters.mileageMax)
+      ));
+    }
+
+    if (filters.query) {
+      const searchTerm = `%${filters.query}%`;
+      conditions.push(
+        sql`(${cachedPortalListings.title} ILIKE ${searchTerm} OR ${cachedPortalListings.description} ILIKE ${searchTerm})`
+      );
+    }
+
+    let queryBuilder = this.db
+      .select({ count: count() })
+      .from(cachedPortalListings);
+
+    if (conditions.length > 0) {
+      queryBuilder = queryBuilder.where(and(...conditions)) as any;
+    }
+
+    const result = await queryBuilder;
+    const totalCount = result[0]?.count ?? 0;
+
+    // Cache for 2 minutes
+    this.setCache(cacheKey, totalCount, 120000);
+    
+    return totalCount;
+  }
+
+  /**
+   * Get available filter options based on current dataset
+   */
+  async getCachedPortalListingsFilterOptions(baseFilters: {
+    make?: string;
+    model?: string;
+    city?: string;
+  } = {}): Promise<{
+    availableMakes: string[];
+    availableModels: string[];
+    availableCities: string[];
+    priceRange: { min: number; max: number };
+    yearRange: { min: number; max: number };
+  }> {
+    const cacheKey = `portal_filters:${JSON.stringify(baseFilters)}`;
+    const cached = this.getCached<any>(cacheKey);
+    if (cached) return cached;
+
+    try {
+      // Build base conditions from filters
+      const baseConditions = [];
+      
+      if (baseFilters.make) {
+        baseConditions.push(ilike(cachedPortalListings.brand, `%${baseFilters.make}%`));
+      }
+      if (baseFilters.model) {
+        baseConditions.push(ilike(cachedPortalListings.model, `%${baseFilters.model}%`));
+      }
+      if (baseFilters.city) {
+        baseConditions.push(ilike(cachedPortalListings.city, `%${baseFilters.city}%`));
+      }
+
+      // Build conditions including non-null checks
+      const makesConditions = [
+        sql`${cachedPortalListings.brand} IS NOT NULL AND ${cachedPortalListings.brand} != ''`,
+        ...baseConditions
+      ];
+      
+      const modelsConditions = [
+        sql`${cachedPortalListings.model} IS NOT NULL AND ${cachedPortalListings.model} != ''`,
+        ...baseConditions
+      ];
+      
+      const citiesConditions = [
+        sql`${cachedPortalListings.city} IS NOT NULL AND ${cachedPortalListings.city} != ''`,
+        ...baseConditions
+      ];
+
+      // Get distinct makes
+      const makesQuery = this.db
+        .selectDistinct({ brand: cachedPortalListings.brand })
+        .from(cachedPortalListings)
+        .where(and(...makesConditions))
+        .orderBy(asc(cachedPortalListings.brand));
+
+      // Get distinct models
+      const modelsQuery = this.db
+        .selectDistinct({ model: cachedPortalListings.model })
+        .from(cachedPortalListings)
+        .where(and(...modelsConditions))
+        .orderBy(asc(cachedPortalListings.model));
+
+      // Get distinct cities
+      const citiesQuery = this.db
+        .selectDistinct({ city: cachedPortalListings.city })
+        .from(cachedPortalListings)
+        .where(and(...citiesConditions))
+        .orderBy(asc(cachedPortalListings.city));
+
+      // Get price and year ranges
+      const rangeQuery = baseConditions.length > 0
+        ? this.db
+            .select({
+              minPrice: sql<number>`MIN(CAST(${cachedPortalListings.price} AS NUMERIC))`,
+              maxPrice: sql<number>`MAX(CAST(${cachedPortalListings.price} AS NUMERIC))`,
+              minYear: sql<number>`MIN(${cachedPortalListings.year})`,
+              maxYear: sql<number>`MAX(${cachedPortalListings.year})`
+            })
+            .from(cachedPortalListings)
+            .where(and(...baseConditions))
+        : this.db
+            .select({
+              minPrice: sql<number>`MIN(CAST(${cachedPortalListings.price} AS NUMERIC))`,
+              maxPrice: sql<number>`MAX(CAST(${cachedPortalListings.price} AS NUMERIC))`,
+              minYear: sql<number>`MIN(${cachedPortalListings.year})`,
+              maxYear: sql<number>`MAX(${cachedPortalListings.year})`
+            })
+            .from(cachedPortalListings);
+
+      // Execute all queries in parallel
+      const [makesResult, modelsResult, citiesResult, rangeResult] = await Promise.all([
+        makesQuery,
+        modelsQuery,
+        citiesQuery,
+        rangeQuery
+      ]);
+
+      const result = {
+        availableMakes: makesResult.map(r => r.brand).filter(Boolean).slice(0, 50),
+        availableModels: modelsResult.map(r => r.model).filter(Boolean).slice(0, 100),
+        availableCities: citiesResult.map(r => r.city).filter(Boolean).slice(0, 100),
+        priceRange: {
+          min: rangeResult[0]?.minPrice ?? 0,
+          max: rangeResult[0]?.maxPrice ?? 5000000
+        },
+        yearRange: {
+          min: rangeResult[0]?.minYear ?? 2000,
+          max: rangeResult[0]?.maxYear ?? new Date().getFullYear()
+        }
+      };
+
+      // Cache for 5 minutes
+      this.setCache(cacheKey, result, 300000);
+      
+      return result;
+    } catch (error) {
+      console.error('❌ Failed to get filter options:', error);
+      return {
+        availableMakes: [],
+        availableModels: [],
+        availableCities: [],
+        priceRange: { min: 0, max: 5000000 },
+        yearRange: { min: 2000, max: new Date().getFullYear() }
+      };
+    }
+  }
+
+  /**
+   * Get search statistics for dashboard
+   */
+  async getCachedPortalListingsStats(): Promise<{
+    totalListings: number;
+    citiesCount: number;
+    makesCount: number;
+    latestUpdate: string | null;
+  }> {
+    const cacheKey = 'portal_stats';
+    const cached = this.getCached<any>(cacheKey);
+    if (cached) return cached;
+
+    try {
+      // Get total count
+      const totalResult = await this.db
+        .select({ count: count() })
+        .from(cachedPortalListings);
+
+      // Get distinct cities count
+      const citiesResult = await this.db
+        .select({ count: count(sql`DISTINCT ${cachedPortalListings.city}`) })
+        .from(cachedPortalListings)
+        .where(sql`${cachedPortalListings.city} IS NOT NULL AND ${cachedPortalListings.city} != ''`);
+
+      // Get distinct makes count
+      const makesResult = await this.db
+        .select({ count: count(sql`DISTINCT ${cachedPortalListings.brand}`) })
+        .from(cachedPortalListings)
+        .where(sql`${cachedPortalListings.brand} IS NOT NULL AND ${cachedPortalListings.brand} != ''`);
+
+      // Get latest update
+      const latestResult = await this.db
+        .select({ latestUpdate: sql<string>`MAX(${cachedPortalListings.fetchedAt})` })
+        .from(cachedPortalListings);
+
+      const result = {
+        totalListings: totalResult[0]?.count ?? 0,
+        citiesCount: citiesResult[0]?.count ?? 0,
+        makesCount: makesResult[0]?.count ?? 0,
+        latestUpdate: latestResult[0]?.latestUpdate ?? null
+      };
+
+      // Cache for 10 minutes
+      this.setCache(cacheKey, result, 600000);
+      
+      return result;
+    } catch (error) {
+      console.error('❌ Failed to get portal stats:', error);
+      return {
+        totalListings: 0,
+        citiesCount: 0,
+        makesCount: 0,
+        latestUpdate: null
+      };
+    }
+  }
+
+  /**
+   * Create a new cached portal listing
+   */
+  async createCachedPortalListing(listing: InsertCachedPortalListing): Promise<CachedPortalListing> {
+    const result = await this.db
+      .insert(cachedPortalListings)
+      .values(listing)
+      .returning();
+    
+    const newListing = result[0];
+    
+    // Invalidate related caches
+    this.cache.delete('portal_stats');
+    Array.from(this.cache.keys())
+      .filter(key => key.startsWith('portal_search:') || key.startsWith('portal_count:') || key.startsWith('portal_filters:'))
+      .forEach(key => this.cache.delete(key));
+    
+    console.log(`✅ Created cached portal listing: ${newListing.title}`);
+    return newListing;
+  }
+
+  /**
+   * Cleanup old cached listings before a certain date
+   */
+  async cleanupOldCachedListings(before: Date): Promise<void> {
+    const result = await this.db
+      .delete(cachedPortalListings)
+      .where(lte(cachedPortalListings.fetchedAt, before));
+    
+    // Clear all portal-related caches after cleanup
+    Array.from(this.cache.keys())
+      .filter(key => key.startsWith('portal_'))
+      .forEach(key => this.cache.delete(key));
+    
+    console.log(`🧹 Cleaned up cached portal listings before ${before.toISOString()}`);
   }
 }
