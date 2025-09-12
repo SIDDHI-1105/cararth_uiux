@@ -36,7 +36,7 @@ export function BrandWordmark({
       
       {/* Tagline */}
       {showTagline && (
-        <div className={cn("font-medium text-muted-foreground mt-1", taglineSizes[variant])}>
+        <div className={cn("font-bold text-gray-800 dark:text-gray-200 mt-1", taglineSizes[variant])}>
           India's first used car search engine
           <span className="text-blue-500 font-semibold">*</span>
         </div>
