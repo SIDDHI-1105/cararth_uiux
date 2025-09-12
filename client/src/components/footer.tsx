@@ -25,7 +25,7 @@ export default function Footer() {
               <BrandWordmark variant="footer" showTagline={true} className="transition-opacity duration-300 hover:opacity-90" />
             </Link>
             <p className="text-muted-foreground text-sm mb-4 max-w-md">
-              Discover cars from across platforms, compare smarter, and buy or sell with confidence. More than a marketplace — your guide, your community, your car's true value (arth).
+              Discover cars from across platforms, compare smarter, and buy or sell with confidence. More than a marketplace — your guide, your community, your trusted car partner.
             </p>
             <div className="text-xs text-muted-foreground">
               🇮🇳 Proudly Made in India
