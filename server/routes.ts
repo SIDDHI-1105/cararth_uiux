@@ -11,7 +11,12 @@ import {
   insertMessageInteractionSchema,
   insertConversationBlockSchema,
   insertUserSearchActivitySchema,
-  insertPhoneVerificationSchema
+  insertPhoneVerificationSchema,
+  insertListingClassificationSchema,
+  insertQualityAnalysisSchema,
+  insertContentModerationSchema,
+  insertUserSearchIntentSchema,
+  insertAiAnalysisMetricsSchema
 } from "@shared/schema";
 import { priceComparisonService } from "./priceComparison";
 import { marketplaceAggregator, initializeMarketplaceAggregator } from "./marketplaceAggregator";
@@ -32,6 +37,7 @@ import { assistantService, type AssistantQuery } from "./assistantService";
 import { cacheManager, withCache, HyderabadCacheWarmer } from "./advancedCaching.js";
 import { enhanceHyderabadSearch, HyderabadMarketIntelligence } from "./hyderabadOptimizations.js";
 import { fastSearchService } from "./fastSearch.js";
+import { claudeService } from "./claudeService.js";
 
 // Developer mode check
 const isDeveloperMode = (req: any) => {
@@ -2211,6 +2217,402 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         error: 'Failed to fetch community statistics',
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  // =========================================================
+  // CLAUDE AI SERVICE ENDPOINTS - SECURE & VALIDATED
+  // =========================================================
+
+  // Zod validation schemas for Claude endpoint request bodies
+  const claudeListingSchema = z.object({
+    listing: z.object({
+      id: z.string().min(1, "Listing ID is required"),
+      title: z.string().min(1),
+      brand: z.string().min(1),
+      model: z.string().min(1),
+      year: z.number().int().min(1900).max(new Date().getFullYear() + 1),
+      price: z.number().positive(),
+      mileage: z.number().nonnegative(),
+      fuelType: z.string().min(1),
+      transmission: z.string().min(1),
+      location: z.string().min(1),
+      city: z.string().min(1),
+      source: z.string().min(1),
+      url: z.string().url(),
+      images: z.array(z.string()).default([]),
+      description: z.string().optional(),
+      features: z.array(z.string()).default([]),
+      condition: z.string().min(1),
+      verificationStatus: z.enum(['verified', 'unverified', 'certified']),
+      listingDate: z.date(),
+      sellerType: z.enum(['individual', 'dealer', 'oem'])
+    })
+  });
+
+  const claudeContentModerationSchema = z.object({
+    content: z.string().min(1, "Content is required"),
+    contentType: z.enum(['listing', 'comment', 'review', 'message']).default('listing')
+  });
+
+  const claudeBatchAnalysisSchema = z.object({
+    listings: z.array(claudeListingSchema.shape.listing).min(1).max(50, "Maximum 50 listings allowed")
+  });
+
+  const claudeIntentRankingSchema = z.object({
+    listings: z.array(claudeListingSchema.shape.listing).min(1),
+    userIntent: z.object({
+      budget: z.number().positive().optional(),
+      preferredBrands: z.array(z.string()).optional(),
+      fuelTypePreference: z.string().optional(),
+      transmissionPreference: z.string().optional(),
+      useCase: z.string().optional(),
+      priorityFeatures: z.array(z.string()).optional()
+    }),
+    searchFilters: z.record(z.any()).optional()
+  });
+
+  // Authentication middleware for Claude endpoints (premium feature)
+  const requireClaudeAccess = async (req: any, res: any, next: any) => {
+    try {
+      // Developer mode bypass
+      if (isDeveloperMode(req)) {
+        console.log('🚀 Developer mode active - bypassing Claude access restrictions');
+        return next();
+      }
+
+      // Require authentication for Claude AI features
+      if (!req.isAuthenticated || typeof req.isAuthenticated !== 'function' || !req.isAuthenticated()) {
+        return res.status(401).json({
+          error: "Authentication required",
+          message: "Claude AI features require authentication",
+          requiresAuth: true
+        });
+      }
+
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(401).json({ error: "User not found" });
+      }
+
+      // Check if user has premium access for Claude AI features
+      const hasPremiumAccess = user.subscriptionTier && 
+        ['pro_seller', 'pro_buyer', 'superhero'].includes(user.subscriptionTier) &&
+        user.subscriptionStatus === 'active';
+
+      if (!hasPremiumAccess) {
+        return res.status(403).json({
+          error: "Premium subscription required",
+          message: "Claude AI analysis features require a premium subscription",
+          userTier: user.subscriptionTier,
+          requiresUpgrade: true
+        });
+      }
+
+      next();
+    } catch (error) {
+      console.error("Claude access check error:", error);
+      res.status(500).json({ error: "Failed to verify Claude access permissions" });
+    }
+  };
+
+  // Rate limiting middleware specifically for Claude endpoints (expensive AI calls)
+  const claudeRateLimit = async (req: any, res: any, next: any) => {
+    try {
+      // Developer mode bypass
+      if (isDeveloperMode(req)) {
+        return next();
+      }
+
+      const userId = req.user.claims.sub;
+      
+      // Check rate limit (10 requests per minute per user)
+      const currentCount = await storage.getUserClaudeRequestCount(userId);
+      if (currentCount >= 10) {
+        return res.status(429).json({
+          error: "Rate limit exceeded",
+          message: "Too many Claude AI requests. Limit: 10 per minute",
+          retryAfter: 60
+        });
+      }
+
+      // Increment counter
+      await storage.incrementClaudeRequestCount(userId);
+      next();
+    } catch (error) {
+      console.error("Claude rate limit error:", error);
+      // Continue on rate limit errors to avoid blocking legitimate requests
+      next();
+    }
+  };
+
+  // Classify a single listing for accuracy, completeness, and fairness
+  app.post('/api/claude/classify-listing', requireClaudeAccess, claudeRateLimit, async (req, res) => {
+    try {
+      // Validate request body with Zod schema
+      const validatedData = claudeListingSchema.parse(req.body);
+      const { listing } = validatedData;
+
+      console.log(`🧠 Claude classification request for listing: ${listing.id}`);
+      const classification = await claudeService.classifyListing(listing);
+      
+      res.json({
+        success: true,
+        listingId: listing.id,
+        classification,
+        timestamp: new Date().toISOString(),
+        meta: {
+          model: 'claude-sonnet-4-20250514',
+          analysisType: 'classification'
+        }
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: 'Invalid request data',
+          details: error.errors,
+          message: 'Please check your listing data format'
+        });
+      }
+      console.error('❌ Claude classification error:', error);
+      res.status(500).json({
+        error: 'Failed to classify listing',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Analyze listing quality for authenticity and information completeness
+  app.post('/api/claude/analyze-quality', requireClaudeAccess, claudeRateLimit, async (req, res) => {
+    try {
+      // Validate request body with Zod schema
+      const validatedData = claudeListingSchema.parse(req.body);
+      const { listing } = validatedData;
+
+      console.log(`🔍 Claude quality analysis request for listing: ${listing.id}`);
+      const qualityAnalysis = await claudeService.analyzeQuality(listing);
+      
+      res.json({
+        success: true,
+        listingId: listing.id,
+        qualityAnalysis,
+        timestamp: new Date().toISOString(),
+        meta: {
+          model: 'claude-sonnet-4-20250514',
+          analysisType: 'quality'
+        }
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: 'Invalid request data',
+          details: error.errors,
+          message: 'Please check your listing data format'
+        });
+      }
+      console.error('❌ Claude quality analysis error:', error);
+      res.status(500).json({
+        error: 'Failed to analyze listing quality',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Moderate content for compliance with community guidelines
+  app.post('/api/claude/moderate-content', requireClaudeAccess, claudeRateLimit, async (req, res) => {
+    try {
+      // Validate request body with Zod schema
+      const validatedData = claudeContentModerationSchema.parse(req.body);
+      const { content, contentType } = validatedData;
+
+      console.log(`🛡️ Claude content moderation request for ${contentType}`);
+      const moderation = await claudeService.moderateContent(content, contentType);
+      
+      res.json({
+        success: true,
+        contentType,
+        moderation,
+        timestamp: new Date().toISOString(),
+        meta: {
+          model: 'claude-sonnet-4-20250514',
+          analysisType: 'moderation'
+        }
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: 'Invalid request data',
+          details: error.errors,
+          message: 'Please check your content and contentType parameters'
+        });
+      }
+      console.error('❌ Claude moderation error:', error);
+      res.status(500).json({
+        error: 'Failed to moderate content',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Batch analyze multiple listings for efficiency
+  app.post('/api/claude/batch-analyze', requireClaudeAccess, claudeRateLimit, async (req, res) => {
+    try {
+      // Validate request body with Zod schema
+      const validatedData = claudeBatchAnalysisSchema.parse(req.body);
+      const { listings } = validatedData;
+
+      console.log(`📊 Claude batch analysis request for ${listings.length} listings`);
+      const batchResults = await claudeService.batchAnalyzeListings(listings);
+      
+      res.json({
+        success: true,
+        listingsCount: listings.length,
+        results: batchResults,
+        timestamp: new Date().toISOString(),
+        meta: {
+          model: 'claude-sonnet-4-20250514',
+          analysisType: 'batch',
+          classificationsCount: batchResults.classifications.length,
+          qualityAnalysesCount: batchResults.qualityAnalyses.length
+        }
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: 'Invalid request data',
+          details: error.errors,
+          message: 'Please check your listings array format'
+        });
+      }
+      console.error('❌ Claude batch analysis error:', error);
+      res.status(500).json({
+        error: 'Failed to perform batch analysis',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Re-rank search results based on user intent
+  app.post('/api/claude/rank-by-intent', requireClaudeAccess, claudeRateLimit, async (req, res) => {
+    try {
+      // Validate request body with Zod schema
+      const validatedData = claudeIntentRankingSchema.parse(req.body);
+      const { listings, userIntent, searchFilters } = validatedData;
+
+      console.log(`🎯 Claude intent-based ranking for ${listings.length} listings`);
+      const rankedListings = await claudeService.rankByIntent(listings, userIntent, searchFilters || {});
+      
+      res.json({
+        success: true,
+        originalCount: listings.length,
+        rankedCount: rankedListings.length,
+        rankedListings,
+        timestamp: new Date().toISOString(),
+        meta: {
+          model: 'claude-sonnet-4-20250514',
+          analysisType: 'intent-ranking',
+          userIntent: userIntent
+        }
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: 'Invalid request data',
+          details: error.errors,
+          message: 'Please check your listings, userIntent, and searchFilters format'
+        });
+      }
+      console.error('❌ Claude intent ranking error:', error);
+      res.status(500).json({
+        error: 'Failed to rank listings by intent',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Get Claude service analytics and performance metrics
+  app.get('/api/claude/metrics', requireClaudeAccess, async (req, res) => {
+    try {
+      const metrics = claudeService.getMetrics();
+      
+      res.json({
+        success: true,
+        metrics,
+        timestamp: new Date().toISOString(),
+        meta: {
+          service: 'claude-car-listing-service',
+          version: '1.0.0'
+        }
+      });
+    } catch (error) {
+      console.error('❌ Claude metrics error:', error);
+      res.status(500).json({
+        error: 'Failed to fetch Claude metrics',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Test Claude service connectivity and configuration
+  app.get('/api/claude/health', requireClaudeAccess, async (req, res) => {
+    try {
+      // Test with a simple sample listing
+      const testListing = {
+        id: 'test-health-check',
+        title: '2020 Maruti Swift VDI',
+        brand: 'Maruti Suzuki',
+        model: 'Swift',
+        year: 2020,
+        price: 650000,
+        mileage: 35000,
+        fuelType: 'Diesel',
+        transmission: 'Manual',
+        location: 'Mumbai, Maharashtra',
+        city: 'Mumbai',
+        source: 'Health Check',
+        url: 'https://test.example.com',
+        images: ['test.jpg'],
+        description: 'Test listing for health check',
+        features: ['AC', 'Power Steering'],
+        condition: 'Good',
+        verificationStatus: 'verified' as const,
+        listingDate: new Date(),
+        sellerType: 'individual' as const
+      };
+
+      // Test classification (lightweight test)
+      const startTime = Date.now();
+      const testResult = await Promise.race([
+        claudeService.classifyListing(testListing),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Health check timeout')), 10000))
+      ]);
+      const responseTime = Date.now() - startTime;
+
+      res.json({
+        success: true,
+        status: 'healthy',
+        responseTime: `${responseTime}ms`,
+        testResult: {
+          classification: testResult.overallClassification,
+          confidence: testResult.confidence
+        },
+        timestamp: new Date().toISOString(),
+        meta: {
+          service: 'claude-car-listing-service',
+          model: 'claude-sonnet-4-20250514',
+          testType: 'classification'
+        }
+      });
+    } catch (error) {
+      console.error('❌ Claude health check failed:', error);
+      res.status(500).json({
+        success: false,
+        status: 'unhealthy',
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date().toISOString()
       });
     }

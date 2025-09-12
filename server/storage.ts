@@ -330,7 +330,12 @@ export class MemStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
     const user: User = { 
-      ...insertUser, 
+      ...insertUser,
+      email: insertUser.email ?? null,
+      firstName: insertUser.firstName ?? null,
+      lastName: insertUser.lastName ?? null,
+      profileImageUrl: insertUser.profileImageUrl ?? null,
+      phone: insertUser.phone ?? null,
       id,
       phoneVerified: false,
       phoneVerifiedAt: null,
@@ -349,12 +354,20 @@ export class MemStorage implements IStorage {
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
+    if (!userData.id) {
+      throw new Error('User ID is required for upsert operation');
+    }
+    
     const existingUser = this.users.get(userData.id);
     if (existingUser) {
       // Update existing user
       const updatedUser: User = {
         ...existingUser,
         ...userData,
+        email: userData.email ?? existingUser.email,
+        firstName: userData.firstName ?? existingUser.firstName,
+        lastName: userData.lastName ?? existingUser.lastName,
+        profileImageUrl: userData.profileImageUrl ?? existingUser.profileImageUrl,
         updatedAt: new Date(),
       };
       this.users.set(userData.id, updatedUser);
@@ -362,7 +375,11 @@ export class MemStorage implements IStorage {
     } else {
       // Create new user
       const newUser: User = {
-        ...userData,
+        id: userData.id,
+        email: userData.email ?? null,
+        firstName: userData.firstName ?? null,
+        lastName: userData.lastName ?? null,
+        profileImageUrl: userData.profileImageUrl ?? null,
         phone: null,
         phoneVerified: false,
         phoneVerifiedAt: null,
@@ -490,6 +507,11 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const subscription: Subscription = {
       ...insertSubscription,
+      currency: insertSubscription.currency ?? 'INR',
+      nextBillingDate: insertSubscription.nextBillingDate ?? null,
+      stripeSubscriptionId: insertSubscription.stripeSubscriptionId ?? null,
+      stripeCustomerId: insertSubscription.stripeCustomerId ?? null,
+      locationRestriction: insertSubscription.locationRestriction ?? null,
       id,
       status: 'active',
       startDate: new Date(),
@@ -588,11 +610,16 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const newMessage: Message = {
       id,
-      ...message,
-      messageType: message.messageType || null,
-      offerAmount: message.offerAmount || null,
-      offerStatus: message.offerStatus || null,
-      attachments: message.attachments || null,
+      conversationId: message.conversationId,
+      senderId: message.senderId,
+      senderType: message.senderType,
+      content: message.content,
+      messageType: message.messageType ?? null,
+      offerAmount: message.offerAmount ?? null,
+      offerStatus: message.offerStatus ?? null,
+      isSystemMessage: message.isSystemMessage ?? null,
+      isModerated: message.isModerated ?? null,
+      moderationStatus: message.moderationStatus ?? null,
       isRead: false,
       readAt: null,
       createdAt: new Date(),
@@ -644,6 +671,7 @@ export class MemStorage implements IStorage {
     const newBlock: ConversationBlock = {
       id,
       ...block,
+      reason: block.reason ?? null,
       createdAt: new Date(),
     };
     this.conversationBlocks.set(id, newBlock);
@@ -659,12 +687,13 @@ export class MemStorage implements IStorage {
     // Return masked contact info for privacy
     return {
       buyerDisplayName: `Seller ${sellerId.slice(-4)}`,
-      maskedPhone: this.maskPhone(seller.phone),
-      maskedEmail: this.maskEmail(seller.email),
+      maskedPhone: this.maskPhone(seller.phone || ''),
+      maskedEmail: this.maskEmail(seller.email || ''),
     };
   }
 
-  private maskPhone(phone: string): string {
+  private maskPhone(phone: string | null): string {
+    if (!phone) return 'xxxxx0000';
     const digits = phone.replace(/\D/g, '');
     if (digits.length >= 10) {
       return `xxxxx${digits.slice(-4)}`;
@@ -672,7 +701,8 @@ export class MemStorage implements IStorage {
     return 'xxxxx0000';
   }
 
-  private maskEmail(email: string): string {
+  private maskEmail(email: string | null): string {
+    if (!email) return 'xxxxx@example.com';
     const [localPart, domain] = email.split('@');
     if (localPart && domain) {
       return `${localPart.charAt(0)}xxxxx@${domain}`;
@@ -694,7 +724,7 @@ export class MemStorage implements IStorage {
 
     // Check if 30 days have passed since last reset
     const now = new Date();
-    const resetDate = user.searchCountResetAt;
+    const resetDate = user.searchCountResetAt || new Date();
     const daysSinceReset = Math.floor((now.getTime() - resetDate.getTime()) / (1000 * 60 * 60 * 24));
     
     if (daysSinceReset >= 30) {
@@ -704,7 +734,7 @@ export class MemStorage implements IStorage {
       this.users.set(userId, user);
     }
 
-    const searchesLeft = Math.max(0, 5 - user.searchCount);
+    const searchesLeft = Math.max(0, 5 - (user.searchCount || 0));
     const canSearch = searchesLeft > 0;
     const nextResetDate = new Date(resetDate.getTime() + (30 * 24 * 60 * 60 * 1000));
 
@@ -717,6 +747,42 @@ export class MemStorage implements IStorage {
       user.searchCount = (user.searchCount || 0) + 1;
       user.updatedAt = new Date();
       this.users.set(userId, user);
+    }
+  }
+
+  // Claude AI request rate limiting (10 requests per minute per user)
+  private claudeRequestCounts: Map<string, { count: number; resetTime: number }> = new Map();
+
+  async getUserClaudeRequestCount(userId: string): Promise<number> {
+    const now = Date.now();
+    const userLimit = this.claudeRequestCounts.get(userId);
+    
+    if (!userLimit || now > userLimit.resetTime) {
+      // Reset or initialize counter (1-minute window)
+      this.claudeRequestCounts.set(userId, {
+        count: 0,
+        resetTime: now + (60 * 1000) // 1 minute from now
+      });
+      return 0;
+    }
+    
+    return userLimit.count;
+  }
+
+  async incrementClaudeRequestCount(userId: string): Promise<void> {
+    const now = Date.now();
+    const userLimit = this.claudeRequestCounts.get(userId);
+    
+    if (!userLimit || now > userLimit.resetTime) {
+      // Initialize new window
+      this.claudeRequestCounts.set(userId, {
+        count: 1,
+        resetTime: now + (60 * 1000)
+      });
+    } else {
+      // Increment existing window
+      userLimit.count += 1;
+      this.claudeRequestCounts.set(userId, userLimit);
     }
   }
 
@@ -754,7 +820,7 @@ export class MemStorage implements IStorage {
 
   async verifyPhoneCode(userId: string, code: string): Promise<boolean> {
     // Find verification record for this user
-    for (const verification of this.phoneVerifications.values()) {
+    for (const verification of Array.from(this.phoneVerifications.values())) {
       if (verification.userId === userId && verification.verificationCode === code) {
         const now = new Date();
         if (now <= verification.expiresAt && !verification.verified) {
@@ -783,6 +849,10 @@ export class MemStorage implements IStorage {
     const searchActivity: UserSearchActivity = {
       id,
       ...activity,
+      userAgent: activity.userAgent ?? null,
+      searchFilters: activity.searchFilters ?? null,
+      resultsCount: activity.resultsCount ?? null,
+      ipAddress: activity.ipAddress ?? null,
       createdAt: new Date(),
     };
     this.userSearchActivity.set(id, searchActivity);
@@ -795,6 +865,8 @@ export class MemStorage implements IStorage {
     const newActivity: AnonymousSearchActivity = {
       id,
       ...activity,
+      ipHash: activity.ipHash ?? null,
+      userAgent: activity.userAgent ?? null,
       createdAt: new Date(),
     };
     this.anonymousSearchActivity.set(id, newActivity);
@@ -803,7 +875,7 @@ export class MemStorage implements IStorage {
 
   async getAnonymousSearchCountSince(visitorId: string, since: Date): Promise<number> {
     let count = 0;
-    for (const activity of this.anonymousSearchActivity.values()) {
+    for (const activity of Array.from(this.anonymousSearchActivity.values())) {
       if (activity.visitorId === visitorId && activity.createdAt && activity.createdAt >= since) {
         count++;
       }
@@ -812,7 +884,7 @@ export class MemStorage implements IStorage {
   }
 
   async pruneAnonymousSearches(before: Date): Promise<void> {
-    for (const [id, activity] of this.anonymousSearchActivity.entries()) {
+    for (const [id, activity] of Array.from(this.anonymousSearchActivity.entries())) {
       if (activity.createdAt && activity.createdAt < before) {
         this.anonymousSearchActivity.delete(id);
       }

@@ -218,6 +218,186 @@ export type InsertUserSearchActivity = z.infer<typeof insertUserSearchActivitySc
 export type UserSearchActivity = typeof userSearchActivity.$inferSelect;
 export type InsertPhoneVerification = z.infer<typeof insertPhoneVerificationSchema>;
 export type PhoneVerification = typeof phoneVerifications.$inferSelect;
+
+// Claude AI Analysis Tables for CarArth Intelligence Platform
+
+// Listing Classification & Fairness Analysis Results
+export const listingClassifications = pgTable("listing_classifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  listingId: varchar("listing_id").notNull(), // References external listing ID
+  source: text("source").notNull(), // Source marketplace (CarDekho, OLX, etc.)
+  
+  // Classification Scores (0-100)
+  accuracyScore: integer("accuracy_score").notNull(),
+  completenessScore: integer("completeness_score").notNull(),
+  fairnessScore: integer("fairness_score").notNull(),
+  
+  // Overall Classification
+  overallClassification: text("overall_classification").notNull(), // excellent, good, fair, poor, rejected
+  
+  // Analysis Results
+  issues: text("issues").array().default([]),
+  recommendations: text("recommendations").array().default([]),
+  confidence: decimal("confidence", { precision: 3, scale: 2 }).notNull(), // 0.00-1.00
+  
+  // Metadata
+  analysisTimestamp: timestamp("analysis_timestamp").defaultNow(),
+  modelVersion: text("model_version").default('claude-sonnet-4-20250514'),
+  processingTimeMs: integer("processing_time_ms"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Quality Analysis Results
+export const qualityAnalyses = pgTable("quality_analyses", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  listingId: varchar("listing_id").notNull(),
+  source: text("source").notNull(),
+  
+  // Quality Scores (0-100)
+  authenticityScore: integer("authenticity_score").notNull(),
+  informationQuality: integer("information_quality").notNull(),
+  imageQuality: integer("image_quality").notNull(),
+  priceReasonableness: integer("price_reasonableness").notNull(),
+  overallQuality: integer("overall_quality").notNull(),
+  
+  // Quality Flags and Recommendations
+  qualityFlags: text("quality_flags").array().default([]),
+  verificationRecommendations: text("verification_recommendations").array().default([]),
+  confidence: decimal("confidence", { precision: 3, scale: 2 }).notNull(),
+  
+  // Metadata
+  analysisTimestamp: timestamp("analysis_timestamp").defaultNow(),
+  modelVersion: text("model_version").default('claude-sonnet-4-20250514'),
+  processingTimeMs: integer("processing_time_ms"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Content Moderation Results
+export const contentModerations = pgTable("content_moderations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  contentId: varchar("content_id").notNull(), // References listing, comment, review, etc.
+  contentType: text("content_type").notNull(), // listing, comment, review, message
+  userId: varchar("user_id"), // Optional user who created content
+  
+  // Moderation Results
+  isCompliant: boolean("is_compliant").notNull(),
+  violationTypes: text("violation_types").array().default([]),
+  severity: text("severity").notNull(), // low, medium, high, critical
+  moderationActions: text("moderation_actions").array().default([]),
+  explanation: text("explanation"),
+  confidence: decimal("confidence", { precision: 3, scale: 2 }).notNull(),
+  
+  // Review Status
+  humanReviewRequired: boolean("human_review_required").default(false),
+  humanReviewedAt: timestamp("human_reviewed_at"),
+  humanReviewedBy: varchar("human_reviewed_by"),
+  finalDecision: text("final_decision"), // approved, rejected, modified
+  
+  // Metadata
+  analysisTimestamp: timestamp("analysis_timestamp").defaultNow(),
+  modelVersion: text("model_version").default('claude-sonnet-4-20250514'),
+  processingTimeMs: integer("processing_time_ms"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// User Search Intent & Behavior Tracking
+export const userSearchIntents = pgTable("user_search_intents", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id"), // Optional for anonymous users
+  sessionId: varchar("session_id").notNull(), // Track search sessions
+  
+  // Search Context
+  searchFilters: jsonb("search_filters").notNull(), // DetailedFilters as JSON
+  searchQuery: text("search_query"), // Natural language query if any
+  
+  // Inferred Intent
+  budgetMin: integer("budget_min"),
+  budgetMax: integer("budget_max"),
+  urgencyLevel: text("urgency_level"), // low, medium, high
+  behaviorPattern: text("behavior_pattern"), // browsing, comparing, ready_to_buy
+  
+  // Preference Scores (0-100)
+  brandImportance: integer("brand_importance").default(50),
+  priceImportance: integer("price_importance").default(70),
+  mileageImportance: integer("mileage_importance").default(60),
+  yearImportance: integer("year_importance").default(50),
+  locationImportance: integer("location_importance").default(60),
+  
+  // Search Results & Interaction
+  resultsCount: integer("results_count"),
+  clickedListings: text("clicked_listings").array().default([]),
+  timeOnResults: integer("time_on_results_seconds"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// AI Analysis Performance Metrics
+export const aiAnalysisMetrics = pgTable("ai_analysis_metrics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Service Metrics
+  serviceName: text("service_name").notNull(), // claude, gemini, perplexity
+  operationType: text("operation_type").notNull(), // classification, quality, ranking, moderation
+  
+  // Performance Data
+  totalCalls: integer("total_calls").default(0),
+  successfulCalls: integer("successful_calls").default(0),
+  failedCalls: integer("failed_calls").default(0),
+  averageProcessingTime: decimal("average_processing_time", { precision: 8, scale: 2 }),
+  averageConfidence: decimal("average_confidence", { precision: 3, scale: 2 }),
+  
+  // Cost Tracking
+  totalTokensUsed: integer("total_tokens_used").default(0),
+  estimatedCostUsd: decimal("estimated_cost_usd", { precision: 10, scale: 4 }),
+  
+  // Time Window
+  periodStart: timestamp("period_start").notNull(),
+  periodEnd: timestamp("period_end").notNull(),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Insert Schemas for Claude AI Tables
+export const insertListingClassificationSchema = createInsertSchema(listingClassifications).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertQualityAnalysisSchema = createInsertSchema(qualityAnalyses).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertContentModerationSchema = createInsertSchema(contentModerations).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserSearchIntentSchema = createInsertSchema(userSearchIntents).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAiAnalysisMetricsSchema = createInsertSchema(aiAnalysisMetrics).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Type Exports for Claude AI Services
+export type ListingClassification = typeof listingClassifications.$inferSelect;
+export type QualityAnalysis = typeof qualityAnalyses.$inferSelect;
+export type ContentModeration = typeof contentModerations.$inferSelect;
+export type UserSearchIntent = typeof userSearchIntents.$inferSelect;
+export type AiAnalysisMetrics = typeof aiAnalysisMetrics.$inferSelect;
+
+export type InsertListingClassification = z.infer<typeof insertListingClassificationSchema>;
+export type InsertQualityAnalysis = z.infer<typeof insertQualityAnalysisSchema>;
+export type InsertContentModeration = z.infer<typeof insertContentModerationSchema>;
+export type InsertUserSearchIntent = z.infer<typeof insertUserSearchIntentSchema>;
+export type InsertAiAnalysisMetrics = z.infer<typeof insertAiAnalysisMetricsSchema>;
 export type InsertFeaturedListing = z.infer<typeof insertFeaturedListingSchema>;
 export type FeaturedListing = typeof featuredListings.$inferSelect;
 

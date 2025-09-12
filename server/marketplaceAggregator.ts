@@ -4,6 +4,7 @@ import FirecrawlApp from '@mendable/firecrawl-js';
 import { GeographicIntelligenceService, type LocationData, type GeoSearchContext } from './geoService.js';
 import { HistoricalIntelligenceService, type HistoricalAnalysis } from './historicalIntelligence.js';
 import { AIDataExtractionService } from './aiDataExtraction.js';
+import { claudeService, type ListingClassification, type QualityAnalysis, type UserSearchIntent } from './claudeService.js';
 import { 
   timeoutConfigs, 
   retryConfigs, 
@@ -52,6 +53,10 @@ export interface EnhancedMarketplaceListing extends MarketplaceListing {
   historicalAnalysis?: HistoricalAnalysis;
   recencyScore?: number;
   authenticityRating?: number;
+  claudeClassification?: ListingClassification;
+  claudeQualityAnalysis?: QualityAnalysis;
+  intentScore?: number;
+  overallQualityScore?: number;
 }
 
 export interface AggregatedSearchResult {
@@ -839,9 +844,9 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
     };
   }
 
-  // 🧠 Enhance listings with historical intelligence
+  // 🧠 Enhance listings with historical intelligence and Claude AI analysis
   private async enhanceWithHistoricalIntelligence(listings: MarketplaceListing[], city: string): Promise<EnhancedMarketplaceListing[]> {
-    console.log(`🧠 Analyzing ${listings.length} listings with historical intelligence...`);
+    console.log(`🧠 Analyzing ${listings.length} listings with historical intelligence and Claude AI...`);
     
     const enhancedListings = await Promise.all(
       listings.map(async (listing) => {
@@ -858,29 +863,86 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
             listingDate: listing.listingDate
           };
           
-          const historicalAnalysis = await this.historicalService.analyzeHistoricalData(vehicleProfile);
+          // Run historical analysis and Claude analysis in parallel for efficiency
+          const [historicalAnalysis, claudeClassification, claudeQuality] = await Promise.allSettled([
+            this.historicalService.analyzeHistoricalData(vehicleProfile),
+            claudeService.classifyListing(listing),
+            claudeService.analyzeQuality(listing)
+          ]);
+          
+          // Extract results with fallbacks
+          const historical = historicalAnalysis.status === 'fulfilled' ? historicalAnalysis.value : null;
+          const classification = claudeClassification.status === 'fulfilled' ? claudeClassification.value : null;
+          const quality = claudeQuality.status === 'fulfilled' ? claudeQuality.value : null;
+          
+          // Calculate combined quality score
+          const overallQualityScore = this.calculateCombinedQualityScore(historical, quality, classification);
           
           return {
             ...listing,
-            historicalAnalysis,
-            recencyScore: historicalAnalysis.recencyScore,
-            authenticityRating: historicalAnalysis.authenticityRating
+            historicalAnalysis: historical,
+            claudeClassification: classification,
+            claudeQualityAnalysis: quality,
+            recencyScore: historical?.recencyScore || this.historicalService.calculateRecencyScore(listing.listingDate),
+            authenticityRating: historical?.authenticityRating || (quality?.authenticityScore ? quality.authenticityScore / 10 : 7.5),
+            overallQualityScore: overallQualityScore
           };
         } catch (error) {
           console.warn(`⚠️ Failed to analyze ${listing.brand} ${listing.model}:`, error);
           return {
             ...listing,
             recencyScore: this.historicalService.calculateRecencyScore(listing.listingDate),
-            authenticityRating: 7.5 // Default rating
+            authenticityRating: 7.5, // Default rating
+            overallQualityScore: 70 // Default quality score
           };
         }
       })
     );
     
-    const analyzedCount = enhancedListings.filter(l => l.historicalAnalysis).length;
-    console.log(`✅ Successfully analyzed ${analyzedCount}/${listings.length} listings with AI intelligence`);
+    const analyzedCount = enhancedListings.filter(l => l.historicalAnalysis || l.claudeClassification).length;
+    console.log(`✅ Successfully analyzed ${analyzedCount}/${listings.length} listings with combined AI intelligence`);
     
     return enhancedListings;
+  }
+
+  // Helper method to calculate combined quality score from multiple AI analyses
+  private calculateCombinedQualityScore(
+    historical: any, 
+    quality: QualityAnalysis | null, 
+    classification: ListingClassification | null
+  ): number {
+    let combinedScore = 70; // Base score
+    
+    // Historical analysis contribution (30% weight)
+    if (historical?.authenticityRating) {
+      combinedScore += (historical.authenticityRating - 7.5) * 4; // Scale to impact
+    }
+    
+    // Claude quality analysis contribution (40% weight)
+    if (quality) {
+      const claudeQualityScore = quality.overallQuality;
+      combinedScore = (combinedScore * 0.6) + (claudeQualityScore * 0.4);
+    }
+    
+    // Claude classification contribution (30% weight)
+    if (classification) {
+      const classificationBonus = this.getClassificationBonus(classification.overallClassification);
+      combinedScore += classificationBonus;
+    }
+    
+    return Math.min(100, Math.max(0, Math.round(combinedScore)));
+  }
+  
+  // Helper method to convert classification to quality bonus
+  private getClassificationBonus(classification: string): number {
+    const bonusMap = {
+      'excellent': 15,
+      'good': 8,
+      'fair': 0,
+      'poor': -10,
+      'rejected': -20
+    };
+    return bonusMap[classification as keyof typeof bonusMap] || 0;
   }
 
   // Helper methods
