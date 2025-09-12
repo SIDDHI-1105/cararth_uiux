@@ -8,10 +8,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Heart, MessageCircle, Share2, Users, Camera, Calendar, MapPin, Star, TrendingUp, Award } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// SEO-friendly image paths (dynamically referenced)
+// SEO-friendly image paths (dynamically referenced) - Enhanced with real automotive photography
 const sportsCarImage = '/attached_assets/generated_images/Dynamic_sports_car_mountain_road_5267e5a6.png';
 const heritageImage = '/attached_assets/generated_images/Classic_meets_modern_Indian_cars_2c8c3217.png';
 const communityImage = '/attached_assets/generated_images/Car_enthusiasts_community_gathering_46d58c97.png';
+const swiftImage = '/attached_assets/generated_images/Modern_Maruti_Swift_photography_7f6b059d.png';
+const cretaImage = '/attached_assets/generated_images/Premium_Hyundai_Creta_photography_72cd10be.png';
 
 interface CommunityPost {
   id: string;

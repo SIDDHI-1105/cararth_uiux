@@ -10,6 +10,7 @@ import FeaturedListingModal from "@/components/featured-listing-modal";
 import PremiumUpgrade from "@/components/premium-upgrade";
 import RecentlyViewed from "@/components/recently-viewed";
 import SearchLimitPopup from "@/components/search-limit-popup";
+import { SEOHead, createWebsiteSchema, createOrganizationSchema } from "@/components/seo-head";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +35,39 @@ export default function Home() {
   const [showSearchLimitPopup, setShowSearchLimitPopup] = useState(false);
   const [searchLimitData, setSearchLimitData] = useState<any>(null);
   const [usageStatus, setUsageStatus] = useState<any>(null);
+
+  // Dynamic SEO based on search filters
+  const dynamicSEO = useMemo(() => {
+    const hasFilters = Object.keys(filters).length > 0;
+    let title = "CarArth - India's First Used Car Search Engine";
+    let description = "India's first used car search engine. Compare cars across platforms, discover true value with AI intelligence. Buy & sell with confidence on CarArth.";
+    
+    if (hasFilters) {
+      const filterParts = [];
+      if (filters.brand) filterParts.push(filters.brand);
+      if (filters.model) filterParts.push(filters.model);
+      if (filters.city) filterParts.push(`in ${filters.city}`);
+      if (filters.fuelType) filterParts.push(filters.fuelType);
+      
+      if (filterParts.length > 0) {
+        title = `${filterParts.join(' ')} Used Cars - CarArth`;
+        description = `Find ${filterParts.join(' ')} used cars on CarArth. Compare prices across all major platforms with AI intelligence. Authentic listings, verified sellers.`;
+      }
+    }
+    
+    return { title, description };
+  }, [filters]);
+
+  // Structured data for homepage
+  const structuredData = useMemo(() => {
+    const baseSchema = createWebsiteSchema();
+    const orgSchema = createOrganizationSchema();
+    
+    return {
+      "@context": "https://schema.org",
+      "@graph": [baseSchema, orgSchema]
+    };
+  }, []);
 
   const { data: cars = [], isLoading } = useQuery<Car[]>({
     queryKey: ["/api/marketplace/search", filters],

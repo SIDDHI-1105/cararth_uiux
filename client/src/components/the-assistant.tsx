@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, Send, Sparkles, Loader2, Bot, User, Lock, LogIn } from "lucide-react";
+import { MessageSquare, Send, Sparkles, Loader2, User, Lock, LogIn } from "lucide-react";
+import HumanoidAvatar from "@/components/humanoid-avatar";
 import { apiRequest } from "@/lib/queryClient";
 
 interface Message {
@@ -28,7 +29,7 @@ export default function TheAssistant({ isAuthenticated = false, userEmail }: The
     {
       id: '1',
       type: 'assistant',
-      content: "Hi, I'm your CarArth Assistant. How may I help you find the perfect car today?",
+      content: "Hi there! I'm Alex, your personal CarArth assistant. I'm here to help you find the perfect car with a friendly, human touch. What kind of car are you looking for today?",
       timestamp: new Date()
     }
   ]);
@@ -160,15 +161,14 @@ export default function TheAssistant({ isAuthenticated = false, userEmail }: The
         <CardTitle className="flex items-center justify-between text-lg font-bold">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="w-10 h-10 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center shadow-lg">
-                <Bot className="w-5 h-5 text-white" />
-              </div>
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center">
-                <Sparkles className="w-2 h-2 text-white animate-pulse" />
-              </div>
+              <HumanoidAvatar 
+                size="md" 
+                isActive={chatMutation.isPending}
+                mood={chatMutation.isPending ? 'thinking' : 'helpful'}
+              />
             </div>
             <div>
-              <div className="text-gray-800 dark:text-gray-200 font-bold">Assistant</div>
+              <div className="text-gray-800 dark:text-gray-200 font-bold">Alex - Your Car Assistant</div>
               <div className="text-xs text-gray-500 dark:text-gray-400">
                 {isAuthenticated 
                   ? `Welcome back, ${userEmail?.split('@')[0] || 'User'}!` 
@@ -198,10 +198,10 @@ export default function TheAssistant({ isAuthenticated = false, userEmail }: The
         {!isExpanded && (
           <div className="mt-3 p-3 bg-white/50 dark:bg-gray-800/50 rounded-lg backdrop-blur-sm">
             <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">
-              🚗 Find your perfect car with AI
+              🚗 Find your perfect car with Alex
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Natural language search • Instant results
+              Human-like conversation • Instant car recommendations
             </p>
           </div>
         )}
@@ -257,8 +257,8 @@ export default function TheAssistant({ isAuthenticated = false, userEmail }: The
                       {message.type === 'user' ? (
                         <User className="w-4 h-4" />
                       ) : (
-                        <Bot className="w-4 h-4" />
-                      )}
+                        <HumanoidAvatar size="sm" mood="happy" />
+                      ) }
                     </div>
                     <div
                       className={`rounded-2xl px-4 py-3 shadow-sm ${
@@ -285,7 +285,7 @@ export default function TheAssistant({ isAuthenticated = false, userEmail }: The
                 <div className="flex justify-start">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center">
-                      <Loader2 className="w-4 h-4 text-white animate-spin" />
+                      <HumanoidAvatar size="sm" mood="thinking" isActive={true} />
                     </div>
                     <div className="bg-white dark:bg-gray-800 rounded-2xl px-4 py-2 border border-gray-200 dark:border-gray-700">
                       <div className="flex space-x-1">
