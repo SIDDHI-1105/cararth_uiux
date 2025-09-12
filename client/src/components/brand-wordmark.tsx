@@ -14,8 +14,8 @@ export function BrandWordmark({
   // Responsive CSS classes controlling only height for proper aspect ratio
   const responsiveClasses = {
     header: showTagline 
-      ? "h-8 sm:h-10 md:h-11 w-auto max-w-full" 
-      : "h-6 sm:h-7 md:h-8 w-auto max-w-full",
+      ? "h-12 sm:h-14 md:h-16 w-auto max-w-full" 
+      : "h-9 sm:h-10 md:h-12 w-auto max-w-full",
     hero: showTagline 
       ? "h-12 sm:h-14 md:h-16 lg:h-20 w-auto max-w-full" 
       : "h-10 sm:h-12 md:h-14 lg:h-16 w-auto max-w-full",
@@ -26,7 +26,7 @@ export function BrandWordmark({
   
   // Use consistent viewBox that scales properly
   const viewBoxWidth = 280;
-  const viewBoxHeight = showTagline ? 80 : 56;
+  const viewBoxHeight = showTagline ? 96 : 68;
   
   return (
     <svg
@@ -39,9 +39,9 @@ export function BrandWordmark({
       {/* CarArth wordmark with proper kerning */}
       <text
         x="0"
-        y="36"
+        y="48"
         fill="currentColor"
-        fontSize="32"
+        fontSize="44"
         fontFamily="Inter, system-ui, sans-serif"
         fontWeight="700"
         letterSpacing="-0.025em"
@@ -55,16 +55,16 @@ export function BrandWordmark({
       {showTagline && (
         <text
           x="0"
-          y="58"
+          y="74"
           fill="currentColor"
-          fontSize="12"
+          fontSize="16"
           fontFamily="Inter, system-ui, sans-serif"
           fontWeight="400"
           opacity="0.7"
         >
           India's first used car search engine
           <tspan
-            fontSize="10"
+            fontSize="14"
             baselineShift="super"
           >
             *
