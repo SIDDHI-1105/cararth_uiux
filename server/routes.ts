@@ -45,13 +45,18 @@ import { orchestratedBatchIngestion } from "./orchestratedIngestion.js";
 
 // Developer mode check
 const isDeveloperMode = (req: any) => {
-  // Check if running in development environment
-  if (process.env.NODE_ENV === 'development') {
+  // Only enable developer mode if explicitly set with environment flag
+  if (process.env.ENABLE_DEVELOPER_MODE === 'true' && process.env.NODE_ENV === 'development') {
     return true;
   }
   
-  // Check for developer user (if authenticated)
-  if (req.isAuthenticated && typeof req.isAuthenticated === 'function' && req.isAuthenticated()) {
+  // For production, never allow developer mode bypass
+  if (process.env.NODE_ENV === 'production') {
+    return false;
+  }
+  
+  // Check for developer user (if authenticated) - only in development
+  if (process.env.NODE_ENV === 'development' && req.isAuthenticated && typeof req.isAuthenticated === 'function' && req.isAuthenticated()) {
     const userEmail = req.user?.claims?.email;
     // Add your developer email here or check for admin status
     return userEmail && (
@@ -69,7 +74,7 @@ const checkSearchLimit = async (req: any, res: any, next: any) => {
   try {
     // Developer mode bypass
     if (isDeveloperMode(req)) {
-      console.log('🚀 Developer mode active - bypassing all restrictions');
+      console.log('🔧 Developer mode active - auth bypass enabled (development only)');
       return next();
     }
 

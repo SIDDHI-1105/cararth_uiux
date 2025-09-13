@@ -239,10 +239,22 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
     );
   };
 
+  // Deterministic hash function for stable AI insights
+  const getStableScore = (listingId: string, seed: string, min: number, max: number) => {
+    let hash = 0;
+    const input = listingId + seed;
+    for (let i = 0; i < input.length; i++) {
+      const char = input.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash) % (max - min + 1) + min;
+  };
+
   // Intent-based ranking functions
   const calculateIntentMatch = (listing: MarketplaceListing, query: string) => {
-    // Mock intent matching algorithm - calculates how well listing matches user intent
-    const baseScore = Math.random() * 40 + 60; // 60-100%
+    // Deterministic intent matching - stable scores per listing
+    const baseScore = getStableScore(listing.id, 'intent', 70, 95);
     
     const intentFactors = [];
     const queryLower = query.toLowerCase();
@@ -251,7 +263,7 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
     if (queryLower.includes('budget') || queryLower.includes('₹') || queryLower.includes('lakh')) {
       intentFactors.push({
         factor: 'Budget Alignment',
-        score: 85 + Math.floor(Math.random() * 15),
+        score: getStableScore(listing.id, 'budget', 85, 95),
         explanation: 'Price fits within your specified budget range'
       });
     }
@@ -260,7 +272,7 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
     if (queryLower.includes('family') || queryLower.includes('spacious') || queryLower.includes('suv')) {
       intentFactors.push({
         factor: 'Family Suitability',
-        score: 80 + Math.floor(Math.random() * 20),
+        score: getStableScore(listing.id, 'family', 80, 95),
         explanation: 'Spacious interior and safety features for family use'
       });
     }
@@ -269,7 +281,7 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
     if (queryLower.includes('mileage') || queryLower.includes('efficiency') || queryLower.includes('petrol')) {
       intentFactors.push({
         factor: 'Fuel Efficiency',
-        score: 75 + Math.floor(Math.random() * 25),
+        score: getStableScore(listing.id, 'fuel', 75, 92),
         explanation: 'Excellent fuel economy for daily commuting'
       });
     }
@@ -278,7 +290,7 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
     if (queryLower.includes('city') || queryLower.includes('compact') || queryLower.includes('parking')) {
       intentFactors.push({
         factor: 'City Driving',
-        score: 82 + Math.floor(Math.random() * 18),
+        score: getStableScore(listing.id, 'city', 82, 94),
         explanation: 'Compact size perfect for city navigation and parking'
       });
     }
@@ -287,7 +299,7 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
     if (queryLower.includes('reliable') || queryLower.includes('maintained') || queryLower.includes('service')) {
       intentFactors.push({
         factor: 'Reliability',
-        score: 78 + Math.floor(Math.random() * 22),
+        score: getStableScore(listing.id, 'reliability', 78, 93),
         explanation: 'Brand reputation and maintenance history indicate reliability'
       });
     }
@@ -297,12 +309,12 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
       intentFactors.push(
         {
           factor: 'Value for Money',
-          score: 75 + Math.floor(Math.random() * 25),
+          score: getStableScore(listing.id, 'value', 75, 90),
           explanation: 'Competitive pricing compared to similar models'
         },
         {
           factor: 'Market Demand',
-          score: 70 + Math.floor(Math.random() * 30),
+          score: getStableScore(listing.id, 'demand', 70, 88),
           explanation: 'Popular model with good resale value'
         }
       );
@@ -327,10 +339,10 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
     });
   };
 
-  // Mock AI-generated data for demonstration
+  // AI-generated insights with stable scores
   const getAIInsights = (listing: MarketplaceListing) => {
-    const authenticityScore = 85 + Math.floor(Math.random() * 15); // 85-100%
-    const qualityScore = 80 + Math.floor(Math.random() * 20); // 80-100%
+    const authenticityScore = getStableScore(listing.id, 'authenticity', 85, 95);
+    const qualityScore = getStableScore(listing.id, 'quality', 80, 95);
     const priceAdvantage = calculatePriceAdvantage(listing);
     
     const prosOptions = [
@@ -353,8 +365,10 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
       'Slight price premium'
     ];
     
-    const pros = prosOptions.slice(0, 2 + Math.floor(Math.random() * 2));
-    const cons = consOptions.slice(0, 1 + Math.floor(Math.random() * 2));
+    const prosCount = getStableScore(listing.id, 'prosCount', 2, 3);
+    const consCount = getStableScore(listing.id, 'consCount', 1, 2);
+    const pros = prosOptions.slice(0, prosCount);
+    const cons = consOptions.slice(0, consCount);
     
     return {
       authenticityScore,
@@ -363,7 +377,7 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
       cons,
       aiRecommendation: authenticityScore > 90 ? 'Highly Recommended' : 
                         authenticityScore > 80 ? 'Recommended' : 'Consider Carefully',
-      imageVerified: Math.random() > 0.2, // 80% chance of verified images
+      imageVerified: getStableScore(listing.id, 'imageVerified', 1, 10) > 2, // ~80% chance of verified images
       priceInsight: priceAdvantage > 10 ? 'Great Deal' : 
                    priceAdvantage > 0 ? 'Fair Price' : 'Above Market'
     };
