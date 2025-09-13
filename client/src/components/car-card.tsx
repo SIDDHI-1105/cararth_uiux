@@ -2,11 +2,11 @@ import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Heart, Calendar, Gauge, Fuel, Settings, MapPin, Star, Share2 } from "lucide-react";
-import { type Car } from "@shared/schema";
+import { type CarListing } from "@shared/schema";
 import SocialShare from "@/components/social-share";
 
 interface CarCardProps {
-  car: Car;
+  car: CarListing;
   onFavoriteToggle?: (carId: string) => void;
   isFavorite?: boolean;
 }
@@ -29,7 +29,8 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
     }
   };
 
-  const formatMileage = (mileage: number) => {
+  const formatMileage = (mileage: number | null) => {
+    if (!mileage) return 'N/A';
     if (mileage >= 1000) {
       return `${(mileage / 1000).toFixed(0)}k km`;
     }
@@ -37,17 +38,8 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
   };
 
   return (
-    <div className={`car-card steel-gradient rounded-lg overflow-hidden border-2 ${
-      car.isFeatured 
-        ? 'border-yellow-500 shadow-lg shadow-yellow-500/20 relative'
-        : 'border-steel-primary/30'
-    }`} data-testid={`card-car-${car.id}`}>
-      {car.isFeatured && (
-        <div className="absolute top-2 left-2 bg-gradient-to-r from-yellow-500 to-amber-500 text-black px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 z-10">
-          <Star className="w-3 h-3 fill-current" />
-          FEATURED
-        </div>
-      )}
+    <div className="car-card steel-gradient rounded-lg overflow-hidden border-2 border-steel-primary/30" data-testid={`card-car-${car.id}`}>
+      {/* Portal listings don't have featured status */}
       <div className="relative overflow-hidden">
         {!imageLoaded && (
           <div className="absolute inset-0 bg-muted animate-pulse flex items-center justify-center">
@@ -101,17 +93,11 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
           </div>
         </div>
         
-        {/* Legal Source Badge - Shows compliance with Indian laws */}
-        {car.source && (
+        {/* Portal Source Badge - Shows data source */}
+        {car.portal && (
           <div className="mb-3">
-            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-              ['Google Places', 'GMB Dealer', 'Gov Auction', 'RSS Feed', 'Dealer Syndicate', 'Public Feed'].includes(car.source)
-                ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30'
-                : 'bg-green-500/10 text-green-400 border border-green-500/30'
-            }`} data-testid={`badge-source-${car.id}`}>
-              {['Google Places', 'GMB Dealer', 'Gov Auction', 'RSS Feed', 'Dealer Syndicate', 'Public Feed'].includes(car.source) && '🆓 '}
-              {car.source === 'Partner API' && '🤝 '}
-              {car.source}
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/30" data-testid={`badge-source-${car.id}`}>
+              {car.portal}
             </span>
           </div>
         )}

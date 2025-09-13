@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { FullWidthLayout } from "@/components/layout";
 import HeroSection from "@/components/hero-section";
@@ -109,6 +109,8 @@ export default function Home() {
     },
   });
 
+  // Debugging removed - cars should now display correctly
+
   const handleHeroSearch = (searchFilters: any) => {
     console.log('🔍 Hero search called with:', searchFilters);
     setActiveTab("marketplace");
@@ -201,7 +203,7 @@ export default function Home() {
     });
   };
 
-  const handleMakeFeatured = (car: Car) => {
+  const handleMakeFeatured = (car: CarListing) => {
     setSelectedCarForFeatured({ id: car.id, title: car.title });
     setShowFeaturedModal(true);
   };
