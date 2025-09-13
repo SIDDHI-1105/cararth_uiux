@@ -202,7 +202,7 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
     else score += 5; // individual
     
     // Age penalty (older listings may be stale)
-    const daysSince = Math.ceil((Date.now() - listing.listingDate.getTime()) / (1000 * 60 * 60 * 24));
+    const daysSince = Math.ceil((Date.now() - new Date(listing.listingDate).getTime()) / (1000 * 60 * 60 * 24));
     if (daysSince > 30) score -= 10;
     else if (daysSince > 7) score -= 5;
     
@@ -618,7 +618,7 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
                   <MapPin className="w-4 h-4 mr-1" />
                   <span>{listing.location}</span>
                   <Clock className="w-4 h-4 ml-3 mr-1" />
-                  <span>{Math.ceil((Date.now() - listing.listingDate.getTime()) / (1000 * 60 * 60 * 24))} days ago</span>
+                  <span>{Math.ceil((Date.now() - new Date(listing.listingDate).getTime()) / (1000 * 60 * 60 * 24))} days ago</span>
                 </div>
                 <div className="flex gap-2">
                   <Button 
