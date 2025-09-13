@@ -250,7 +250,45 @@ export default function Home() {
     },
     onSuccess: (data) => {
       console.log('✅ Marketplace search successful:', data);
-      setMarketplaceResult(data);
+      
+      // Transform API response to match MarketplaceResults expected structure
+      const transformedResult = {
+        listings: data.listings || [],
+        analytics: {
+          totalListings: data.total || 0,
+          avgPrice: data.listings && data.listings.length > 0 ? 
+            data.listings.reduce((sum: number, car: any) => sum + car.price, 0) / data.listings.length : 0,
+          priceRange: {
+            min: data.listings && data.listings.length > 0 ? 
+              Math.min(...data.listings.map((car: any) => car.price)) : 0,
+            max: data.listings && data.listings.length > 0 ? 
+              Math.max(...data.listings.map((car: any) => car.price)) : 0
+          },
+          mostCommonFuelType: 'Petrol', // Default for now
+          avgMileage: data.listings && data.listings.length > 0 ? 
+            data.listings.reduce((sum: number, car: any) => sum + car.mileage, 0) / data.listings.length : 0,
+          sourcesCount: data.listings ? 
+            data.listings.reduce((acc: Record<string, number>, car: any) => {
+              acc[car.source] = (acc[car.source] || 0) + 1;
+              return acc;
+            }, {}) : {},
+          locationDistribution: data.listings ? 
+            data.listings.reduce((acc: Record<string, number>, car: any) => {
+              acc[car.city || car.location] = (acc[car.city || car.location] || 0) + 1;
+              return acc;
+            }, {}) : {},
+          priceByLocation: {},
+          historicalTrend: 'stable' as const
+        },
+        recommendations: {
+          bestDeals: data.listings ? data.listings.slice(0, 3) : [],
+          overpriced: [],
+          newListings: data.listings ? data.listings.slice(0, 5) : [],
+          certified: data.listings ? data.listings.filter((car: any) => car.verificationStatus === 'certified').slice(0, 3) : []
+        }
+      };
+      
+      setMarketplaceResult(transformedResult);
       setMarketplaceError(null);
     },
     onError: (error: any) => {
