@@ -351,7 +351,7 @@ export default function Home() {
         case "year-new":
           return b.year - a.year;
         case "mileage-low":
-          return a.mileage - b.mileage;
+          return (a.mileage || 0) - (b.mileage || 0);
         default:
           return 0;
       }

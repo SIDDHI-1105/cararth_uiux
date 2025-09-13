@@ -47,7 +47,7 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
           </div>
         )}
         <img 
-          src={(car.images && car.images[0]) || "/api/placeholder/car-image"} 
+          src={(car.images && Array.isArray(car.images) && car.images[0]) || "/api/placeholder/car-image"} 
           alt={car.title} 
           className={`w-full h-48 object-cover transition-opacity duration-300 ${
             imageLoaded ? 'opacity-100' : 'opacity-0'
