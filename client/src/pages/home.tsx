@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ChevronLeft, ChevronRight, Search, Globe, Star, Crown, MessageSquare, Users } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import { type Car } from "@shared/schema";
+import { type CarListing } from "@shared/schema";
 
 // Type definition for usage status data
 interface UsageStatus {
@@ -77,7 +77,7 @@ export default function Home() {
     };
   }, []);
 
-  const { data: cars = [], isLoading } = useQuery<Car[]>({
+  const { data: cars = [], isLoading } = useQuery<CarListing[]>({
     queryKey: ["/api/marketplace/search", filters],
     queryFn: async () => {
       const searchFilters = {
