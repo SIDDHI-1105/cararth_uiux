@@ -177,6 +177,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('⚠️ Using MarketplaceAggregator without database caching');
   }
 
+  // Start internal scheduler for batch ingestion (temporary solution)
+  const { internalScheduler } = await import('./scheduler.js');
+  internalScheduler.start();
+  console.log('⏰ Internal scheduler started for twice-daily batch ingestion');
+
   // Auth middleware
   await setupAuth(app);
   
