@@ -1,15 +1,19 @@
 /**
- * Internal Scheduler for Batch Ingestion
- * Temporary solution until external cron services are set up
+ * Internal Scheduler for Batch Ingestion - Cost-Optimized Workflow
+ * Runs Firecrawl caching at 11AM & 11PM IST for lean operation
+ * Configurable via CACHE_TIMES_IST environment variable
  */
 
 export class InternalScheduler {
   private intervalId: NodeJS.Timeout | null = null;
   private isRunning = false;
+  private isExecuting = false;
+  private lastRunTimes = new Map<number, string>(); // hour -> ISO date
 
   /**
    * Start the scheduler to run batch ingestion twice daily
-   * Runs at 6 AM and 6 PM IST (12:30 AM and 12:30 PM UTC)
+   * Runs at 11 AM and 11 PM IST (configurable via CACHE_TIMES_IST)
+   * Default: 11:00,23:00 for cost-optimized lean workflow
    */
   start() {
     if (this.isRunning) {
@@ -18,7 +22,8 @@ export class InternalScheduler {
     }
 
     this.isRunning = true;
-    console.log('⏰ Internal scheduler started - will run batch ingestion twice daily');
+    const cacheTimesIST = this.getCacheSchedule();
+    console.log(`⏰ Internal scheduler started - will run batch ingestion at ${cacheTimesIST.join(' & ')} IST`);
     
     // Check every hour if it's time to run
     this.intervalId = setInterval(() => {
@@ -38,32 +43,125 @@ export class InternalScheduler {
     }
   }
 
-  private async checkAndRunIngestion() {
+  private getCacheSchedule(): string[] {
+    const cacheTimesEnv = process.env.CACHE_TIMES_IST || '11:00,23:00';
+    const times = cacheTimesEnv.split(',').map(time => time.trim());
+    
+    // Validate time format
+    const validTimes = times.filter(time => {
+      const match = time.match(/^([01]?\d|2[0-3]):([0-5]\d)$/);
+      if (!match) {
+        console.warn(`⚠️ Invalid time format in CACHE_TIMES_IST: '${time}'. Expected HH:MM format.`);
+        return false;
+      }
+      return true;
+    });
+    
+    if (validTimes.length === 0) {
+      console.warn('⚠️ No valid times found in CACHE_TIMES_IST, falling back to default: 11:00,23:00');
+      return ['11:00', '23:00'];
+    }
+    
+    return validTimes;
+  }
+
+  private getScheduleHours(): number[] {
+    const times = this.getCacheSchedule();
+    return times.map(time => parseInt(time.split(':')[0]));
+  }
+  
+  private getISTTime(): { hour: number; minute: number; date: Date } {
+    // Use timezone-aware calculation for IST
     const now = new Date();
-    const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
-    const istTime = new Date(now.getTime() + istOffset);
-    const hour = istTime.getHours();
+    const istTimeString = now.toLocaleString('en-US', {
+      timeZone: 'Asia/Kolkata',
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit'
+    });
     
-    // Run at 6 AM and 6 PM IST (approximately)
-    const shouldRun = (hour === 6 || hour === 18) && istTime.getMinutes() < 30;
+    const [hour, minute] = istTimeString.split(':').map(num => parseInt(num));
     
-    if (shouldRun) {
-      console.log('⏰ Scheduled batch ingestion triggered at', istTime.toISOString());
+    // Get full IST date for comparison
+    const istDate = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    
+    return { hour, minute, date: istDate };
+  }
+
+  private async checkAndRunIngestion() {
+    // Prevent concurrent executions
+    if (this.isExecuting) {
+      console.log('⏳ Ingestion already executing, skipping check');
+      return;
+    }
+    
+    const { hour, minute, date: istTime } = this.getISTTime();
+    const todayKey = istTime.toISOString().split('T')[0]; // YYYY-MM-DD
+    
+    // Check if current time matches any configured schedule (within ±5 minutes)
+    const cacheSchedule = this.getCacheSchedule();
+    let shouldRun = false;
+    let matchedTime: string | null = null;
+    
+    for (const timeStr of cacheSchedule) {
+      const [scheduleHour, scheduleMinute] = timeStr.split(':').map(num => parseInt(num));
+      const timeDiffMinutes = Math.abs((hour * 60 + minute) - (scheduleHour * 60 + scheduleMinute));
+      
+      // Run within ±5 minutes of scheduled time
+      if (timeDiffMinutes <= 5) {
+        // Check if we already ran today for this hour
+        const lastRun = this.lastRunTimes.get(scheduleHour);
+        if (lastRun !== todayKey) {
+          shouldRun = true;
+          matchedTime = timeStr;
+          break;
+        }
+      }
+    }
+    
+    if (shouldRun && matchedTime) {
+      this.isExecuting = true;
+      const scheduleHour = parseInt(matchedTime.split(':')[0]);
+      
+      console.log(`⏰ Firecrawl cache refresh triggered at ${matchedTime} IST (${istTime.toISOString()})`);
       
       try {
-        // Import and run batch ingestion
-        const { batchIngestionService } = await import('./batchIngestion.js');
-        const status = batchIngestionService.getStatus();
+        // Use new orchestrated ingestion for cost-optimized workflow
+        const pipelineMode = process.env.AI_PIPELINE_MODE || 'lean_v1';
+        console.log(`🔄 Running ${pipelineMode} ingestion pipeline`);
         
-        if (!status.isIngesting) {
-          const cities = ['hyderabad', 'bangalore', 'mumbai', 'delhi', 'pune', 'chennai'];
-          await batchIngestionService.runIngestion(cities);
-          console.log('✅ Scheduled batch ingestion completed successfully');
+        if (pipelineMode === 'lean_v1') {
+          // Import and run orchestrated ingestion with status check
+          const { orchestratedBatchIngestion } = await import('./orchestratedIngestion.js');
+          const status = orchestratedBatchIngestion.getSystemStatus();
+          
+          if (!status.isRunning) {
+            const cities = ['hyderabad', 'bangalore', 'mumbai', 'delhi', 'pune', 'chennai'];
+            await orchestratedBatchIngestion.runIngestion(cities);
+            console.log('✅ Orchestrated lean ingestion completed successfully');
+          } else {
+            console.log('⏳ Orchestrated ingestion already in progress, skipping scheduled run');
+          }
         } else {
-          console.log('⏳ Batch ingestion already in progress, skipping scheduled run');
+          // Fallback to legacy batch ingestion
+          const { batchIngestionService } = await import('./batchIngestion.js');
+          const status = batchIngestionService.getStatus();
+          
+          if (!status.isIngesting) {
+            const cities = ['hyderabad', 'bangalore', 'mumbai', 'delhi', 'pune', 'chennai'];
+            await batchIngestionService.runIngestion(cities);
+            console.log('✅ Legacy batch ingestion completed successfully');
+          } else {
+            console.log('⏳ Batch ingestion already in progress, skipping scheduled run');
+          }
         }
+        // Mark this hour as executed for today
+        this.lastRunTimes.set(scheduleHour, todayKey);
+        
       } catch (error) {
-        console.error('❌ Scheduled batch ingestion failed:', error);
+        console.error('❌ Scheduled ingestion failed:', error);
+      } finally {
+        this.isExecuting = false;
       }
     }
   }
@@ -71,7 +169,10 @@ export class InternalScheduler {
   getStatus() {
     return {
       isRunning: this.isRunning,
-      nextCheck: this.isRunning ? 'Every hour' : 'Stopped'
+      nextCheck: this.isRunning ? 'Every hour' : 'Stopped',
+      cacheSchedule: this.getCacheSchedule(),
+      scheduleHours: this.getScheduleHours(),
+      pipelineMode: process.env.AI_PIPELINE_MODE || 'lean_v1'
     };
   }
 }
