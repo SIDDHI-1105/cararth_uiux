@@ -42,6 +42,7 @@ import { unifiedPerplexityService } from "./unifiedPerplexityService.js";
 import { aiMetricsMonitor } from "./aiMetricsMonitor.js";
 import { metricsIntegration } from "./aiMetricsIntegration.js";
 import { orchestratedBatchIngestion } from "./orchestratedIngestion.js";
+import crypto from "crypto";
 
 // Developer mode check
 const isDeveloperMode = (req: any) => {
@@ -83,7 +84,7 @@ const checkSearchLimit = async (req: any, res: any, next: any) => {
       // Get or generate visitor ID
       let visitorId = req.headers['x-visitor-id'] as string;
       if (!visitorId) {
-        visitorId = require('crypto').randomUUID();
+        visitorId = crypto.randomUUID();
         res.setHeader('X-Visitor-ID', visitorId);
       }
 
@@ -109,7 +110,7 @@ const checkSearchLimit = async (req: any, res: any, next: any) => {
       // Log the search activity
       await storage.logAnonymousSearch({
         visitorId,
-        ipHash: req.ip ? require('crypto').createHash('sha256').update(req.ip).digest('hex').substring(0, 32) : null,
+        ipHash: req.ip ? crypto.createHash('sha256').update(req.ip).digest('hex').substring(0, 32) : null,
         userAgent: req.get('User-Agent') || null
       });
 
