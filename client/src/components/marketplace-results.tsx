@@ -484,7 +484,7 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
                     <div className="flex items-center gap-4 text-xs" data-testid={`ai-scores-${listing.id}`}>
                       <div className="flex items-center gap-1" data-testid={`claude-authenticity-${listing.id}`}>
                         <Shield className="w-4 h-4 text-green-600" />
-                        <span className="font-medium">Claude AI Verified:</span>
+                        <span className="font-medium">📸 CarArth x Claude AI:</span>
                         <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200" data-testid={`authenticity-score-${listing.id}`}>
                           {aiInsights.authenticityScore}% Authentic
                         </Badge>
@@ -527,7 +527,7 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
                       <div className="space-y-1" data-testid={`gpt5-pros-${listing.id}`}>
                         <div className="flex items-center gap-1 font-medium text-green-700">
                           <ThumbsUp className="w-3 h-3" />
-                          <span>GPT-5 Insights - Pros:</span>
+                          <span>🧠 CarArth x GPT-5 - Pros:</span>
                         </div>
                         <ul className="space-y-1 text-muted-foreground">
                           {aiInsights.pros.map((pro, index) => (
@@ -542,7 +542,7 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
                       <div className="space-y-1" data-testid={`gpt5-cons-${listing.id}`}>
                         <div className="flex items-center gap-1 font-medium text-orange-700">
                           <ThumbsDown className="w-3 h-3" />
-                          <span>GPT-5 Insights - Considerations:</span>
+                          <span>🧠 CarArth x GPT-5 - Considerations:</span>
                         </div>
                         <ul className="space-y-1 text-muted-foreground">
                           {aiInsights.cons.map((con, index) => (
