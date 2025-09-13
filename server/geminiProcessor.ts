@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import { MarketplaceListing } from './marketplaceAggregator';
 
 // Bulk processing capabilities for Gemini
@@ -55,7 +55,7 @@ export class GeminiProcessor {
   };
 
   constructor() {
-    this.gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+    this.gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
     
     this.normalizationRules = {
       brandVariations: {
@@ -253,10 +253,12 @@ Return clean JSON array with normalized data following this structure:
 }`;
 
     try {
-      const model = this.gemini.getGenerativeModel({ model: 'gemini-1.5-flash' });
-      const response = await model.generateContent(prompt);
+      const response = await this.gemini.models.generateContent({
+        model: 'gemini-1.5-flash',
+        contents: prompt
+      });
       
-      const responseText = response.response.text();
+      const responseText = response.text || "";
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       
       if (jsonMatch) {
