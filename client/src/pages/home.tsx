@@ -109,7 +109,7 @@ export default function Home() {
     },
   });
 
-  // Debugging removed - cars should now display correctly
+  // FIXED: Removed sortedCars reference that was causing component crash
 
   const handleHeroSearch = (searchFilters: any) => {
     console.log('🔍 Hero search called with:', searchFilters);
