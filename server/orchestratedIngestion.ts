@@ -4,7 +4,7 @@ import { GeminiProcessor } from './geminiProcessor';
 import { PerplexityValidator } from './perplexityValidator';
 import { MarketplaceListing, EnhancedMarketplaceListing } from './marketplaceAggregator';
 import { storage } from './storage';
-import { aiDataExtraction } from './aiDataExtraction';
+import { aiDataExtractionService } from './aiDataExtraction';
 
 // Orchestrated batch ingestion pipeline
 export interface OrchestratedIngestionResult {
@@ -363,7 +363,7 @@ export class OrchestratedBatchIngestion {
   private async executeExtraction(url: string, decision: any, city: string): Promise<any[]> {
     try {
       // Use the existing aiDataExtraction service but with orchestrated decisions
-      const listings = await aiDataExtraction.extractFromUrl(url);
+      const listings = await aiDataExtractionService.extractFromUrl(url);
       return listings || [];
     } catch (error) {
       console.error(`🚨 Extraction execution failed for ${url}:`, error);

@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import { GoogleGenAI } from '@google/genai';
 import { ClaudeCarListingService } from './claudeService';
 import { UnifiedPerplexityService } from './unifiedPerplexityService';
-import { aiDataExtraction } from './aiDataExtraction';
+import { aiDataExtractionService } from './aiDataExtraction';
 import { MarketplaceListing } from './marketplaceAggregator';
 
 // AI Budget Management
