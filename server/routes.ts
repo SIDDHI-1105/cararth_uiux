@@ -240,6 +240,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI Health Monitoring Dashboard
+  app.get('/api/ai/health', async (req, res) => {
+    try {
+      console.log('🔍 AI Health Dashboard requested');
+      
+      // Get AI Data Extraction metrics
+      const { aiDataExtractionService } = await import('./aiDataExtraction.js');
+      const extractionMetrics = aiDataExtractionService.getCostMetrics();
+      
+      // Get Claude metrics
+      const claudeMetrics = claudeService.getMetrics();
+      
+      // Get Perplexity metrics (using available method)
+      const perplexityMetrics = unifiedPerplexityService.getPerformanceMetrics ? 
+        unifiedPerplexityService.getPerformanceMetrics() : 
+        { totalRequests: 0, successfulRequests: 0, fallbackResponses: 0, errorRate: 0, averageResponseTime: 0 };
+      
+      // Check API key status
+      const apiKeysStatus = {
+        openai: !!process.env.OPENAI_API_KEY,
+        anthropic: !!process.env.ANTHROPIC_API_KEY,
+        gemini: !!process.env.GEMINI_API_KEY,
+        perplexity: !!process.env.PERPLEXITY_API_KEY,
+        firecrawl: !!process.env.FIRECRAWL_API_KEY
+      };
+      
+      // Calculate overall health status
+      const healthStatus = {
+        openai: extractionMetrics.averageListingsPerCall > 0 ? 'healthy' : 'degraded',
+        claude: claudeMetrics.classificationCalls > 0 ? 'healthy' : 'idle',
+        gemini: extractionMetrics.geminiCalls > 0 ? 'healthy' : 'idle',
+        perplexity: perplexityMetrics.totalRequests > 0 ? 'healthy' : 'idle',
+        firecrawl: extractionMetrics.dailyUsage.firecrawlCalls < extractionMetrics.dailyUsage.dailyLimit ? 'healthy' : 'quota_exceeded'
+      };
+      
+      // Firecrawl usage warnings
+      const firecrawlUsagePercent = (extractionMetrics.dailyUsage.firecrawlCalls / extractionMetrics.dailyUsage.dailyLimit) * 100;
+      const firecrawlWarnings = [];
+      if (firecrawlUsagePercent > 90) {
+        firecrawlWarnings.push('Critical: Daily limit almost reached');
+      } else if (firecrawlUsagePercent > 75) {
+        firecrawlWarnings.push('Warning: High daily usage');
+      }
+      
+      res.json({
+        timestamp: new Date().toISOString(),
+        overallHealth: Object.values(healthStatus).every(s => s === 'healthy' || s === 'idle') ? 'healthy' : 'degraded',
+        services: {
+          firecrawl: {
+            status: healthStatus.firecrawl,
+            apiKeyPresent: apiKeysStatus.firecrawl,
+            dailyUsage: extractionMetrics.dailyUsage,
+            usagePercent: Math.round(firecrawlUsagePercent),
+            cacheEfficiency: extractionMetrics.cacheEfficiency,
+            warnings: firecrawlWarnings,
+            metrics: {
+              extractCalls: extractionMetrics.firecrawlExtractCalls,
+              basicCalls: extractionMetrics.firecrawlBasicCalls,
+              cacheHits: extractionMetrics.firecrawlCacheHits,
+              cacheMisses: extractionMetrics.firecrawlCacheMisses,
+              urlsDeduplicated: extractionMetrics.urlsDeduplicated
+            }
+          },
+          claude: {
+            status: healthStatus.claude,
+            apiKeyPresent: apiKeysStatus.anthropic,
+            metrics: {
+              classificationCalls: claudeMetrics.classificationCalls,
+              qualityCalls: claudeMetrics.qualityCalls,
+              moderationCalls: claudeMetrics.moderationCalls,
+              errorRate: claudeMetrics.errorRate,
+              averageResponseTime: claudeMetrics.averageResponseTime
+            }
+          },
+          gemini: {
+            status: healthStatus.gemini,
+            apiKeyPresent: apiKeysStatus.gemini,
+            metrics: {
+              calls: extractionMetrics.geminiCalls,
+              usage: 'backup_extraction'
+            }
+          },
+          perplexity: {
+            status: healthStatus.perplexity,
+            apiKeyPresent: apiKeysStatus.perplexity,
+            metrics: {
+              totalRequests: perplexityMetrics.totalRequests,
+              successfulRequests: perplexityMetrics.successfulRequests,
+              fallbackResponses: perplexityMetrics.fallbackResponses,
+              errorRate: perplexityMetrics.errorRate,
+              averageResponseTime: perplexityMetrics.averageResponseTime
+            }
+          },
+          openai: {
+            status: healthStatus.openai,
+            apiKeyPresent: apiKeysStatus.openai,
+            usage: 'assistant_and_enrichment'
+          }
+        },
+        recommendations: [
+          ...(firecrawlUsagePercent > 75 ? ['Consider implementing more aggressive caching to reduce Firecrawl usage'] : []),
+          ...(claudeMetrics.errorRate > 20 ? ['High Claude error rate - check API status'] : []),
+          ...(perplexityMetrics.errorRate > 30 ? ['High Perplexity error rate - verify model configuration'] : [])
+        ],
+        cacheStats: {
+          firecrawlCacheHitRate: extractionMetrics.cacheEfficiency.firecrawlCacheHitRate,
+          totalCacheHits: extractionMetrics.cacheEfficiency.totalCacheHits,
+          urlDeduplicationSavings: extractionMetrics.cacheEfficiency.urlDeduplicationCount
+        }
+      });
+    } catch (error) {
+      console.error('❌ AI Health Dashboard error:', error);
+      res.status(500).json({ 
+        error: 'Failed to get AI health status',
+        message: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {

@@ -1,55 +1,152 @@
 import { GoogleGenAI } from "@google/genai";
 import FirecrawlApp from '@mendable/firecrawl-js';
 import { MarketplaceListing } from './marketplaceAggregator.js';
+import { AdvancedCache, CacheKeyGenerator, cacheConfigs } from './advancedCaching.js';
+import { createHash } from 'crypto';
 
 // Enhanced AI-powered data extraction service leveraging multiple LLM providers
 export class AIDataExtractionService {
   private gemini: GoogleGenAI;
   private firecrawl: FirecrawlApp;
   private perplexityApiKey: string;
+  
+  // Enhanced caching and rate limiting
+  private firecrawlCache: AdvancedCache<MarketplaceListing[]>;
+  private urlDedupCache: AdvancedCache<boolean>;
+  private dailyUsage: {
+    firecrawlCalls: number;
+    lastResetDate: string;
+    dailyLimit: number;
+  };
+  
   private costMetrics: {
     firecrawlExtractCalls: number;
     firecrawlBasicCalls: number;
+    firecrawlCacheHits: number;
+    firecrawlCacheMisses: number;
     perplexityPrimaryCalls: number;
     perplexityEnhanceCalls: number;
     geminiCalls: number;
     totalListingsExtracted: number;
+    urlsDeduplicated: number;
   };
 
   constructor() {
     this.gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
     this.firecrawl = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY || "" });
     this.perplexityApiKey = process.env.PERPLEXITY_API_KEY || "";
+    
+    // Initialize caching systems
+    this.firecrawlCache = new AdvancedCache(cacheConfigs.firecrawl);
+    this.urlDedupCache = new AdvancedCache(cacheConfigs.urlDedup);
+    
+    // Initialize daily usage tracking
+    const today = new Date().toISOString().split('T')[0];
+    this.dailyUsage = {
+      firecrawlCalls: 0,
+      lastResetDate: today,
+      dailyLimit: 500 // Limit to 500 Firecrawl calls per day (leaving buffer from 3,025 monthly)
+    };
+    
     this.costMetrics = {
       firecrawlExtractCalls: 0,
       firecrawlBasicCalls: 0,
+      firecrawlCacheHits: 0,
+      firecrawlCacheMisses: 0,
       perplexityPrimaryCalls: 0,
       perplexityEnhanceCalls: 0,
       geminiCalls: 0,
-      totalListingsExtracted: 0
+      totalListingsExtracted: 0,
+      urlsDeduplicated: 0
     };
   }
 
   getCostMetrics() {
+    this.resetDailyUsageIfNeeded();
     return {
       ...this.costMetrics,
+      dailyUsage: this.dailyUsage,
       averageListingsPerCall: this.costMetrics.totalListingsExtracted / 
-        (this.costMetrics.firecrawlExtractCalls + this.costMetrics.perplexityPrimaryCalls + this.costMetrics.geminiCalls || 1)
+        (this.costMetrics.firecrawlExtractCalls + this.costMetrics.perplexityPrimaryCalls + this.costMetrics.geminiCalls || 1),
+      cacheEfficiency: {
+        firecrawlCacheHitRate: this.costMetrics.firecrawlCacheHits / 
+          (this.costMetrics.firecrawlCacheHits + this.costMetrics.firecrawlCacheMisses || 1) * 100,
+        totalCacheHits: this.costMetrics.firecrawlCacheHits,
+        urlDeduplicationCount: this.costMetrics.urlsDeduplicated
+      }
     };
   }
 
+  private resetDailyUsageIfNeeded(): void {
+    const today = new Date().toISOString().split('T')[0];
+    if (this.dailyUsage.lastResetDate !== today) {
+      this.dailyUsage.firecrawlCalls = 0;
+      this.dailyUsage.lastResetDate = today;
+      console.log(`🔄 Daily Firecrawl usage reset for ${today}`);
+    }
+  }
+
+  private isUnderDailyLimit(): boolean {
+    this.resetDailyUsageIfNeeded();
+    return this.dailyUsage.firecrawlCalls < this.dailyUsage.dailyLimit;
+  }
+
+  private async isUrlRecentlyProcessed(url: string): Promise<boolean> {
+    const dedupKey = CacheKeyGenerator.urlDeduplication(url);
+    const wasProcessed = await this.urlDedupCache.get(dedupKey);
+    
+    if (wasProcessed) {
+      this.costMetrics.urlsDeduplicated++;
+      console.log(`🔍 URL already processed recently: ${url.slice(0, 50)}...`);
+      return true;
+    }
+    
+    // Mark as processed
+    await this.urlDedupCache.set(dedupKey, true);
+    return false;
+  }
+
   /**
-   * Enhanced Firecrawl scraping with LLM-powered extraction
+   * Enhanced Firecrawl scraping with LLM-powered extraction + caching + rate limiting
    */
   async scrapeWithLLMExtraction(url: string, extractionPrompt: string): Promise<MarketplaceListing[]> {
     try {
       console.log(`🧠 LLM-Enhanced scraping: ${url}`);
       
-      // Use Firecrawl's LLM extraction capabilities with optimized schema
+      // Check cache first
+      const cacheKey = CacheKeyGenerator.firecrawlResult(url, extractionPrompt);
+      const cachedResult = await this.firecrawlCache.get(cacheKey);
+      if (cachedResult) {
+        this.costMetrics.firecrawlCacheHits++;
+        console.log(`✅ Cache hit for Firecrawl: ${cachedResult.length} listings from cache`);
+        return cachedResult;
+      }
+      
+      this.costMetrics.firecrawlCacheMisses++;
+      
+      // Check URL deduplication
+      if (await this.isUrlRecentlyProcessed(url)) {
+        console.log(`⏭️ Skipping recently processed URL: ${url.slice(0, 50)}...`);
+        return []; // Return empty if recently processed
+      }
+      
+      // Check daily rate limit
+      if (!this.isUnderDailyLimit()) {
+        console.log(`🚫 Daily Firecrawl limit reached (${this.dailyUsage.firecrawlCalls}/${this.dailyUsage.dailyLimit})`);
+        throw new Error('Daily Firecrawl API limit reached - falling back to alternative extraction');
+      }
+      
+      // Track usage
       this.costMetrics.firecrawlExtractCalls++;
+      this.dailyUsage.firecrawlCalls++;
+      
+      console.log(`📊 Firecrawl usage: ${this.dailyUsage.firecrawlCalls}/${this.dailyUsage.dailyLimit} daily calls`);
+      
+      // Use Firecrawl's LLM extraction capabilities with optimized schema
       const result = await this.firecrawl.scrapeUrl(url, {
         formats: ['extract'],
         extract: {
+          prompt: extractionPrompt,
           schema: {
             type: "object",
             properties: {
@@ -77,8 +174,7 @@ export class AIDataExtractionService {
               }
             },
             required: ["listings"]
-          },
-          prompt: extractionPrompt
+          }
         },
         timeout: 60000,
         waitFor: 8000
@@ -90,7 +186,11 @@ export class AIDataExtractionService {
         if (extractedData?.listings && Array.isArray(extractedData.listings)) {
           const validListings = this.validateAndNormalizeListings(extractedData.listings, url);
           this.costMetrics.totalListingsExtracted += validListings.length;
-          console.log(`✅ Firecrawl extract tokens used: ${validListings.length} genuine listings from ${url}`);
+          
+          // Cache the result
+          await this.firecrawlCache.set(cacheKey, validListings);
+          
+          console.log(`✅ Firecrawl extract: ${validListings.length} genuine listings from ${url} (cached for 24h)`);
           return validListings;
         }
       }
@@ -576,3 +676,6 @@ CRITICAL EXTRACTION RULES:
     return `https://via.placeholder.com/400x300/cccccc/666666?text=${encodeURIComponent(brand + ' ' + model)}`;
   }
 }
+
+// Export singleton instance
+export const aiDataExtractionService = new AIDataExtractionService();

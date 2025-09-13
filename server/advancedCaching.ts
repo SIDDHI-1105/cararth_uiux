@@ -25,6 +25,19 @@ export class CacheKeyGenerator {
     const hash = createHash('sha256').update(filterString).digest('base64url').slice(0, 32);
     return `search:${hash}`;
   }
+
+  static firecrawlResult(url: string, extractionPrompt?: string): string {
+    const key = url + (extractionPrompt ? `:${extractionPrompt.slice(0, 100)}` : '');
+    const hash = createHash('sha256').update(key).digest('base64url').slice(0, 32);
+    return `firecrawl:${hash}`;
+  }
+
+  static urlDeduplication(url: string): string {
+    // Normalize URL for deduplication (remove query params, fragments)
+    const normalizedUrl = url.split('?')[0].split('#')[0].toLowerCase();
+    const hash = createHash('sha256').update(normalizedUrl).digest('base64url').slice(0, 20);
+    return `urldedup:${hash}`;
+  }
 }
 
 // Multi-tier caching strategy
@@ -74,6 +87,22 @@ export const cacheConfigs: Record<string, CacheConfig> = {
     maxSize: 500,
     priority: 'low',
     refreshThreshold: 0.5
+  },
+  
+  // Firecrawl results - long-lived to reduce API calls
+  firecrawl: {
+    ttl: 24 * 60 * 60 * 1000, // 24 hours - URLs don't change frequently
+    maxSize: 1000,
+    priority: 'high',
+    refreshThreshold: 0.9
+  },
+  
+  // URL deduplication - very long-lived
+  urlDedup: {
+    ttl: 7 * 24 * 60 * 60 * 1000, // 7 days
+    maxSize: 2000,
+    priority: 'high',
+    refreshThreshold: 0.95
   }
 };
 
