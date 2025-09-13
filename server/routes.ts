@@ -39,6 +39,9 @@ import { enhanceHyderabadSearch, HyderabadMarketIntelligence } from "./hyderabad
 import { fastSearchService } from "./fastSearch.js";
 import { claudeService } from "./claudeService.js";
 import { unifiedPerplexityService } from "./unifiedPerplexityService.js";
+import { aiMetricsMonitor } from "./aiMetricsMonitor.js";
+import { metricsIntegration } from "./aiMetricsIntegration.js";
+import { orchestratedBatchIngestion } from "./orchestratedIngestion.js";
 
 // Developer mode check
 const isDeveloperMode = (req: any) => {

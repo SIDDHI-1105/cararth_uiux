@@ -1,0 +1,341 @@
+import { ClaudeCarListingService } from './claudeService';
+import { MarketplaceListing } from './marketplaceAggregator';
+
+// Trust and compliance gate for all listings
+export interface TrustAnalysisResult {
+  isApproved: boolean;
+  trustScore: number; // 0-100
+  issues: string[];
+  actions: ('approve' | 'flag' | 'reject' | 'request_verification')[];
+  moderationRequired: boolean;
+  explanation: string;
+}
+
+export interface ContentModerationResult {
+  isClean: boolean;
+  violations: string[];
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  maskedContent?: Partial<MarketplaceListing>;
+}
+
+export class TrustLayer {
+  private claude: ClaudeCarListingService;
+  private trustedSources: Set<string>;
+  private blacklistedKeywords: Set<string>;
+  
+  constructor() {
+    this.claude = new ClaudeCarListingService();
+    this.trustedSources = new Set([
+      'cardekho.com',
+      'cars24.com', 
+      'carwale.com',
+      'autotrader.in'
+    ]);
+    
+    this.blacklistedKeywords = new Set([
+      'accident',
+      'flood',
+      'stolen',
+      'duplicate',
+      'fake',
+      'scam',
+      'urgent sale',
+      'immediate cash'
+    ]);
+  }
+
+  /**
+   * PRIMARY TRUST GATE - Screen all listings before storage
+   */
+  async screenListing(listing: MarketplaceListing): Promise<TrustAnalysisResult> {
+    try {
+      console.log(`🔍 Trust screening: ${listing.title}`);
+      
+      // 1. Source credibility check
+      const sourceScore = this.assessSourceCredibility(listing);
+      
+      // 2. Content moderation (Claude)
+      const moderationResult = await this.moderateContent(listing);
+      
+      // 3. Quality and authenticity assessment  
+      const qualityAnalysis = await this.claude.assessListingQuality(listing);
+      
+      // 4. Fraud pattern detection
+      const fraudScore = this.detectFraudPatterns(listing);
+      
+      // 5. Calculate overall trust score
+      const trustScore = this.calculateTrustScore({
+        sourceScore,
+        moderationScore: moderationResult.isClean ? 100 : 20,
+        qualityScore: qualityAnalysis.overallQuality,
+        fraudScore
+      });
+      
+      // 6. Make approval decision
+      const decision = this.makeApprovalDecision(trustScore, moderationResult, fraudScore);
+      
+      return {
+        isApproved: decision.approved,
+        trustScore,
+        issues: [...moderationResult.violations, ...decision.issues],
+        actions: decision.actions,
+        moderationRequired: !moderationResult.isClean || trustScore < 60,
+        explanation: decision.explanation
+      };
+      
+    } catch (error) {
+      console.error(`🚨 Trust screening failed for ${listing.id}:`, error);
+      
+      // Fail-safe: reject on error
+      return {
+        isApproved: false,
+        trustScore: 0,
+        issues: ['Trust screening system error'],
+        actions: ['flag'],
+        moderationRequired: true,
+        explanation: 'Automated trust screening failed - manual review required'
+      };
+    }
+  }
+
+  /**
+   * CONTENT MODERATION - Claude-powered content cleaning
+   */
+  async moderateContent(listing: MarketplaceListing): Promise<ContentModerationResult> {
+    try {
+      // Use Claude for content moderation
+      const moderationResult = await this.claude.moderateListingContent(listing);
+      
+      // Apply PII masking if needed
+      const maskedListing = this.maskSensitiveInfo(listing);
+      
+      return {
+        isClean: moderationResult.isCompliant,
+        violations: moderationResult.violationTypes,
+        severity: moderationResult.severity,
+        maskedContent: maskedListing
+      };
+      
+    } catch (error) {
+      console.error('🚨 Content moderation error:', error);
+      
+      // Conservative fallback
+      return {
+        isClean: false,
+        violations: ['Moderation system error'],
+        severity: 'high'
+      };
+    }
+  }
+
+  /**
+   * SOURCE CREDIBILITY ASSESSMENT
+   */
+  private assessSourceCredibility(listing: MarketplaceListing): number {
+    let score = 50; // Base score
+    
+    // Trusted source bonus
+    if (listing.source && this.trustedSources.has(listing.source.toLowerCase())) {
+      score += 30;
+    }
+    
+    // Dealer vs individual seller
+    if (listing.sellerType === 'dealer') {
+      score += 15;
+    }
+    
+    // Verification status
+    if (listing.verificationStatus === 'verified') {
+      score += 20;
+    }
+    
+    // Image availability
+    if (listing.images && listing.images.length > 0) {
+      score += 10;
+    }
+    
+    return Math.min(score, 100);
+  }
+
+  /**
+   * FRAUD PATTERN DETECTION
+   */
+  private detectFraudPatterns(listing: MarketplaceListing): number {
+    let suspiciousScore = 0;
+    
+    // Check title and description for suspicious keywords
+    const textContent = `${listing.title} ${listing.description || ''}`.toLowerCase();
+    
+    for (const keyword of this.blacklistedKeywords) {
+      if (textContent.includes(keyword)) {
+        suspiciousScore += 20;
+      }
+    }
+    
+    // Price anomaly detection
+    if (this.isPriceAnomalous(listing)) {
+      suspiciousScore += 30;
+    }
+    
+    // Incomplete information red flags
+    if (!listing.year || listing.year < 1990 || listing.year > new Date().getFullYear() + 1) {
+      suspiciousScore += 15;
+    }
+    
+    if (!listing.mileage || listing.mileage < 0) {
+      suspiciousScore += 10;
+    }
+    
+    // Return fraud-free score (inverse)
+    return Math.max(0, 100 - suspiciousScore);
+  }
+
+  /**
+   * PRICE ANOMALY DETECTION
+   */
+  private isPriceAnomalous(listing: MarketplaceListing): boolean {
+    // Very basic price checks - could be enhanced with market data
+    if (listing.price <= 0 || listing.price > 50000000) { // 0 to 5 crores
+      return true;
+    }
+    
+    // Suspiciously low prices for popular brands
+    const popularBrands = ['maruti suzuki', 'hyundai', 'tata', 'honda'];
+    if (popularBrands.includes(listing.brand?.toLowerCase() || '')) {
+      if (listing.price < 100000) { // Less than 1 lakh for popular brands
+        return true;
+      }
+    }
+    
+    return false;
+  }
+
+  /**
+   * PII MASKING - Protect sensitive information
+   */
+  private maskSensitiveInfo(listing: MarketplaceListing): Partial<MarketplaceListing> {
+    const masked = { ...listing };
+    
+    // Mask phone numbers in description
+    if (masked.description) {
+      masked.description = masked.description.replace(
+        /(\+91[\-\s]?)?[6-9]\d{9}/g, 
+        '[PHONE_MASKED]'
+      );
+    }
+    
+    // Mask email addresses
+    if (masked.description) {
+      masked.description = masked.description.replace(
+        /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
+        '[EMAIL_MASKED]'
+      );
+    }
+    
+    return masked;
+  }
+
+  /**
+   * TRUST SCORE CALCULATION
+   */
+  private calculateTrustScore(factors: {
+    sourceScore: number;
+    moderationScore: number;
+    qualityScore: number;
+    fraudScore: number;
+  }): number {
+    return Math.round(
+      (factors.sourceScore * 0.25) +
+      (factors.moderationScore * 0.25) +
+      (factors.qualityScore * 0.30) +
+      (factors.fraudScore * 0.20)
+    );
+  }
+
+  /**
+   * APPROVAL DECISION LOGIC
+   */
+  private makeApprovalDecision(
+    trustScore: number, 
+    moderationResult: ContentModerationResult,
+    fraudScore: number
+  ): {
+    approved: boolean;
+    actions: ('approve' | 'flag' | 'reject' | 'request_verification')[];
+    issues: string[];
+    explanation: string;
+  } {
+    
+    // Critical violations - immediate rejection
+    if (moderationResult.severity === 'critical' || fraudScore < 30) {
+      return {
+        approved: false,
+        actions: ['reject'],
+        issues: ['Critical content violations or fraud patterns detected'],
+        explanation: 'Listing rejected due to critical trust issues'
+      };
+    }
+    
+    // High trust score - approve
+    if (trustScore >= 80 && moderationResult.isClean) {
+      return {
+        approved: true,
+        actions: ['approve'],
+        issues: [],
+        explanation: 'High trust score - approved for publication'
+      };
+    }
+    
+    // Medium trust score - flag for review
+    if (trustScore >= 60) {
+      return {
+        approved: false,
+        actions: ['flag'],
+        issues: ['Medium trust score - requires human review'],
+        explanation: 'Moderate trust issues - flagged for manual review'
+      };
+    }
+    
+    // Low trust score - request verification
+    return {
+      approved: false,
+      actions: ['request_verification'],
+      issues: ['Low trust score - additional verification needed'],
+      explanation: 'Trust score below threshold - verification required'
+    };
+  }
+
+  /**
+   * BULK SCREENING - For batch ingestion
+   */
+  async screenListings(listings: MarketplaceListing[]): Promise<Array<{
+    listing: MarketplaceListing;
+    trustResult: TrustAnalysisResult;
+  }>> {
+    console.log(`🔍 Bulk trust screening: ${listings.length} listings`);
+    
+    const results = await Promise.all(
+      listings.map(async (listing) => ({
+        listing,
+        trustResult: await this.screenListing(listing)
+      }))
+    );
+    
+    const approved = results.filter(r => r.trustResult.isApproved).length;
+    const flagged = results.filter(r => r.trustResult.actions.includes('flag')).length;
+    const rejected = results.filter(r => r.trustResult.actions.includes('reject')).length;
+    
+    console.log(`✅ Trust screening complete: ${approved} approved, ${flagged} flagged, ${rejected} rejected`);
+    
+    return results;
+  }
+
+  /**
+   * TRUST METRICS
+   */
+  getTrustMetrics() {
+    return this.claude.getMetrics();
+  }
+}
+
+export const trustLayer = new TrustLayer();
