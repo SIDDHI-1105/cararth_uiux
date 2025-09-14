@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { MessageSquare, Send, Sparkles, Loader2, User, Lock, LogIn } from "lucide-react";
-import HumanoidAvatar from "@/components/humanoid-avatar";
 import { apiRequest } from "@/lib/queryClient";
 
 interface Message {
@@ -161,11 +160,9 @@ export default function TheAssistant({ isAuthenticated = false, userEmail }: The
         <CardTitle className="flex items-center justify-between text-lg font-bold">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <HumanoidAvatar 
-                size="md" 
-                isActive={chatMutation.isPending}
-                mood={chatMutation.isPending ? 'thinking' : 'helpful'}
-              />
+              <div className="w-10 h-10 bg-gradient-to-br from-indigo-400 to-purple-400 rounded-full flex items-center justify-center">
+                <User className="w-5 h-5 text-white" />
+              </div>
             </div>
             <div>
               <div className="text-gray-800 dark:text-gray-200 font-bold">Alex - Your Car Assistant</div>
@@ -257,7 +254,9 @@ export default function TheAssistant({ isAuthenticated = false, userEmail }: The
                       {message.type === 'user' ? (
                         <User className="w-4 h-4" />
                       ) : (
-                        <HumanoidAvatar size="sm" mood="happy" />
+                        <div className="w-6 h-6 bg-gradient-to-br from-indigo-400 to-purple-400 rounded-full flex items-center justify-center">
+                          <User className="w-3 h-3 text-white" />
+                        </div>
                       ) }
                     </div>
                     <div
@@ -285,7 +284,9 @@ export default function TheAssistant({ isAuthenticated = false, userEmail }: The
                 <div className="flex justify-start">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center">
-                      <HumanoidAvatar size="sm" mood="thinking" isActive={true} />
+                      <div className="w-6 h-6 bg-gradient-to-br from-indigo-400 to-purple-400 rounded-full flex items-center justify-center animate-pulse">
+                        <User className="w-3 h-3 text-white" />
+                      </div>
                     </div>
                     <div className="bg-white dark:bg-gray-800 rounded-2xl px-4 py-2 border border-gray-200 dark:border-gray-700">
                       <div className="flex space-x-1">

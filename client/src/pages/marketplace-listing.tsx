@@ -12,7 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import Navbar from '@/components/navbar';
-import ContactSellerModal from '@/components/contact-seller-modal';
+import ContactModal from '@/components/contact-modal';
 import LoanWidget from '@/components/loan-widget';
 
 export default function MarketplaceListing() {
@@ -239,7 +239,7 @@ export default function MarketplaceListing() {
                         'Air Conditioning', 'Power Steering', 'Power Windows', 'Central Locking',
                         'ABS', 'Airbags', 'Music System', 'Bluetooth Connectivity',
                         'Alloy Wheels', 'Fog Lights', 'Rear Parking Sensors', 'Electric Mirrors'
-                      ]).map((feature, index) => (
+                      ]).map((feature: string, index: number) => (
                         <div key={index} className="flex items-center gap-2 p-2 bg-muted/50 rounded">
                           <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
                           <span className="text-sm">{feature}</span>
@@ -473,10 +473,11 @@ export default function MarketplaceListing() {
         </div>
       </div>
       
-      <ContactSellerModal
+      <ContactModal
         open={contactModalOpen}
         onOpenChange={setContactModalOpen}
-        listing={listing}
+        carId={listing.id}
+        carTitle={listing.title}
       />
     </div>
   );
