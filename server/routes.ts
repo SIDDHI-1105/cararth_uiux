@@ -95,17 +95,17 @@ const checkSearchLimit = async (req: any, res: any, next: any) => {
       // Check search count in rolling 30-day window
       const searchCount = await storage.getAnonymousSearchCountSince(visitorId, thirtyDaysAgo);
       
-      if (searchCount >= 10) {
-        // Return 429 with popup trigger metadata
-        return res.status(429).json({
-          code: "search_limit_exceeded",
-          message: "🔥 You're on fire with searches! Ready to unlock unlimited car discoveries?",
-          limit: 10,
-          window: "30d",
-          searchesLeft: 0,
-          resetAt: new Date(Date.now() + (24 * 60 * 60 * 1000)) // Reset tomorrow (searches older than 30 days will be available)
-        });
-      }
+      // UNLIMITED SEARCHES ENABLED - No search limits for now
+      // if (searchCount >= 10) {
+      //   return res.status(429).json({
+      //     code: "search_limit_exceeded", 
+      //     message: "🔥 You're on fire with searches! Ready to unlock unlimited car discoveries?",
+      //     limit: 10,
+      //     window: "30d",
+      //     searchesLeft: 0,
+      //     resetAt: new Date(Date.now() + (24 * 60 * 60 * 1000))
+      //   });
+      // }
 
       // Log the search activity
       await storage.logAnonymousSearch({
@@ -114,13 +114,14 @@ const checkSearchLimit = async (req: any, res: any, next: any) => {
         userAgent: req.get('User-Agent') || null
       });
 
+      // UNLIMITED RESULTS ENABLED - No result limits  
       // Limit results to 10 for non-authenticated users
-      if (req.body) {
-        req.body.limit = Math.min(req.body.limit || 10, 10);
-      }
-      if (req.query) {
-        req.query.limit = Math.min(req.query.limit || 10, 10);
-      }
+      // if (req.body) {
+      //   req.body.limit = Math.min(req.body.limit || 10, 10);
+      // }
+      // if (req.query) {
+      //   req.query.limit = Math.min(req.query.limit || 10, 10);
+      // }
       return next();
     }
 
