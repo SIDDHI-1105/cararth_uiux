@@ -30,7 +30,7 @@ export default function HeroSection({ onSearch }: HeroSearchProps) {
   };
 
   return (
-    <section className="bg-gradient-to-br from-primary/5 via-secondary/5 to-background dark:from-slate-800 dark:via-slate-700 dark:to-background py-16 md:py-20 px-4">
+    <section className="bg-background dark:bg-background py-16 md:py-20 px-4">
       <div className="max-w-6xl mx-auto text-center">
         {/* CarArth Logo */}
         <div className="mb-6">
