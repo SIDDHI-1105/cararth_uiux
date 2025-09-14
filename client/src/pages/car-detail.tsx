@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Layout from "@/components/layout";
 import ContactModal from "@/components/contact-modal";
-import { CarConversation } from "@/components/car-conversation";
 import PriceInsights from "@/components/price-insights";
 import LoanWidget from "@/components/loan-widget";
 import { Phone, Calendar, MapPin, User, Star, Check, ArrowLeft, MessageCircle } from "lucide-react";
@@ -159,16 +158,6 @@ export default function CarDetail() {
                 </div>
               </div>
               
-              <div className="space-y-3">
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  data-testid="button-schedule-test"
-                >
-                  <Calendar className="mr-2 h-4 w-4" />
-                  Schedule Test Drive
-                </Button>
-              </div>
             </div>
           </div>
         </div>
@@ -195,14 +184,24 @@ export default function CarDetail() {
           </div>
           
           <div className="space-y-6">
-            {/* Messaging & Contact */}
-            <CarConversation
-              carId={car.id}
-              carTitle={car.title}
-              sellerId={car.sellerId}
-              sellerName={seller ? `${seller.firstName || ''} ${seller.lastName || ''}`.trim() || 'Car Owner' : 'Car Owner'}
-              price={formatPrice(car.price)}
-            />
+            {/* Contact Seller - Simple & Working */}
+            <div className="bg-muted rounded-lg p-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center">
+                <MessageCircle className="w-5 h-5 mr-2" />
+                Contact Seller
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                Interested in this car? Send a message to the seller directly.
+              </p>
+              <Button 
+                onClick={() => setContactModalOpen(true)}
+                className="w-full btn-metallic"
+                data-testid="button-contact-seller"
+              >
+                <MessageCircle className="w-4 h-4 mr-2" />
+                Send Message to Seller
+              </Button>
+            </div>
             
             {/* Loan Widget */}
             <LoanWidget 
