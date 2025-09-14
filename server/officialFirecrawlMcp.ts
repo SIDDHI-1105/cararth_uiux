@@ -13,8 +13,9 @@ export interface McpExtractionResult {
 }
 
 /**
- * Official Firecrawl MCP Integration
- * Uses the official npx firecrawl-mcp server for enhanced LLM context sharing
+ * Official Firecrawl MCP Integration Service
+ * Provides MCP-ready interface that delegates to direct Firecrawl API
+ * Future: Can be extended to use official npx firecrawl-mcp server
  */
 export class OfficialFirecrawlMcpService {
   private apiKey: string;
@@ -87,13 +88,13 @@ export class OfficialFirecrawlMcpService {
 
       console.log(`📡 MCP Request prepared for: ${url}`);
       
-      // Since we can't directly integrate the subprocess in this context,
-      // we'll return a structured response that indicates MCP is available
-      // but delegate to the direct API for actual processing
+      // This service currently delegates to the direct Firecrawl API
+      // The MCP protocol integration can be added here when needed
+      console.log('📋 MCP Service: Delegating to direct Firecrawl API (preserves functionality)');
       
       return {
         success: false,
-        error: 'MCP delegation to direct API',
+        error: 'MCP_DELEGATION', // Special code for delegation
         data: null
       };
       

@@ -1,6 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
 import FirecrawlApp from '@mendable/firecrawl-js';
-import { FirecrawlMcpService } from './firecrawlMcpService.js';
 import { OfficialFirecrawlMcpService } from './officialFirecrawlMcp.js';
 import { MarketplaceListing } from './marketplaceAggregator.js';
 import { AdvancedCache, CacheKeyGenerator, cacheConfigs } from './advancedCaching.js';
@@ -10,7 +9,6 @@ import { createHash } from 'crypto';
 export class AIDataExtractionService {
   private gemini: GoogleGenAI;
   private firecrawl: FirecrawlApp;
-  private firecrawlMcp: FirecrawlMcpService;
   private officialMcp: OfficialFirecrawlMcpService;
   private perplexityApiKey: string;
   private useMcp: boolean;
@@ -39,7 +37,6 @@ export class AIDataExtractionService {
   constructor() {
     this.gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
     this.firecrawl = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY || "" });
-    this.firecrawlMcp = new FirecrawlMcpService({ apiKey: process.env.FIRECRAWL_API_KEY || "" });
     this.officialMcp = new OfficialFirecrawlMcpService({ apiKey: process.env.FIRECRAWL_API_KEY || "" });
     this.perplexityApiKey = process.env.PERPLEXITY_API_KEY || "";
     // Enable MCP with official implementation
