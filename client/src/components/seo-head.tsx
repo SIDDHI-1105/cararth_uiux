@@ -92,7 +92,7 @@ export function SEOHead({
 
     // Structured data
     if (structuredData) {
-      let script = document.querySelector('script[type="application/ld+json"]');
+      let script = document.querySelector('script[type="application/ld+json"]') as HTMLScriptElement;
       if (!script) {
         script = document.createElement('script');
         script.type = 'application/ld+json';
@@ -101,24 +101,6 @@ export function SEOHead({
       script.textContent = JSON.stringify(structuredData, null, 2);
     }
 
-    // Google Analytics tracking
-    if (!document.querySelector('script[src*="googletagmanager.com/gtag/js"]')) {
-      // Add Google Analytics script
-      const gtagScript = document.createElement('script');
-      gtagScript.async = true;
-      gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-B5GJ9X3GXZ';
-      document.head.appendChild(gtagScript);
-
-      // Add Google Analytics configuration
-      const configScript = document.createElement('script');
-      configScript.innerHTML = `
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-B5GJ9X3GXZ');
-      `;
-      document.head.appendChild(configScript);
-    }
 
   }, [title, description, keywords, ogImage, ogType, structuredData, canonical, noIndex]);
 
