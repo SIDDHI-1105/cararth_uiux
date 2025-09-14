@@ -54,8 +54,13 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
             imageLoaded ? 'opacity-100' : 'opacity-0'
           }`}
           data-testid={`img-car-${car.id}`}
-          onLoad={() => setImageLoaded(true)}
+          onLoad={() => {
+            console.log(`✅ Image loaded successfully for ${car.title}:`, car.images?.[0]);
+            setImageLoaded(true);
+          }}
           onError={(e) => {
+            console.error(`❌ Image failed to load for ${car.title}:`, car.images?.[0]);
+            console.error('Error details:', e);
             e.currentTarget.src = FALLBACK_CAR_IMAGE_URL;
             setImageLoaded(true);
           }}
