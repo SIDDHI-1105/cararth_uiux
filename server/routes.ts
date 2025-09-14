@@ -400,44 +400,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // For anonymous users, check visitor ID and rolling window
-      const visitorId = req.headers['x-visitor-id'] as string;
-      if (!visitorId) {
-        return res.json({
-          isAuthenticated: false,
-          searchesLeft: 10,
-          totalLimit: 10,
-          window: "30d",
-          needsVisitorId: true
-        });
-      }
-
-      // Calculate 30 days ago
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-      // Check search count in rolling 30-day window
-      let searchCount = 0;
-      try {
-        searchCount = await storage.getAnonymousSearchCountSince(visitorId, thirtyDaysAgo);
-      } catch (dbError: any) {
-        // If table doesn't exist, default to 0 searches
-        if (dbError.code === '42P01') {
-          console.warn('Anonymous search activity table not found, defaulting to 0 searches');
-          searchCount = 0;
-        } else {
-          throw dbError; // Re-throw other database errors
-        }
-      }
-      const searchesLeft = Math.max(0, 10 - searchCount);
-
-      res.json({
+      // UNLIMITED SEARCHES ENABLED - Anonymous users have unlimited access
+      return res.json({
         isAuthenticated: false,
-        searchesLeft,
-        totalLimit: 10,
-        window: "30d",
-        searchCount
+        searchesLeft: -1, // unlimited
+        totalLimit: -1, // unlimited
+        window: "unlimited",
+        searchCount: 0 // Reset count for unlimited access
       });
+
+      // DISABLED: Original search limit logic
+      // const visitorId = req.headers['x-visitor-id'] as string;
+      // if (!visitorId) {
+      //   return res.json({
+      //     isAuthenticated: false,
+      //     searchesLeft: 10,
+      //     totalLimit: 10,
+      //     window: "30d",
+      //     needsVisitorId: true
+      //   });
+      // }
     } catch (error) {
       console.error("Error fetching usage status:", error);
       res.status(500).json({ error: "Failed to fetch usage status" });
