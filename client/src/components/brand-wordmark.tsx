@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import cararthLogo from "@assets/cararth logo_1757827558983.png";
+import cararthLogo from "@assets/cararth-logo.png";
 
 interface BrandWordmarkProps {
   variant?: "header" | "hero" | "footer";

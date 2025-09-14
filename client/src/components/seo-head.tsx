@@ -4,7 +4,7 @@
  */
 
 import { useEffect } from 'react';
-import cararthLogo from "@assets/cararth logo_1757827558983.png";
+import cararthLogo from "@assets/cararth-logo.png";
 
 interface SEOHeadProps {
   title?: string;
