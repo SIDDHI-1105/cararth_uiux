@@ -167,7 +167,12 @@ export class AIDataExtractionService {
                     location: { type: "string", description: "Location or city" },
                     condition: { type: "string", description: "Car condition" },
                     sellerType: { type: "string", description: "Seller type" },
-                    url: { type: "string", description: "Direct listing URL" }
+                    url: { type: "string", description: "Direct listing URL" },
+                    images: { 
+                      type: "array", 
+                      description: "Array of image URLs showing the actual car",
+                      items: { type: "string" }
+                    }
                   },
                   required: ["title", "brand", "model", "year", "price"]
                 }
@@ -219,6 +224,7 @@ CRITICAL REQUIREMENTS:
 4. All prices must be in Indian Rupees (₹)
 5. Years must be between 2010-2024
 6. Mileage in kilometers only
+7. **IMAGES: Extract ONLY the actual photos of the specific cars being sold - NOT stock photos, logos, or placeholder images**
 
 Content from ${domain}:
 ${content.substring(0, 8000)}
@@ -241,10 +247,24 @@ Extract car listings in this exact JSON format:
       "condition": "Good",
       "sellerType": "individual",
       "url": "direct_listing_url",
-      "images": ["image_url_1", "image_url_2"]
+      "images": ["https://example.com/actual-car-photo1.jpg", "https://example.com/actual-car-photo2.jpg"]
     }
   ]
 }
+
+**IMPORTANT FOR IMAGES**: Only include URLs of actual photographs of the specific car being sold. Look for:
+- Photos showing license plates
+- Multiple angles of the same car
+- Interior/exterior shots of the actual vehicle
+- Real car photos taken by the seller
+
+DO NOT include:
+- Stock photos or generic car images
+- Logo images
+- Placeholder images
+- Random car photos
+
+If no real car photos are found, leave images array empty: "images": []
 
 Return only the JSON with genuine listings found. If no genuine listings are found, return {"listings": []}.`;
 
@@ -294,6 +314,7 @@ Focus on Indian automotive market with authentic listings only:
 3. Price in Indian Rupees (₹), mileage in kilometers  
 4. Year between 2010-2024, realistic market prices
 5. Standard Indian brands: Maruti Suzuki, Hyundai, Tata, etc.
+6. **IMAGES: Extract ONLY actual photos of the specific cars being sold - NOT stock photos or placeholders**
 
 Return JSON format:
 {
@@ -509,6 +530,14 @@ CRITICAL EXTRACTION RULES:
 3. Price in Indian Rupees (₹), mileage in kilometers
 4. Year between 2010-2024, realistic market prices
 5. Standard Indian car brands: Maruti Suzuki, Hyundai, Tata, Mahindra, Honda, Toyota, etc.
+6. **IMAGES: Extract ONLY actual photos of the specific cars being sold - NOT stock photos, logos, or placeholder images**
+
+**IMAGE EXTRACTION REQUIREMENTS:**
+- Look for photos showing license plates
+- Multiple angles of the same car
+- Interior/exterior shots of the actual vehicle  
+- Real car photos taken by the seller
+- If no real car photos found, omit images field or use empty array
 `;
 
     const domainSpecific = {
@@ -575,7 +604,7 @@ CRITICAL EXTRACTION RULES:
           city: this.extractCity(listing.location),
           source: this.getSourceName(source),
           url: listing.url || this.buildDefaultUrl(source, listing.brand, listing.model),
-          images: Array.isArray(listing.images) ? listing.images : [this.getDefaultCarImage(listing.brand, listing.model)],
+          images: Array.isArray(listing.images) && listing.images.length > 0 ? listing.images : [],
           description: listing.description || `Genuine ${year} ${listing.brand} ${listing.model} listing`,
           features: Array.isArray(listing.features) ? listing.features : ['AC', 'Power Steering'],
           condition: listing.condition || 'Good',

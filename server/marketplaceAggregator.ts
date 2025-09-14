@@ -2654,7 +2654,7 @@ Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rup
       city: rawData.city || filters.city || 'Delhi NCR',
       source: source,
       url: rawData.url || rawData.link || `https://${source.toLowerCase().replace(' ', '')}.com/listing/${rawData.id}`,
-      images: rawData.images || [this.getCarSpecificImage(brand, model)],
+      images: Array.isArray(rawData.images) && rawData.images.length > 0 ? rawData.images : [],
       description: rawData.description || `Well-maintained ${year} ${brand} ${model} verified by ${source}. Authentic listing with realistic market pricing.`,
       features: rawData.features || ['AC', 'Power Steering', 'Central Locking'],
       condition: rawData.condition || 'Good',

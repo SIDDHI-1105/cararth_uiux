@@ -48,7 +48,7 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
           </div>
         )}
         <img 
-          src={(car.images && Array.isArray(car.images) && car.images[0]) || FALLBACK_CAR_IMAGE_URL} 
+          src={(car.images && Array.isArray(car.images) && car.images.length > 0 && car.images[0]) || FALLBACK_CAR_IMAGE_URL} 
           alt={car.title} 
           className={`w-full h-48 object-cover transition-opacity duration-300 ${
             imageLoaded ? 'opacity-100' : 'opacity-0'
