@@ -254,6 +254,9 @@ export default function Home() {
     onSuccess: (data) => {
       console.log('✅ Marketplace search successful:', data);
       
+      // Auto-switch to All Portals tab to show search results
+      setActiveTab("marketplace");
+      
       // Transform API response to match MarketplaceResults expected structure
       const transformedResult = {
         listings: data.listings || [],
@@ -412,7 +415,10 @@ export default function Home() {
               </TabsTrigger>
               <TabsTrigger value="marketplace" className="flex items-center gap-2">
                 <Globe className="w-4 h-4" />
-                All Portals {marketplaceResult ? `(${marketplaceResult.analytics?.totalListings || 0})` : ''}
+                {marketplaceResult ? 
+                  `Search Results (${marketplaceResult.analytics?.totalListings || 0})` : 
+                  'All Portals'
+                }
                 {(() => {
                   const usage = usageStatusData as UsageStatus | undefined;
                   return usage && !usage.isAuthenticated ? (
