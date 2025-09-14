@@ -855,23 +855,42 @@ export class DatabaseStorage implements IStorage {
       );
     }
 
-    // Determine sorting
+    // Determine sorting - prioritize quality for general searches
     let orderByClause;
     const isDesc = filters.sortOrder === 'desc';
     
     switch (filters.sortBy) {
       case 'price':
-        orderByClause = isDesc ? desc(cachedPortalListings.price) : asc(cachedPortalListings.price);
+        // For price searches, still prioritize quality but respect price sorting
+        orderByClause = [
+          desc(cachedPortalListings.qualityScore),
+          isDesc ? desc(cachedPortalListings.price) : asc(cachedPortalListings.price)
+        ];
         break;
       case 'year':
-        orderByClause = isDesc ? desc(cachedPortalListings.year) : asc(cachedPortalListings.year);
+        orderByClause = [
+          desc(cachedPortalListings.qualityScore),
+          isDesc ? desc(cachedPortalListings.year) : asc(cachedPortalListings.year)
+        ];
         break;
       case 'mileage':
-        orderByClause = isDesc ? desc(cachedPortalListings.mileage) : asc(cachedPortalListings.mileage);
+        orderByClause = [
+          desc(cachedPortalListings.qualityScore),
+          isDesc ? desc(cachedPortalListings.mileage) : asc(cachedPortalListings.mileage)
+        ];
         break;
       case 'date':
+        orderByClause = [
+          desc(cachedPortalListings.qualityScore),
+          desc(cachedPortalListings.listingDate)
+        ];
+        break;
       default:
-        orderByClause = desc(cachedPortalListings.listingDate);
+        // For general searches, prioritize quality score above all
+        orderByClause = [
+          desc(cachedPortalListings.qualityScore),
+          desc(cachedPortalListings.listingDate)
+        ];
         break;
     }
 
@@ -884,7 +903,12 @@ export class DatabaseStorage implements IStorage {
       queryBuilder = queryBuilder.where(and(...conditions)) as any;
     }
 
-    queryBuilder = queryBuilder.orderBy(orderByClause) as any;
+    // Apply multiple order by clauses
+    if (Array.isArray(orderByClause)) {
+      queryBuilder = queryBuilder.orderBy(...orderByClause) as any;
+    } else {
+      queryBuilder = queryBuilder.orderBy(orderByClause) as any;
+    }
 
     if (filters.limit) {
       queryBuilder = queryBuilder.limit(filters.limit) as any;

@@ -17,6 +17,7 @@ import { storage } from './storage.js';
 import type { InsertCachedPortalListing } from '@shared/schema.js';
 import crypto from 'crypto';
 import { enrichmentService } from './enrichmentService.js';
+import carSpecValidator from './carSpecValidator.js';
 
 export class BatchIngestionService {
   private marketplaceAggregator: MarketplaceAggregator;
@@ -68,7 +69,7 @@ export class BatchIngestionService {
               if (enrichment) {
                 listing.description = enrichment.summary;
                 listing.sourceMeta = {
-                  ...listing.sourceMeta,
+                  ...(listing.sourceMeta || {}),
                   aiEnrichment: enrichment
                 };
               }
@@ -125,6 +126,20 @@ export class BatchIngestionService {
           .update(`${listing.source}-${listing.id}-${listing.title}-${price}`)
           .digest('hex');
 
+        // Validate car specifications and compute quality scores
+        const validation = carSpecValidator.validateListing({
+          brand: listing.brand,
+          model: listing.model,
+          fuelType: listing.fuelType || listing.fuel,
+          transmission: listing.transmission,
+          year: year,
+          price: price,
+          mileage: parseInt(String(listing.mileage || '0')) || null
+        });
+        
+        const qualityScore = carSpecValidator.calculateQualityScore(listing, listing.source || 'unknown');
+        const hasRealImage = carSpecValidator.hasAuthenticImages(listing);
+
         const normalizedListing: InsertCachedPortalListing = {
           portal: listing.source || 'unknown',
           externalId: listing.id || `${listing.source}-${Date.now()}`,
@@ -154,14 +169,35 @@ export class BatchIngestionService {
           verificationStatus: listing.verified ? 'verified' : 'unverified',
           condition: listing.condition || null,
           
+          // Quality scoring
+          qualityScore: qualityScore,
+          sourceWeight: {
+            'CarDekho': 100,
+            'CarWale': 90,
+            'Spinny': 85,
+            'Cars24': 65,
+            'OLX': 50,
+            'Facebook Marketplace': 30
+          }[listing.source] || 20,
+          hasRealImage: hasRealImage,
+          specValid: validation.isValid,
+          imageAuthenticity: hasRealImage ? (listing.source === 'CarDekho' ? 90 : 60) : 0,
+          
           // Cache metadata
           listingDate: new Date(listing.listedDate || Date.now()),
           sourceMeta: {
             originalListing: listing,
             ingestionTime: new Date().toISOString(),
+            validationIssues: validation.issues,
           },
           hash: hash,
         };
+
+        // Skip invalid listings that fail critical validation
+        if (!validation.isValid && validation.issues.some(issue => issue.includes('never came with'))) {
+          console.log(`❌ Skipping invalid listing: ${listing.title} - ${validation.issues.join(', ')}`);
+          continue;
+        }
 
         normalized.push(normalizedListing);
 

@@ -801,6 +801,13 @@ export const cachedPortalListings = pgTable(
     verificationStatus: text("verification_status").default("unverified"),
     condition: text("condition"), // excellent, good, fair
     
+    // Quality scoring for trust-weighted ranking
+    qualityScore: integer("quality_score").default(50), // Overall quality score 0-100
+    sourceWeight: integer("source_weight").default(50), // Source reliability 0-100
+    hasRealImage: boolean("has_real_image").default(false), // True if authentic images from portals
+    specValid: boolean("spec_valid").default(true), // True if car specs are valid (no Alto Diesel)
+    imageAuthenticity: integer("image_authenticity").default(0), // Image authenticity score 0-100
+    
     // Cache metadata
     listingDate: timestamp("listing_date").notNull(),
     fetchedAt: timestamp("fetched_at").defaultNow(),
@@ -814,6 +821,7 @@ export const cachedPortalListings = pgTable(
     index("idx_cached_city_brand_date").on(table.city, table.brand, table.listingDate),
     index("idx_cached_listing_date").on(table.listingDate),
     index("idx_cached_portal_external").on(table.portal, table.externalId),
+    index("idx_cached_quality_score").on(table.qualityScore, table.listingDate), // For quality-based ranking
   ],
 );
 
