@@ -97,6 +97,7 @@ export default function Home() {
       try {
         const response = await apiRequest('POST', '/api/marketplace/search', searchFilters);
         const result = await response.json();
+        console.log('🔍 DEBUG API response images:', result.listings?.slice(0, 2)?.map(c => ({ title: c.title, images: c.images })));
         return result.listings || [];
       } catch (error: any) {
         if (error.isSearchLimitExceeded) {
