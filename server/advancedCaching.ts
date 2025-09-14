@@ -305,6 +305,28 @@ export class CacheManager {
     this.startBackgroundRefresh();
   }
 
+  // 🚀 DURABILITY-FIRST STORAGE: Store raw listings immediately
+  async storeRawListings(listings: any[]): Promise<void> {
+    console.log(`💾 Storing ${listings.length} raw listings for durability...`);
+    
+    // Try to store in database first for persistence
+    if (typeof global !== 'undefined' && (global as any).dbStorage) {
+      try {
+        await (global as any).dbStorage.storePortalListings(listings);
+        console.log(`✅ Stored ${listings.length} listings in database for durability`);
+      } catch (error) {
+        console.error('❌ Failed to store in database:', error);
+        // Fall back to cache storage
+        await this.searchCache.set('raw_listings_' + Date.now(), listings);
+        console.log(`🔄 Stored ${listings.length} listings in cache as fallback`);
+      }
+    } else {
+      // Store in cache as backup
+      await this.searchCache.set('raw_listings_' + Date.now(), listings);
+      console.log(`💾 Stored ${listings.length} listings in cache`);
+    }
+  }
+
   private startBackgroundRefresh(): void {
     this.refreshInterval = setInterval(async () => {
       await this.processRefreshQueue();

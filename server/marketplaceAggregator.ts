@@ -349,9 +349,41 @@ export class MarketplaceAggregator {
           console.log(`✅ After brand filtering: ${allListings.length} listings`);
         }
         
-        // 🧠 Apply AI-powered historical intelligence and recency bias
-        console.log('🧠 Applying historical intelligence and recency bias...');
-        const enhancedListings = await this.enhanceWithHistoricalIntelligence(allListings, locationData?.city || filters.city || '');
+        // 🚀 DURABILITY-FIRST STORAGE: Save listings immediately before any analysis
+        console.log('💾 Storing authentic listings immediately to ensure durability...');
+        if (this.cacheManager) {
+          try {
+            // Store raw listings with pending_analysis status
+            const pendingListings = allListings.map(listing => ({
+              ...listing,
+              analysisStatus: 'pending_analysis',
+              qualityScore: null,
+              classification: 'pending',
+              historicalAnalysis: null
+            }));
+            
+            await this.cacheManager.storeRawListings(pendingListings);
+            console.log(`✅ Stored ${pendingListings.length} authentic listings for durability`);
+          } catch (error) {
+            console.error('❌ Failed to store raw listings:', error);
+          }
+        }
+        
+        // 🧠 Apply AI-powered historical intelligence and recency bias (with fallbacks)
+        console.log('🧠 Applying historical intelligence and recency bias (non-blocking)...');
+        let enhancedListings;
+        try {
+          enhancedListings = await this.enhanceWithHistoricalIntelligence(allListings, locationData?.city || filters.city || '');
+        } catch (error) {
+          console.warn('⚠️ Analysis failed, using raw listings:', error);
+          enhancedListings = allListings.map(listing => ({
+            ...listing,
+            qualityScore: 70, // Default decent score
+            classification: 'good', // Default classification
+            authenticity: 6, // Default authenticity for real portal sources
+            historicalData: null
+          }));
+        }
         
         // ⏰ Apply recency bias sorting
         const sortedListings = this.historicalService.applyRecencyBias(enhancedListings);
@@ -366,13 +398,13 @@ export class MarketplaceAggregator {
           recommendations
         };
         
-        // 💾 Cache the fresh search results for future fast access
+        // 💾 Cache the enhanced search results for future fast access
         if (this.cacheManager) {
           try {
             await this.cacheManager.cacheSearchResults(optimizedFilters, result, allListings);
-            console.log('💾 Cached search results for fast future access');
+            console.log('💾 Cached enhanced search results for fast future access');
           } catch (error) {
-            console.error('❌ Failed to cache search results:', error);
+            console.error('❌ Failed to cache enhanced search results:', error);
           }
         }
         
