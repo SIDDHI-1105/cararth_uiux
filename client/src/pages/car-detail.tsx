@@ -205,7 +205,7 @@ export default function CarDetail() {
             
             {/* Loan Widget */}
             <LoanWidget 
-              carPrice={parseFloat(car.price) * 100000} 
+              carPrice={parseFloat(car.price)} 
               carTitle={car.title}
             />
           </div>

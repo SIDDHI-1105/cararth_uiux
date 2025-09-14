@@ -61,7 +61,7 @@ export default function PriceInsights({ car }: PriceInsightsProps) {
   const getCurrentPriceComparison = () => {
     if (!insights) return null;
     
-    const currentPrice = parseFloat(car.price) * 100000;
+    const currentPrice = parseFloat(car.price);
     const avgPrice = insights.averagePrice;
     
     if (avgPrice === 0) return null;
@@ -138,7 +138,7 @@ export default function PriceInsights({ car }: PriceInsightsProps) {
             <div className="bg-muted rounded-lg p-4">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium">Your Price</span>
-                <span className="text-2xl font-bold">{formatPrice(parseFloat(car.price) * 100000)}</span>
+                <span className="text-2xl font-bold">{formatPrice(parseFloat(car.price))}</span>
               </div>
               {getCurrentPriceComparison() && (
                 <div className={`text-sm font-medium ${getCurrentPriceComparison()!.color}`}>
