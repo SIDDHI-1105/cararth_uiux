@@ -39,23 +39,30 @@ export default function HeroSection({ onSearch }: HeroSearchProps) {
         
         {/* Legal Compliance Badge */}
         <div className="mb-6">
-          <div className="inline-flex items-center px-4 py-2 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-full text-sm font-medium text-green-700 dark:text-green-300">
+          <div className="inline-flex items-center px-4 py-2 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-full text-sm font-medium text-blue-700 dark:text-blue-300">
             <span className="mr-2">🔒</span>
-            <span>Authentic Listings • Verified by Source Platforms</span>
+            <span>We index public listings from multiple platforms</span>
           </div>
         </div>
         
-        {/* Source Logos - AutoTempest Style */}
-        <div className="flex flex-wrap justify-center items-center gap-4 mb-8 opacity-80">
-          {[
-            "CarDekho", "OLX", "Cars24", "CarWale", "AutoTrader", "Spinny",
-            "Facebook Marketplace", "Google Places", "Government Auctions"
-          ].map((source) => (
-            <div key={source} className="text-sm font-medium text-muted-foreground bg-background/70 dark:bg-card/70 px-3 py-1 rounded-md border border-border shadow-sm">
-              {source}
+        {/* Platform Sources - Legally Compliant Display */}
+        <div className="mb-8">
+          <p className="text-sm text-muted-foreground mb-4">Data sources (public listings aggregated with compliance):</p>
+          <div className="flex flex-wrap justify-center items-center gap-3 opacity-80">
+            {[
+              "CarDekho", "OLX Autos", "Cars24", "CarWale", "AutoTrader", "Spinny"
+            ].map((source) => (
+              <div 
+                key={source} 
+                className="text-sm font-medium px-3 py-1.5 rounded-md border shadow-sm text-muted-foreground bg-background/70 dark:bg-card/70 border-border"
+              >
+                <span>{source}</span>
+              </div>
+            ))}
+            <div className="text-sm font-medium text-primary font-bold px-3 py-1.5 bg-primary/10 rounded-md border border-primary/20">
+              + Government Auctions & More
             </div>
-          ))}
-          <div className="text-sm font-medium text-muted-foreground font-bold">& More!</div>
+          </div>
         </div>
         
         <TooltipWrapper trigger="hero-search-form">

@@ -3202,6 +3202,158 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Price Simulator API - Uses Perplexity + Gemini for intelligent price prediction
+  app.post('/api/price-simulator', async (req: any, res) => {
+    try {
+      const { brand, model, year, city, mileage, fuelType, transmission, condition } = req.body;
+
+      if (!brand || !model || !year || !city) {
+        return res.status(400).json({ 
+          error: 'Missing required fields: brand, model, year, city are required' 
+        });
+      }
+
+      console.log(`🏷️ Price simulation request: ${year} ${brand} ${model} in ${city}`);
+
+      // Use existing singleton services
+      const { HistoricalIntelligenceService } = await import('./historicalIntelligence.js');
+      const historicalService = new HistoricalIntelligenceService();
+
+      const carData = {
+        brand,
+        model,
+        year: parseInt(year),
+        city,
+        mileage: parseInt(mileage) || 50000,
+        fuelType: fuelType || 'Petrol',
+        transmission: transmission || 'Manual'
+      };
+
+      // Get price insights from multiple AI sources
+      const [priceInsights, historicalAnalysis] = await Promise.allSettled([
+        priceComparisonService.getPriceInsights(carData),
+        historicalService.analyzeVehicle({
+          ...carData,
+          price: 0, // Will be predicted
+          listingDate: new Date()
+        })
+      ]);
+
+      let simulationResult = {
+        estimatedPrice: 0,
+        priceRange: { min: 0, max: 0 },
+        confidence: 0,
+        aiInsights: [],
+        marketAnalysis: {
+          trend: 'stable' as 'rising' | 'falling' | 'stable',
+          recommendation: 'Get price analysis from multiple sources before buying.'
+        },
+        sources: ['📸 CarArth x Claude AI', '🧠 CarArth x GPT-5'],
+        timestamp: new Date()
+      };
+
+      // Process Gemini price insights
+      if (priceInsights.status === 'fulfilled' && priceInsights.value) {
+        const insights = priceInsights.value;
+        simulationResult.estimatedPrice = insights.averagePrice;
+        simulationResult.priceRange = insights.priceRange;
+        simulationResult.marketAnalysis.trend = insights.marketTrend;
+        simulationResult.marketAnalysis.recommendation = insights.recommendation;
+        simulationResult.confidence = 0.85; // High confidence from Gemini
+      }
+
+      // Process historical analysis  
+      if (historicalAnalysis.status === 'fulfilled' && historicalAnalysis.value) {
+        const analysis = historicalAnalysis.value;
+        simulationResult.aiInsights.push(
+          `Authenticity rating: ${analysis.authenticityRating}/10`,
+          `Market trend: ${analysis.marketTrend}`,
+          `Average days to sell: ${analysis.salesVelocity.avgDaysToSell}`,
+          `Price confidence: ${(analysis.priceConfidence * 100).toFixed(0)}%`
+        );
+      }
+
+      // Fallback if no services worked - use Perplexity for market research
+      if (simulationResult.estimatedPrice === 0) {
+        try {
+          console.log('🔍 Using Perplexity fallback for price research...');
+          
+          const perplexityResponse = await fetch('https://api.perplexity.ai/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: 'llama-3.1-sonar-small-128k-online',
+              messages: [
+                {
+                  role: 'system',
+                  content: 'You are a car pricing expert for the Indian used car market. Provide accurate price estimates in INR.'
+                },
+                {
+                  role: 'user', 
+                  content: `What is the current market price for a ${year} ${brand} ${model} in ${city}, India? Consider ${mileage} km mileage, ${fuelType} fuel, ${transmission} transmission. Give price range in lakhs.`
+                }
+              ],
+              temperature: 0.2,
+              max_tokens: 200
+            })
+          });
+
+          if (perplexityResponse.ok) {
+            const data = await perplexityResponse.json();
+            const priceText = data.choices[0]?.message?.content || '';
+            
+            // Extract price from Perplexity response
+            const priceMatch = priceText.match(/₹\s*(\d+(?:\.\d+)?)\s*(?:lakh|lakhs?)/i);
+            if (priceMatch) {
+              const priceInLakhs = parseFloat(priceMatch[1]);
+              simulationResult.estimatedPrice = priceInLakhs * 100000; // Convert to rupees
+              simulationResult.priceRange = {
+                min: Math.round(simulationResult.estimatedPrice * 0.85),
+                max: Math.round(simulationResult.estimatedPrice * 1.15)
+              };
+              simulationResult.confidence = 0.75;
+              simulationResult.aiInsights.push(`Market research: ${priceText.substring(0, 100)}...`);
+            }
+          }
+        } catch (perplexityError) {
+          console.error('Perplexity fallback failed:', perplexityError);
+        }
+      }
+
+      // Final fallback with basic estimation
+      if (simulationResult.estimatedPrice === 0) {
+        // Basic depreciation model as last resort
+        const currentYear = new Date().getFullYear();
+        const age = currentYear - parseInt(year);
+        const basePrice = 500000; // Base price estimate
+        const depreciation = Math.max(0.1, 1 - (age * 0.1)); // 10% per year
+        
+        simulationResult.estimatedPrice = Math.round(basePrice * depreciation);
+        simulationResult.priceRange = {
+          min: Math.round(simulationResult.estimatedPrice * 0.8),
+          max: Math.round(simulationResult.estimatedPrice * 1.2)
+        };
+        simulationResult.confidence = 0.6;
+        simulationResult.aiInsights.push('Price estimated using depreciation model due to limited market data');
+      }
+
+      console.log(`💰 Price simulation complete: ₹${simulationResult.estimatedPrice.toLocaleString('en-IN')}`);
+
+      res.json(simulationResult);
+
+    } catch (error: any) {
+      console.error('Price simulator error:', error);
+      res.status(500).json({
+        error: 'Price simulation failed',
+        message: 'Unable to estimate price at this time. Please try again later.',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

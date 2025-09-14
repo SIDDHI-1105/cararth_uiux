@@ -10,6 +10,7 @@ import FeaturedListingModal from "@/components/featured-listing-modal";
 import PremiumUpgrade from "@/components/premium-upgrade";
 import RecentlyViewed from "@/components/recently-viewed";
 import SearchLimitPopup from "@/components/search-limit-popup";
+import PriceSimulator from "@/components/price-simulator";
 import { SEOHead, createWebsiteSchema, createOrganizationSchema } from "@/components/seo-head";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -404,7 +405,7 @@ export default function Home() {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="local" className="flex items-center gap-2">
                 <Search className="w-4 h-4" />
                 Local Listings ({cars.length})
@@ -420,6 +421,10 @@ export default function Home() {
                     </Badge>
                   ) : null;
                 })()}
+              </TabsTrigger>
+              <TabsTrigger value="price-simulator" className="flex items-center gap-2">
+                <div className="w-4 h-4">🏷️</div>
+                AI Price Simulator
               </TabsTrigger>
             </TabsList>
 
@@ -514,6 +519,10 @@ export default function Home() {
                   </p>
                 </div>
               )}
+            </TabsContent>
+
+            <TabsContent value="price-simulator">
+              <PriceSimulator />
             </TabsContent>
           </Tabs>
         </div>
