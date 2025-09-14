@@ -11,10 +11,9 @@ import {
   IndianRupee, 
   ExternalLink,
   TrendingDown,
-  TrendingUp,
   Info
 } from "lucide-react";
-import { calculateLoan, formatInLakhs, formatIndianCurrency } from "@/lib/loan";
+import { calculateLoanDetails, formatIndianCurrency, formatInLakhs } from "@/lib/loan";
 
 interface LoanWidgetProps {
   carPrice: number;
@@ -23,26 +22,23 @@ interface LoanWidgetProps {
 
 export default function LoanWidget({ carPrice, carTitle = "this car" }: LoanWidgetProps) {
   const [downPayment, setDownPayment] = useState<string>(Math.round(carPrice * 0.2).toString());
-  const [tradeInValue, setTradeInValue] = useState<string>("0");
-  const [selectedTenure, setSelectedTenure] = useState<string>("60");
+  const [selectedTenure, setSelectedTenure] = useState<string>("5");
+  const [interestRate, setInterestRate] = useState<string>("7.05");
   
-  const bestRate = 7.05; // DialABank's best rate
+  // Calculate principal amount after down payment
+  const principal = Math.max(0, carPrice - Number(downPayment || "0"));
+  const tenure = Number(selectedTenure);
+  const rate = Number(interestRate);
   
-  // Use proper loan calculation utility
-  const loanResult = calculateLoan({
-    carPrice,
-    downPayment: Number(downPayment || "0"),
-    tradeInValue: Number(tradeInValue || "0"),
-    annualInterestRate: bestRate,
-    tenureMonths: Number(selectedTenure)
-  });
+  // Use proven EMI calculation
+  const result = calculateLoanDetails(principal, rate, tenure);
   
   const handleGetQuotes = () => {
     const params = new URLSearchParams({
       carPrice: carPrice.toString(),
       downPayment: downPayment,
-      tradeInValue: tradeInValue,
-      tenure: selectedTenure
+      tenure: selectedTenure,
+      interestRate: interestRate
     });
     window.open(`/financing?${params.toString()}`, '_blank');
   };
@@ -52,17 +48,17 @@ export default function LoanWidget({ carPrice, carTitle = "this car" }: LoanWidg
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg" data-testid="text-loan-widget-title">
           <Calculator className="w-5 h-5 text-blue-600" />
-          Car Loan Calculator
+          Car Loan EMI Calculator
         </CardTitle>
         <CardDescription>
-          Get instant loan quotes for {carTitle}
+          Get instant loan estimates for {carTitle} using proven EMI formula
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Car Price Display */}
         <div className="bg-muted/50 p-3 rounded-lg">
           <div className="text-sm text-muted-foreground">Car Price</div>
-          <div className="text-xl font-bold text-green-600">₹{carPrice.toLocaleString()}</div>
+          <div className="text-xl font-bold text-green-600">{formatInLakhs(carPrice)}</div>
         </div>
 
         {/* Down Payment Input */}
@@ -80,24 +76,25 @@ export default function LoanWidget({ carPrice, carTitle = "this car" }: LoanWidg
               data-testid="input-widget-down-payment"
             />
           </div>
+          <p className="text-xs text-muted-foreground">
+            Loan amount: {formatInLakhs(principal)}
+          </p>
         </div>
 
-        {/* Trade-In Value Input */}
+        {/* Interest Rate Input */}
         <div className="space-y-2">
-          <Label htmlFor="widget-trade-in" className="text-sm">Trade-In Value (Optional)</Label>
+          <Label htmlFor="widget-interest-rate" className="text-sm">Annual Interest Rate (%)</Label>
           <div className="relative">
-            <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
-              id="widget-trade-in"
+              id="widget-interest-rate"
               type="number"
-              placeholder="Current car value"
-              value={tradeInValue}
-              onChange={(e) => setTradeInValue(e.target.value)}
-              className="pl-9"
-              data-testid="input-widget-trade-in"
+              step="0.1"
+              placeholder="Interest rate"
+              value={interestRate}
+              onChange={(e) => setInterestRate(e.target.value)}
+              data-testid="input-widget-interest-rate"
             />
           </div>
-          <p className="text-xs text-muted-foreground">Value of your current car if trading in</p>
         </div>
 
         {/* Tenure Selection */}
@@ -108,43 +105,45 @@ export default function LoanWidget({ carPrice, carTitle = "this car" }: LoanWidg
               <SelectValue placeholder="Select tenure" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="36">3 Years</SelectItem>
-              <SelectItem value="48">4 Years</SelectItem>
-              <SelectItem value="60">5 Years</SelectItem>
-              <SelectItem value="72">6 Years</SelectItem>
-              <SelectItem value="84">7 Years</SelectItem>
+              <SelectItem value="3">3 Years</SelectItem>
+              <SelectItem value="4">4 Years</SelectItem>
+              <SelectItem value="5">5 Years</SelectItem>
+              <SelectItem value="6">6 Years</SelectItem>
+              <SelectItem value="7">7 Years</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        {/* Loan Summary */}
+        {/* EMI Results - Proven Formula */}
         <div className="bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-950/30 dark:to-green-950/30 p-4 rounded-lg border space-y-3">
+          {/* Main EMI Display */}
           <div className="text-center">
             <div className="text-sm text-muted-foreground mb-1">
               Monthly EMI
             </div>
             <div className="text-2xl font-bold text-green-600" data-testid="text-widget-emi">
-              {formatInLakhs(loanResult.monthlyEMI)}
+              {formatInLakhs(result.monthlyEMI)}
             </div>
           </div>
           
-          <div className="grid grid-cols-3 gap-2 text-center text-xs">
-            <div>
-              <div className="text-muted-foreground">Loan Amount</div>
-              <div className="font-semibold" data-testid="text-widget-principal">
-                {formatInLakhs(loanResult.principalAmount)}
-              </div>
-            </div>
-            <div>
+          {/* Detailed Breakdown */}
+          <div className="grid grid-cols-3 gap-3 text-center text-xs">
+            <div className="bg-white/50 dark:bg-gray-800/50 p-2 rounded">
               <div className="text-muted-foreground">Total Interest</div>
               <div className="font-semibold text-orange-600" data-testid="text-widget-interest">
-                {formatInLakhs(loanResult.totalInterest)}
+                {formatInLakhs(result.totalInterest)}
               </div>
             </div>
-            <div>
+            <div className="bg-white/50 dark:bg-gray-800/50 p-2 rounded">
               <div className="text-muted-foreground">Total Payment</div>
               <div className="font-semibold" data-testid="text-widget-total">
-                {formatInLakhs(loanResult.totalPayment)}
+                {formatInLakhs(result.totalAmount)}
+              </div>
+            </div>
+            <div className="bg-white/50 dark:bg-gray-800/50 p-2 rounded">
+              <div className="text-muted-foreground">Principal</div>
+              <div className="font-semibold text-blue-600" data-testid="text-widget-principal">
+                {formatInLakhs(result.totalPrincipal)}
               </div>
             </div>
           </div>
@@ -152,7 +151,7 @@ export default function LoanWidget({ carPrice, carTitle = "this car" }: LoanWidg
           <div className="flex items-center justify-center gap-1">
             <TrendingDown className="w-3 h-3 text-green-600" />
             <span className="text-xs text-muted-foreground">
-              Starting from {bestRate}% interest • {Number(selectedTenure) / 12} years
+              {rate}% interest • {tenure} years • Proven EMI formula
             </span>
           </div>
         </div>
@@ -182,7 +181,7 @@ export default function LoanWidget({ carPrice, carTitle = "this car" }: LoanWidg
         {/* Trust Indicators */}
         <div className="flex flex-wrap gap-1 justify-center">
           <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-            Instant Approval
+            Proven Formula
           </Badge>
           <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
             25+ Banks
@@ -194,7 +193,11 @@ export default function LoanWidget({ carPrice, carTitle = "this car" }: LoanWidg
 
         {/* Fine Print */}
         <div className="text-xs text-muted-foreground text-center">
-          *EMI calculated at {bestRate}% interest rate. Actual rates may vary based on profile.
+          <div className="flex items-center justify-center gap-1 mb-1">
+            <Info className="w-3 h-3" />
+            <span>EMI calculated using industry-standard formula</span>
+          </div>
+          *Actual rates may vary based on your credit profile and lender policies.
         </div>
       </CardContent>
     </Card>
