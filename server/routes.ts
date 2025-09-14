@@ -1166,15 +1166,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await cacheManager.search.setSearchResults(req.body, searchResult);
       console.log(`💾 Cached search results (${Date.now() - searchStart}ms total)`);
       
-      // Include search limit info in response (skip for developer mode)
-      if (isDeveloperMode(req)) {
+      // Include search limit info in response (skip for developer mode or unauthenticated users)
+      if (isDeveloperMode(req) || !req.user) {
         res.json({
           ...searchResult,
           searchInfo: {
-            userTier: 'developer',
-            searchesLeft: 9999,
+            userTier: req.user ? 'developer' : 'anonymous',
+            searchesLeft: -1, // Unlimited for anonymous users
             resetDate: null,
-            isDeveloper: true
+            isDeveloper: isDeveloperMode(req)
           }
         });
       } else {

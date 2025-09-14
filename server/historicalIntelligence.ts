@@ -218,7 +218,7 @@ INDIAN MARKET CONTEXT:
     const highDemandListings = enrichedListings.filter(l => 
       l.historicalAnalysis.salesVelocity.demandLevel === 'high');
     
-    const demandHotspots = [...new Set(highDemandListings.map(l => l.brand))].slice(0, 3);
+    const demandHotspots = Array.from(new Set(highDemandListings.map(l => l.brand))).slice(0, 3);
 
     const marketHealth = avgAuthenticityRating >= 8 ? 'excellent' :
                         avgAuthenticityRating >= 6.5 ? 'good' :
