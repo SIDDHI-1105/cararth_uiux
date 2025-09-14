@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import FirecrawlApp from '@mendable/firecrawl-js';
 import { FirecrawlMcpService } from './firecrawlMcpService.js';
+import { OfficialFirecrawlMcpService } from './officialFirecrawlMcp.js';
 import { MarketplaceListing } from './marketplaceAggregator.js';
 import { AdvancedCache, CacheKeyGenerator, cacheConfigs } from './advancedCaching.js';
 import { createHash } from 'crypto';
@@ -10,6 +11,7 @@ export class AIDataExtractionService {
   private gemini: GoogleGenAI;
   private firecrawl: FirecrawlApp;
   private firecrawlMcp: FirecrawlMcpService;
+  private officialMcp: OfficialFirecrawlMcpService;
   private perplexityApiKey: string;
   private useMcp: boolean;
   
@@ -38,9 +40,10 @@ export class AIDataExtractionService {
     this.gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
     this.firecrawl = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY || "" });
     this.firecrawlMcp = new FirecrawlMcpService({ apiKey: process.env.FIRECRAWL_API_KEY || "" });
+    this.officialMcp = new OfficialFirecrawlMcpService({ apiKey: process.env.FIRECRAWL_API_KEY || "" });
     this.perplexityApiKey = process.env.PERPLEXITY_API_KEY || "";
-    // Disable MCP by default until proper protocol is documented
-    this.useMcp = false; // process.env.FIRECRAWL_USE_MCP === 'true';
+    // Enable MCP with official implementation
+    this.useMcp = process.env.FIRECRAWL_USE_MCP === 'true';
     
     // Initialize caching systems
     this.firecrawlCache = new AdvancedCache(cacheConfigs.firecrawl);
@@ -186,30 +189,32 @@ export class AIDataExtractionService {
       let result: any;
 
       if (this.useMcp) {
-        console.log('🔗 Using Firecrawl MCP for extraction...');
+        console.log('🔗 Using Official Firecrawl MCP for extraction...');
         try {
-          const mcpResult = await this.firecrawlMcp.extractWithLLM(url, extractionPrompt, extractSchema);
-          if (mcpResult.success) {
-            result = mcpResult;
+          // Try official MCP first
+          const officialResult = await this.officialMcp.extractCarListings(url, extractionPrompt);
+          if (officialResult.success) {
+            result = officialResult;
           } else {
-            console.log('⚠️ MCP failed, falling back to direct API');
+            console.log('⚠️ Official MCP delegated to direct API');
+            // Fallback to direct API (as designed)
             result = await this.firecrawl.scrapeUrl(url, {
               formats: ['extract'],
               extract: {
                 prompt: extractionPrompt,
-                schema: extractSchema
+                schema: extractSchema as any
               },
               timeout: 60000,
               waitFor: 8000
             });
           }
         } catch (error) {
-          console.log('⚠️ MCP error, falling back to direct API:', error);
+          console.log('⚠️ Official MCP error, falling back to direct API:', error);
           result = await this.firecrawl.scrapeUrl(url, {
             formats: ['extract'],
             extract: {
               prompt: extractionPrompt,
-              schema: extractSchema
+              schema: extractSchema as any
             },
             timeout: 60000,
             waitFor: 8000
@@ -221,7 +226,7 @@ export class AIDataExtractionService {
           formats: ['extract'],
           extract: {
             prompt: extractionPrompt,
-            schema: extractSchema
+            schema: extractSchema as any
           },
           timeout: 60000,
           waitFor: 8000

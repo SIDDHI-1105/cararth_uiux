@@ -47,12 +47,9 @@ export class FirecrawlMcpService {
     
     try {
       console.log('🔗 Connecting to Firecrawl MCP Server...');
-      this.eventSource = new EventSource(`${this.baseUrl}/sse`, {
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      // Note: EventSource doesn't support custom headers in constructor
+      // Authentication will be handled via URL parameters or alternative method
+      this.eventSource = new EventSource(`${this.baseUrl}/sse?token=${this.apiKey}`);
 
       this.eventSource.onopen = () => {
         this.connected = true;
