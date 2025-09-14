@@ -203,6 +203,24 @@ export class DatabaseStorage implements IStorage {
     return car;
   }
 
+  async getCachedPortalListing(id: string): Promise<any | undefined> {
+    const cacheKey = `portal_listing:${id}`;
+    const cached = this.getCached<any>(cacheKey);
+    if (cached) return cached;
+
+    const result = await this.db
+      .select()
+      .from(cachedPortalListings)
+      .where(eq(cachedPortalListings.id, id))
+      .limit(1);
+    
+    const listing = result[0];
+    if (listing) {
+      this.setCache(cacheKey, listing);
+    }
+    return listing;
+  }
+
   async getAllCars(): Promise<Car[]> {
     const cacheKey = 'cars:all:active';
     const cached = this.getCached<Car[]>(cacheKey);

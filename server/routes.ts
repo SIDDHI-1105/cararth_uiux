@@ -537,15 +537,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get car by ID
+  // Get car by ID (checks both cars and cached_portal_listings tables)
   app.get("/api/cars/:id", async (req, res) => {
     try {
-      const car = await storage.getCar(req.params.id);
+      let car = await storage.getCar(req.params.id);
+      
+      // If not found in cars table, check cached_portal_listings table
+      if (!car) {
+        car = await storage.getCachedPortalListing(req.params.id);
+      }
+      
       if (!car) {
         return res.status(404).json({ error: "Car not found" });
       }
+      
       res.json(car);
     } catch (error) {
+      console.error("Failed to fetch car details:", error);
       res.status(500).json({ error: "Failed to fetch car" });
     }
   });
