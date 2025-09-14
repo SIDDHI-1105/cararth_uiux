@@ -14,6 +14,39 @@ interface CarCardProps {
 
 export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: CarCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
+
+  // Helper function to get image source with proxy for external URLs
+  const getImageSrc = (images: string[] | null | undefined): string => {
+    if (!images || !Array.isArray(images) || images.length === 0) {
+      return FALLBACK_CAR_IMAGE_URL;
+    }
+    
+    const imageUrl = images[0];
+    
+    // Check if it's an external CarDekho or other trusted domain image
+    const trustedDomains = [
+      'images10.gaadi.com',
+      'stimg.cardekho.com', 
+      'stimg2.gaadi.com',
+      'images.cars24.com',
+      'img.cartrade.com',
+      'cdn.droom.in'
+    ];
+    
+    try {
+      const url = new URL(imageUrl);
+      if (trustedDomains.includes(url.hostname)) {
+        // Use proxy to bypass CORS for external images
+        return `/api/proxy/image?url=${encodeURIComponent(imageUrl)}`;
+      }
+    } catch (error) {
+      // Invalid URL, use fallback
+      return FALLBACK_CAR_IMAGE_URL;
+    }
+    
+    // For local images or other domains, use as-is
+    return imageUrl;
+  };
   
   useEffect(() => {
     // Track recently viewed cars
@@ -48,18 +81,18 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
           </div>
         )}
         <img 
-          src={(car.images && Array.isArray(car.images) && car.images.length > 0 && car.images[0]) || FALLBACK_CAR_IMAGE_URL} 
+          src={getImageSrc(car.images as string[])} 
           alt={car.title} 
           className={`w-full h-48 object-cover transition-opacity duration-300 ${
             imageLoaded ? 'opacity-100' : 'opacity-0'
           }`}
           data-testid={`img-car-${car.id}`}
           onLoad={() => {
-            console.log(`✅ Image loaded successfully for ${car.title}:`, car.images?.[0]);
+            console.log(`✅ Image loaded successfully for ${car.title}:`, getImageSrc(car.images as string[]));
             setImageLoaded(true);
           }}
           onError={(e) => {
-            console.error(`❌ Image failed to load for ${car.title}:`, car.images?.[0]);
+            console.error(`❌ Image failed to load for ${car.title}:`, getImageSrc(car.images as string[]));
             console.error('Error details:', e);
             e.currentTarget.src = FALLBACK_CAR_IMAGE_URL;
             setImageLoaded(true);

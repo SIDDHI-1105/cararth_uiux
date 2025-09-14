@@ -42,6 +42,7 @@ import { unifiedPerplexityService } from "./unifiedPerplexityService.js";
 import { aiMetricsMonitor } from "./aiMetricsMonitor.js";
 import { metricsIntegration } from "./aiMetricsIntegration.js";
 import { orchestratedBatchIngestion } from "./orchestratedIngestion.js";
+import { ImageProxyService } from "./imageProxyService.js";
 import crypto from "crypto";
 
 // Developer mode check
@@ -2049,6 +2050,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Seller service endpoints
   const sellerService = new (await import('./sellerService')).SellerService();
   const objectStorageService = new (await import('./objectStorage')).ObjectStorageService();
+  const imageProxyService = new ImageProxyService();
+
+  // Image proxy endpoint to handle CORS for external car images  
+  app.get("/api/proxy/image", async (req, res) => {
+    await imageProxyService.proxyImage(req, res);
+  });
 
   // Create new seller listing
   app.post("/api/seller/listings", async (req, res) => {

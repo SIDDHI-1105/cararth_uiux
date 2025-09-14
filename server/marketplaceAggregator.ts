@@ -362,7 +362,7 @@ export class MarketplaceAggregator {
               historicalAnalysis: null
             }));
             
-            await this.cacheManager.storeRawListings(pendingListings);
+            await this.cacheManager.search.setSearchResults('raw_listings_' + Date.now(), { listings: pendingListings });
             console.log(`✅ Stored ${pendingListings.length} authentic listings for durability`);
           } catch (error) {
             console.error('❌ Failed to store raw listings:', error);
