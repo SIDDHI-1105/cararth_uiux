@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Heart, Calendar, Gauge, Fuel, Settings, MapPin, Star, Share2 } from "lucide-react";
 import { type CarListing } from "@shared/schema";
 import SocialShare from "@/components/social-share";
+import { FALLBACK_CAR_IMAGE_URL } from '@/lib/constants';
 
 interface CarCardProps {
   car: CarListing;
@@ -47,13 +48,17 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
           </div>
         )}
         <img 
-          src={(car.images && Array.isArray(car.images) && car.images[0]) || "/api/placeholder/car-image"} 
+          src={(car.images && Array.isArray(car.images) && car.images[0]) || FALLBACK_CAR_IMAGE_URL} 
           alt={car.title} 
           className={`w-full h-48 object-cover transition-opacity duration-300 ${
             imageLoaded ? 'opacity-100' : 'opacity-0'
           }`}
           data-testid={`img-car-${car.id}`}
           onLoad={() => setImageLoaded(true)}
+          onError={(e) => {
+            e.currentTarget.src = FALLBACK_CAR_IMAGE_URL;
+            setImageLoaded(true);
+          }}
         />
       </div>
       <div className="p-4">

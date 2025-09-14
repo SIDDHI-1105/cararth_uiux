@@ -1225,10 +1225,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description: `This Hyundai i20 Sportz is in excellent condition with complete service history. 
         Single owner, non-accident car with all genuine parts. Well-maintained with regular servicing at authorized service center.`,
         images: [
-          "/api/placeholder/car-image",
-          "/api/placeholder/car-image",
-          "/api/placeholder/car-image",
-          "/api/placeholder/car-image"
+          "https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=800&q=80",
+          "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=800&q=80",
+          "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&q=80",
+          "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80"
         ],
         features: [
           'Air Conditioning', 'Power Steering', 'Power Windows', 'Central Locking',

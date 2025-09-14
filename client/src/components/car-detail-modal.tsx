@@ -29,6 +29,7 @@ import {
   TrendingUp
 } from "lucide-react";
 import SocialShare from "@/components/social-share";
+import { FALLBACK_CAR_IMAGE_URL } from '@/lib/constants';
 
 interface CarDetailModalProps {
   car: any;
@@ -106,7 +107,7 @@ export default function CarDetailModal({ car, isOpen, onClose }: CarDetailModalP
 
   const aiInsights = getAIInsights(car);
 
-  const images = car.images || ['/api/placeholder/car-image'];
+  const images = Array.isArray(car.images) && car.images.length > 0 ? car.images : [FALLBACK_CAR_IMAGE_URL];
 
   const formatPrice = (price: number) => {
     return `₹${(price / 100000).toFixed(1)}L`;
@@ -168,6 +169,9 @@ export default function CarDetailModal({ car, isOpen, onClose }: CarDetailModalP
                 src={images[currentImageIndex]}
                 alt={car.title}
                 className="w-full h-64 object-cover rounded-lg"
+                onError={(e) => {
+                  e.currentTarget.src = FALLBACK_CAR_IMAGE_URL;
+                }}
               />
               {images.length > 1 && (
                 <>

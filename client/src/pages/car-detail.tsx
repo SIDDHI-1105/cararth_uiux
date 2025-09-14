@@ -12,6 +12,7 @@ import { Phone, Calendar, MapPin, User, Star, Check, ArrowLeft, MessageCircle } 
 import { Link } from "wouter";
 import { type Car, type User as UserType } from "@shared/schema";
 import { BrandWordmark } from "@/components/brand-wordmark";
+import { FALLBACK_CAR_IMAGE_URL } from '@/lib/constants';
 
 export default function CarDetail() {
   const { id } = useParams<{ id: string }>();
@@ -98,10 +99,13 @@ export default function CarDetail() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
             <img 
-              src={(car.images && car.images[0]) || "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400"} 
+              src={(car.images && car.images[0]) || FALLBACK_CAR_IMAGE_URL} 
               alt={car.title} 
               className="w-full h-80 object-cover rounded-lg mb-4"
               data-testid="img-car-main"
+              onError={(e) => {
+                e.currentTarget.src = FALLBACK_CAR_IMAGE_URL;
+              }}
             />
             <div className="grid grid-cols-4 gap-2">
               {[
@@ -196,7 +200,7 @@ export default function CarDetail() {
               carId={car.id}
               carTitle={car.title}
               sellerId={car.sellerId}
-              sellerName={seller?.name || 'Car Owner'}
+              sellerName={seller ? `${seller.firstName || ''} ${seller.lastName || ''}`.trim() || 'Car Owner' : 'Car Owner'}
               price={formatPrice(car.price)}
             />
             
@@ -228,7 +232,7 @@ export default function CarDetail() {
                     <User className="text-primary-foreground h-5 w-5" />
                   </div>
                   <div>
-                    <div className="font-semibold" data-testid="text-seller-name">{seller.name}</div>
+                    <div className="font-semibold" data-testid="text-seller-name">{`${seller.firstName || ''} ${seller.lastName || ''}`.trim() || 'Car Owner'}</div>
                     <div className="text-sm text-muted-foreground">Individual Seller</div>
                   </div>
                 </div>
