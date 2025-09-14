@@ -10,10 +10,10 @@ import {
   Calculator, 
   IndianRupee, 
   ExternalLink,
-  TrendingDown,
-  Info
+  TrendingDown
 } from "lucide-react";
 import { calculateLoanDetails, formatIndianCurrency, formatInLakhs } from "@/lib/loan";
+import { IndicativeLoanDisclaimer } from "@/components/ui/indicative-loan-disclaimer";
 
 interface LoanWidgetProps {
   carPrice: number;
@@ -178,27 +178,21 @@ export default function LoanWidget({ carPrice, carTitle = "this car" }: LoanWidg
           </Link>
         </div>
 
-        {/* Trust Indicators */}
+        {/* Trust Indicators - No Partnership Claims */}
         <div className="flex flex-wrap gap-1 justify-center">
           <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
             Proven Formula
           </Badge>
           <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-            25+ Banks
+            Compare Options
           </Badge>
           <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
-            Best Rates
+            Transparent
           </Badge>
         </div>
 
-        {/* Fine Print */}
-        <div className="text-xs text-muted-foreground text-center">
-          <div className="flex items-center justify-center gap-1 mb-1">
-            <Info className="w-3 h-3" />
-            <span>EMI calculated using industry-standard formula</span>
-          </div>
-          *Actual rates may vary based on your credit profile and lender policies.
-        </div>
+        {/* Universal Indicative Loan Disclaimer */}
+        <IndicativeLoanDisclaimer />
       </CardContent>
     </Card>
   );

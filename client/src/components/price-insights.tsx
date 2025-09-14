@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown, Minus, RefreshCw, BarChart3 } from "lucide-react";
 import { type Car } from "@shared/schema";
+import { IndicativeLoanDisclaimer } from "@/components/ui/indicative-loan-disclaimer";
 
 interface PriceInsight {
   averagePrice: number;
@@ -188,6 +189,11 @@ export default function PriceInsights({ car }: PriceInsightsProps) {
             <div className="text-xs text-muted-foreground">
               <div className="mb-1">Data sources: {insights.sources.join(', ')}</div>
               <div>Last updated: {new Date(insights.lastUpdated).toLocaleString()}</div>
+            </div>
+            
+            {/* Universal Disclaimer - Price insights may influence financing decisions */}
+            <div className="mt-4">
+              <IndicativeLoanDisclaimer compact />
             </div>
           </div>
         ) : (

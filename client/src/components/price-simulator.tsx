@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calculator, TrendingUp, TrendingDown, Minus, Car, MapPin, Fuel, Settings } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { IndicativeLoanDisclaimer } from "@/components/ui/indicative-loan-disclaimer";
 
 interface PriceSimulationResult {
   estimatedPrice: number;
@@ -287,6 +288,9 @@ export default function PriceSimulator() {
                 {simulatePriceMutation.data.marketAnalysis.recommendation}
               </p>
             </div>
+            
+            {/* Universal Disclaimer - Price predictions may influence financing decisions */}
+            <IndicativeLoanDisclaimer compact />
           </CardContent>
         </Card>
       )}
