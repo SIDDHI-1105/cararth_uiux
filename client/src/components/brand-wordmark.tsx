@@ -12,11 +12,11 @@ export function BrandWordmark({
   showTagline = true, 
   className 
 }: BrandWordmarkProps) {
-  // Logo sizes for each variant
+  // Logo sizes for each variant - LARGER & MORE VISIBLE
   const logoSizes = {
-    header: "h-12 sm:h-16 md:h-20 lg:h-24",
-    hero: "h-24 sm:h-32 md:h-40 lg:h-48 xl:h-56", 
-    footer: "h-10 sm:h-12 md:h-16"
+    header: "h-16 sm:h-20 md:h-24 lg:h-28",
+    hero: "h-32 sm:h-40 md:h-48 lg:h-56 xl:h-64", 
+    footer: "h-12 sm:h-16 md:h-20"
   };
   
   const taglineSizes = {
