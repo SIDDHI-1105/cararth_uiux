@@ -3203,15 +3203,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Price Simulator API - Uses Perplexity + Gemini for intelligent price prediction
+  const priceSimulatorSchema = z.object({
+    brand: z.string().min(1, 'Brand is required'),
+    model: z.string().min(1, 'Model is required'), 
+    year: z.string().transform(val => {
+      const parsed = parseInt(val);
+      if (isNaN(parsed) || parsed < 1990 || parsed > new Date().getFullYear() + 1) {
+        throw new Error('Invalid year');
+      }
+      return parsed;
+    }),
+    city: z.string().min(1, 'City is required'),
+    mileage: z.string().optional().transform(val => {
+      if (!val) return 50000;
+      const parsed = parseInt(val);
+      if (isNaN(parsed) || parsed < 0) return 50000;
+      return parsed;
+    }),
+    fuelType: z.string().optional().default('Petrol'),
+    transmission: z.string().optional().default('Manual'),
+    condition: z.string().optional().default('Good')
+  });
+
   app.post('/api/price-simulator', async (req: any, res) => {
     try {
-      const { brand, model, year, city, mileage, fuelType, transmission, condition } = req.body;
-
-      if (!brand || !model || !year || !city) {
-        return res.status(400).json({ 
-          error: 'Missing required fields: brand, model, year, city are required' 
-        });
-      }
+      // Validate and parse request data
+      const validatedData = priceSimulatorSchema.parse(req.body);
+      const { brand, model, year, city, mileage, fuelType, transmission } = validatedData;
 
       console.log(`🏷️ Price simulation request: ${year} ${brand} ${model} in ${city}`);
 
@@ -3232,7 +3250,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get price insights from multiple AI sources
       const [priceInsights, historicalAnalysis] = await Promise.allSettled([
         priceComparisonService.getPriceInsights(carData),
-        historicalService.analyzeVehicle({
+        historicalService.analyzeHistoricalData({
           ...carData,
           price: 0, // Will be predicted
           listingDate: new Date()
@@ -3342,11 +3360,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`💰 Price simulation complete: ₹${simulationResult.estimatedPrice.toLocaleString('en-IN')}`);
 
-      res.json(simulationResult);
+      return res.status(200).json(simulationResult);
 
     } catch (error: any) {
       console.error('Price simulator error:', error);
-      res.status(500).json({
+      
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: 'Invalid request data',
+          details: error.errors.map(e => `${e.path.join('.')}: ${e.message}`)
+        });
+      }
+      
+      return res.status(500).json({
         error: 'Price simulation failed',
         message: 'Unable to estimate price at this time. Please try again later.',
         details: process.env.NODE_ENV === 'development' ? error.message : undefined
