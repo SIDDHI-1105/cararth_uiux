@@ -39,7 +39,8 @@ export class AIDataExtractionService {
     this.firecrawl = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY || "" });
     this.firecrawlMcp = new FirecrawlMcpService({ apiKey: process.env.FIRECRAWL_API_KEY || "" });
     this.perplexityApiKey = process.env.PERPLEXITY_API_KEY || "";
-    this.useMcp = process.env.FIRECRAWL_USE_MCP === 'true';
+    // Disable MCP by default until proper protocol is documented
+    this.useMcp = false; // process.env.FIRECRAWL_USE_MCP === 'true';
     
     // Initialize caching systems
     this.firecrawlCache = new AdvancedCache(cacheConfigs.firecrawl);
