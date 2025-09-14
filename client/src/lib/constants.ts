@@ -1,7 +1,7 @@
 // Centralized constants for CarArth
 
-// Default fallback image for car listings - simple car silhouette, not a specific model
-export const FALLBACK_CAR_IMAGE_URL = "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?w=400&q=80";
+// Default fallback image for car listings - simple geometric placeholder
+export const FALLBACK_CAR_IMAGE_URL = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23f3f4f6'/%3E%3Ctext x='200' y='150' text-anchor='middle' dy='0.3em' font-family='Arial, sans-serif' font-size='18' fill='%23374151'%3ENo Image Available%3C/text%3E%3C/svg%3E";
 
 // Car image sizes for different components
 export const CAR_IMAGE_SIZES = {
