@@ -10,35 +10,38 @@ import {
   Calculator, 
   IndianRupee, 
   ExternalLink,
-  TrendingDown
+  TrendingDown,
+  TrendingUp,
+  Info
 } from "lucide-react";
+import { calculateLoan, formatInLakhs, formatIndianCurrency } from "@/lib/loan";
 
 interface LoanWidgetProps {
   carPrice: number;
   carTitle?: string;
 }
 
-function calculateEMI(principal: number, rate: number, tenure: number): number {
-  const monthlyRate = rate / 12 / 100;
-  const emi = (principal * monthlyRate * Math.pow(1 + monthlyRate, tenure)) / 
-              (Math.pow(1 + monthlyRate, tenure) - 1);
-  return Math.round(emi);
-}
-
 export default function LoanWidget({ carPrice, carTitle = "this car" }: LoanWidgetProps) {
   const [downPayment, setDownPayment] = useState<string>(Math.round(carPrice * 0.2).toString());
+  const [tradeInValue, setTradeInValue] = useState<string>("0");
   const [selectedTenure, setSelectedTenure] = useState<string>("60");
   
-  const loanAmount = carPrice - parseInt(downPayment || "0");
-  const tenure = parseInt(selectedTenure);
   const bestRate = 7.05; // DialABank's best rate
   
-  const monthlyEMI = calculateEMI(loanAmount, bestRate, tenure);
+  // Use proper loan calculation utility
+  const loanResult = calculateLoan({
+    carPrice,
+    downPayment: Number(downPayment || "0"),
+    tradeInValue: Number(tradeInValue || "0"),
+    annualInterestRate: bestRate,
+    tenureMonths: Number(selectedTenure)
+  });
   
   const handleGetQuotes = () => {
     const params = new URLSearchParams({
       carPrice: carPrice.toString(),
       downPayment: downPayment,
+      tradeInValue: tradeInValue,
       tenure: selectedTenure
     });
     window.open(`/financing?${params.toString()}`, '_blank');
@@ -79,6 +82,24 @@ export default function LoanWidget({ carPrice, carTitle = "this car" }: LoanWidg
           </div>
         </div>
 
+        {/* Trade-In Value Input */}
+        <div className="space-y-2">
+          <Label htmlFor="widget-trade-in" className="text-sm">Trade-In Value (Optional)</Label>
+          <div className="relative">
+            <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              id="widget-trade-in"
+              type="number"
+              placeholder="Current car value"
+              value={tradeInValue}
+              onChange={(e) => setTradeInValue(e.target.value)}
+              className="pl-9"
+              data-testid="input-widget-trade-in"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">Value of your current car if trading in</p>
+        </div>
+
         {/* Tenure Selection */}
         <div className="space-y-2">
           <Label htmlFor="widget-tenure" className="text-sm">Loan Tenure</Label>
@@ -96,21 +117,43 @@ export default function LoanWidget({ carPrice, carTitle = "this car" }: LoanWidg
           </Select>
         </div>
 
-        {/* EMI Result */}
-        <div className="bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-950/30 dark:to-green-950/30 p-4 rounded-lg border">
+        {/* Loan Summary */}
+        <div className="bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-950/30 dark:to-green-950/30 p-4 rounded-lg border space-y-3">
           <div className="text-center">
             <div className="text-sm text-muted-foreground mb-1">
-              Estimated Monthly EMI
+              Monthly EMI
             </div>
             <div className="text-2xl font-bold text-green-600" data-testid="text-widget-emi">
-              ₹{monthlyEMI.toLocaleString()}
+              {formatInLakhs(loanResult.monthlyEMI)}
             </div>
-            <div className="flex items-center justify-center gap-1 mt-1">
-              <TrendingDown className="w-3 h-3 text-green-600" />
-              <span className="text-xs text-muted-foreground">
-                Starting from {bestRate}% interest
-              </span>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-2 text-center text-xs">
+            <div>
+              <div className="text-muted-foreground">Loan Amount</div>
+              <div className="font-semibold" data-testid="text-widget-principal">
+                {formatInLakhs(loanResult.principalAmount)}
+              </div>
             </div>
+            <div>
+              <div className="text-muted-foreground">Total Interest</div>
+              <div className="font-semibold text-orange-600" data-testid="text-widget-interest">
+                {formatInLakhs(loanResult.totalInterest)}
+              </div>
+            </div>
+            <div>
+              <div className="text-muted-foreground">Total Payment</div>
+              <div className="font-semibold" data-testid="text-widget-total">
+                {formatInLakhs(loanResult.totalPayment)}
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex items-center justify-center gap-1">
+            <TrendingDown className="w-3 h-3 text-green-600" />
+            <span className="text-xs text-muted-foreground">
+              Starting from {bestRate}% interest • {Number(selectedTenure) / 12} years
+            </span>
           </div>
         </div>
 
