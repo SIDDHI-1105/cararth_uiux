@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import FirecrawlApp from '@mendable/firecrawl-js';
+import { FirecrawlMcpService } from './firecrawlMcpService.js';
 import { MarketplaceListing } from './marketplaceAggregator.js';
 import { AdvancedCache, CacheKeyGenerator, cacheConfigs } from './advancedCaching.js';
 import { createHash } from 'crypto';
@@ -8,7 +9,9 @@ import { createHash } from 'crypto';
 export class AIDataExtractionService {
   private gemini: GoogleGenAI;
   private firecrawl: FirecrawlApp;
+  private firecrawlMcp: FirecrawlMcpService;
   private perplexityApiKey: string;
+  private useMcp: boolean;
   
   // Enhanced caching and rate limiting
   private firecrawlCache: AdvancedCache<MarketplaceListing[]>;
@@ -34,7 +37,9 @@ export class AIDataExtractionService {
   constructor() {
     this.gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
     this.firecrawl = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY || "" });
+    this.firecrawlMcp = new FirecrawlMcpService({ apiKey: process.env.FIRECRAWL_API_KEY || "" });
     this.perplexityApiKey = process.env.PERPLEXITY_API_KEY || "";
+    this.useMcp = process.env.FIRECRAWL_USE_MCP === 'true';
     
     // Initialize caching systems
     this.firecrawlCache = new AdvancedCache(cacheConfigs.firecrawl);
@@ -142,52 +147,91 @@ export class AIDataExtractionService {
       
       console.log(`📊 Firecrawl usage: ${this.dailyUsage.firecrawlCalls}/${this.dailyUsage.dailyLimit} daily calls`);
       
-      // Use Firecrawl's LLM extraction capabilities with optimized schema
-      const result = await this.firecrawl.scrapeUrl(url, {
-        formats: ['extract'],
-        extract: {
-          prompt: extractionPrompt,
-          schema: {
-            type: "object",
-            properties: {
-              listings: {
-                type: "array", 
-                description: "Array of car listings found on the page",
-                items: {
-                  type: "object",
-                  properties: {
-                    title: { type: "string", description: "Car title or name" },
-                    brand: { type: "string", description: "Car brand/manufacturer" },
-                    model: { type: "string", description: "Car model" },
-                    year: { type: "number", description: "Manufacturing year" },
-                    price: { type: "number", description: "Price in Indian Rupees" },
-                    mileage: { type: "number", description: "Mileage in kilometers" },
-                    fuelType: { type: "string", description: "Fuel type" },
-                    transmission: { type: "string", description: "Transmission type" },
-                    location: { type: "string", description: "Location or city" },
-                    condition: { type: "string", description: "Car condition" },
-                    sellerType: { type: "string", description: "Seller type" },
-                    url: { type: "string", description: "Direct listing URL" },
-                    images: { 
-                      type: "array", 
-                      description: "Array of image URLs showing the actual car",
-                      items: { type: "string" }
-                    }
-                  },
-                  required: ["title", "brand", "model", "year", "price"]
+      // Define schema for both MCP and direct API
+      const extractSchema = {
+        type: "object",
+        properties: {
+          listings: {
+            type: "array", 
+            description: "Array of car listings found on the page",
+            items: {
+              type: "object",
+              properties: {
+                title: { type: "string", description: "Car title or name" },
+                brand: { type: "string", description: "Car brand/manufacturer" },
+                model: { type: "string", description: "Car model" },
+                year: { type: "number", description: "Manufacturing year" },
+                price: { type: "number", description: "Price in Indian Rupees" },
+                mileage: { type: "number", description: "Mileage in kilometers" },
+                fuelType: { type: "string", description: "Fuel type" },
+                transmission: { type: "string", description: "Transmission type" },
+                location: { type: "string", description: "Location or city" },
+                condition: { type: "string", description: "Car condition" },
+                sellerType: { type: "string", description: "Seller type" },
+                url: { type: "string", description: "Direct listing URL" },
+                images: { 
+                  type: "array", 
+                  description: "Array of image URLs showing the actual car",
+                  items: { type: "string" }
                 }
-              }
-            },
-            required: ["listings"]
+              },
+              required: ["title", "brand", "model", "year", "price"]
+            }
           }
         },
-        timeout: 60000,
-        waitFor: 8000
-      });
+        required: ["listings"]
+      };
 
-      // Handle Firecrawl response with proper type checking
+      let result: any;
+
+      if (this.useMcp) {
+        console.log('🔗 Using Firecrawl MCP for extraction...');
+        try {
+          const mcpResult = await this.firecrawlMcp.extractWithLLM(url, extractionPrompt, extractSchema);
+          if (mcpResult.success) {
+            result = mcpResult;
+          } else {
+            console.log('⚠️ MCP failed, falling back to direct API');
+            result = await this.firecrawl.scrapeUrl(url, {
+              formats: ['extract'],
+              extract: {
+                prompt: extractionPrompt,
+                schema: extractSchema
+              },
+              timeout: 60000,
+              waitFor: 8000
+            });
+          }
+        } catch (error) {
+          console.log('⚠️ MCP error, falling back to direct API:', error);
+          result = await this.firecrawl.scrapeUrl(url, {
+            formats: ['extract'],
+            extract: {
+              prompt: extractionPrompt,
+              schema: extractSchema
+            },
+            timeout: 60000,
+            waitFor: 8000
+          });
+        }
+      } else {
+        // Use direct Firecrawl API
+        result = await this.firecrawl.scrapeUrl(url, {
+          formats: ['extract'],
+          extract: {
+            prompt: extractionPrompt,
+            schema: extractSchema
+          },
+          timeout: 60000,
+          waitFor: 8000
+        });
+      }
+
+      // Handle response with proper type checking (unified parsing for both MCP and direct API)
       if (result && typeof result === 'object') {
-        const extractedData = (result as any).extract || (result as any).data?.extract;
+        // Unified response parsing to handle both MCP and direct API formats
+        const extractedData = result.data?.extract ?? result.extract ?? result.data;
+        
         if (extractedData?.listings && Array.isArray(extractedData.listings)) {
           const validListings = this.validateAndNormalizeListings(extractedData.listings, url);
           this.costMetrics.totalListingsExtracted += validListings.length;
@@ -195,7 +239,8 @@ export class AIDataExtractionService {
           // Cache the result
           await this.firecrawlCache.set(cacheKey, validListings);
           
-          console.log(`✅ Firecrawl extract: ${validListings.length} genuine listings from ${url} (cached for 24h)`);
+          const method = this.useMcp ? 'MCP' : 'Direct API';
+          console.log(`✅ Firecrawl ${method} extract: ${validListings.length} genuine listings from ${url} (cached for 24h)`);
           return validListings;
         }
       }
