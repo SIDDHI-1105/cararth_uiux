@@ -32,6 +32,10 @@ export default function HeroSection({ onSearch }: HeroSearchProps) {
   return (
     <section className="bg-gradient-to-br from-primary/5 via-secondary/5 to-background dark:from-slate-800 dark:via-slate-700 dark:to-background py-16 md:py-20 px-4">
       <div className="max-w-6xl mx-auto text-center">
+        {/* CarArth Logo */}
+        <div className="mb-6">
+          <BrandWordmark variant="hero" showTagline={false} className="justify-center items-center" />
+        </div>
         <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 text-foreground leading-tight">India's First Used Car Search Engine</h1>
         <p className="text-lg sm:text-xl md:text-2xl mb-6 text-muted-foreground max-w-4xl mx-auto leading-relaxed">
           Your dream car is out there. We'll find it across every platform in India. One search, endless possibilities.

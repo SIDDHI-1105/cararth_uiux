@@ -4,6 +4,7 @@
  */
 
 import { useEffect } from 'react';
+import cararthLogo from "@assets/cararth logo_1757827558983.png";
 
 interface SEOHeadProps {
   title?: string;
@@ -20,7 +21,7 @@ export function SEOHead({
   title = "CarArth - India's First Used Car Search Engine",
   description = "India's first used car search engine. Compare cars across platforms, discover true value with AI intelligence. Buy & sell with confidence on CarArth.",
   keywords = "used cars India, car search engine, compare cars, authentic car listings, AI car recommendations, cross-platform car search, car marketplace India, used car price comparison",
-  ogImage = "https://cararth.com/og-image.png",
+  ogImage = cararthLogo,
   ogType = "website",
   structuredData,
   canonical,
