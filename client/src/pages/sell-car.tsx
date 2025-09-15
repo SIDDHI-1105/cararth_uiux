@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Car, Upload, FileText } from "lucide-react";
+import { Car, Upload, FileText, MapPin, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -26,14 +26,30 @@ const BRANDS = [
 
 const INDIAN_CITIES = [
   "Mumbai", "Delhi", "Bangalore", "Chennai", "Hyderabad", "Pune", 
-  "Ahmedabad", "Kolkata", "Surat", "Jaipur", "Lucknow", "Kanpur"
+  "Ahmedabad", "Kolkata", "Surat", "Jaipur", "Lucknow", "Kanpur",
+  "Noida", "Gurgaon", "Faridabad", "Ghaziabad", "Agra", "Meerut",
+  "Vadodara", "Rajkot", "Nashik", "Aurangabad", "Solapur", "Dhanbad",
+  "Amritsar", "Allahabad", "Ranchi", "Jodhpur", "Coimbatore", "Madurai",
+  "Kochi", "Visakhapatnam", "Bhopal", "Indore", "Nagpur", "Thane",
+  "Vasai-Virar", "Kalyan-Dombivli", "Howrah", "South Dumdum", "Firozabad"
 ];
+
+type LocationState = {
+  status: 'idle' | 'detecting' | 'success' | 'error';
+  city: string | null;
+  error: string | null;
+};
 
 export default function SellCar() {
   const { toast } = useToast();
   const [uploadProgress, setUploadProgress] = useState({
     registration: false,
     insurance: false,
+  });
+  const [locationState, setLocationState] = useState<LocationState>({
+    status: 'idle',
+    city: null,
+    error: null
   });
 
   const form = useForm<z.infer<typeof sellCarSchema>>({
@@ -42,15 +58,14 @@ export default function SellCar() {
       sellerId: "temp-seller",
       actualPhone: "",
       actualEmail: "",
+      city: "",
     },
   });
 
   const createListingMutation = useMutation({
     mutationFn: async (data: z.infer<typeof sellCarSchema>) => {
-      return apiRequest("/api/seller/listings", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      const response = await apiRequest("POST", "/api/seller/listings", data);
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -80,12 +95,112 @@ export default function SellCar() {
   };
 
   const getUploadParameters = (category: string) => async () => {
-    const response = await apiRequest(`/api/seller/upload-url?category=${category}`);
+    const response = await apiRequest("GET", `/api/seller/upload-url?category=${category}`);
+    const data = await response.json();
     return {
       method: 'PUT' as const,
-      url: response.uploadURL,
+      url: data.uploadURL,
     };
   };
+
+  const detectCurrentLocation = async () => {
+    setLocationState({ status: 'detecting', city: null, error: null });
+    
+    if (!navigator.geolocation) {
+      setLocationState({ 
+        status: 'error', 
+        city: null, 
+        error: 'Geolocation is not supported by this browser.' 
+      });
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          
+          // Use reverse geocoding to get city name
+          const response = await fetch(
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+          );
+          
+          if (!response.ok) {
+            throw new Error('Failed to get location details');
+          }
+          
+          const data = await response.json();
+          const detectedCity = data.city || data.locality || data.principalSubdivision;
+          
+          if (detectedCity) {
+            // Try to match with Indian cities list or use detected city
+            const matchedCity = INDIAN_CITIES.find(city => 
+              city.toLowerCase().includes(detectedCity.toLowerCase()) ||
+              detectedCity.toLowerCase().includes(city.toLowerCase())
+            ) || detectedCity;
+            
+            setLocationState({ 
+              status: 'success', 
+              city: matchedCity, 
+              error: null 
+            });
+            
+            // Update form field
+            form.setValue('city', matchedCity);
+            
+            toast({
+              title: "Location Detected!",
+              description: `Your current location: ${matchedCity}`,
+            });
+          } else {
+            throw new Error('Could not determine city from location');
+          }
+        } catch (error) {
+          setLocationState({ 
+            status: 'error', 
+            city: null, 
+            error: 'Failed to get city name from location' 
+          });
+        }
+      },
+      (error) => {
+        let errorMessage = 'Failed to detect location';
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Location access denied. Please allow location access and try again.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Location information is unavailable.';
+            break;
+          case error.TIMEOUT:
+            errorMessage = 'Location request timed out.';
+            break;
+        }
+        
+        setLocationState({ 
+          status: 'error', 
+          city: null, 
+          error: errorMessage 
+        });
+        
+        toast({
+          title: "Location Detection Failed",
+          description: errorMessage,
+          variant: "destructive"
+        });
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000
+      }
+    );
+  };
+
+  // Auto-detect location on component mount
+  useEffect(() => {
+    detectCurrentLocation();
+  }, []);
 
   const onSubmit = async (data: z.infer<typeof sellCarSchema>) => {
     createListingMutation.mutate(data);
@@ -280,21 +395,63 @@ export default function SellCar() {
                       name="city"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>City</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-city">
-                                <SelectValue placeholder="Select city" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {INDIAN_CITIES.map((city) => (
-                                <SelectItem key={city} value={city}>
-                                  {city}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <FormLabel className="flex items-center gap-2">
+                            City
+                            {locationState.status === 'detecting' && (
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                Detecting...
+                              </div>
+                            )}
+                            {locationState.status === 'success' && locationState.city && (
+                              <div className="flex items-center gap-1 text-xs text-green-600">
+                                <MapPin className="h-3 w-3" />
+                                Auto-detected
+                              </div>
+                            )}
+                          </FormLabel>
+                          <div className="flex gap-2">
+                            <div className="flex-1">
+                              <Select onValueChange={field.onChange} value={field.value || ''}>
+                                <FormControl>
+                                  <SelectTrigger data-testid="select-city">
+                                    <SelectValue placeholder={locationState.status === 'detecting' ? 'Detecting location...' : 'Select city'} />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {/* Show detected city first if available */}
+                                  {locationState.city && !INDIAN_CITIES.includes(locationState.city) && (
+                                    <SelectItem value={locationState.city}>
+                                      📍 {locationState.city} (Detected)
+                                    </SelectItem>
+                                  )}
+                                  {INDIAN_CITIES.map((city) => (
+                                    <SelectItem key={city} value={city}>
+                                      {city}
+                                      {locationState.city === city && ' (Detected)'}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              onClick={detectCurrentLocation}
+                              disabled={locationState.status === 'detecting'}
+                              data-testid="button-detect-location"
+                            >
+                              {locationState.status === 'detecting' ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <MapPin className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                          {locationState.status === 'error' && locationState.error && (
+                            <p className="text-xs text-red-500 mt-1">{locationState.error}</p>
+                          )}
                           <FormMessage />
                         </FormItem>
                       )}
@@ -315,6 +472,7 @@ export default function SellCar() {
                             placeholder="Describe your car's condition, maintenance history... Share details with #cararth.com community"
                             className="min-h-[100px]"
                             {...field}
+                            value={field.value || ''}
                             data-testid="textarea-description"
                           />
                         </FormControl>
