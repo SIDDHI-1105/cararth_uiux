@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Heart, Calendar, Gauge, Fuel, Settings, MapPin, Star, Share2 } from "lucide-react";
+import { Heart, Calendar, Gauge, Fuel, Settings, MapPin, Star, Share2, User, Shield, Award, Phone } from "lucide-react";
 import { type CarListing } from "@shared/schema";
 import SocialShare from "@/components/social-share";
 import { FALLBACK_CAR_IMAGE_URL } from '@/lib/constants';
@@ -72,6 +72,60 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
       return `${(mileage / 1000).toFixed(0)}k km`;
     }
     return `${mileage.toLocaleString()} km`;
+  };
+
+  // Helper function to get seller type styling and icon - CarDekho inspired
+  const getSellerInfo = (sellerType: string | null | undefined) => {
+    switch (sellerType?.toLowerCase()) {
+      case 'individual':
+        return {
+          label: 'Individual',
+          icon: User,
+          className: 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300 dark:border-green-800',
+          trusted: true
+        };
+      case 'dealer':
+        return {
+          label: 'Dealer',
+          icon: Shield,
+          className: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800',
+          trusted: true
+        };
+      case 'oem':
+        return {
+          label: 'OEM Partner',
+          icon: Award,
+          className: 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800',
+          trusted: true
+        };
+      default:
+        return {
+          label: 'Dealer',
+          icon: Shield,
+          className: 'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-950 dark:text-gray-300 dark:border-gray-800',
+          trusted: false
+        };
+    }
+  };
+
+  // Get verification badge info
+  const getVerificationBadge = (status: string | null | undefined) => {
+    switch (status?.toLowerCase()) {
+      case 'verified':
+        return {
+          label: 'Verified',
+          className: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+          icon: Shield
+        };
+      case 'certified':
+        return {
+          label: 'Certified',
+          className: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+          icon: Award
+        };
+      default:
+        return null;
+    }
   };
 
   return (
@@ -147,6 +201,53 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
             </span>
           </div>
         )}
+
+        {/* Seller Information - CarDekho inspired prominent display */}
+        <div className="mb-4 space-y-2">
+          {(() => {
+            const sellerInfo = getSellerInfo(car.sellerType);
+            const verificationBadge = getVerificationBadge(car.verificationStatus);
+            const SellerIcon = sellerInfo.icon;
+            
+            return (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {/* Seller Type Badge */}
+                  <span 
+                    className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${sellerInfo.className}`}
+                    data-testid={`badge-seller-type-${car.id}`}
+                  >
+                    <SellerIcon className="w-3 h-3 mr-1" />
+                    {sellerInfo.label}
+                    {sellerInfo.trusted && <Shield className="w-3 h-3 ml-1 text-green-600" />}
+                  </span>
+
+                  {/* Verification Badge */}
+                  {verificationBadge && (
+                    <span 
+                      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${verificationBadge.className}`}
+                      data-testid={`badge-verification-${car.id}`}
+                    >
+                      <verificationBadge.icon className="w-3 h-3 mr-1" />
+                      {verificationBadge.label}
+                    </span>
+                  )}
+                </div>
+
+                {/* Contact Seller Button - CarDekho style */}
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  className="text-xs px-3 py-1 h-7 bg-green-50 hover:bg-green-100 text-green-700 border-green-200 dark:bg-green-950 dark:hover:bg-green-900 dark:text-green-300 dark:border-green-800"
+                  data-testid={`button-contact-seller-${car.id}`}
+                >
+                  <Phone className="w-3 h-3 mr-1" />
+                  Contact
+                </Button>
+              </div>
+            );
+          })()}
+        </div>
         
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground flex items-center">
