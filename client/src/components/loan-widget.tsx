@@ -191,8 +191,8 @@ export default function LoanWidget({ carPrice, carTitle = "this car" }: LoanWidg
           </Badge>
         </div>
 
-        {/* Universal Indicative Loan Disclaimer */}
-        <IndicativeLoanDisclaimer />
+        {/* Universal Indicative Loan Disclaimer - Curtain Mode */}
+        <IndicativeLoanDisclaimer curtainMode />
       </CardContent>
     </Card>
   );
