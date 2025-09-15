@@ -11,14 +11,15 @@ export default function AiTrainingDashboard() {
   const { toast } = useToast();
 
   const startTrainingMutation = useMutation({
-    mutationFn: () => apiRequest('/api/ai/train/price-modeling', {
-      method: 'POST'
-    }),
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/ai/train/price-modeling');
+      return await response.json();
+    },
     onSuccess: (data) => {
-      setTrainingJobId(data.job_id);
+      setTrainingJobId(data.jobId);
       toast({
         title: "Training Started!",
-        description: `Price modeling training initiated with job ID: ${data.job_id}`
+        description: `Price modeling training initiated with job ID: ${data.jobId}`
       });
     },
     onError: (error: any) => {
@@ -31,10 +32,10 @@ export default function AiTrainingDashboard() {
   });
 
   const generateDataMutation = useMutation({
-    mutationFn: (count: number) => apiRequest('/api/ai/generate-training-data', {
-      method: 'POST',
-      body: { count }
-    }),
+    mutationFn: async (count: number) => {
+      const response = await apiRequest('POST', '/api/ai/generate-training-data', { count });
+      return await response.json();
+    },
     onSuccess: (data) => {
       toast({
         title: "Training Data Generated!",
