@@ -331,23 +331,6 @@ export class OfficialFirecrawlMcpService extends EventEmitter {
   getStatus() {
     return {
       ready: this.isReady,
-      type: 'official',
-      version: '1.0.0',
-      features: [
-        'Enhanced LLM context sharing',
-        'Official Firecrawl support', 
-        'JSON-RPC protocol compliance',
-        'Automatic retries and error handling'
-      ]
-    };
-  }
-
-  /**
-   * Check if MCP service is available and ready
-   */
-  getStatus() {
-    return {
-      ready: this.isReady,
       connecting: this.isConnecting,
       hasProcess: !!this.mcpProcess,
       type: 'official-jsonrpc',
@@ -372,10 +355,10 @@ export class OfficialFirecrawlMcpService extends EventEmitter {
     console.log('🔌 Cleaning up Official MCP Service...');
     
     // Clear all pending requests
-    for (const [id, pending] of this.pendingRequests) {
+    this.pendingRequests.forEach((pending) => {
       clearTimeout(pending.timeout);
       pending.reject(new Error('MCP service shutting down'));
-    }
+    });
     this.pendingRequests.clear();
 
     // Terminate the MCP process
