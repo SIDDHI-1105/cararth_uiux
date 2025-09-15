@@ -37,7 +37,7 @@ function Router() {
       <Route path="/terms-of-service" component={TermsOfService} />
       <Route path="/data-sources-policy" component={DataSourcesPolicy} />
       <Route path="/api-compliance" component={ApiCompliance} />
-      <Route path="/ai-training" component={AiTrainingDashboard} />
+      <Route path="/ai-training-dashboard" component={AiTrainingDashboard} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -7,7 +7,7 @@ import { Brain, Target, Zap, Play, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function AiTrainingDashboard() {
-  const [trainingJobId, setTrainingJobId] = useState<string | null>(null);
+  const [trainingJobId, setTrainingJobId] = useState<string | null>("ftjob-cJVP58gwOuz7IBJ2DbGUvu7F");
   const { toast } = useToast();
 
   const startTrainingMutation = useMutation({
