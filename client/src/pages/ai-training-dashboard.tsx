@@ -1,14 +1,43 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useMutation } from '@tanstack/react-query';
+import { Badge } from '@/components/ui/badge';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { Brain, Target, Zap, Play, RefreshCw } from 'lucide-react';
+import { Brain, Target, Zap, Play, RefreshCw, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function AiTrainingDashboard() {
   const [trainingJobId, setTrainingJobId] = useState<string | null>("ftjob-cJVP58gwOuz7IBJ2DbGUvu7F");
   const { toast } = useToast();
+
+  // Query for training job status
+  const { data: jobStatus, refetch: refetchStatus } = useQuery({
+    queryKey: ['/api/ai/train/status', trainingJobId],
+    enabled: !!trainingJobId,
+    refetchInterval: 5000, // Refetch every 5 seconds
+    queryFn: async () => {
+      if (!trainingJobId) return null;
+      const response = await fetch(`/api/ai/train/status/${trainingJobId}`);
+      return await response.json();
+    }
+  });
+
+  // Status display helpers
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'validating_files':
+        return <Badge variant="outline" className="text-yellow-600"><Clock className="w-3 h-3 mr-1" />Validating Files</Badge>;
+      case 'running':
+        return <Badge variant="outline" className="text-blue-600"><RefreshCw className="w-3 h-3 mr-1 animate-spin" />Training</Badge>;
+      case 'succeeded':
+        return <Badge variant="outline" className="text-green-600"><CheckCircle className="w-3 h-3 mr-1" />Completed</Badge>;
+      case 'failed':
+        return <Badge variant="destructive"><AlertCircle className="w-3 h-3 mr-1" />Failed</Badge>;
+      default:
+        return <Badge variant="secondary">{status}</Badge>;
+    }
+  };
 
   const startTrainingMutation = useMutation({
     mutationFn: async () => {
@@ -77,8 +106,8 @@ export default function AiTrainingDashboard() {
           <CardContent>
             <Button 
               onClick={() => startTrainingMutation.mutate()}
-              disabled={startTrainingMutation.isPending}
-              className="w-full"
+              disabled={startTrainingMutation.isPending || (jobStatus && jobStatus.status !== 'failed')}
+              className="w-full mb-4"
               data-testid="button-start-price-training"
             >
               {startTrainingMutation.isPending ? (
@@ -86,13 +115,56 @@ export default function AiTrainingDashboard() {
               ) : (
                 <Play className="w-4 h-4 mr-2" />
               )}
-              Start Price Modeling Training
+              Start New Training Job
             </Button>
+            
             {trainingJobId && (
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                <p className="text-sm text-blue-800">
-                  Training Job ID: <code className="font-mono">{trainingJobId}</code>
-                </p>
+              <div className="space-y-3">
+                <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                      Active Training Job
+                    </p>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => refetchStatus()}
+                      data-testid="button-refresh-status"
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-blue-700 dark:text-blue-300 mb-2">
+                    ID: <code className="font-mono">{trainingJobId}</code>
+                  </p>
+                  
+                  {jobStatus && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-blue-700 dark:text-blue-300">Status:</span>
+                        {getStatusBadge(jobStatus.status)}
+                      </div>
+                      
+                      {jobStatus.model_id && (
+                        <p className="text-xs text-blue-600 dark:text-blue-400">
+                          <strong>Model:</strong> <code>{jobStatus.model_id}</code>
+                        </p>
+                      )}
+                      
+                      {jobStatus.trained_tokens && (
+                        <p className="text-xs text-blue-600 dark:text-blue-400">
+                          <strong>Tokens Trained:</strong> {jobStatus.trained_tokens.toLocaleString()}
+                        </p>
+                      )}
+                      
+                      <p className="text-xs text-blue-600 dark:text-blue-400">
+                        <strong>Hyperparameters:</strong> {jobStatus.hyperparameters?.n_epochs} epochs, 
+                        batch size {jobStatus.hyperparameters?.batch_size}, 
+                        LR {jobStatus.hyperparameters?.learning_rate_multiplier}
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </CardContent>
