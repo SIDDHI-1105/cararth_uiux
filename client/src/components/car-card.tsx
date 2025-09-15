@@ -17,14 +17,11 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
 
   // Helper function to get image source with proxy for external URLs
   const getImageSrc = (images: string[] | null | undefined): string => {
-    console.log(`🔍 DEBUG car=${car.title} images=`, images);
     if (!images || !Array.isArray(images) || images.length === 0) {
-      console.log(`❌ No images for ${car.title}, using fallback`);
       return FALLBACK_CAR_IMAGE_URL;
     }
     
     const imageUrl = images[0];
-    console.log(`🔍 DEBUG imageUrl for ${car.title}:`, imageUrl);
     
     // Check if it's an external CarDekho or other trusted domain image
     const trustedDomains = [
@@ -145,7 +142,6 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
           }`}
           data-testid={`img-car-${car.id}`}
           onLoad={() => {
-            console.log(`✅ Image loaded successfully for ${car.title}:`, getImageSrc(car.images as string[]));
             setImageLoaded(true);
           }}
           onError={(e) => {

@@ -7,7 +7,7 @@ import Layout from "@/components/layout";
 import ContactModal from "@/components/contact-modal";
 import PriceInsights from "@/components/price-insights";
 import LoanWidget from "@/components/loan-widget";
-import { Phone, Calendar, MapPin, User, Star, Check, ArrowLeft, MessageCircle } from "lucide-react";
+import { Phone, Calendar, MapPin, User, Star, Check, ArrowLeft, MessageCircle, Shield } from "lucide-react";
 import { Link } from "wouter";
 import { type Car, type User as UserType } from "@shared/schema";
 import { BrandWordmark } from "@/components/brand-wordmark";
@@ -107,18 +107,17 @@ export default function CarDetail() {
               }}
             />
             <div className="grid grid-cols-4 gap-2">
-              {[
-                "https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=100",
-                "https://images.unsplash.com/photo-1555215695-3004980ad54e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=100",
-                "https://images.unsplash.com/photo-1486326658981-ed68abe5868e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=100",
-                "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=100",
-              ].map((src, index) => (
+              {/* Show actual car images if available, otherwise show single image */}
+              {(car.images && car.images.length > 1 ? car.images.slice(0, 4) : [car.images?.[0] || FALLBACK_CAR_IMAGE_URL]).map((src, index) => (
                 <img 
                   key={index}
-                  src={src} 
+                  src={src?.startsWith('http') ? `/api/proxy/image?url=${encodeURIComponent(src)}` : (src || FALLBACK_CAR_IMAGE_URL)} 
                   alt={`${car.title} view ${index + 1}`} 
                   className="w-full h-20 object-cover rounded border-2 hover:border-primary cursor-pointer"
                   data-testid={`img-car-gallery-${index}`}
+                  onError={(e) => {
+                    e.currentTarget.src = FALLBACK_CAR_IMAGE_URL;
+                  }}
                 />
               ))}
             </div>
@@ -129,7 +128,7 @@ export default function CarDetail() {
               <div className="text-3xl font-bold text-accent mb-2" data-testid="text-car-price">
                 {formatPrice(car.price)}
               </div>
-              <div className="text-muted-foreground mb-4">EMI starts at ₹{Math.round(parseFloat(car.price) * 2000)}/month</div>
+              <div className="text-muted-foreground mb-4">EMI starts at ₹{Math.round((parseFloat(car.price) * 80000) / 12)}/month</div>
               
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div>
@@ -184,14 +183,33 @@ export default function CarDetail() {
           </div>
           
           <div className="space-y-6">
-            {/* Contact Seller - Simple & Working */}
+            {/* Contact Seller - With Details */}
             <div className="bg-muted rounded-lg p-6">
               <h3 className="text-lg font-semibold mb-4 flex items-center">
                 <MessageCircle className="w-5 h-5 mr-2" />
                 Contact Seller
               </h3>
+              
+              {/* Seller Information */}
+              <div className="mb-4 space-y-2">
+                <div className="flex items-center text-sm">
+                  <User className="w-4 h-4 mr-2 text-blue-600" />
+                  <span className="font-medium">{'Seller'}</span>
+                </div>
+                <div className="flex items-center text-sm">
+                  <MapPin className="w-4 h-4 mr-2 text-green-600" />
+                  <span className="text-muted-foreground">{car.location}</span>
+                </div>
+                {car.source && (
+                  <div className="flex items-center text-sm">
+                    <Shield className="w-4 h-4 mr-2 text-purple-600" />
+                    <span className="text-muted-foreground">Listed on {car.source}</span>
+                  </div>
+                )}
+              </div>
+              
               <p className="text-muted-foreground mb-4">
-                Interested in this car? Send a message to the seller directly.
+                Interested in this car? Contact the seller for more details and inspection.
               </p>
               <Button 
                 onClick={() => setContactModalOpen(true)}
