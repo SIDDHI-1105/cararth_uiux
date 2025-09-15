@@ -1,4 +1,12 @@
 import { webSearch } from "../shared/webSearch.js";
+import { withRetry, CircuitBreaker } from "../shared/retryUtils.js";
+import { 
+  GeminiResponseSchema, 
+  PriceAnalysisResponseSchema, 
+  safeParseJSON, 
+  validateApiResponse,
+  type PriceDataItem
+} from "../shared/apiSchemas.js";
 
 export interface PriceInsight {
   averagePrice: number;
@@ -23,12 +31,14 @@ export interface CarPriceData {
 }
 
 export class PriceComparisonService {
+  private circuitBreaker = new CircuitBreaker(5, 60000, 30000);
+
   private async searchCarPrices(carData: CarPriceData): Promise<any[]> {
     if (!process.env.GEMINI_API_KEY) {
       throw new Error('Price analysis service unavailable - please ensure API configuration is complete');
     }
 
-    try {
+    const operation = async () => {
       const prompt = `You are a car pricing expert for the Indian used car market.
 
 Car Details: ${JSON.stringify(carData)}
@@ -63,21 +73,90 @@ Base prices on current Indian market conditions for ${carData.year} ${carData.br
         model: "gemini-2.5-flash",
         contents: prompt,
       });
+      
+      if (!response || !response.text) {
+        throw new Error('Invalid response from price analysis service');
+      }
+      
+      return response;
+    };
+
+    try {
+      const response = await this.circuitBreaker.execute(() => 
+        withRetry(operation, {
+          maxAttempts: 3,
+          baseDelayMs: 1000,
+          maxDelayMs: 8000,
+          timeoutMs: 15000,
+          shouldRetry: (error) => {
+            const msg = error.message?.toLowerCase() || '';
+            return msg.includes('timeout') || 
+                   msg.includes('network') || 
+                   msg.includes('rate limit') ||
+                   msg.includes('service unavailable');
+          }
+        })
+      );
+
+      // First validate the Gemini API response structure
+      const responseValidation = validateApiResponse(response, GeminiResponseSchema, 'Gemini API response');
+      if (!responseValidation.success) {
+        console.warn('Gemini API response validation failed, attempting fallback:', responseValidation.error);
+        // Continue with fallback extraction instead of throwing
+      }
 
       const resultText = response.text || "";
       const jsonMatch = resultText.match(/\{[\s\S]*\}/);
       
       if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        if (parsed.priceData && Array.isArray(parsed.priceData)) {
-          return parsed.priceData;
+        // Use schema-validated JSON parsing
+        const parseResult = safeParseJSON(jsonMatch[0], PriceAnalysisResponseSchema);
+        
+        if (parseResult.success && parseResult.data) {
+          // Additional validation for price data items
+          const validatedPriceData = parseResult.data.priceData.filter((item: any) => {
+            return typeof item.price === 'number' && 
+                   item.price > 0 && 
+                   item.price < 10000000 && // Reasonable upper limit
+                   typeof item.title === 'string' && 
+                   item.title.length > 0 &&
+                   typeof item.content === 'string' && 
+                   item.content.length > 0;
+          });
+          
+          if (validatedPriceData.length > 0) {
+            console.log(`✅ Successfully validated ${validatedPriceData.length} price data items`);
+            return validatedPriceData;
+          }
+        }
+        
+        console.warn('Schema validation failed for price data, falling back to heuristic extraction');
+      }
+      
+      // Fallback to heuristic extraction when JSON parsing/validation fails
+      console.log('Falling back to heuristic price extraction...');
+      const fallbackPrices = this.extractPricesFromText(resultText);
+      if (fallbackPrices.length > 0) {
+        const fallbackData = fallbackPrices.slice(0, 5).map((price, index) => ({
+          title: `Price estimate ${index + 1}`,
+          content: `Market price estimate: ₹${(price / 100000).toFixed(2)} lakhs`,
+          source: 'Market Analysis',
+          price: price
+        }));
+        
+        // Validate fallback data with schema
+        const fallbackValidation = PriceAnalysisResponseSchema.safeParse({ priceData: fallbackData });
+        if (fallbackValidation.success) {
+          console.log(`✅ Successfully created ${fallbackData.length} fallback price estimates`);
+          return fallbackData;
         }
       }
+      
+      throw new Error('Unable to extract price data from analysis');
     } catch (error) {
-      console.error('Gemini price search error:', error);
+      console.error('Price search error:', error.message);
+      throw new Error('Unable to fetch market data - please try again later');
     }
-
-    throw new Error('Unable to fetch real market data - please try again later');
   }
 
 

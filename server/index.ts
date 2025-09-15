@@ -1,8 +1,21 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { 
+  setupProcessErrorHandlers,
+  errorHandler,
+  requestIdMiddleware,
+  createHealthCheckHandler
+} from "./errorHandling.js";
 
 const app = express();
+
+// Setup process-level error handlers first
+setupProcessErrorHandlers();
+
+// Add request ID middleware for better error tracking
+app.use(requestIdMiddleware);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -52,28 +65,11 @@ app.use((req, res, next) => {
       process.exit(1);
     }
 
-    // Add global error handler
-    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-      const status = err.status || err.statusCode || 500;
-      const message = err.message || "Internal Server Error";
-      
-      // Log the error for debugging
-      console.error('❌ Request error:', {
-        status,
-        message,
-        stack: err.stack,
-        url: _req.url,
-        method: _req.method
-      });
-
-      // Include stack trace in development
-      const responsePayload = process.env.NODE_ENV === 'development' 
-        ? { message, stack: err.stack }
-        : { message };
-
-      res.status(status).json(responsePayload);
-      // Never throw after sending response
-    });
+    // Add health check endpoint  
+    app.get('/health', createHealthCheckHandler());
+    
+    // Add centralized error handling middleware (must be last)
+    app.use(errorHandler);
 
     // Setup development/production serving with error handling
     try {
@@ -134,16 +130,4 @@ app.use((req, res, next) => {
   process.exit(1);
 });
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Unhandled promise rejection:', reason);
-  if (process.env.NODE_ENV === 'production') {
-    process.exit(1);
-  }
-});
-
-// Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
-  console.error('❌ Uncaught exception:', error);
-  process.exit(1);
-});
+// Note: Process-level error handlers are already setup in setupProcessErrorHandlers()

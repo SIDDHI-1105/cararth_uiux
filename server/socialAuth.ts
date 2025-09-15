@@ -7,6 +7,7 @@ import type { Express } from "express";
 import { db } from "./db";
 import { users, socialAccounts, userReputation } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
+import { logError, ErrorCategory, createAppError } from './errorHandling.js';
 
 // Social OAuth configuration
 interface SocialProfile {
@@ -24,8 +25,8 @@ function checkRequiredSecrets() {
   const missing = required.filter(key => !process.env[key]);
   
   if (missing.length > 0) {
-    console.warn(`⚠️ Missing social auth secrets: ${missing.join(', ')}`);
-    console.warn('Social login will be disabled until these are configured.');
+    logError(createAppError('Missing social auth configuration', 500, ErrorCategory.CONFIGURATION), 'Social auth secrets validation');
+    logError({ message: 'Social login disabled - missing configuration', statusCode: 500 }, 'Social auth configuration validation');
     return false;
   }
   return true;
@@ -36,7 +37,7 @@ export function setupSocialAuth(app: Express) {
   const hasRequiredSecrets = checkRequiredSecrets();
   
   if (!hasRequiredSecrets) {
-    console.log('🔐 Social authentication disabled - missing required secrets');
+    logError({ message: 'Social authentication disabled - missing required secrets', statusCode: 500 }, 'Social auth configuration check');
     return;
   }
 
@@ -183,7 +184,7 @@ export function setupSocialAuth(app: Express) {
     );
   }
 
-  console.log('✅ Social authentication configured');
+  logError({ message: 'Social authentication configured successfully', statusCode: 200 }, 'Social auth initialization');
 }
 
 // Handle social login logic
@@ -275,11 +276,11 @@ async function handleSocialLogin(
         });
     }
 
-    console.log(`✅ Social login successful: ${profile.provider} - ${profile.email}`);
+    logError({ message: 'Social login successful', statusCode: 200 }, 'Social auth login success');
     return user;
 
   } catch (error) {
-    console.error('❌ Social login error:', error);
+    logError(createAppError('Social authentication operation failed', 500, ErrorCategory.AUTHENTICATION), 'Social auth error handler');
     throw error;
   }
 }

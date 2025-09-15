@@ -1,4 +1,12 @@
 import { GoogleGenAI } from "@google/genai";
+import { withRetry, CircuitBreaker } from "./retryUtils.js";
+import { 
+  GeminiResponseSchema, 
+  WebSearchResponseSchema, 
+  safeParseJSON, 
+  validateApiResponse,
+  type SearchListing
+} from "./apiSchemas.js";
 
 // Web search functionality for price comparison
 export interface SearchResult {
@@ -9,15 +17,16 @@ export interface SearchResult {
 }
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+const circuitBreaker = new CircuitBreaker(5, 60000, 30000);
 
 export async function webSearch(query: string): Promise<SearchResult[]> {
-  try {
-    console.log(`Searching for: ${query}`);
-    
-    if (!process.env.GEMINI_API_KEY) {
-      throw new Error('Search service unavailable - API configuration required');
-    }
-    
+  console.log(`Searching for: ${query}`);
+  
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error('Search service unavailable - API configuration required');
+  }
+  
+  const operation = async () => {
     // Use Gemini to search and extract REAL listings from car portals
     const prompt = `You are a web scraper expert for Indian car marketplaces. 
 
@@ -55,27 +64,72 @@ Include realistic seller details while respecting data usage rights and Indian l
       model: "gemini-2.5-flash",
       contents: prompt,
     });
-
-    const resultText = response.text || "";
     
-    try {
-      // Extract JSON from response
-      const jsonMatch = resultText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        if (parsed.listings && Array.isArray(parsed.listings)) {
-          return parsed.listings;
+    return response;
+  };
+
+  try {
+    const response = await circuitBreaker.execute(() => 
+      withRetry(operation, {
+        maxAttempts: 3,
+        baseDelayMs: 1000,
+        maxDelayMs: 8000,
+        timeoutMs: 15000,
+        shouldRetry: (error) => {
+          const msg = error.message?.toLowerCase() || '';
+          return msg.includes('timeout') || 
+                 msg.includes('network') || 
+                 msg.includes('rate limit') ||
+                 msg.includes('service unavailable');
         }
-      }
-    } catch (parseError) {
-      console.error('Error parsing Gemini response:', parseError);
+      })
+    );
+
+    // First validate the Gemini API response structure
+    const responseValidation = validateApiResponse(response, GeminiResponseSchema, 'Gemini API response');
+    if (!responseValidation.success) {
+      console.warn('Gemini API response validation failed:', responseValidation.error);
+      // Continue with fallback instead of throwing
     }
     
-    // Unable to get real data
-    throw new Error('Unable to fetch real search results - please try again later');
+    const resultText = response.text || "";
+    
+    // Extract JSON from response and validate with schema
+    const jsonMatch = resultText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parseResult = safeParseJSON(jsonMatch[0], WebSearchResponseSchema);
+      
+      if (parseResult.success && parseResult.data) {
+        // Additional validation for search listings
+        const validatedListings = parseResult.data.listings.filter((listing: any) => {
+          try {
+            return typeof listing.title === 'string' && 
+                   listing.title.length > 0 &&
+                   typeof listing.content === 'string' && 
+                   listing.content.length > 0 &&
+                   typeof listing.url === 'string' && 
+                   listing.url.startsWith('http') &&
+                   typeof listing.source === 'string' && 
+                   listing.source.length > 0;
+          } catch {
+            return false;
+          }
+        });
+        
+        if (validatedListings.length > 0) {
+          console.log(`✅ Successfully validated ${validatedListings.length} search listings`);
+          return validatedListings;
+        }
+      }
+      
+      console.warn('Schema validation failed for web search results');
+    }
+    
+    // Unable to get valid data
+    throw new Error('Unable to fetch valid search results - please try again later');
     
   } catch (error) {
-    console.error('Web search error:', error);
+    console.error('Web search error:', error.message);
     throw new Error('Search service temporarily unavailable');
   }
 }

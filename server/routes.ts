@@ -47,6 +47,7 @@ import { orchestratedBatchIngestion } from "./orchestratedIngestion.js";
 import { ImageProxyService } from "./imageProxyService.js";
 import { aiTrainingService } from "./aiTrainingService.js";
 import crypto from "crypto";
+import { logError, ErrorCategory, createAppError, asyncHandler } from "./errorHandling.js";
 
 // Developer mode check
 const isDeveloperMode = (req: any) => {
@@ -79,7 +80,7 @@ const checkSearchLimit = async (req: any, res: any, next: any) => {
   try {
     // Developer mode bypass
     if (isDeveloperMode(req)) {
-      console.log('🔧 Developer mode active - auth bypass enabled (development only)');
+      logError({ message: 'Developer mode active - auth bypass enabled (development only)', statusCode: 200 }, 'Developer mode check');
       return next();
     }
 
@@ -172,7 +173,7 @@ const checkSearchLimit = async (req: any, res: any, next: any) => {
 
     next();
   } catch (error) {
-    console.error("Search limit check error:", error);
+    logError(createAppError('Search limit check failed', 500, ErrorCategory.INTERNAL), 'checkSearchLimit middleware');
     res.status(500).json({ error: "Failed to check search limits" });
   }
 }
@@ -182,9 +183,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   let automotiveNewsService;
   try {
     automotiveNewsService = new AutomotiveNewsService();
-    console.log('✅ AutomotiveNewsService initialized');
+    logError({ message: 'AutomotiveNewsService initialized successfully', statusCode: 200 }, 'AutomotiveNewsService initialization');
   } catch (error) {
-    console.error('❌ Failed to initialize AutomotiveNewsService:', error);
+    logError(createAppError('AutomotiveNewsService initialization failed', 500, ErrorCategory.INTERNAL), 'AutomotiveNewsService setup');
     // Continue without this service - it's not critical for basic functionality
   }
   
@@ -194,13 +195,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { DatabaseStorage } = await import('./dbStorage.js');
       const dbStorage = new DatabaseStorage();
       initializeMarketplaceAggregator(dbStorage);
-      console.log('🚀 MarketplaceAggregator initialized with database caching');
+      logError({ message: 'MarketplaceAggregator initialized with database caching', statusCode: 200 }, 'MarketplaceAggregator setup');
     } else {
-      console.log('⚠️ Using MarketplaceAggregator without database caching');
+      logError({ message: 'MarketplaceAggregator initialized without database caching', statusCode: 200 }, 'MarketplaceAggregator setup');
     }
   } catch (error) {
-    console.error('❌ Failed to initialize MarketplaceAggregator:', error);
-    console.log('⚠️ Continuing without MarketplaceAggregator - some features may be limited');
+    logError(createAppError('MarketplaceAggregator initialization failed', 500, ErrorCategory.INTERNAL), 'MarketplaceAggregator setup');
+    logError({ message: 'Continuing without MarketplaceAggregator - some features may be limited', statusCode: 200 }, 'MarketplaceAggregator fallback');
   }
 
   // Start internal scheduler for batch ingestion (with idempotency)
@@ -208,21 +209,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const { internalScheduler } = await import('./scheduler.js');
     if (!internalScheduler.isStarted) {
       internalScheduler.start();
-      console.log('⏰ Internal scheduler started for twice-daily batch ingestion');
+      logError({ message: 'Internal scheduler started for twice-daily batch ingestion', statusCode: 200 }, 'Scheduler initialization');
     } else {
-      console.log('✅ Internal scheduler already running');
+      logError({ message: 'Internal scheduler already running', statusCode: 200 }, 'Scheduler status check');
     }
   } catch (error) {
-    console.error('❌ Failed to start internal scheduler:', error);
-    console.log('⚠️ Continuing without scheduler - batch ingestion will need manual triggers');
+    logError(createAppError('Internal scheduler startup failed', 500, ErrorCategory.INTERNAL), 'Scheduler initialization');
+    logError({ message: 'Continuing without scheduler - batch ingestion will need manual triggers', statusCode: 200 }, 'Scheduler fallback');
   }
 
   // Auth middleware with error handling
   try {
     await setupAuth(app);
-    console.log('✅ Authentication middleware configured');
+    logError({ message: 'Authentication middleware configured successfully', statusCode: 200 }, 'Authentication setup');
   } catch (error) {
-    console.error('❌ Failed to setup auth middleware:', error);
+    logError(createAppError('Authentication middleware setup failed', 500, ErrorCategory.AUTHENTICATION), 'Authentication configuration');
     // In production, authentication failure should be fatal
     if (process.env.NODE_ENV === 'production') {
       console.error('❌ Authentication is required in production. Exiting.');
@@ -467,7 +468,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(httpStatus).json(healthData);
 
     } catch (error) {
-      console.error('❌ Health check failed:', error);
+      logError(createAppError('Health check operation failed', 500, ErrorCategory.INTERNAL), 'Health check endpoint');
       res.status(500).json({
         timestamp: new Date().toISOString(),
         overallStatus: 'critical',
@@ -712,7 +713,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
-      console.error("Error fetching user:", error);
+      logError(createAppError('User fetch operation failed', 500, ErrorCategory.DATABASE), 'User lookup operation');
       res.status(500).json({ message: "Failed to fetch user" });
     }
   });
@@ -751,7 +752,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       //   });
       // }
     } catch (error) {
-      console.error("Error fetching usage status:", error);
+      logError(createAppError('Usage status fetch operation failed', 500, ErrorCategory.INTERNAL), 'Usage status endpoint');
       res.status(500).json({ error: "Failed to fetch usage status" });
     }
   });
@@ -778,11 +779,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // In a real app, send SMS here
-      console.log(`SMS Verification Code for ${phoneNumber}: ${verificationCode}`);
+      logError({ message: 'SMS verification code sent', statusCode: 200 }, 'SMS verification service');
       
       res.json({ message: "Verification code sent", codeForDemo: verificationCode });
     } catch (error) {
-      console.error("Phone verification error:", error);
+      logError(createAppError('Phone verification code send failed', 500, ErrorCategory.EXTERNAL_API), 'Phone verification send operation');
       res.status(500).json({ error: "Failed to send verification code" });
     }
   });
@@ -805,7 +806,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(400).json({ error: "Invalid or expired verification code" });
       }
     } catch (error) {
-      console.error("Phone verification error:", error);
+      logError(createAppError('Phone verification validation failed', 500, ErrorCategory.VALIDATION), 'Phone verification validation operation');
       res.status(500).json({ error: "Failed to verify phone" });
     }
   });
@@ -824,7 +825,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         searchInfo: searchLimitInfo
       });
     } catch (error) {
-      console.error("Subscription status error:", error);
+      logError(createAppError('Subscription status fetch failed', 500, ErrorCategory.DATABASE), 'Subscription status service');
       res.status(500).json({ error: "Failed to get subscription status" });
     }
   });
@@ -841,7 +842,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedUser = await storage.updateUserSubscriptionTier(userId, tier);
       res.json({ message: "Subscription upgraded successfully", user: updatedUser });
     } catch (error) {
-      console.error("Subscription upgrade error:", error);
+      logError(createAppError('Subscription upgrade operation failed', 500, ErrorCategory.DATABASE), 'Subscription upgrade service');
       res.status(500).json({ error: "Failed to upgrade subscription" });
     }
   });
@@ -882,7 +883,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(car);
     } catch (error) {
-      console.error("Failed to fetch car details:", error);
+      logError(createAppError('Car details fetch operation failed', 500, ErrorCategory.DATABASE), 'Car details service');
       res.status(500).json({ error: "Failed to fetch car" });
     }
   });
@@ -913,7 +914,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return res.json(sellerInfo);
           }
         } catch (error) {
-          console.error('Failed to fetch seller user:', error);
+          logError(createAppError('Seller user fetch operation failed', 500, ErrorCategory.DATABASE), 'Seller user lookup');
           // Fall through to check marketplace listings
         }
       }
@@ -941,7 +942,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
     } catch (error) {
-      console.error("Failed to fetch seller information:", error);
+      logError(createAppError('Seller information fetch failed', 500, ErrorCategory.DATABASE), 'Seller information service');
       res.status(500).json({ error: "Failed to fetch seller information" });
     }
   });
@@ -1344,7 +1345,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { message, filters, context } = schema.parse(req.body);
       
-      console.log('🤖 The Assistant query:', message);
+      logError({ message: 'Assistant query received', statusCode: 200 }, 'Assistant query processing');
       
       const assistantQuery: AssistantQuery = {
         message,
@@ -1354,7 +1355,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const response = await assistantService.processQuery(assistantQuery);
       
-      console.log('✅ The Assistant response:', response.action, '-', response.message.substring(0, 100) + '...');
+      logError({ message: `Assistant response completed: ${response.action}`, statusCode: 200 }, 'Assistant response generated');
       
       // Include chat limit info in response
       if (isDeveloperMode(req)) {
@@ -1395,7 +1396,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
     } catch (error: any) {
-      console.error('❌ The Assistant error:', error);
+      logError(createAppError('Assistant service operation failed', 500, ErrorCategory.EXTERNAL_API), 'Assistant service error');
       
       // Determine appropriate error response based on error type
       let errorMessage = "I'm having trouble understanding your request. Could you try rephrasing it?";
@@ -1434,7 +1435,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       } catch (searchInfoError) {
         // Ignore search info errors in error responses
-        console.warn('Failed to get search info in error response:', searchInfoError);
+        logError(createAppError('Search info retrieval failed in error response', 500, ErrorCategory.INTERNAL), 'Search info fallback');
       }
       
       const errorResponse: any = { 
@@ -1458,7 +1459,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check cache first for instant response
       const cachedResults = await cacheManager.search.getSearchResults(req.body);
       if (cachedResults) {
-        console.log(`🚀 Cache hit! Returning results in ${Date.now() - searchStart}ms`);
+        logError({ message: `Cache hit - returning results in ${Date.now() - searchStart}ms`, statusCode: 200 }, 'Search cache hit');
         return res.json(cachedResults);
       }
       
@@ -1490,7 +1491,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const filters = searchSchema.parse(req.body);
-      console.log('Marketplace search filters:', filters);
+      logError({ message: 'Marketplace search initiated', statusCode: 200 }, 'Marketplace search request');
       
       // Apply Hyderabad-specific optimizations
       const enhancedFilters = await enhanceHyderabadSearch(filters);
@@ -2566,7 +2567,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       objectStorageService.downloadObject(file, res);
     } catch (error) {
-      console.error("Error searching for public object:", error);
+      logError(createAppError('Public object search operation failed', 500, ErrorCategory.EXTERNAL_API), 'Public object search');
       return res.status(500).json({ error: "Internal server error" });
     }
   });
@@ -2574,7 +2575,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Automotive News and Market Intelligence API
   app.get("/api/news/automotive", async (req, res) => {
     try {
-      console.log('📰 Fetching latest automotive news and market intelligence...');
+      logError({ message: 'Fetching latest automotive news and market intelligence', statusCode: 200 }, 'News service request');
       const news = await automotiveNewsService.getLatestAutomotiveNews();
       
       res.json({
@@ -2588,7 +2589,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
     } catch (error) {
-      console.error('❌ News service error:', error);
+      logError(createAppError('News service operation failed', 500, ErrorCategory.EXTERNAL_API), 'News service error');
       res.status(500).json({ 
         error: 'Failed to fetch automotive news',
         message: error instanceof Error ? error.message : 'Unknown error'

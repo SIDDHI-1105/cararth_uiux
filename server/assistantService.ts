@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { logError, ErrorCategory, createAppError } from './errorHandling.js';
 
 // Initialize OpenAI client with timeout and retry configuration
 const openai = new OpenAI({
@@ -127,7 +128,7 @@ Always be helpful, conversational, and focused on understanding the user's car b
         return completion;
       } catch (error: any) {
         const isLastAttempt = attempt === retries;
-        console.warn(`🔄 OpenAI API attempt ${attempt + 1} failed:`, error.message);
+        logError(createAppError(`OpenAI API attempt ${attempt + 1} failed`, 500, ErrorCategory.EXTERNAL_API), 'OpenAI retry mechanism');
         
         if (isLastAttempt || !this.isRetryableError(error)) {
           throw error;
@@ -193,7 +194,7 @@ Always be helpful, conversational, and focused on understanding the user's car b
         }
       ];
 
-      console.log(`🤖 Processing assistant query: ${query.message.substring(0, 50)}...`);
+      logError({ message: 'Processing assistant query', statusCode: 200 }, 'Assistant query processing');
       
       const completion = await this.callOpenAIWithRetry(messages);
       
@@ -206,7 +207,7 @@ Always be helpful, conversational, and focused on understanding the user's car b
       try {
         parsedResponse = JSON.parse(response);
       } catch (parseError) {
-        console.warn('🔄 JSON parse failed, using rule-based fallback');
+        logError(createAppError('OpenAI JSON response parse failed, using fallback', 500, ErrorCategory.EXTERNAL_API), 'OpenAI response parsing');
         parsedResponse = this.getRuleBasedResponse(query);
         fallbackUsed = true;
       }
@@ -217,12 +218,12 @@ Always be helpful, conversational, and focused on understanding the user's car b
       // Track metrics - fallback usage counts as error
       this.updateMetrics(startTime, sanitizedResponse.confidence || 0.5, !fallbackUsed, fallbackUsed);
       
-      console.log(`✅ Assistant response ${fallbackUsed ? '(fallback)' : ''}:`, sanitizedResponse.action, '-', sanitizedResponse.message.substring(0, 50) + '...');
+      logError({ message: `Assistant response ${fallbackUsed ? '(fallback)' : ''} completed: ${sanitizedResponse.action}`, statusCode: 200 }, 'Assistant response generation');
       
       return sanitizedResponse;
 
     } catch (error: any) {
-      console.error('❌ Assistant service error:', error.message);
+      logError(createAppError('Assistant service operation failed', 500, ErrorCategory.EXTERNAL_API), 'Assistant service error handler');
       
       // Use rule-based fallback for better user experience
       const fallbackResponse = this.getRuleBasedResponse(query);
@@ -230,7 +231,7 @@ Always be helpful, conversational, and focused on understanding the user's car b
       // Track metrics - complete API failure counts as error with fallback
       this.updateMetrics(startTime, fallbackResponse.confidence || 0.7, false, true);
       
-      console.log('🔄 Using rule-based fallback response');
+      logError({ message: 'Using rule-based fallback response', statusCode: 200 }, 'Assistant fallback mechanism');
       
       return fallbackResponse;
     }

@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import { logError, ErrorCategory, createAppError } from './errorHandling.js';
 
 export interface LocationData {
   city: string;
@@ -90,7 +91,7 @@ Include nearby important areas for car market density analysis.`;
           locationData.isSupported = false;
         }
         
-        console.log(`🗺️ Location enriched: ${userLocation} -> ${locationData.city}, ${locationData.state} (Supported: ${locationData.isSupported})`);
+        logError({ message: 'Location context enriched successfully', statusCode: 200 }, 'Geographic intelligence processing');
         return locationData;
       }
       
@@ -143,7 +144,7 @@ MARKET INTELLIGENCE:
       
       if (jsonMatch) {
         const context: GeoSearchContext = JSON.parse(jsonMatch[0]);
-        console.log(`🎯 Geographic context generated for ${locationData.city}: ${context.marketDensity} density market`);
+        logError({ message: 'Geographic context generated successfully', statusCode: 200 }, 'Geographic context generation');
         return context;
       }
 

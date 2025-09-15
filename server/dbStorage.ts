@@ -44,6 +44,7 @@ import {
   type InsertCachedPortalListing
 } from "@shared/schema";
 import type { IStorage } from "./storage.js";
+import { logError, ErrorCategory, createAppError } from "./errorHandling.js";
 
 // Enhanced search interface for optimization
 export interface OptimizedSearchFilters {
@@ -80,7 +81,7 @@ export class DatabaseStorage implements IStorage {
     
     const sql = neon(process.env.DATABASE_URL);
     this.db = drizzle(sql);
-    console.log('✅ PostgreSQL Database Storage initialized');
+    logError({ message: 'PostgreSQL Database Storage initialized', statusCode: 200 }, 'DatabaseStorage initialization');
   }
 
   // Cache management
@@ -106,26 +107,36 @@ export class DatabaseStorage implements IStorage {
     const cached = this.getCached<User>(cacheKey);
     if (cached) return cached;
 
-    const result = await this.db
-      .select()
-      .from(users)
-      .where(eq(users.id, id))
-      .limit(1);
-    
-    const user = result[0];
-    if (user) {
-      this.setCache(cacheKey, user);
+    try {
+      const result = await this.db
+        .select()
+        .from(users)
+        .where(eq(users.id, id))
+        .limit(1);
+      
+      const user = result[0];
+      if (user) {
+        this.setCache(cacheKey, user);
+      }
+      return user;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getUser operation');
+      return undefined;
     }
-    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const result = await this.db
-      .select()
-      .from(users)
-      .where(eq(users.email, username))
-      .limit(1);
-    return result[0];
+    try {
+      const result = await this.db
+        .select()
+        .from(users)
+        .where(eq(users.email, username))
+        .limit(1);
+      return result[0];
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getUserByUsername operation');
+      return undefined;
+    }
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
@@ -133,55 +144,70 @@ export class DatabaseStorage implements IStorage {
     const cached = this.getCached<User>(cacheKey);
     if (cached) return cached;
 
-    const result = await this.db
-      .select()
-      .from(users)
-      .where(eq(users.email, email))
-      .limit(1);
-    
-    const user = result[0];
-    if (user) {
-      this.setCache(cacheKey, user);
+    try {
+      const result = await this.db
+        .select()
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+      
+      const user = result[0];
+      if (user) {
+        this.setCache(cacheKey, user);
+      }
+      return user;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getUserByEmail operation');
+      return undefined;
     }
-    return user;
   }
 
   async createUser(user: InsertUser): Promise<User> {
-    const result = await this.db
-      .insert(users)
-      .values(user)
-      .returning();
-    
-    const newUser = result[0];
-    this.setCache(`user:${newUser.id}`, newUser);
-    if (newUser.email) {
-      this.setCache(`user:email:${newUser.email}`, newUser);
+    try {
+      const result = await this.db
+        .insert(users)
+        .values(user)
+        .returning();
+      
+      const newUser = result[0];
+      this.setCache(`user:${newUser.id}`, newUser);
+      if (newUser.email) {
+        this.setCache(`user:email:${newUser.email}`, newUser);
+      }
+      return newUser;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'createUser operation');
+      throw new Error('Failed to create user - please try again');
     }
-    return newUser;
   }
 
   async upsertUser(user: UpsertUser): Promise<User> {
-    const result = await this.db
-      .insert(users)
-      .values(user)
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          profileImageUrl: user.profileImageUrl,
-          updatedAt: sql`now()`
-        }
-      })
-      .returning();
+    try {
+      const result = await this.db
+        .insert(users)
+        .values(user)
+        .onConflictDoUpdate({
+          target: users.id,
+          set: {
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            profileImageUrl: user.profileImageUrl,
+            updatedAt: sql`now()`
+          }
+        })
+        .returning();
 
-    const updatedUser = result[0];
-    this.setCache(`user:${updatedUser.id}`, updatedUser);
-    if (updatedUser.email) {
-      this.setCache(`user:email:${updatedUser.email}`, updatedUser);
+      const updatedUser = result[0];
+      this.setCache(`user:${updatedUser.id}`, updatedUser);
+      if (updatedUser.email) {
+        this.setCache(`user:email:${updatedUser.email}`, updatedUser);
+      }
+      return updatedUser;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'upsertUser operation');
+      throw new Error('Failed to update user profile - please try again');
     }
-    return updatedUser;
   }
 
   // Optimized car operations with performance indexes
@@ -190,17 +216,22 @@ export class DatabaseStorage implements IStorage {
     const cached = this.getCached<Car>(cacheKey);
     if (cached) return cached;
 
-    const result = await this.db
-      .select()
-      .from(cars)
-      .where(eq(cars.id, id))
-      .limit(1);
-    
-    const car = result[0];
-    if (car) {
-      this.setCache(cacheKey, car);
+    try {
+      const result = await this.db
+        .select()
+        .from(cars)
+        .where(eq(cars.id, id))
+        .limit(1);
+      
+      const car = result[0];
+      if (car) {
+        this.setCache(cacheKey, car);
+      }
+      return car;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getCar operation');
+      return undefined;
     }
-    return car;
   }
 
   async getCachedPortalListing(id: string): Promise<any | undefined> {
@@ -208,17 +239,22 @@ export class DatabaseStorage implements IStorage {
     const cached = this.getCached<any>(cacheKey);
     if (cached) return cached;
 
-    const result = await this.db
-      .select()
-      .from(cachedPortalListings)
-      .where(eq(cachedPortalListings.id, id))
-      .limit(1);
-    
-    const listing = result[0];
-    if (listing) {
-      this.setCache(cacheKey, listing);
+    try {
+      const result = await this.db
+        .select()
+        .from(cachedPortalListings)
+        .where(eq(cachedPortalListings.id, id))
+        .limit(1);
+      
+      const listing = result[0];
+      if (listing) {
+        this.setCache(cacheKey, listing);
+      }
+      return listing;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getCachedPortalListing operation');
+      return undefined;
     }
-    return listing;
   }
 
   async getAllCars(): Promise<Car[]> {
@@ -226,55 +262,75 @@ export class DatabaseStorage implements IStorage {
     const cached = this.getCached<Car[]>(cacheKey);
     if (cached) return cached;
 
-    const result = await this.db
-      .select()
-      .from(cars)
-      .where(eq(cars.isSold, false))
-      .orderBy(desc(cars.createdAt))
-      .limit(100);
-    
-    this.setCache(cacheKey, result, 60000); // 1 minute cache for active listings
-    return result;
+    try {
+      const result = await this.db
+        .select()
+        .from(cars)
+        .where(eq(cars.isSold, false))
+        .orderBy(desc(cars.createdAt))
+        .limit(100);
+      
+      this.setCache(cacheKey, result, 60000); // 1 minute cache for active listings
+      return result;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getAllCars operation');
+      return [];
+    }
   }
 
   async getCarsBySeller(sellerId: string): Promise<Car[]> {
-    const result = await this.db
-      .select()
-      .from(cars)
-      .where(eq(cars.sellerId, sellerId))
-      .orderBy(desc(cars.createdAt));
-    
-    return result;
+    try {
+      const result = await this.db
+        .select()
+        .from(cars)
+        .where(eq(cars.sellerId, sellerId))
+        .orderBy(desc(cars.createdAt));
+      
+      return result;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getCarsBySeller operation');
+      return [];
+    }
   }
 
   async createCar(car: InsertCar): Promise<Car> {
-    const result = await this.db
-      .insert(cars)
-      .values(car)
-      .returning();
-    
-    const newCar = result[0];
-    this.setCache(`car:${newCar.id}`, newCar);
-    
-    // Invalidate related caches
-    this.cache.delete('cars:all:active');
-    
-    return newCar;
+    try {
+      const result = await this.db
+        .insert(cars)
+        .values(car)
+        .returning();
+      
+      const newCar = result[0];
+      this.setCache(`car:${newCar.id}`, newCar);
+      
+      // Invalidate related caches
+      this.cache.delete('cars:all:active');
+      
+      return newCar;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'createCar operation');
+      throw new Error('Failed to create car listing - please try again');
+    }
   }
 
   async updateCar(id: string, updates: Partial<Car>): Promise<Car | undefined> {
-    const result = await this.db
-      .update(cars)
-      .set(updates)
-      .where(eq(cars.id, id))
-      .returning();
-    
-    const updatedCar = result[0];
-    if (updatedCar) {
-      this.setCache(`car:${updatedCar.id}`, updatedCar);
-      this.cache.delete('cars:all:active');
+    try {
+      const result = await this.db
+        .update(cars)
+        .set(updates)
+        .where(eq(cars.id, id))
+        .returning();
+      
+      const updatedCar = result[0];
+      if (updatedCar) {
+        this.setCache(`car:${updatedCar.id}`, updatedCar);
+        this.cache.delete('cars:all:active');
+      }
+      return updatedCar;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'updateCar operation');
+      return undefined;
     }
-    return updatedCar;
   }
 
   // Highly optimized search with PostgreSQL indexes
@@ -293,58 +349,63 @@ export class DatabaseStorage implements IStorage {
     const cached = this.getCached<Car[]>(cacheKey);
     if (cached) return cached;
 
-    let query = this.db
-      .select()
-      .from(cars)
-      .where(eq(cars.isSold, false));
+    try {
+      let query = this.db
+        .select()
+        .from(cars)
+        .where(eq(cars.isSold, false));
 
-    // Build dynamic WHERE conditions
-    const conditions = [eq(cars.isSold, false)];
+      // Build dynamic WHERE conditions
+      const conditions = [eq(cars.isSold, false)];
 
-    if (filters.brand && filters.brand !== "All Brands") {
-      conditions.push(ilike(cars.brand, `%${filters.brand}%`));
+      if (filters.brand && filters.brand !== "All Brands") {
+        conditions.push(ilike(cars.brand, `%${filters.brand}%`));
+      }
+
+      if (filters.priceMin !== undefined) {
+        conditions.push(gte(cars.price, filters.priceMin.toString()));
+      }
+
+      if (filters.priceMax !== undefined) {
+        conditions.push(lte(cars.price, filters.priceMax.toString()));
+      }
+
+      if (filters.city && filters.city !== "Select City") {
+        conditions.push(ilike(cars.city, `%${filters.city}%`));
+      }
+
+      if (filters.fuelType && filters.fuelType !== "Any Fuel") {
+        conditions.push(eq(cars.fuelType, filters.fuelType));
+      }
+
+      if (filters.transmission && filters.transmission !== "Any Transmission") {
+        conditions.push(eq(cars.transmission, filters.transmission));
+      }
+
+      if (filters.yearMin !== undefined) {
+        conditions.push(gte(cars.year, filters.yearMin));
+      }
+
+      if (filters.yearMax !== undefined) {
+        conditions.push(lte(cars.year, filters.yearMax));
+      }
+
+      const result = await this.db
+        .select()
+        .from(cars)
+        .where(and(...conditions))
+        .orderBy(desc(cars.createdAt))
+        .limit(50);
+
+      // Cache search results for 2 minutes
+      this.setCache(cacheKey, result, 120000);
+      
+      logError({ message: `PostgreSQL search completed: ${result.length} results`, statusCode: 200 }, 'searchCars success');
+      return result;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'searchCars operation');
+      return [];
     }
-
-    if (filters.priceMin !== undefined) {
-      conditions.push(gte(cars.price, filters.priceMin.toString()));
-    }
-
-    if (filters.priceMax !== undefined) {
-      conditions.push(lte(cars.price, filters.priceMax.toString()));
-    }
-
-    if (filters.city && filters.city !== "Select City") {
-      conditions.push(ilike(cars.city, `%${filters.city}%`));
-    }
-
-    if (filters.fuelType && filters.fuelType !== "Any Fuel") {
-      conditions.push(eq(cars.fuelType, filters.fuelType));
-    }
-
-    if (filters.transmission && filters.transmission !== "Any Transmission") {
-      conditions.push(eq(cars.transmission, filters.transmission));
-    }
-
-    if (filters.yearMin !== undefined) {
-      conditions.push(gte(cars.year, filters.yearMin));
-    }
-
-    if (filters.yearMax !== undefined) {
-      conditions.push(lte(cars.year, filters.yearMax));
-    }
-
-    const result = await this.db
-      .select()
-      .from(cars)
-      .where(and(...conditions))
-      .orderBy(desc(cars.createdAt))
-      .limit(50);
-
-    // Cache search results for 2 minutes
-    this.setCache(cacheKey, result, 120000);
-    
-    console.log(`🔍 PostgreSQL search: ${result.length} results for filters:`, filters);
-    return result;
   }
 
   // Advanced search for marketplace optimization
@@ -357,124 +418,148 @@ export class DatabaseStorage implements IStorage {
     const cached = this.getCached<any>(cacheKey);
     if (cached) return cached;
 
-    // Build conditions
-    const conditions = [eq(cars.isSold, false)];
+    try {
+      // Build conditions
+      const conditions = [eq(cars.isSold, false)];
 
-    if (filters.brand) {
-      conditions.push(ilike(cars.brand, `%${filters.brand}%`));
-    }
-    if (filters.model) {
-      conditions.push(ilike(cars.model, `%${filters.model}%`));
-    }
-    if (filters.priceMin) {
-      conditions.push(gte(cars.price, filters.priceMin.toString()));
-    }
-    if (filters.priceMax) {
-      conditions.push(lte(cars.price, filters.priceMax.toString()));
-    }
-    if (filters.city) {
-      conditions.push(ilike(cars.city, `%${filters.city}%`));
-    }
-    if (filters.state) {
-      conditions.push(ilike(cars.state, `%${filters.state}%`));
-    }
-    if (filters.fuelType?.length) {
-      conditions.push(inArray(cars.fuelType, filters.fuelType));
-    }
-    if (filters.transmission?.length) {
-      conditions.push(inArray(cars.transmission, filters.transmission));
-    }
-    if (filters.yearMin) {
-      conditions.push(gte(cars.year, filters.yearMin));
-    }
-    if (filters.yearMax) {
-      conditions.push(lte(cars.year, filters.yearMax));
-    }
-    if (filters.mileageMax) {
-      conditions.push(lte(cars.mileage, filters.mileageMax));
-    }
-    if (filters.hasImages) {
-      conditions.push(sql`array_length(${cars.images}, 1) > 0`);
-    }
+      if (filters.brand) {
+        conditions.push(ilike(cars.brand, `%${filters.brand}%`));
+      }
+      if (filters.model) {
+        conditions.push(ilike(cars.model, `%${filters.model}%`));
+      }
+      if (filters.priceMin) {
+        conditions.push(gte(cars.price, filters.priceMin.toString()));
+      }
+      if (filters.priceMax) {
+        conditions.push(lte(cars.price, filters.priceMax.toString()));
+      }
+      if (filters.city) {
+        conditions.push(ilike(cars.city, `%${filters.city}%`));
+      }
+      if (filters.state) {
+        conditions.push(ilike(cars.state, `%${filters.state}%`));
+      }
+      if (filters.fuelType?.length) {
+        conditions.push(inArray(cars.fuelType, filters.fuelType));
+      }
+      if (filters.transmission?.length) {
+        conditions.push(inArray(cars.transmission, filters.transmission));
+      }
+      if (filters.yearMin) {
+        conditions.push(gte(cars.year, filters.yearMin));
+      }
+      if (filters.yearMax) {
+        conditions.push(lte(cars.year, filters.yearMax));
+      }
+      if (filters.mileageMax) {
+        conditions.push(lte(cars.mileage, filters.mileageMax));
+      }
+      if (filters.hasImages) {
+        conditions.push(sql`array_length(${cars.images}, 1) > 0`);
+      }
 
-    // Get total count
-    const [totalResult] = await this.db
-      .select({ count: count() })
-      .from(cars)
-      .where(and(...conditions));
+      // Get total count
+      const [totalResult] = await this.db
+        .select({ count: count() })
+        .from(cars)
+        .where(and(...conditions));
 
-    // Get paginated results with sorting
-    let orderBy;
-    const isDesc = filters.sortOrder === 'desc';
-    
-    switch (filters.sortBy) {
-      case 'price':
-        orderBy = isDesc ? desc(cars.price) : asc(cars.price);
-        break;
-      case 'year':
-        orderBy = isDesc ? desc(cars.year) : asc(cars.year);
-        break;
-      case 'mileage':
-        orderBy = isDesc ? desc(cars.mileage) : asc(cars.mileage);
-        break;
-      default:
-        orderBy = desc(cars.createdAt);
+      // Get paginated results with sorting
+      let orderBy;
+      const isDesc = filters.sortOrder === 'desc';
+      
+      switch (filters.sortBy) {
+        case 'price':
+          orderBy = isDesc ? desc(cars.price) : asc(cars.price);
+          break;
+        case 'year':
+          orderBy = isDesc ? desc(cars.year) : asc(cars.year);
+          break;
+        case 'mileage':
+          orderBy = isDesc ? desc(cars.mileage) : asc(cars.mileage);
+          break;
+        default:
+          orderBy = desc(cars.createdAt);
+      }
+
+      const limit = filters.limit || 20;
+      const offset = filters.offset || 0;
+
+      const carResults = await this.db
+        .select()
+        .from(cars)
+        .where(and(...conditions))
+        .orderBy(orderBy)
+        .limit(limit + 1) // +1 to check if there are more results
+        .offset(offset);
+
+      const hasMore = carResults.length > limit;
+      if (hasMore) {
+        carResults.pop(); // Remove the extra result
+      }
+
+      const result = {
+        cars: carResults,
+        total: totalResult.count,
+        hasMore
+      };
+
+      // Cache for 1 minute
+      this.setCache(cacheKey, result, 60000);
+      
+      logError({ message: `Optimized search completed: ${carResults.length}/${totalResult.count} results`, statusCode: 200 }, 'optimizedSearch success');
+      return result;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'optimizedSearch operation');
+      return {
+        cars: [],
+        total: 0,
+        hasMore: false
+      };
     }
-
-    const limit = filters.limit || 20;
-    const offset = filters.offset || 0;
-
-    const carResults = await this.db
-      .select()
-      .from(cars)
-      .where(and(...conditions))
-      .orderBy(orderBy)
-      .limit(limit + 1) // +1 to check if there are more results
-      .offset(offset);
-
-    const hasMore = carResults.length > limit;
-    if (hasMore) {
-      carResults.pop(); // Remove the extra result
-    }
-
-    const result = {
-      cars: carResults,
-      total: totalResult.count,
-      hasMore
-    };
-
-    // Cache for 1 minute
-    this.setCache(cacheKey, result, 60000);
-    
-    console.log(`🚀 Optimized search: ${carResults.length}/${totalResult.count} results`);
-    return result;
   }
 
   // Contact operations
   async createContact(contact: InsertContact): Promise<Contact> {
-    const result = await this.db
-      .insert(contacts)
-      .values(contact)
-      .returning();
-    return result[0];
+    try {
+      const result = await this.db
+        .insert(contacts)
+        .values(contact)
+        .returning();
+      return result[0];
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'createContact operation');
+      throw new Error('Failed to create contact - please try again');
+    }
   }
 
   async getContactsForCar(carId: string): Promise<Contact[]> {
-    const result = await this.db
-      .select()
-      .from(contacts)
-      .where(eq(contacts.carId, carId))
-      .orderBy(desc(contacts.createdAt));
-    return result;
+    try {
+      const result = await this.db
+        .select()
+        .from(contacts)
+        .where(eq(contacts.carId, carId))
+        .orderBy(desc(contacts.createdAt));
+      return result;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getContactsForCar operation');
+      return [];
+    }
   }
 
   // Subscription operations
   async createSubscription(subscription: InsertSubscription): Promise<Subscription> {
-    const result = await this.db
-      .insert(subscriptions)
-      .values(subscription)
-      .returning();
-    return result[0];
+    try {
+      const result = await this.db
+        .insert(subscriptions)
+        .values(subscription)
+        .returning();
+      return result[0];
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'createSubscription operation');
+      throw new Error('Failed to create subscription - please try again');
+    }
   }
 
   async getUserSubscription(userId: string): Promise<Subscription | undefined> {
@@ -482,277 +567,389 @@ export class DatabaseStorage implements IStorage {
     const cached = this.getCached<Subscription>(cacheKey);
     if (cached) return cached;
 
-    const result = await this.db
-      .select()
-      .from(subscriptions)
-      .where(and(
-        eq(subscriptions.userId, userId),
-        eq(subscriptions.status, 'active')
-      ))
-      .limit(1);
-    
-    const subscription = result[0];
-    if (subscription) {
-      this.setCache(cacheKey, subscription, 300000); // 5 minutes cache
+    try {
+      const result = await this.db
+        .select()
+        .from(subscriptions)
+        .where(and(
+          eq(subscriptions.userId, userId),
+          eq(subscriptions.status, 'active')
+        ))
+        .limit(1);
+      
+      const subscription = result[0];
+      if (subscription) {
+        this.setCache(cacheKey, subscription, 300000); // 5 minutes cache
+      }
+      return subscription;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getUserSubscription operation');
+      return undefined;
     }
-    return subscription;
   }
 
   // Featured listing operations
   async createFeaturedListing(featured: InsertFeaturedListing): Promise<FeaturedListing> {
-    const result = await this.db
-      .insert(featuredListings)
-      .values(featured)
-      .returning();
-    return result[0];
+    try {
+      const result = await this.db
+        .insert(featuredListings)
+        .values(featured)
+        .returning();
+      return result[0];
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'createFeaturedListing operation');
+      throw new Error('Failed to create featured listing - please try again');
+    }
   }
 
   async updateCarFeatured(carId: string, isFeatured: boolean, expiresAt?: Date): Promise<void> {
-    await this.db
-      .update(cars)
-      .set({
-        isFeatured,
-        featuredExpiresAt: expiresAt || null
-      })
-      .where(eq(cars.id, carId));
-    
-    // Invalidate cache
-    this.cache.delete(`car:${carId}`);
+    try {
+      await this.db
+        .update(cars)
+        .set({
+          isFeatured,
+          featuredExpiresAt: expiresAt || null
+        })
+        .where(eq(cars.id, carId));
+      
+      // Invalidate cache
+      this.cache.delete(`car:${carId}`);
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'updateCarFeatured operation');
+      throw new Error('Failed to update featured status - please try again');
+    }
   }
 
   // Messaging operations (stubs for now)
   async createConversation(conversation: InsertConversation): Promise<Conversation> {
-    const result = await this.db
-      .insert(conversations)
-      .values(conversation)
-      .returning();
-    return result[0];
+    try {
+      const result = await this.db
+        .insert(conversations)
+        .values(conversation)
+        .returning();
+      return result[0];
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'createConversation operation');
+      throw new Error('Failed to create conversation - please try again');
+    }
   }
 
   async getConversation(id: string): Promise<Conversation | undefined> {
-    const result = await this.db
-      .select()
-      .from(conversations)
-      .where(eq(conversations.id, id))
-      .limit(1);
-    return result[0];
+    try {
+      const result = await this.db
+        .select()
+        .from(conversations)
+        .where(eq(conversations.id, id))
+        .limit(1);
+      return result[0];
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getConversation operation');
+      return undefined;
+    }
   }
 
   async getConversationByCarAndBuyer(carId: string, buyerId: string): Promise<Conversation | undefined> {
-    const result = await this.db
-      .select()
-      .from(conversations)
-      .where(and(
-        eq(conversations.carId, carId),
-        eq(conversations.buyerId, buyerId)
-      ))
-      .limit(1);
-    return result[0];
+    try {
+      const result = await this.db
+        .select()
+        .from(conversations)
+        .where(and(
+          eq(conversations.carId, carId),
+          eq(conversations.buyerId, buyerId)
+        ))
+        .limit(1);
+      return result[0];
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getConversationByCarAndBuyer operation');
+      return undefined;
+    }
   }
 
   async getConversationsForUser(userId: string, userType: 'buyer' | 'seller'): Promise<Conversation[]> {
-    const condition = userType === 'buyer' 
-      ? eq(conversations.buyerId, userId)
-      : eq(conversations.sellerId, userId);
-    
-    const result = await this.db
-      .select()
-      .from(conversations)
-      .where(condition)
-      .orderBy(desc(conversations.lastMessageAt));
-    return result;
+    try {
+      const condition = userType === 'buyer' 
+        ? eq(conversations.buyerId, userId)
+        : eq(conversations.sellerId, userId);
+      
+      const result = await this.db
+        .select()
+        .from(conversations)
+        .where(condition)
+        .orderBy(desc(conversations.lastMessageAt));
+      return result;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getConversationsForUser operation');
+      return [];
+    }
   }
 
   async updateConversationLastMessage(conversationId: string): Promise<void> {
-    await this.db
-      .update(conversations)
-      .set({ lastMessageAt: sql`now()`, updatedAt: sql`now()` })
-      .where(eq(conversations.id, conversationId));
+    try {
+      await this.db
+        .update(conversations)
+        .set({ lastMessageAt: sql`now()`, updatedAt: sql`now()` })
+        .where(eq(conversations.id, conversationId));
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'updateConversationLastMessage operation');
+      // Don't throw - this is a background operation
+    }
   }
 
   async createMessage(message: InsertMessage): Promise<Message> {
-    const result = await this.db
-      .insert(messages)
-      .values(message)
-      .returning();
-    return result[0];
+    try {
+      const result = await this.db
+        .insert(messages)
+        .values(message)
+        .returning();
+      return result[0];
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'createMessage operation');
+      throw new Error('Failed to send message - please try again');
+    }
   }
 
   async getMessagesInConversation(conversationId: string): Promise<Message[]> {
-    const result = await this.db
-      .select()
-      .from(messages)
-      .where(eq(messages.conversationId, conversationId))
-      .orderBy(asc(messages.createdAt));
-    return result;
+    try {
+      const result = await this.db
+        .select()
+        .from(messages)
+        .where(eq(messages.conversationId, conversationId))
+        .orderBy(asc(messages.createdAt));
+      return result;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getMessagesInConversation operation');
+      return [];
+    }
   }
 
   async markMessagesAsRead(conversationId: string, userId: string): Promise<void> {
-    await this.db
-      .update(messages)
-      .set({ isRead: true, readAt: sql`now()` })
-      .where(and(
-        eq(messages.conversationId, conversationId),
-        eq(messages.senderId, userId)
-      ));
+    try {
+      await this.db
+        .update(messages)
+        .set({ isRead: true, readAt: sql`now()` })
+        .where(and(
+          eq(messages.conversationId, conversationId),
+          eq(messages.senderId, userId)
+        ));
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'markMessagesAsRead operation');
+      // Don't throw - this is a background operation
+    }
   }
 
   async updateOfferStatus(messageId: string, status: string, userId: string): Promise<Message | undefined> {
-    const result = await this.db
-      .update(messages)
-      .set({ offerStatus: status })
-      .where(and(
-        eq(messages.id, messageId),
-        eq(messages.senderId, userId)
-      ))
-      .returning();
-    return result[0];
+    try {
+      const result = await this.db
+        .update(messages)
+        .set({ offerStatus: status })
+        .where(and(
+          eq(messages.id, messageId),
+          eq(messages.senderId, userId)
+        ))
+        .returning();
+      return result[0];
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'updateOfferStatus operation');
+      return undefined;
+    }
   }
 
   async createConversationBlock(block: InsertConversationBlock): Promise<ConversationBlock> {
-    const result = await this.db
-      .insert(conversationBlocks)
-      .values(block)
-      .returning();
-    return result[0];
+    try {
+      const result = await this.db
+        .insert(conversationBlocks)
+        .values(block)
+        .returning();
+      return result[0];
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'createConversationBlock operation');
+      throw new Error('Failed to block conversation - please try again');
+    }
   }
 
   async getSellerContactInfo(sellerId: string): Promise<any> {
-    const user = await this.getUser(sellerId);
-    if (!user) return null;
-    
-    return {
-      name: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
-      email: user.email,
-      phone: user.phone
-    };
+    try {
+      const user = await this.getUser(sellerId);
+      if (!user) return null;
+      
+      return {
+        name: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+        email: user.email,
+        phone: user.phone
+      };
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getSellerContactInfo operation');
+      return null;
+    }
   }
 
   // Subscription tier management
   async checkUserSearchLimit(userId: string): Promise<{ canSearch: boolean; searchesLeft: number; resetDate: Date }> {
-    const user = await this.getUser(userId);
-    if (!user) {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) {
+        return { canSearch: false, searchesLeft: 0, resetDate: new Date() };
+      }
+
+      // Pro users have unlimited searches
+      if (user.subscriptionTier !== 'free') {
+        return { canSearch: true, searchesLeft: 999, resetDate: new Date() };
+      }
+
+      const now = new Date();
+      const resetDate = user.searchCountResetAt || now;
+      
+      // Reset counter if it's been more than 24 hours
+      if (now.getTime() - resetDate.getTime() > 24 * 60 * 60 * 1000) {
+        await this.db
+          .update(users)
+          .set({ 
+            searchCount: 0, 
+            searchCountResetAt: now 
+          })
+          .where(eq(users.id, userId));
+        
+        return { canSearch: true, searchesLeft: 10, resetDate: now };
+      }
+
+      const searchesLeft = Math.max(0, 10 - (user.searchCount || 0));
+      return {
+        canSearch: searchesLeft > 0,
+        searchesLeft,
+        resetDate
+      };
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'checkUserSearchLimit operation');
+      // Fallback to conservative limit for errors
       return { canSearch: false, searchesLeft: 0, resetDate: new Date() };
     }
-
-    // Pro users have unlimited searches
-    if (user.subscriptionTier !== 'free') {
-      return { canSearch: true, searchesLeft: 999, resetDate: new Date() };
-    }
-
-    const now = new Date();
-    const resetDate = user.searchCountResetAt || now;
-    
-    // Reset counter if it's been more than 24 hours
-    if (now.getTime() - resetDate.getTime() > 24 * 60 * 60 * 1000) {
-      await this.db
-        .update(users)
-        .set({ 
-          searchCount: 0, 
-          searchCountResetAt: now 
-        })
-        .where(eq(users.id, userId));
-      
-      return { canSearch: true, searchesLeft: 10, resetDate: now };
-    }
-
-    const searchesLeft = Math.max(0, 10 - (user.searchCount || 0));
-    return {
-      canSearch: searchesLeft > 0,
-      searchesLeft,
-      resetDate
-    };
   }
 
   async incrementUserSearchCount(userId: string): Promise<void> {
-    await this.db
-      .update(users)
-      .set({ 
-        searchCount: sql`${users.searchCount} + 1`,
-        updatedAt: sql`now()`
-      })
-      .where(eq(users.id, userId));
-    
-    // Invalidate user cache
-    this.cache.delete(`user:${userId}`);
+    try {
+      await this.db
+        .update(users)
+        .set({ 
+          searchCount: sql`${users.searchCount} + 1`,
+          updatedAt: sql`now()`
+        })
+        .where(eq(users.id, userId));
+      
+      // Invalidate user cache
+      this.cache.delete(`user:${userId}`);
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'incrementUserSearchCount operation');
+      // Don't throw - search should continue even if count fails
+    }
   }
 
   async updateUserSubscriptionTier(userId: string, tier: 'free' | 'pro_seller' | 'pro_buyer' | 'superhero'): Promise<User> {
-    const result = await this.db
-      .update(users)
-      .set({ 
-        subscriptionTier: tier,
-        updatedAt: sql`now()`
-      })
-      .where(eq(users.id, userId))
-      .returning();
-    
-    const updatedUser = result[0];
-    this.setCache(`user:${userId}`, updatedUser);
-    return updatedUser;
+    try {
+      const result = await this.db
+        .update(users)
+        .set({ 
+          subscriptionTier: tier,
+          updatedAt: sql`now()`
+        })
+        .where(eq(users.id, userId))
+        .returning();
+      
+      const updatedUser = result[0];
+      this.setCache(`user:${userId}`, updatedUser);
+      return updatedUser;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'updateUserSubscriptionTier operation');
+      throw new Error('Failed to update subscription tier - please try again');
+    }
   }
 
   // Phone verification operations
   async createPhoneVerification(verification: InsertPhoneVerification): Promise<PhoneVerification> {
-    const result = await this.db
-      .insert(phoneVerifications)
-      .values(verification)
-      .returning();
-    return result[0];
+    try {
+      const result = await this.db
+        .insert(phoneVerifications)
+        .values(verification)
+        .returning();
+      return result[0];
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'createPhoneVerification operation');
+      throw new Error('Failed to create phone verification - please try again');
+    }
   }
 
   async verifyPhoneCode(userId: string, code: string): Promise<boolean> {
-    const result = await this.db
-      .select()
-      .from(phoneVerifications)
-      .where(and(
-        eq(phoneVerifications.userId, userId),
-        eq(phoneVerifications.verificationCode, code),
-        eq(phoneVerifications.verified, false),
-        gte(phoneVerifications.expiresAt, sql`now()`)
-      ))
-      .limit(1);
-    
-    if (result.length > 0) {
-      await this.db
-        .update(phoneVerifications)
-        .set({ verified: true })
-        .where(eq(phoneVerifications.id, result[0].id));
-      return true;
+    try {
+      const result = await this.db
+        .select()
+        .from(phoneVerifications)
+        .where(and(
+          eq(phoneVerifications.userId, userId),
+          eq(phoneVerifications.verificationCode, code),
+          eq(phoneVerifications.verified, false),
+          gte(phoneVerifications.expiresAt, sql`now()`)
+        ))
+        .limit(1);
+      
+      if (result.length > 0) {
+        await this.db
+          .update(phoneVerifications)
+          .set({ verified: true })
+          .where(eq(phoneVerifications.id, result[0].id));
+        return true;
+      }
+      return false;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'verifyPhoneCode operation');
+      return false;
     }
-    return false;
   }
 
   async markPhoneAsVerified(userId: string): Promise<void> {
-    await this.db
-      .update(users)
-      .set({ 
-        phoneVerified: true,
-        phoneVerifiedAt: sql`now()`,
-        updatedAt: sql`now()`
-      })
-      .where(eq(users.id, userId));
-    
-    // Invalidate user cache
-    this.cache.delete(`user:${userId}`);
+    try {
+      await this.db
+        .update(users)
+        .set({ 
+          phoneVerified: true,
+          phoneVerifiedAt: sql`now()`,
+          updatedAt: sql`now()`
+        })
+        .where(eq(users.id, userId));
+      
+      // Invalidate user cache
+      this.cache.delete(`user:${userId}`);
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'markPhoneAsVerified operation');
+      throw new Error('Failed to verify phone - please try again');
+    }
   }
 
   // Search activity tracking
   async logUserSearchActivity(activity: InsertUserSearchActivity): Promise<UserSearchActivity> {
-    const result = await this.db
-      .insert(userSearchActivity)
-      .values(activity)
-      .returning();
-    return result[0];
+    try {
+      const result = await this.db
+        .insert(userSearchActivity)
+        .values(activity)
+        .returning();
+      return result[0];
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'logUserSearchActivity operation');
+      throw new Error('Failed to log search activity - please try again');
+    }
   }
 
   // Anonymous search activity tracking for 30-day rolling window
   async logAnonymousSearch(activity: InsertAnonymousSearchActivity): Promise<AnonymousSearchActivity> {
-    const result = await this.db
-      .insert(anonymousSearchActivity)
-      .values(activity)
-      .returning();
-    return result[0];
+    try {
+      const result = await this.db
+        .insert(anonymousSearchActivity)
+        .values(activity)
+        .returning();
+      return result[0];
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'logAnonymousSearch operation');
+      // Don't throw - search should continue even if logging fails
+      throw new Error('Failed to log search activity - please try again');
+    }
   }
 
   async getAnonymousSearchCountSince(visitorId: string, since: Date): Promise<number> {
@@ -783,7 +980,7 @@ export class DatabaseStorage implements IStorage {
 
   clearCache(): void {
     this.cache.clear();
-    console.log('🧹 Cache cleared');
+    logError({ message: 'Database cache cleared successfully', statusCode: 200 }, 'clearCache operation');
   }
 
   // ================================
@@ -941,7 +1138,7 @@ export class DatabaseStorage implements IStorage {
     // Cache for 2 minutes
     this.setCache(cacheKey, result, 120000);
     
-    console.log(`🔍 Cached portal search: ${result.length} results for filters:`, filters);
+    logError({ message: `Cached portal search completed: ${result.length} results`, statusCode: 200 }, 'searchCachedPortalListings success');
     return result;
   }
 
@@ -1156,7 +1353,7 @@ export class DatabaseStorage implements IStorage {
       
       return result;
     } catch (error) {
-      console.error('❌ Failed to get filter options:', error);
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getFilterOptions operation');
       return {
         availableMakes: [],
         availableModels: [],
@@ -1215,7 +1412,7 @@ export class DatabaseStorage implements IStorage {
       
       return result;
     } catch (error) {
-      console.error('❌ Failed to get portal stats:', error);
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getPortalStats operation');
       return {
         totalListings: 0,
         citiesCount: 0,
@@ -1229,36 +1426,46 @@ export class DatabaseStorage implements IStorage {
    * Create a new cached portal listing
    */
   async createCachedPortalListing(listing: InsertCachedPortalListing): Promise<CachedPortalListing> {
-    const result = await this.db
-      .insert(cachedPortalListings)
-      .values(listing)
-      .returning();
-    
-    const newListing = result[0];
-    
-    // Invalidate related caches
-    this.cache.delete('portal_stats');
-    Array.from(this.cache.keys())
-      .filter(key => key.startsWith('portal_search:') || key.startsWith('portal_count:') || key.startsWith('portal_filters:'))
-      .forEach(key => this.cache.delete(key));
-    
-    console.log(`✅ Created cached portal listing: ${newListing.title}`);
-    return newListing;
+    try {
+      const result = await this.db
+        .insert(cachedPortalListings)
+        .values(listing)
+        .returning();
+      
+      const newListing = result[0];
+      
+      // Invalidate related caches
+      this.cache.delete('portal_stats');
+      Array.from(this.cache.keys())
+        .filter(key => key.startsWith('portal_search:') || key.startsWith('portal_count:') || key.startsWith('portal_filters:'))
+        .forEach(key => this.cache.delete(key));
+      
+      logError({ message: 'Cached portal listing created successfully', statusCode: 200 }, 'createCachedPortalListing success');
+      return newListing;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'createCachedPortalListing operation');
+      throw new Error('Failed to create cached portal listing - please try again');
+    }
   }
 
   /**
    * Cleanup old cached listings before a certain date
    */
   async cleanupOldCachedListings(before: Date): Promise<void> {
-    const result = await this.db
-      .delete(cachedPortalListings)
-      .where(lte(cachedPortalListings.fetchedAt, before));
-    
-    // Clear all portal-related caches after cleanup
-    Array.from(this.cache.keys())
-      .filter(key => key.startsWith('portal_'))
-      .forEach(key => this.cache.delete(key));
-    
-    console.log(`🧹 Cleaned up cached portal listings before ${before.toISOString()}`);
+    try {
+      const result = await this.db
+        .delete(cachedPortalListings)
+        .where(lte(cachedPortalListings.fetchedAt, before));
+      
+      // Clear all portal-related caches after cleanup
+      Array.from(this.cache.keys())
+        .filter(key => key.startsWith('portal_'))
+        .forEach(key => this.cache.delete(key));
+      
+      logError({ message: `Cached portal listings cleanup completed before ${before.toISOString()}`, statusCode: 200 }, 'cleanupOldCachedListings success');
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'cleanupOldCachedListings operation');
+      // Don't throw - cleanup failure shouldn't break the application
+    }
   }
 }

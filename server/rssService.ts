@@ -1,25 +1,18 @@
 import { z } from 'zod';
 import Parser from 'rss-parser';
+import { withRetry, CircuitBreaker } from '../shared/retryUtils.js';
+import { 
+  RSSFeedSchema, 
+  RSSItemSchema,
+  CommunityPostSchema,
+  validateApiResponse,
+  type RSSFeed,
+  type RSSItem,
+  type CommunityPost as ValidatedCommunityPost
+} from '../shared/apiSchemas.js';
+import { logError, ErrorCategory, createAppError } from './errorHandling.js';
 
-// RSS Feed Item Schema for validation
-const RSSItemSchema = z.object({
-  title: z.string(),
-  description: z.string().optional(),
-  link: z.string().url(),
-  pubDate: z.string().optional(),
-  category: z.string().optional(),
-  guid: z.string().optional(),
-});
-
-const RSSFeedSchema = z.object({
-  title: z.string(),
-  description: z.string(),
-  link: z.string().url(),
-  items: z.array(RSSItemSchema),
-});
-
-export type RSSItem = z.infer<typeof RSSItemSchema>;
-export type RSSFeed = z.infer<typeof RSSFeedSchema>;
+// Types imported from shared schemas - no local definitions needed
 
 export interface CommunityPost {
   id: string;
@@ -37,6 +30,7 @@ export interface CommunityPost {
 
 export class RSSAggregatorService {
   private parser: Parser;
+  private circuitBreaker = new CircuitBreaker(3, 60000, 30000);
 
   constructor() {
     this.parser = new Parser();
@@ -72,11 +66,11 @@ export class RSSAggregatorService {
 
     for (const source of this.RSS_SOURCES) {
       try {
-        console.log(`🔍 Fetching RSS feed from ${source.name}...`);
+        logError({ message: `Fetching RSS feed from ${source.name}`, statusCode: 200 }, 'RSS feed fetch started');
         const posts = await this.fetchRSSFeed(source);
         allPosts.push(...posts);
       } catch (error) {
-        console.error(`⚠️ Error fetching RSS from ${source.name}:`, error);
+        logError(createAppError('RSS feed fetch failed', 500, ErrorCategory.EXTERNAL_API), `RSS feed fetch from ${source.name}`);
         // Continue with other sources even if one fails
       }
     }
@@ -86,35 +80,98 @@ export class RSSAggregatorService {
   }
 
   /**
-   * Fetch individual RSS feed with real RSS parsing and Perplexity fallback for 404s
+   * Fetch individual RSS feed with real RSS parsing and retry logic
    */
   private async fetchRSSFeed(source: typeof this.RSS_SOURCES[0]): Promise<CommunityPost[]> {
-    try {
-      console.log(`📡 Fetching authentic RSS feed from ${source.url}`);
+    const operation = async () => {
+      logError({ message: `Fetching authentic RSS feed from ${source.name}`, statusCode: 200 }, 'RSS feed parsing started');
       
-      // Parse real RSS feed using rss-parser
       const feed = await this.parser.parseURL(source.url);
       
-      const posts: CommunityPost[] = feed.items.slice(0, 10).map(item => ({
-        id: item.guid || `${source.name.toLowerCase()}-${Date.now()}-${Math.random()}`,
-        title: item.title || 'Untitled Article',
-        content: item.contentSnippet || item.content || item.summary || this.generatePreviewContent(item.title || 'Article'),
-        author: item.creator || item.author || `${source.name} Editorial`,
-        source: source.name,
-        sourceUrl: item.link || source.url, // Real working URL from RSS feed
-        publishedAt: item.pubDate ? new Date(item.pubDate) : new Date(),
-        category: source.category,
-        attribution: source.attribution,
-        isExternal: true,
-        coverImage: this.generateCoverImage(item.title || 'Article', source.category)
-      }));
+      if (!feed || !feed.items) {
+        throw new Error('Invalid RSS feed structure');
+      }
+      
+      return feed;
+    };
 
-      console.log(`✅ Successfully fetched ${posts.length} authentic articles from ${source.name}`);
+    try {
+      const rawFeed = await this.circuitBreaker.execute(() => 
+        withRetry(operation, {
+          maxAttempts: 3,
+          baseDelayMs: 2000,
+          maxDelayMs: 10000,
+          timeoutMs: 10000,
+          shouldRetry: (error) => {
+            const msg = error.message?.toLowerCase() || '';
+            return msg.includes('timeout') || 
+                   msg.includes('network') || 
+                   msg.includes('econnreset') ||
+                   msg.includes('enotfound') ||
+                   msg.includes('connect') ||
+                   msg.includes('getaddrinfo');
+          }
+        })
+      );
+      
+      // Validate RSS feed structure with schema
+      const feedValidation = validateApiResponse(rawFeed, RSSFeedSchema, 'RSS feed response');
+      if (!feedValidation.success) {
+        logError(createAppError('RSS feed validation failed', 400, ErrorCategory.VALIDATION), `RSS feed validation for ${source.name}`);
+        // Continue with raw feed but log warning
+      }
+      
+      const feed = feedValidation.success ? feedValidation.data! : rawFeed;
+      
+      const posts: CommunityPost[] = feed.items.slice(0, 10).map(item => {
+        try {
+          // Validate individual RSS item
+          const itemValidation = validateApiResponse(item, RSSItemSchema, 'RSS item');
+          const validatedItem = itemValidation.success ? itemValidation.data! : item;
+          
+          const post = {
+            id: validatedItem.guid || `${source.name.toLowerCase()}-${Date.now()}-${Math.random()}`,
+            title: validatedItem.title || 'Untitled Article',
+            content: validatedItem.contentSnippet || validatedItem.content || validatedItem.summary || this.generatePreviewContent(validatedItem.title || 'Article'),
+            author: validatedItem.creator || validatedItem.author || `${source.name} Editorial`,
+            source: source.name,
+            sourceUrl: validatedItem.link || source.url, // Real working URL from RSS feed
+            publishedAt: validatedItem.pubDate ? new Date(validatedItem.pubDate) : new Date(),
+            category: source.category,
+            attribution: source.attribution,
+            isExternal: true,
+            coverImage: this.generateCoverImage(validatedItem.title || 'Article', source.category)
+          };
+          
+          // Validate the final community post structure
+          const postValidation = validateApiResponse(post, CommunityPostSchema, 'Community post');
+          if (!postValidation.success) {
+            logError(createAppError('Community post validation failed', 400, ErrorCategory.VALIDATION), `RSS item from ${source.name}`);
+            return null;
+          }
+          
+          return post;
+        } catch (itemError) {
+          logError(createAppError('RSS item processing failed', 500, ErrorCategory.EXTERNAL_API), `RSS item processing from ${source.name}`);
+          return null;
+        }
+      }).filter(Boolean) as CommunityPost[];
+
+      logError({ message: `Successfully fetched ${posts.length} authentic articles from ${source.name}`, statusCode: 200 }, 'RSS feed fetch completed');
       return posts;
       
     } catch (error: any) {
-      console.error(`❌ RSS fetch failed for ${source.name}:`, error.message);
-      console.log(`⏭️ Skipping ${source.name} and continuing with other sources...`);
+      logError(createAppError(`RSS fetch failed for ${source.name}`, 503, ErrorCategory.EXTERNAL_API), 'RSS feed fetch error');
+      
+      // Log specific error type for monitoring
+      const errorMsg = error.message?.toLowerCase() || '';
+      if (errorMsg.includes('timeout')) {
+        logError({ message: `RSS feed timeout for ${source.name} - skipping`, statusCode: 408 }, 'RSS timeout');
+      } else if (errorMsg.includes('network') || errorMsg.includes('enotfound') || errorMsg.includes('econnreset')) {
+        logError({ message: `Network error for ${source.name} - skipping`, statusCode: 503 }, 'RSS network error');
+      }
+      
+      logError({ message: `Skipping ${source.name} and continuing with other sources`, statusCode: 200 }, 'RSS source skip');
       
       // Skip this source and continue with others - quality over quantity
       return [];
@@ -341,7 +398,7 @@ export class RSSAggregatorService {
     try {
       return RSSFeedSchema.parse(data);
     } catch (error) {
-      console.error('RSS validation error:', error);
+      logError(createAppError('RSS validation error', 400, ErrorCategory.VALIDATION), 'validateRSSFeed operation');
       throw new Error('Invalid RSS feed structure');
     }
   }
