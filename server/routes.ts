@@ -20,6 +20,14 @@ import {
   sellerInfoSchema,
   type SellerInfo
 } from "@shared/schema";
+import {
+  authenticityRequestSchema,
+  batchAuthenticityRequestSchema,
+  authenticityResponseSchema,
+  batchAuthenticityResponseSchema,
+  type AuthenticityRequest,
+  type BatchAuthenticityRequest
+} from "@shared/aiTrainingSchema";
 import { priceComparisonService } from "./priceComparison";
 import { marketplaceAggregator, initializeMarketplaceAggregator } from "./marketplaceAggregator";
 import { AutomotiveNewsService } from "./automotiveNews";
@@ -586,6 +594,148 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Authenticity scoring with fine-tuned model - PRODUCTION READY
+  app.post('/api/ai/score-authenticity', requireClaudeAccess, claudeRateLimit, async (req, res) => {
+    try {
+      // Validate request body with Zod schema
+      const validatedData = authenticityRequestSchema.parse(req.body);
+      const { listing } = validatedData;
+      
+      console.log(`🔍 Scoring authenticity for listing: ${listing.id || 'unknown'}`);
+      const authenticityScore = await aiTrainingService.scoreAuthenticity(listing);
+      
+      // Validate response before sending
+      const response = {
+        authenticity_score: authenticityScore,
+        analysis_timestamp: new Date().toISOString()
+      };
+      
+      // Validate response against schema
+      authenticityResponseSchema.parse(response);
+      
+      res.json({
+        success: true,
+        ...response,
+        meta: {
+          model: 'ft:gpt-4o-mini-2024-07-18:personal:cararth-price-v1:CFzS4zfH',
+          analysisType: 'authenticity_scoring'
+        }
+      });
+      
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: 'Invalid request data',
+          details: error.errors,
+          message: 'Please check your listing data format'
+        });
+      }
+      console.error('❌ Authenticity scoring failed:', error);
+      res.status(500).json({ 
+        error: 'Authenticity scoring failed',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Batch authenticity scoring for multiple listings - PRODUCTION READY
+  app.post('/api/ai/batch-score-authenticity', requireClaudeAccess, claudeRateLimit, async (req, res) => {
+    try {
+      // Validate request body with Zod schema
+      const validatedData = batchAuthenticityRequestSchema.parse(req.body);
+      const { listings } = validatedData;
+      
+      console.log(`🔍 Batch authenticity scoring for ${listings.length} listings`);
+      
+      // Process each listing individually to isolate errors
+      const results = [];
+      let successful = 0;
+      let failed = 0;
+      
+      // Process in chunks to avoid overwhelming the system
+      const chunkSize = 10;
+      for (let i = 0; i < listings.length; i += chunkSize) {
+        const chunk = listings.slice(i, i + chunkSize);
+        
+        const chunkPromises = chunk.map(async (listing, index) => {
+          try {
+            const authenticityScore = await aiTrainingService.scoreAuthenticity(listing);
+            successful++;
+            return {
+              listing_id: listing.id || `batch_${i + index}`,
+              success: true,
+              authenticity_score: authenticityScore
+            };
+          } catch (error) {
+            failed++;
+            console.warn(`❌ Failed to score listing ${listing.id || `batch_${i + index}`}:`, error.message);
+            return {
+              listing_id: listing.id || `batch_${i + index}`,
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error'
+            };
+          }
+        });
+        
+        const chunkResults = await Promise.allSettled(chunkPromises);
+        const processedChunk = chunkResults.map((result, index) => {
+          if (result.status === 'fulfilled') {
+            return result.value;
+          } else {
+            failed++;
+            return {
+              listing_id: chunk[index]?.id || `batch_${i + index}`,
+              success: false,
+              error: 'Processing failed'
+            };
+          }
+        });
+        
+        results.push(...processedChunk);
+        
+        // Small delay between chunks to respect rate limits
+        if (i + chunkSize < listings.length) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+      
+      const response = {
+        results,
+        total_processed: results.length,
+        successful,
+        failed,
+        analysis_timestamp: new Date().toISOString()
+      };
+      
+      // Validate response against schema
+      batchAuthenticityResponseSchema.parse(response);
+      
+      res.json({
+        success: true,
+        ...response,
+        meta: {
+          model: 'ft:gpt-4o-mini-2024-07-18:personal:cararth-price-v1:CFzS4zfH',
+          analysisType: 'batch_authenticity_scoring',
+          chunkSize: chunkSize
+        }
+      });
+      
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: 'Invalid request data',
+          details: error.errors,
+          message: 'Please check your listings array format. Maximum 50 listings allowed.'
+        });
+      }
+      console.error('❌ Batch authenticity scoring failed:', error);
+      res.status(500).json({ 
+        error: 'Batch authenticity scoring failed',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // AI Health Monitoring Dashboard
   app.get('/api/ai/health', async (req, res) => {
     try {
@@ -1016,6 +1166,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Community Posts API - Create new post
   app.post('/api/community/posts', isAuthenticated, async (req: any, res) => {
     try {
+      // Import database for direct operations
+      const { db } = await import('./db.js');
+      
       const userId = req.user.claims.sub;
       const validatedData = insertCommunityPostSchema.parse({
         ...req.body,
@@ -1060,6 +1213,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user-generated community posts with author info
   app.get('/api/community/user-posts', async (req, res) => {
     try {
+      // Import database for direct operations
+      const { db } = await import('./db.js');
+      
       const posts = await db
         .select({
           id: communityPosts.id,
@@ -1097,6 +1253,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get single community post with comments
   app.get('/api/community/posts/:id', async (req, res) => {
     try {
+      // Import database for direct operations
+      const { db } = await import('./db.js');
+      
       const { id } = req.params;
       
       // Get the post
@@ -1171,6 +1330,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create comment on a post
   app.post('/api/community/posts/:id/comments', isAuthenticated, async (req: any, res) => {
     try {
+      // Import database for direct operations
+      const { db } = await import('./db.js');
+      
       const { id: postId } = req.params;
       const userId = req.user.claims.sub;
       

@@ -131,10 +131,79 @@ export const evaluationMetricsSchema = z.object({
 // Types
 export type TrainingData = z.infer<typeof trainingDataSchema>;
 export type AiPrediction = z.infer<typeof aiPredictionSchema>;
+
+// Authenticity scoring schema for fine-tuned model
+export const authenticityScoreSchema = z.object({
+  id: z.string().uuid(),
+  listing_id: z.string().uuid(),
+  overall_authenticity: z.number().min(0).max(100),
+  price_authenticity: z.number().min(0).max(100),
+  image_authenticity: z.number().min(0).max(100),
+  contact_validity: z.number().min(0).max(100),
+  fraud_indicators: z.array(z.string()),
+  trust_signals: z.array(z.string()),
+  confidence_score: z.number().min(0).max(1),
+  model_version: z.string(),
+  analysis_timestamp: z.string().datetime(),
+  model_latency_ms: z.number().nonnegative()
+});
+
+export type AuthenticityScore = z.infer<typeof authenticityScoreSchema>;
 export type ModelConfig = z.infer<typeof modelConfigSchema>;
 export type EvaluationMetrics = z.infer<typeof evaluationMetricsSchema>;
 
 // Hyderabad-specific market context for training
+// Input validation schema for API endpoints
+export const listingInputSchema = z.object({
+  id: z.string().optional(),
+  make: z.string().min(1, "Make is required"),
+  model: z.string().min(1, "Model is required"),
+  year: z.number().int().min(1990).max(2025),
+  price: z.number().positive("Price must be positive"),
+  mileage: z.number().nonnegative("Mileage cannot be negative"),
+  city: z.string().min(1, "City is required"),
+  images: z.array(z.string()).default([]),
+  contact: z.string().optional(),
+  fuel_type: z.string().optional(),
+  transmission: z.string().optional(),
+  sellerType: z.string().optional(),
+  description: z.string().optional()
+});
+
+// Request schemas for API endpoints
+export const authenticityRequestSchema = z.object({
+  listing: listingInputSchema
+});
+
+export const batchAuthenticityRequestSchema = z.object({
+  listings: z.array(listingInputSchema).min(1, "At least one listing is required").max(50, "Maximum 50 listings allowed")
+});
+
+// Response schemas
+export const authenticityResponseSchema = z.object({
+  authenticity_score: authenticityScoreSchema,
+  analysis_timestamp: z.string().datetime()
+});
+
+export const batchAuthenticityResponseSchema = z.object({
+  results: z.array(z.object({
+    listing_id: z.string().optional(),
+    success: z.boolean(),
+    authenticity_score: authenticityScoreSchema.optional(),
+    error: z.string().optional()
+  })),
+  total_processed: z.number(),
+  successful: z.number(),
+  failed: z.number(),
+  analysis_timestamp: z.string().datetime()
+});
+
+export type ListingInput = z.infer<typeof listingInputSchema>;
+export type AuthenticityRequest = z.infer<typeof authenticityRequestSchema>;
+export type BatchAuthenticityRequest = z.infer<typeof batchAuthenticityRequestSchema>;
+export type AuthenticityResponse = z.infer<typeof authenticityResponseSchema>;
+export type BatchAuthenticityResponse = z.infer<typeof batchAuthenticityResponseSchema>;
+
 export const hyderabadMarketContext = {
   popular_brands: ["Maruti", "Hyundai", "Honda", "Toyota", "Tata", "Mahindra"],
   price_ranges: {
