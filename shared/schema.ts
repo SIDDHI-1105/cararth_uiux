@@ -123,6 +123,31 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertCar = z.infer<typeof insertCarSchema>;
+
+// Normalized seller information for both internal users and external portal listings
+export const sellerInfoSchema = z.discriminatedUnion('kind', [
+  // Internal users with masked contact details
+  z.object({
+    kind: z.literal('internal'),
+    sellerType: z.string(),
+    name: z.string(),
+    phoneMasked: z.string().optional(),
+    emailMasked: z.string().optional(),
+    profileImageUrl: z.string().optional(),
+    badges: z.array(z.string()).optional(),
+    verified: z.boolean().optional()
+  }),
+  // External portal listings with redirect info
+  z.object({
+    kind: z.literal('external'),
+    sellerType: z.string(),
+    portal: z.string(),
+    redirectUrl: z.string(),
+    note: z.string().optional()
+  })
+]);
+
+export type SellerInfo = z.infer<typeof sellerInfoSchema>;
 export type Car = typeof cars.$inferSelect;
 export type InsertContact = z.infer<typeof insertContactSchema>;
 export type Contact = typeof contacts.$inferSelect;

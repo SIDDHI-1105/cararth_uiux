@@ -16,7 +16,9 @@ import {
   insertQualityAnalysisSchema,
   insertContentModerationSchema,
   insertUserSearchIntentSchema,
-  insertAiAnalysisMetricsSchema
+  insertAiAnalysisMetricsSchema,
+  sellerInfoSchema,
+  type SellerInfo
 } from "@shared/schema";
 import { priceComparisonService } from "./priceComparison";
 import { marketplaceAggregator, initializeMarketplaceAggregator } from "./marketplaceAggregator";
@@ -543,8 +545,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let car = await storage.getCar(req.params.id);
       
       // If not found in cars table, check cached_portal_listings table
-      if (!car) {
-        car = await storage.getCachedPortalListing(req.params.id);
+      if (!car && 'getCachedPortalListing' in storage) {
+        car = await (storage as any).getCachedPortalListing(req.params.id);
       }
       
       if (!car) {
@@ -555,6 +557,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to fetch car details:", error);
       res.status(500).json({ error: "Failed to fetch car" });
+    }
+  });
+
+  // Get seller information for a car (normalized for internal users and external portals)
+  app.get("/api/cars/:id/seller", async (req, res) => {
+    try {
+      const carId = req.params.id;
+      
+      // First, try to get internal car from database
+      let car = await storage.getCar(carId);
+      
+      if (car && car.sellerId) {
+        // Internal car with user seller
+        try {
+          const seller = await storage.getUser(car.sellerId);
+          if (seller) {
+            const sellerInfo: SellerInfo = {
+              kind: 'internal',
+              sellerType: 'Individual', // Default for internal users
+              name: `${seller.firstName || ''} ${seller.lastName || ''}`.trim() || 'User',
+              phoneMasked: seller.phone ? `${seller.phone.slice(0, 3)}****${seller.phone.slice(-2)}` : undefined,
+              emailMasked: seller.email ? `${seller.email.split('@')[0].slice(0, 2)}***@${seller.email.split('@')[1]}` : undefined,
+              profileImageUrl: seller.profileImageUrl || undefined,
+              verified: seller.phoneVerified,
+              badges: seller.subscriptionTier !== 'free' ? ['Premium'] : undefined
+            };
+            return res.json(sellerInfo);
+          }
+        } catch (error) {
+          console.error('Failed to fetch seller user:', error);
+          // Fall through to check marketplace listings
+        }
+      }
+      
+      // Check if it's an external marketplace listing
+      let marketplaceListing = null;
+      if ('getCachedPortalListing' in storage) {
+        marketplaceListing = await (storage as any).getCachedPortalListing(carId);
+      }
+      if (marketplaceListing) {
+        const sellerInfo: SellerInfo = {
+          kind: 'external',
+          sellerType: marketplaceListing.sellerType || 'Individual',
+          portal: marketplaceListing.source || 'CarDekho',
+          redirectUrl: marketplaceListing.url || `https://www.cardekho.com`,
+          note: `Contact seller directly on ${marketplaceListing.source || 'the original platform'}`
+        };
+        return res.json(sellerInfo);
+      }
+      
+      // Car not found in either table
+      return res.status(404).json({ 
+        code: 'seller_unavailable',
+        error: "Seller information not found" 
+      });
+      
+    } catch (error) {
+      console.error("Failed to fetch seller information:", error);
+      res.status(500).json({ error: "Failed to fetch seller information" });
     }
   });
 
