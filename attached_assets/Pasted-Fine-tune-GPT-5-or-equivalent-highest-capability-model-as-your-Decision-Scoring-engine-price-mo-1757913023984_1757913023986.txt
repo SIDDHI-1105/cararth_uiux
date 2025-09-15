@@ -1,0 +1,129 @@
+Fine-tune GPT-5 (or equivalent highest-capability model) as your Decision & Scoring engine (price modelling, final summaries, trust scoring). Use Gemini for large-scale market-intel fine-tuning (price-bands & city-specific patterns), and keep Anthropic for safety + classification (PII/fraud) using lightweight fine-tuning or classifier heads. Use Perplexity only as a research/real-time verification API — no fine-tune.
+Why this split
+GPT-5: best for multi-step reasoning, generating high-quality user-facing copy, and final decision logic — worth investing training quota here.
+Gemini: strong for numeric/market patterns and multi-source reconciliation; fine-tune for price curves, depreciation, locality patterns.
+Anthropic: safety + compliance — a small, focused classifier fine-tune helps reduce false negatives in fraud/PII detection.
+Perplexity: real-time web research — keep as-is, used sparingly for anomalies.
+What you should train models to do (priority list)
+Price modelling: predicted fair price range (low/median/high) per listing, with confidence.
+Authenticity scoring: image authenticity (real vs stock/fake), contact validity check, listing plausibility.
+Fraud detection: detect VIN mismatches, copy-paste descriptions, stolen-car signals, suspiciously low prices.
+Normalization & field extraction: robust extraction from noisy textual blobs (addresses, fuel types, transmission).
+Summary & negotiation script: 2–4 line buyer-facing summary + suggested offer/negotiation script.
+Business rules + routing: classify listings by confidence to route to human review, auto-reject, or auto-publish.
+Explainability: short natural-language rationale for any score (helps trust & debug).
+Data you need (and how to label it)
+Create high-quality labeled datasets across these dimensions. Use a mixture of real crawled examples + synthetic augmentation.
+Core schema for a training sample
+{
+  "id": "<uuid>",
+  "source": "CarDekho|OLX|Cars24|FB",
+  "raw_text": "<raw scraped HTML/text>",
+  "normalized": {
+    "make": "Hyundai",
+    "model": "i20",
+    "year": 2016,
+    "price": 450000,
+    "mileage": 42000,
+    "city": "Hyderabad",
+    "images": ["url1", "url2"],
+    "contact": "masked_or_full_if_permitted",
+    "vin": "xxxx"
+  },
+  "human_labels": {
+    "price_band": {"low":420000,"median":450000,"high":480000},
+    "price_confidence": 0.82,
+    "is_authentic": true,
+    "image_real": true,
+    "contact_valid": true,
+    "fraud_flag": false,
+    "fraud_reasons": [],
+    "dedupe_group_id": "group-123",
+    "notes": "manual check done 2025-09-10"
+  },
+  "ingest_batch_ts": "2025-09-14T00:30:00Z"
+}
+Labels to collect
+price_band (low/median/high) and price_confidence (0–1) — critical.
+is_authentic (bool) and image_real (bool) — image authenticity may need visual model + human check.
+contact_valid (bool) — verified by phone ping or pattern check.
+fraud_flag + fraud_reasons (categorical: stolen-vin, duplicate-listing, forged-images, unrealistic-price, phone-mismatch).
+dedupe_group_id — mark examples that are the same car across portals.
+human_edit (what fields humans edited) — good for learning corrections.
+How many labeled examples?
+Minimal useful: 5k–10k labeled listings covering Hyderabad + Delhi NCR, across price bands.
+Target for robust performance: 20k–50k.
+For classifiers (fraud): get at least 1k–3k positive fraud examples (may be rare — use augmentation & historical data).
+Annotation process
+Build a small annotation UI (simple form showing raw listing + images + editable normalized fields + checkboxes for labels).
+Use 2 annotators per item + adjudication for disagreements. Track inter-annotator agreement.
+Prioritize labeling: high-ticket listings, borderline prices, and listings with failed validations.
+Training approaches (practical)
+Fine-tune (supervised)
+Best for GPT-5 & Gemini on tasks like price prediction, normalization, and generation of summaries.
+Train with input = normalized fields + context (city, historical price bands) → output = price_band + summary + reason.
+Retrieval Augmented Generation (RAG)
+Keep a vector search of historical sales, city price-bands, articles — feed top-K to the model at inference (helps grounding).
+Use for GPT-5 final decision calls — reduces hallucination and improves explainability.
+Lightweight classifier heads
+For Anthropic: a binary/multi-class classifier for fraud/PII. Could be a small fine-tune or a separate small model (cheaper).
+Multi-task learning
+Combine related tasks (extraction + price prediction + fraud signal) into a single fine-tune where helpful — but start simple (one or two tasks) then expand.
+Vision pipeline for images
+Use a specialized image model (open-source ViT or hosted APIs) to detect stock images, logos, or obvious edits. Feed image verdicts as features to the LLM.
+Example fine-tune prompt/target (for GPT-5)
+Input (train example):
+SYSTEM: You are Cararth Price & Trust Assistant for Hyderabad.
+CONTEXT: city=Hyderabad; historical_median_for(make=Hyundai, model=i20, year=2016)=465000; last_30d_sales_avg=455000;
+LISTING:
+ - title: "Hyundai i20 2016 petrol 42000km"
+ - price: 450000
+ - mileage: 42000
+ - images: [img1_hash:..., img2_hash:...]
+ - contact: +91-9XXXXXXXX
+ - raw_notes: "owner selling due to relocation"
+Target (train label):
+{"price_band": {"low":420000, "median":450000, "high":480000}, "price_confidence":0.85,
+ "is_authentic": true, "image_real": true, "contact_valid": true,
+ "short_summary": "Clean 2016 i20 at ₹4.5L — slightly below city median; good mileage. Suggest offer ₹4.3L–4.4L.",
+ "explain": "Price 3.2% below median; images consistent; VIN matches public registry; contact verified via ping."}
+Evaluation metrics & acceptance criteria
+Price MAE / MAPE on validation set for price prediction. Target: MAPE < 8–12% initially.
+Auth detection: precision > 0.9 for image_real and contact_valid (high precision important).
+Fraud detection: prioritize precision on fraud positives (precision > 0.85) to avoid false alarms.
+End-user A/B: CTR on listings, complaint rates about fake images, contact validity. Aim for reduction in complaints by >50% after rollout.
+Latency: inference for a single listing (with RAG) ≤ 500–1000 ms for batch/gated flows.
+Rollout, testing & continuous learning
+Offline validation on a held-out labeled set.
+Shadow mode (2–4 weeks): run model in production but don’t surface results; compare model decisions vs current pipeline and human-review.
+Canary: enable model-scored fields for 10% of listings, surface scores with badge “AI-verified (beta)”.
+Full rollout when metrics meet thresholds.
+Continuous labeling loop: route human edits and newly flagged frauds back into training set weekly. Retrain monthly or with triggers (drift detected).
+Infrastructure & tooling (practical suggestions)
+Storage: Postgres (JSONB) + pgvector or Pinecone/Weaviate for vector store.
+Training infra: use managed fine-tuning services where possible (OpenAI fine-tuning, Vertex AI, Anthropic's fine-tune offering), or train on an internal GPU cluster.
+Annotation tool: Label Studio or LightTag or a simple custom UI (fast).
+CI for models: versioning (DVC or MLflow), automatic validation runs on every new model.
+Monitoring: logging model inputs/outputs (anonymized), drift detection, and human-review queue sizes.
+Cost & time ballpark (very rough)
+Labeling 5k–20k examples: weeks (depending on annotators).
+Fine-tune + validation cycle: 2–6 weeks (iterative).
+Cost levers: reduce calls by selective invocation (only high-value listings go through final GPT-5 pass). Use cheaper embedding models for dedupe.
+(I can produce a specific cost estimate based on your expected listings/day and which models you choose to fine-tune.)
+Privacy & compliance
+Mask or avoid storing full phone numbers unless needed and access-controlled.
+Store PII only when necessary and secure it with strong access policies.
+Document human-in-the-loop decisions for audits.
+Concrete next steps (actionable, prioritized)
+Pick 2 tasks for the first sprint: e.g., Price modelling (GPT-5) + Image authenticity (vision model + signal into LLM).
+Build annotation UI and label 5,000 examples focusing on Hyderabad + Delhi NCR.
+Run a baseline evaluation using existing pipeline outputs (estimate current error rates).
+Fine-tune GPT-5 for Price + Summary using supervised examples & add a RAG index of historical sales.
+Deploy in shadow mode, monitor, iterate 2–3 cycles, then canary → full rollout.
+Offer: Ready-to-use artifacts I can generate now
+Tell me which of these you want next and I’ll produce it in this session immediately:
+A labeling schema + CSV template for annotators (fields + examples).
+200 synthetic training examples (price modelling + summaries) to jumpstart fine-tuning.
+A fine-tune prompt + training file format ready for OpenAI/Gemini/Anthropic fine-tune.
+An evaluation script (Python pseudocode) to compute MAE/MAPE + classification metrics.
+Which artifact should I generate first?

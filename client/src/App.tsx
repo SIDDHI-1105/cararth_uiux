@@ -17,6 +17,7 @@ import PrivacyPolicy from "./pages/privacy-policy";
 import TermsOfService from "./pages/terms-of-service";
 import DataSourcesPolicy from "./pages/data-sources-policy";
 import ApiCompliance from "./pages/api-compliance";
+import AiTrainingDashboard from "./pages/ai-training-dashboard";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -36,6 +37,7 @@ function Router() {
       <Route path="/terms-of-service" component={TermsOfService} />
       <Route path="/data-sources-policy" component={DataSourcesPolicy} />
       <Route path="/api-compliance" component={ApiCompliance} />
+      <Route path="/ai-training" component={AiTrainingDashboard} />
       <Route component={NotFound} />
     </Switch>
   );

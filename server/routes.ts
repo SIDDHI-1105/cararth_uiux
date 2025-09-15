@@ -45,6 +45,7 @@ import { aiMetricsMonitor } from "./aiMetricsMonitor.js";
 import { metricsIntegration } from "./aiMetricsIntegration.js";
 import { orchestratedBatchIngestion } from "./orchestratedIngestion.js";
 import { ImageProxyService } from "./imageProxyService.js";
+import { aiTrainingService } from "./aiTrainingService.js";
 import crypto from "crypto";
 
 // Developer mode check
@@ -255,6 +256,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Status endpoint error:', error);
       res.status(500).json({ error: 'Failed to get status' });
+    }
+  });
+
+  // AI Training Endpoints
+  
+  // Start price modeling training
+  app.post('/api/ai/train/price-modeling', async (req, res) => {
+    try {
+      console.log('🎯 Starting price modeling training pipeline...');
+      
+      // Generate synthetic training data
+      const trainingData = await aiTrainingService.generateSyntheticTrainingData(200);
+      console.log(`✅ Generated ${trainingData.length} synthetic training examples`);
+      
+      // Start GPT fine-tuning
+      const fineTuneJobId = await aiTrainingService.startGPTPriceModelingFineTune(trainingData);
+      
+      res.json({
+        message: 'Price modeling training started',
+        job_id: fineTuneJobId,
+        training_samples: trainingData.length,
+        status: 'initiated',
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error('❌ Training initiation failed:', error);
+      res.status(500).json({ 
+        error: 'Failed to start training',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+  
+  // Get training job status
+  app.get('/api/ai/train/status/:jobId', async (req, res) => {
+    try {
+      const jobId = req.params.jobId;
+      const status = await aiTrainingService.getFineTuneStatus(jobId);
+      
+      res.json({
+        job_id: jobId,
+        status: status.status,
+        model_id: status.fine_tuned_model,
+        created_at: status.created_at,
+        finished_at: status.finished_at,
+        training_file: status.training_file,
+        hyperparameters: status.hyperparameters,
+        result_files: status.result_files,
+        trained_tokens: status.trained_tokens
+      });
+      
+    } catch (error) {
+      console.error('❌ Failed to get training status:', error);
+      res.status(500).json({ 
+        error: 'Failed to get training status',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+  
+  // Test price prediction with fine-tuned model
+  app.post('/api/ai/predict/price', async (req, res) => {
+    try {
+      const { listing, model_id } = req.body;
+      
+      if (!listing || !model_id) {
+        return res.status(400).json({ error: 'Missing listing data or model_id' });
+      }
+      
+      const prediction = await aiTrainingService.predictPrice(listing, model_id);
+      
+      res.json({
+        prediction,
+        model_used: model_id,
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error('❌ Price prediction failed:', error);
+      res.status(500).json({ 
+        error: 'Price prediction failed',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+  
+  // Generate synthetic training data endpoint
+  app.post('/api/ai/generate-training-data', async (req, res) => {
+    try {
+      const { count = 100 } = req.body;
+      const trainingData = await aiTrainingService.generateSyntheticTrainingData(count);
+      
+      res.json({
+        message: `Generated ${trainingData.length} training examples`,
+        count: trainingData.length,
+        examples: trainingData.slice(0, 5), // Return first 5 as preview
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error('❌ Training data generation failed:', error);
+      res.status(500).json({ 
+        error: 'Failed to generate training data',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
