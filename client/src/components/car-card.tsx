@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Heart, Calendar, Gauge, Fuel, Settings, MapPin, Star, Share2, User, Shield, Award, Phone } from "lucide-react";
+import { Heart, Calendar, Gauge, Fuel, Settings, MapPin, Star, Share2, User, Shield, Award, Phone, CheckCircle, AlertTriangle, X } from "lucide-react";
 import { type CarListing } from "@shared/schema";
 import SocialShare from "@/components/social-share";
+import AuthenticityScoreDisplay from "@/components/authenticity-score";
 import { FALLBACK_CAR_IMAGE_URL } from '@/lib/constants';
 
 interface CarCardProps {
   car: CarListing;
   onFavoriteToggle?: (carId: string) => void;
   isFavorite?: boolean;
+  showAuthenticityScore?: boolean;
 }
 
 export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: CarCardProps) {
