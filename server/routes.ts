@@ -186,6 +186,82 @@ const checkSearchLimit = async (req: any, res: any, next: any) => {
   }
 }
 
+// Authentication middleware for Claude endpoints (premium feature)
+const requireClaudeAccess = async (req: any, res: any, next: any) => {
+  try {
+    // Developer mode bypass
+    if (isDeveloperMode(req)) {
+      console.log('🚀 Developer mode active - bypassing Claude access restrictions');
+      return next();
+    }
+
+    // Require authentication for Claude AI features
+    if (!req.isAuthenticated || typeof req.isAuthenticated !== 'function' || !req.isAuthenticated()) {
+      return res.status(401).json({
+        error: "Authentication required",
+        message: "Claude AI features require authentication",
+        requiresAuth: true
+      });
+    }
+
+    const userId = req.user.claims.sub;
+    const user = await storage.getUser(userId);
+    
+    if (!user) {
+      return res.status(401).json({ error: "User not found" });
+    }
+
+    // Check if user has premium access for Claude AI features
+    const hasPremiumAccess = user.subscriptionTier && 
+      ['pro_seller', 'pro_buyer', 'superhero'].includes(user.subscriptionTier) &&
+      user.subscriptionStatus === 'active';
+
+    if (!hasPremiumAccess) {
+      return res.status(403).json({
+        error: "Premium subscription required",
+        message: "Claude AI analysis features require a premium subscription",
+        userTier: user.subscriptionTier,
+        requiresUpgrade: true
+      });
+    }
+
+    next();
+  } catch (error) {
+    console.error("Claude access check error:", error);
+    res.status(500).json({ error: "Failed to verify Claude access permissions" });
+  }
+};
+
+// Rate limiting middleware specifically for Claude endpoints (expensive AI calls)
+const claudeRateLimit = async (req: any, res: any, next: any) => {
+  try {
+    // Developer mode bypass
+    if (isDeveloperMode(req)) {
+      return next();
+    }
+
+    const userId = req.user.claims.sub;
+    
+    // Check rate limit (10 requests per minute per user)
+    const currentCount = await storage.getUserClaudeRequestCount(userId);
+    if (currentCount >= 10) {
+      return res.status(429).json({
+        error: "Rate limit exceeded",
+        message: "Too many Claude AI requests. Limit: 10 per minute",
+        retryAfter: 60
+      });
+    }
+
+    // Increment counter
+    await storage.incrementClaudeRequestCount(userId);
+    next();
+  } catch (error) {
+    console.error("Claude rate limit error:", error);
+    // Continue on rate limit errors to avoid blocking legitimate requests
+    next();
+  }
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize services with error handling
   let automotiveNewsService;
@@ -2957,82 +3033,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }),
     searchFilters: z.record(z.any()).optional()
   });
-
-  // Authentication middleware for Claude endpoints (premium feature)
-  const requireClaudeAccess = async (req: any, res: any, next: any) => {
-    try {
-      // Developer mode bypass
-      if (isDeveloperMode(req)) {
-        console.log('🚀 Developer mode active - bypassing Claude access restrictions');
-        return next();
-      }
-
-      // Require authentication for Claude AI features
-      if (!req.isAuthenticated || typeof req.isAuthenticated !== 'function' || !req.isAuthenticated()) {
-        return res.status(401).json({
-          error: "Authentication required",
-          message: "Claude AI features require authentication",
-          requiresAuth: true
-        });
-      }
-
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      
-      if (!user) {
-        return res.status(401).json({ error: "User not found" });
-      }
-
-      // Check if user has premium access for Claude AI features
-      const hasPremiumAccess = user.subscriptionTier && 
-        ['pro_seller', 'pro_buyer', 'superhero'].includes(user.subscriptionTier) &&
-        user.subscriptionStatus === 'active';
-
-      if (!hasPremiumAccess) {
-        return res.status(403).json({
-          error: "Premium subscription required",
-          message: "Claude AI analysis features require a premium subscription",
-          userTier: user.subscriptionTier,
-          requiresUpgrade: true
-        });
-      }
-
-      next();
-    } catch (error) {
-      console.error("Claude access check error:", error);
-      res.status(500).json({ error: "Failed to verify Claude access permissions" });
-    }
-  };
-
-  // Rate limiting middleware specifically for Claude endpoints (expensive AI calls)
-  const claudeRateLimit = async (req: any, res: any, next: any) => {
-    try {
-      // Developer mode bypass
-      if (isDeveloperMode(req)) {
-        return next();
-      }
-
-      const userId = req.user.claims.sub;
-      
-      // Check rate limit (10 requests per minute per user)
-      const currentCount = await storage.getUserClaudeRequestCount(userId);
-      if (currentCount >= 10) {
-        return res.status(429).json({
-          error: "Rate limit exceeded",
-          message: "Too many Claude AI requests. Limit: 10 per minute",
-          retryAfter: 60
-        });
-      }
-
-      // Increment counter
-      await storage.incrementClaudeRequestCount(userId);
-      next();
-    } catch (error) {
-      console.error("Claude rate limit error:", error);
-      // Continue on rate limit errors to avoid blocking legitimate requests
-      next();
-    }
-  };
 
   // Classify a single listing for accuracy, completeness, and fairness
   app.post('/api/claude/classify-listing', requireClaudeAccess, claudeRateLimit, async (req, res) => {
