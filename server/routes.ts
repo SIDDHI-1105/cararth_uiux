@@ -178,29 +178,74 @@ const checkSearchLimit = async (req: any, res: any, next: any) => {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Initialize services
-  const automotiveNewsService = new AutomotiveNewsService();
+  // Initialize services with error handling
+  let automotiveNewsService;
+  try {
+    automotiveNewsService = new AutomotiveNewsService();
+    console.log('✅ AutomotiveNewsService initialized');
+  } catch (error) {
+    console.error('❌ Failed to initialize AutomotiveNewsService:', error);
+    // Continue without this service - it's not critical for basic functionality
+  }
   
   // Initialize MarketplaceAggregator with database storage for caching
-  if (process.env.DATABASE_URL) {
-    const { DatabaseStorage } = await import('./dbStorage.js');
-    const dbStorage = new DatabaseStorage();
-    initializeMarketplaceAggregator(dbStorage);
-    console.log('🚀 MarketplaceAggregator initialized with database caching');
-  } else {
-    console.log('⚠️ Using MarketplaceAggregator without database caching');
+  try {
+    if (process.env.DATABASE_URL) {
+      const { DatabaseStorage } = await import('./dbStorage.js');
+      const dbStorage = new DatabaseStorage();
+      initializeMarketplaceAggregator(dbStorage);
+      console.log('🚀 MarketplaceAggregator initialized with database caching');
+    } else {
+      console.log('⚠️ Using MarketplaceAggregator without database caching');
+    }
+  } catch (error) {
+    console.error('❌ Failed to initialize MarketplaceAggregator:', error);
+    console.log('⚠️ Continuing without MarketplaceAggregator - some features may be limited');
   }
 
-  // Start internal scheduler for batch ingestion (temporary solution)
-  const { internalScheduler } = await import('./scheduler.js');
-  internalScheduler.start();
-  console.log('⏰ Internal scheduler started for twice-daily batch ingestion');
+  // Start internal scheduler for batch ingestion (with idempotency)
+  try {
+    const { internalScheduler } = await import('./scheduler.js');
+    if (!internalScheduler.isStarted) {
+      internalScheduler.start();
+      console.log('⏰ Internal scheduler started for twice-daily batch ingestion');
+    } else {
+      console.log('✅ Internal scheduler already running');
+    }
+  } catch (error) {
+    console.error('❌ Failed to start internal scheduler:', error);
+    console.log('⚠️ Continuing without scheduler - batch ingestion will need manual triggers');
+  }
 
-  // Auth middleware
-  await setupAuth(app);
+  // Auth middleware with error handling
+  try {
+    await setupAuth(app);
+    console.log('✅ Authentication middleware configured');
+  } catch (error) {
+    console.error('❌ Failed to setup auth middleware:', error);
+    // In production, authentication failure should be fatal
+    if (process.env.NODE_ENV === 'production') {
+      console.error('❌ Authentication is required in production. Exiting.');
+      throw new Error('Authentication setup failed in production');
+    } else {
+      console.log('⚠️ Continuing without authentication in development');
+    }
+  }
   
   // Social authentication
-  setupSocialAuth(app);
+  try {
+    setupSocialAuth(app);
+    console.log('✅ Social authentication configured');
+  } catch (error) {
+    console.error('❌ Failed to setup social auth:', error);
+    // In production, social auth failure should be fatal
+    if (process.env.NODE_ENV === 'production') {
+      console.error('❌ Social authentication is required in production. Exiting.');
+      throw new Error('Social authentication setup failed in production');
+    } else {
+      console.log('⚠️ Continuing without social authentication in development');
+    }
+  }
 
   // Batch ingestion endpoint for external cron jobs (cron-job.org, GitHub Actions, Railway)
   app.post('/api/run_ingestion', async (req, res) => {
