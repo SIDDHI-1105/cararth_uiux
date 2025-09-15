@@ -1,1 +1,182 @@
-import { useState, useEffect } from 'react';\nimport { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';\nimport { Button } from '@/components/ui/button';\nimport { Badge } from '@/components/ui/badge';\nimport { Progress } from '@/components/ui/progress';\nimport { Alert, AlertDescription } from '@/components/ui/alert';\nimport { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';\nimport { apiRequest } from '@/lib/queryClient';\nimport { Zap, Brain, Target, TrendingUp, Clock, CheckCircle, AlertCircle, Play, RefreshCw } from 'lucide-react';\nimport { useToast } from '@/hooks/use-toast';\n\ninterface TrainingJob {\n  job_id: string;\n  status: string;\n  model_id?: string;\n  created_at: string;\n  finished_at?: string;\n  trained_tokens?: number;\n}\n\ninterface TrainingExample {\n  id: string;\n  source: string;\n  normalized: {\n    make: string;\n    model: string;\n    year: number;\n    price: number;\n    mileage: number;\n    city: string;\n  };\n  human_labels: {\n    price_band: {\n      low: number;\n      median: number;\n      high: number;\n    };\n    price_confidence: number;\n    is_authentic: boolean;\n  };\n}\n\nexport default function AiTrainingDashboard() {\n  const [activeJobId, setActiveJobId] = useState<string | null>(null);\n  const { toast } = useToast();\n  const queryClient = useQueryClient();\n\n  // Start training mutation\n  const startTrainingMutation = useMutation({\n    mutationFn: () => apiRequest('/api/ai/train/price-modeling', {\n      method: 'POST'\n    }),\n    onSuccess: (data) => {\n      setActiveJobId(data.job_id);\n      toast({\n        title: \"Training Started!\",\n        description: `Price modeling training initiated with job ID: ${data.job_id}`\n      });\n      // Refetch status after starting\n      queryClient.invalidateQueries({ queryKey: ['/api/ai/train/status', data.job_id] });\n    },\n    onError: (error: any) => {\n      toast({\n        title: \"Training Failed\",\n        description: error.message || \"Failed to start training\",\n        variant: \"destructive\"\n      });\n    }\n  });\n\n  // Generate training data mutation\n  const generateDataMutation = useMutation({\n    mutationFn: (count: number) => apiRequest('/api/ai/generate-training-data', {\n      method: 'POST',\n      body: { count }\n    }),\n    onSuccess: (data) => {\n      toast({\n        title: \"Training Data Generated!\",\n        description: `Generated ${data.count} synthetic training examples`\n      });\n    },\n    onError: (error: any) => {\n      toast({\n        title: \"Generation Failed\",\n        description: error.message || \"Failed to generate training data\",\n        variant: \"destructive\"\n      });\n    }\n  });\n\n  // Query training job status\n  const { data: jobStatus, isLoading: jobLoading } = useQuery({\n    queryKey: ['/api/ai/train/status', activeJobId],\n    enabled: !!activeJobId,\n    refetchInterval: activeJobId && ['running', 'validating_files'].includes(jobStatus?.status) ? 5000 : false\n  });\n\n  const getStatusIcon = (status: string) => {\n    switch (status) {\n      case 'succeeded':\n        return <CheckCircle className=\"w-4 h-4 text-green-600\" />;\n      case 'failed':\n        return <AlertCircle className=\"w-4 h-4 text-red-600\" />;\n      case 'running':\n      case 'validating_files':\n        return <RefreshCw className=\"w-4 h-4 text-blue-600 animate-spin\" />;\n      default:\n        return <Clock className=\"w-4 h-4 text-gray-600\" />;\n    }\n  };\n\n  const getStatusColor = (status: string) => {\n    switch (status) {\n      case 'succeeded':\n        return 'bg-green-100 text-green-800 border-green-200';\n      case 'failed':\n        return 'bg-red-100 text-red-800 border-red-200';\n      case 'running':\n      case 'validating_files':\n        return 'bg-blue-100 text-blue-800 border-blue-200';\n      default:\n        return 'bg-gray-100 text-gray-800 border-gray-200';\n    }\n  };\n\n  return (\n    <div className=\"container mx-auto px-4 py-8 max-w-7xl\">\n      <div className=\"mb-8\">\n        <h1 className=\"text-3xl font-bold mb-2 flex items-center gap-2\">\n          <Brain className=\"w-8 h-8 text-blue-600\" />\n          AI Training Dashboard\n        </h1>\n        <p className=\"text-gray-600\">\n          Train and monitor AI models for price prediction, authenticity scoring, and fraud detection\n        </p>\n      </div>\n\n      {/* Training Actions */}\n      <div className=\"grid grid-cols-1 md:grid-cols-3 gap-6 mb-8\">\n        <Card>\n          <CardHeader>\n            <CardTitle className=\"flex items-center gap-2\">\n              <Target className=\"w-5 h-5 text-blue-600\" />\n              Price Modeling\n            </CardTitle>\n            <CardDescription>\n              Train GPT-5 for accurate price predictions\n            </CardDescription>\n          </CardHeader>\n          <CardContent>\n            <Button \n              onClick={() => startTrainingMutation.mutate()}\n              disabled={startTrainingMutation.isPending}\n              className=\"w-full\"\n              data-testid=\"button-start-price-training\"\n            >\n              {startTrainingMutation.isPending ? (\n                <RefreshCw className=\"w-4 h-4 mr-2 animate-spin\" />\n              ) : (\n                <Play className=\"w-4 h-4 mr-2\" />\n              )}\n              Start Training\n            </Button>\n          </CardContent>\n        </Card>\n\n        <Card>\n          <CardHeader>\n            <CardTitle className=\"flex items-center gap-2\">\n              <Zap className=\"w-5 h-5 text-green-600\" />\n              Training Data\n            </CardTitle>\n            <CardDescription>\n              Generate synthetic examples\n            </CardDescription>\n          </CardHeader>\n          <CardContent>\n            <Button \n              variant=\"outline\"\n              onClick={() => generateDataMutation.mutate(200)}\n              disabled={generateDataMutation.isPending}\n              className=\"w-full\"\n              data-testid=\"button-generate-data\"\n            >\n              {generateDataMutation.isPending ? (\n                <RefreshCw className=\"w-4 h-4 mr-2 animate-spin\" />\n              ) : (\n                <Zap className=\"w-4 h-4 mr-2\" />\n              )}\n              Generate 200 Examples\n            </Button>\n          </CardContent>\n        </Card>\n\n        <Card>\n          <CardHeader>\n            <CardTitle className=\"flex items-center gap-2\">\n              <TrendingUp className=\"w-5 h-5 text-purple-600\" />\n              Performance\n            </CardTitle>\n            <CardDescription>\n              Model metrics & evaluation\n            </CardDescription>\n          </CardHeader>\n          <CardContent>\n            <div className=\"space-y-2\">\n              <div className=\"flex justify-between text-sm\">\n                <span>Price MAPE Target:</span>\n                <span className=\"font-semibold text-green-600\">&lt; 8%</span>\n              </div>\n              <div className=\"flex justify-between text-sm\">\n                <span>Fraud Precision:</span>\n                <span className=\"font-semibold text-blue-600\">&gt; 85%</span>\n              </div>\n            </div>\n          </CardContent>\n        </Card>\n      </div>\n\n      {/* Training Job Status */}\n      {activeJobId && (\n        <Card className=\"mb-8\">\n          <CardHeader>\n            <CardTitle className=\"flex items-center gap-2\">\n              <Brain className=\"w-5 h-5\" />\n              Training Job Status\n            </CardTitle>\n            <CardDescription>\n              Monitor your current training job progress\n            </CardDescription>\n          </CardHeader>\n          <CardContent>\n            {jobLoading ? (\n              <div className=\"flex items-center gap-2\">\n                <RefreshCw className=\"w-4 h-4 animate-spin\" />\n                <span>Loading job status...</span>\n              </div>\n            ) : jobStatus ? (\n              <div className=\"space-y-4\">\n                <div className=\"flex items-center justify-between\">\n                  <div className=\"flex items-center gap-2\">\n                    {getStatusIcon(jobStatus.status)}\n                    <span className=\"font-semibold\">Job ID: {activeJobId}</span>\n                  </div>\n                  <Badge className={getStatusColor(jobStatus.status)}>\n                    {jobStatus.status.toUpperCase()}\n                  </Badge>\n                </div>\n                \n                {jobStatus.status === 'running' && (\n                  <div>\n                    <div className=\"flex justify-between text-sm mb-2\">\n                      <span>Training Progress</span>\n                      <span>In Progress...</span>\n                    </div>\n                    <Progress value={50} className=\"w-full\" />\n                  </div>\n                )}\n                \n                {jobStatus.model_id && (\n                  <Alert>\n                    <CheckCircle className=\"w-4 h-4\" />\n                    <AlertDescription>\n                      <strong>Model Ready!</strong> Fine-tuned model ID: {jobStatus.model_id}\n                    </AlertDescription>\n                  </Alert>\n                )}\n                \n                <div className=\"grid grid-cols-2 gap-4 text-sm\">\n                  <div>\n                    <span className=\"text-gray-600\">Created:</span>\n                    <div className=\"font-mono\">\n                      {new Date(jobStatus.created_at * 1000).toLocaleString()}\n                    </div>\n                  </div>\n                  {jobStatus.finished_at && (\n                    <div>\n                      <span className=\"text-gray-600\">Finished:</span>\n                      <div className=\"font-mono\">\n                        {new Date(jobStatus.finished_at * 1000).toLocaleString()}\n                      </div>\n                    </div>\n                  )}\n                  {jobStatus.trained_tokens && (\n                    <div>\n                      <span className=\"text-gray-600\">Tokens Trained:</span>\n                      <div className=\"font-semibold\">\n                        {jobStatus.trained_tokens.toLocaleString()}\n                      </div>\n                    </div>\n                  )}\n                </div>\n              </div>\n            ) : (\n              <p className=\"text-gray-600\">No job status available</p>\n            )}\n          </CardContent>\n        </Card>\n      )}\n\n      {/* Training Strategy Overview */}\n      <Card>\n        <CardHeader>\n          <CardTitle>Training Strategy</CardTitle>\n          <CardDescription>\n            Multi-model approach for optimal performance\n          </CardDescription>\n        </CardHeader>\n        <CardContent>\n          <div className=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4\">\n            <div className=\"p-4 border rounded-lg\">\n              <h3 className=\"font-semibold text-blue-600 mb-2\">GPT-5</h3>\n              <p className=\"text-sm text-gray-600 mb-2\">Decision & Scoring Engine</p>\n              <ul className=\"text-xs space-y-1\">\n                <li>• Price modeling</li>\n                <li>• Final summaries</li>\n                <li>• Trust scoring</li>\n              </ul>\n            </div>\n            \n            <div className=\"p-4 border rounded-lg\">\n              <h3 className=\"font-semibold text-green-600 mb-2\">Gemini</h3>\n              <p className=\"text-sm text-gray-600 mb-2\">Market Intelligence</p>\n              <ul className=\"text-xs space-y-1\">\n                <li>• Price bands</li>\n                <li>• City patterns</li>\n                <li>• Market reconciliation</li>\n              </ul>\n            </div>\n            \n            <div className=\"p-4 border rounded-lg\">\n              <h3 className=\"font-semibold text-purple-600 mb-2\">Anthropic</h3>\n              <p className=\"text-sm text-gray-600 mb-2\">Safety & Classification</p>\n              <ul className=\"text-xs space-y-1\">\n                <li>• PII detection</li>\n                <li>• Fraud classification</li>\n                <li>• Content moderation</li>\n              </ul>\n            </div>\n            \n            <div className=\"p-4 border rounded-lg\">\n              <h3 className=\"font-semibold text-orange-600 mb-2\">Perplexity</h3>\n              <p className=\"text-sm text-gray-600 mb-2\">Real-time Research</p>\n              <ul className=\"text-xs space-y-1\">\n                <li>• Market verification</li>\n                <li>• Anomaly detection</li>\n                <li>• Price validation</li>\n              </ul>\n            </div>\n          </div>\n        </CardContent>\n      </Card>\n    </div>\n  );\n}"
+import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useMutation } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
+import { Brain, Target, Zap, Play, RefreshCw } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+
+export default function AiTrainingDashboard() {
+  const [trainingJobId, setTrainingJobId] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const startTrainingMutation = useMutation({
+    mutationFn: () => apiRequest('/api/ai/train/price-modeling', {
+      method: 'POST'
+    }),
+    onSuccess: (data) => {
+      setTrainingJobId(data.job_id);
+      toast({
+        title: "Training Started!",
+        description: `Price modeling training initiated with job ID: ${data.job_id}`
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Training Failed",
+        description: error.message || "Failed to start training",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const generateDataMutation = useMutation({
+    mutationFn: (count: number) => apiRequest('/api/ai/generate-training-data', {
+      method: 'POST',
+      body: { count }
+    }),
+    onSuccess: (data) => {
+      toast({
+        title: "Training Data Generated!",
+        description: `Generated ${data.count} synthetic training examples`
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Generation Failed",
+        description: error.message || "Failed to generate training data",
+        variant: "destructive"
+      });
+    }
+  });
+
+  return (
+    <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
+          <Brain className="w-8 h-8 text-blue-600" />
+          AI Training Dashboard
+        </h1>
+        <p className="text-gray-600">
+          Train and monitor AI models for price prediction, authenticity scoring, and fraud detection
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="w-5 h-5 text-blue-600" />
+              Price Modeling Training
+            </CardTitle>
+            <CardDescription>
+              Start GPT fine-tuning for accurate price predictions
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              onClick={() => startTrainingMutation.mutate()}
+              disabled={startTrainingMutation.isPending}
+              className="w-full"
+              data-testid="button-start-price-training"
+            >
+              {startTrainingMutation.isPending ? (
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Play className="w-4 h-4 mr-2" />
+              )}
+              Start Price Modeling Training
+            </Button>
+            {trainingJobId && (
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  Training Job ID: <code className="font-mono">{trainingJobId}</code>
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="w-5 h-5 text-green-600" />
+              Generate Training Data
+            </CardTitle>
+            <CardDescription>
+              Create synthetic training examples for model training
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              variant="outline"
+              onClick={() => generateDataMutation.mutate(200)}
+              disabled={generateDataMutation.isPending}
+              className="w-full"
+              data-testid="button-generate-data"
+            >
+              {generateDataMutation.isPending ? (
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Zap className="w-4 h-4 mr-2" />
+              )}
+              Generate 200 Examples
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Multi-Model Training Strategy</CardTitle>
+          <CardDescription>
+            Optimized approach using different AI models for specialized tasks
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-4 border rounded-lg">
+              <h3 className="font-semibold text-blue-600 mb-2">GPT-4o</h3>
+              <p className="text-sm text-gray-600 mb-2">Decision Engine</p>
+              <ul className="text-xs space-y-1">
+                <li>• Price modeling</li>
+                <li>• Final summaries</li>
+                <li>• Trust scoring</li>
+              </ul>
+            </div>
+            
+            <div className="p-4 border rounded-lg">
+              <h3 className="font-semibold text-green-600 mb-2">Gemini</h3>
+              <p className="text-sm text-gray-600 mb-2">Market Intelligence</p>
+              <ul className="text-xs space-y-1">
+                <li>• Price bands</li>
+                <li>• City patterns</li>
+                <li>• Market reconciliation</li>
+              </ul>
+            </div>
+            
+            <div className="p-4 border rounded-lg">
+              <h3 className="font-semibold text-purple-600 mb-2">Anthropic</h3>
+              <p className="text-sm text-gray-600 mb-2">Safety Classification</p>
+              <ul className="text-xs space-y-1">
+                <li>• PII detection</li>
+                <li>• Fraud classification</li>
+                <li>• Content moderation</li>
+              </ul>
+            </div>
+            
+            <div className="p-4 border rounded-lg">
+              <h3 className="font-semibold text-orange-600 mb-2">Perplexity</h3>
+              <p className="text-sm text-gray-600 mb-2">Real-time Research</p>
+              <ul className="text-xs space-y-1">
+                <li>• Market verification</li>
+                <li>• Anomaly detection</li>
+                <li>• Price validation</li>
+              </ul>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

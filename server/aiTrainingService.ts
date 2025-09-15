@@ -1,7 +1,8 @@
 import OpenAI from 'openai';
-import { GoogleGenerativeAI } from '@google/genai';
+import { GoogleGenAI } from '@google/genai';
 import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
+import { randomUUID } from 'crypto';
 import { 
   type TrainingData, 
   type AiPrediction, 
@@ -15,7 +16,7 @@ import {
 // Training service for fine-tuning LLM models
 export class AiTrainingService {
   private openai: OpenAI;
-  private gemini: GoogleGenerativeAI;
+  private gemini: GoogleGenAI;
   private anthropic: Anthropic;
 
   constructor() {
@@ -23,7 +24,7 @@ export class AiTrainingService {
       apiKey: process.env.OPENAI_API_KEY
     });
     
-    this.gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+    this.gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
     
     this.anthropic = new Anthropic({
       apiKey: process.env.ANTHROPIC_API_KEY
@@ -58,7 +59,7 @@ export class AiTrainingService {
       const finalPrice = Math.round(estimatedPrice * variance);
       
       const example: TrainingData = {
-        id: crypto.randomUUID(),
+        id: randomUUID(),
         source: ["CarDekho", "OLX", "Cars24"][Math.floor(Math.random() * 3)] as any,
         raw_text: `${brand} ${this.getRandomModel(brand)} ${year} petrol ${mileage}km excellent condition ${area}`,
         normalized: {
@@ -154,7 +155,7 @@ export class AiTrainingService {
       
       // Upload training file
       const file = await this.openai.files.create({
-        file: new Blob([jsonlData], { type: 'application/jsonl' }),
+        file: await OpenAI.toFile(Buffer.from(jsonlData), 'training.jsonl'),
         purpose: 'fine-tune'
       });
       
@@ -163,7 +164,7 @@ export class AiTrainingService {
       // Create fine-tuning job
       const fineTuneJob = await this.openai.fineTuning.jobs.create({
         training_file: file.id,
-        model: "gpt-4o-2024-08-06", // Latest GPT-4 model for fine-tuning
+        model: "gpt-4o-mini-2024-07-18", // Supported fine-tuning model
         hyperparameters: {
           n_epochs: 3,
           batch_size: 1,
@@ -237,7 +238,7 @@ export class AiTrainingService {
       const prediction = JSON.parse(response.choices[0].message.content || '{}');
       
       const aiPrediction: AiPrediction = {
-        id: crypto.randomUUID(),
+        id: randomUUID(),
         listing_id: listing.id,
         model_version: modelId,
         predictions: prediction,

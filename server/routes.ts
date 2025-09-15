@@ -347,12 +347,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/ai/generate-training-data', async (req, res) => {
     try {
       const { count = 100 } = req.body;
+      
+      console.log(`🎯 Generating ${count} synthetic training examples...`);
       const trainingData = await aiTrainingService.generateSyntheticTrainingData(count);
       
       res.json({
         message: `Generated ${trainingData.length} training examples`,
         count: trainingData.length,
-        examples: trainingData.slice(0, 5), // Return first 5 as preview
+        examples: trainingData.slice(0, 3), // Return first 3 as preview
         timestamp: new Date().toISOString()
       });
       
