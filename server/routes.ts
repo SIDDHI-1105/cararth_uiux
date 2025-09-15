@@ -259,6 +259,179 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Comprehensive health check endpoint
+  app.get('/api/health', async (req, res) => {
+    try {
+      console.log('🔍 Comprehensive health check requested');
+      const startTime = Date.now();
+      
+      // Initialize health status
+      const healthData: any = {
+        timestamp: new Date().toISOString(),
+        overallStatus: 'healthy',
+        services: {},
+        summary: {
+          healthy: 0,
+          degraded: 0,
+          offline: 0,
+          total: 0
+        },
+        responseTime: 0,
+        version: '1.0.0'
+      };
+
+      // Check ingestion service
+      try {
+        const { batchIngestionService } = await import('./batchIngestion.js');
+        const ingestionStatus = batchIngestionService.getStatus();
+        healthData.services.ingestion = {
+          status: ingestionStatus.isIngesting ? 'active' : 'idle',
+          details: ingestionStatus
+        };
+      } catch (error) {
+        healthData.services.ingestion = {
+          status: 'offline',
+          error: 'Service unavailable'
+        };
+      }
+
+      // Check AI services
+      try {
+        const { aiDataExtractionService } = await import('./aiDataExtraction.js');
+        const extractionMetrics = aiDataExtractionService.getCostMetrics();
+        
+        healthData.services.ai = {
+          status: extractionMetrics.averageListingsPerCall > 0 ? 'healthy' : 'idle',
+          dailyUsage: {
+            calls: extractionMetrics.dailyUsage.firecrawlCalls,
+            limit: extractionMetrics.dailyUsage.dailyLimit
+          }
+        };
+      } catch (error) {
+        healthData.services.ai = {
+          status: 'offline',
+          error: 'AI services unavailable'
+        };
+      }
+
+      // Check Perplexity service
+      try {
+        const perplexityMetrics = unifiedPerplexityService.getPerformanceMetrics();
+        const isHealthy = perplexityMetrics.errorRate < 50 && perplexityMetrics.totalRequests >= 0;
+        healthData.services.perplexity = {
+          status: isHealthy ? 'healthy' : (perplexityMetrics.totalRequests > 0 ? 'degraded' : 'idle'),
+          errorRate: perplexityMetrics.errorRate,
+          totalRequests: perplexityMetrics.totalRequests
+        };
+      } catch (error) {
+        healthData.services.perplexity = {
+          status: 'offline',
+          error: 'Perplexity service unavailable'
+        };
+      }
+
+      // Check Claude service
+      try {
+        const claudeMetrics = claudeService.getMetrics();
+        healthData.services.claude = {
+          status: claudeMetrics.classificationCalls > 0 ? 'healthy' : 'idle',
+          metrics: claudeMetrics
+        };
+      } catch (error) {
+        healthData.services.claude = {
+          status: 'offline',
+          error: 'Claude service unavailable'
+        };
+      }
+
+      // Check OfficialFirecrawlMcp service
+      try {
+        const { aiDataExtractionService } = await import('./aiDataExtraction.js');
+        // Access the actual MCP instance from the AI service
+        const mcpStatus = (aiDataExtractionService as any).officialMcp?.getStatus();
+        if (mcpStatus) {
+          healthData.services.firecrawlMcp = {
+            status: mcpStatus.ready ? 'healthy' : (mcpStatus.connecting ? 'connecting' : 'idle'),
+            type: mcpStatus.type,
+            version: mcpStatus.version
+          };
+        } else {
+          healthData.services.firecrawlMcp = {
+            status: 'offline',
+            error: 'MCP service not initialized'
+          };
+        }
+      } catch (error) {
+        healthData.services.firecrawlMcp = {
+          status: 'offline',
+          error: 'MCP service unavailable'
+        };
+      }
+
+      // Check database connectivity
+      try {
+        if (process.env.DATABASE_URL) {
+          // Test actual PostgreSQL connection
+          const { db } = await import('./db.js');
+          await db.execute('SELECT 1 as health_check');
+          healthData.services.database = {
+            status: 'healthy',
+            type: 'postgresql'
+          };
+        } else {
+          // In-memory storage
+          await storage.getCars({ limit: 1 });
+          healthData.services.database = {
+            status: 'healthy',
+            type: 'memory'
+          };
+        }
+      } catch (error) {
+        healthData.services.database = {
+          status: 'offline',
+          error: 'Database connection failed'
+        };
+      }
+
+      // Calculate summary statistics
+      Object.values(healthData.services).forEach((service: any) => {
+        healthData.summary.total++;
+        if (service.status === 'healthy' || service.status === 'active') {
+          healthData.summary.healthy++;
+        } else if (service.status === 'degraded' || service.status === 'idle') {
+          healthData.summary.degraded++;
+        } else {
+          healthData.summary.offline++;
+        }
+      });
+
+      // Determine overall status
+      if (healthData.summary.offline > 0) {
+        healthData.overallStatus = 'degraded';
+      } else if (healthData.summary.degraded > healthData.summary.healthy) {
+        healthData.overallStatus = 'warning';
+      }
+
+      // Calculate response time
+      healthData.responseTime = Date.now() - startTime;
+
+      // Set appropriate HTTP status code
+      const httpStatus = healthData.overallStatus === 'healthy' ? 200 : 
+                        healthData.overallStatus === 'warning' ? 200 : 503;
+
+      res.status(httpStatus).json(healthData);
+
+    } catch (error) {
+      console.error('❌ Health check failed:', error);
+      res.status(500).json({
+        timestamp: new Date().toISOString(),
+        overallStatus: 'critical',
+        error: 'Health check system failure',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // AI Training Endpoints
   
   // Start price modeling training
