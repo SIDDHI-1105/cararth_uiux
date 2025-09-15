@@ -1,5 +1,6 @@
 // Zod schemas for external API response validation
 import { z } from 'zod';
+import { logError, LogCategory } from './logging';
 
 // Schema for Gemini API response structure
 export const GeminiResponseSchema = z.object({
@@ -88,7 +89,10 @@ export function safeParseJSON<T>(
     if (validated.success) {
       return { success: true, data: validated.data };
     } else {
-      console.error('Schema validation failed:', validated.error.issues);
+      logError(`Schema validation failed: ${validated.error.issues.map(i => i.message).join(', ')}`, {
+        category: LogCategory.VALIDATION,
+        operation: 'safeParseJSON'
+      });
       return { 
         success: false, 
         error: `Schema validation failed: ${validated.error.issues.map(i => i.message).join(', ')}`,
@@ -96,7 +100,10 @@ export function safeParseJSON<T>(
       };
     }
   } catch (parseError) {
-    console.error('JSON parsing failed:', parseError);
+    logError(`JSON parsing failed: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`, {
+      category: LogCategory.VALIDATION,
+      operation: 'safeParseJSON'
+    });
     return { 
       success: false, 
       error: `JSON parsing failed: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`,
@@ -117,14 +124,20 @@ export function validateApiResponse<T>(
     if (validated.success) {
       return { success: true, data: validated.data };
     } else {
-      console.error(`${operationName} validation failed:`, validated.error.issues);
+      logError(`${operationName} validation failed: ${validated.error.issues.map(i => i.message).join(', ')}`, {
+        category: LogCategory.EXTERNAL_API,
+        operation: operationName
+      });
       return { 
         success: false, 
         error: `${operationName} validation failed: ${validated.error.issues.map(i => i.message).join(', ')}`
       };
     }
   } catch (validationError) {
-    console.error(`${operationName} validation error:`, validationError);
+    logError(`${operationName} validation error: ${validationError instanceof Error ? validationError.message : 'Unknown error'}`, {
+      category: LogCategory.EXTERNAL_API,
+      operation: operationName
+    });
     return { 
       success: false, 
       error: `${operationName} validation error: ${validationError instanceof Error ? validationError.message : 'Unknown error'}`

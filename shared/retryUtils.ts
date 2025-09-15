@@ -1,4 +1,5 @@
 // Utility functions for retry logic with exponential backoff and jitter
+import { logError, logWarn, LogCategory } from './logging';
 export interface RetryOptions {
   maxAttempts?: number;
   baseDelayMs?: number;
@@ -100,10 +101,10 @@ export async function withRetry<T>(
       }
     } catch (error) {
       lastError = error;
-      console.error(`Attempt ${attempt}/${maxAttempts} failed:`, {
-        error: error.message,
-        attempt,
-        maxAttempts
+      logError(`Retry attempt ${attempt}/${maxAttempts} failed: ${error.message}`, {
+        category: LogCategory.EXTERNAL_API,
+        operation: 'withRetry',
+        requestId: `retry_${Date.now()}`
       });
       
       // Don't retry on last attempt or if error is not retryable
@@ -114,7 +115,10 @@ export async function withRetry<T>(
       // Calculate delay with exponential backoff
       const delay = Math.min(baseDelayMs * Math.pow(2, attempt - 1), maxDelayMs);
       
-      console.log(`Retrying in ${delay}ms... (attempt ${attempt + 1}/${maxAttempts})`);
+      logWarn(`Retrying in ${delay}ms (attempt ${attempt + 1}/${maxAttempts})`, {
+        category: LogCategory.EXTERNAL_API,
+        operation: 'withRetry'
+      });
       await sleep(delay, jitterFactor);
     }
   }
@@ -135,7 +139,10 @@ export async function withRetryBatch<T>(
         const data = await withRetry(operation, options);
         return { success: true, data, attempts: 1 };
       } catch (error) {
-        console.error(`Batch operation ${index} failed after retries:`, error.message);
+        logError(`Batch operation ${index} failed after retries: ${error.message}`, {
+          category: LogCategory.EXTERNAL_API,
+          operation: 'withRetryBatch'
+        });
         return { success: false, error, attempts: options.maxAttempts || 3 };
       }
     })

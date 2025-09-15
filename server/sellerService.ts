@@ -235,7 +235,7 @@ Response format:
   }
 
   // Simulate posting to Cars24
-  private async postToCars24(listing: SellerListing): Promise<{ success: boolean; listingId?: string; error?: string }> {
+  private async postToCars24(listing: SellerListing): Promise<{ success: boolean; listingId: string; error?: never } | { success: boolean; listingId?: never; error: string }> {
     // In a real implementation, this would make actual API calls to Cars24
     // For now, we'll simulate the process
     return new Promise((resolve) => {
@@ -258,7 +258,7 @@ Response format:
   }
 
   // Simulate posting to CarDekho
-  private async postToCarDekho(listing: SellerListing): Promise<{ success: boolean; listingId?: string; error?: string }> {
+  private async postToCarDekho(listing: SellerListing): Promise<{ success: boolean; listingId: string; error?: never } | { success: boolean; listingId?: never; error: string }> {
     return new Promise((resolve) => {
       setTimeout(() => {
         const success = Math.random() > 0.15;
@@ -278,7 +278,7 @@ Response format:
   }
 
   // Simulate posting to Facebook Marketplace
-  private async postToFacebookMarketplace(listing: SellerListing): Promise<{ success: boolean; listingId?: string; error?: string }> {
+  private async postToFacebookMarketplace(listing: SellerListing): Promise<{ success: boolean; listingId: string; error?: never } | { success: boolean; listingId?: never; error: string }> {
     return new Promise((resolve) => {
       setTimeout(() => {
         const success = Math.random() > 0.2;
@@ -339,7 +339,7 @@ Response format:
     await db
       .update(sellerListings)
       .set({
-        inquiryCount: listing.inquiryCount + 1,
+        inquiryCount: (listing.inquiryCount || 0) + 1,
         updatedAt: new Date(),
       })
       .where(eq(sellerListings.id, listing.id));

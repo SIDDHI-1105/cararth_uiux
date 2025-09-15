@@ -1,5 +1,6 @@
 // Centralized error handling utilities and process-level error handlers
 import type { Request, Response, NextFunction } from 'express';
+import { setGlobalLogger, type ILogger, LogCategory as SharedLogCategory } from '../shared/logging';
 
 // Error types for better categorization
 export enum ErrorCategory {
@@ -36,6 +37,51 @@ export function createAppError(
   return error;
 }
 
+// Production-grade logger that implements shared interface
+export class ProductionLogger implements ILogger {
+  error(message: string, context?: any): void {
+    const errorInfo = {
+      level: 'ERROR',
+      message,
+      timestamp: new Date().toISOString(),
+      ...context
+    };
+    console.error('🔥 ERROR:', errorInfo);
+  }
+
+  warn(message: string, context?: any): void {
+    const errorInfo = {
+      level: 'WARN',
+      message,
+      timestamp: new Date().toISOString(),
+      ...context
+    };
+    console.warn('⚠️ WARN:', errorInfo);
+  }
+
+  info(message: string, context?: any): void {
+    const errorInfo = {
+      level: 'INFO',
+      message,
+      timestamp: new Date().toISOString(),
+      ...context
+    };
+    console.info('ℹ️ INFO:', errorInfo);
+  }
+
+  debug(message: string, context?: any): void {
+    if (process.env.NODE_ENV === 'development') {
+      const errorInfo = {
+        level: 'DEBUG',
+        message,
+        timestamp: new Date().toISOString(),
+        ...context
+      };
+      console.debug('🐛 DEBUG:', errorInfo);
+    }
+  }
+}
+
 // Safe logging without PII
 export function logError(error: any, context: string = '', requestId?: string) {
   const errorInfo = {
@@ -48,11 +94,12 @@ export function logError(error: any, context: string = '', requestId?: string) {
     stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
   };
   
-  // Log based on severity
+  // Use production logger
+  const logger = new ProductionLogger();
   if (error.statusCode >= 500) {
-    console.error('🔥 Critical Error:', errorInfo);
+    logger.error('Critical Error', errorInfo);
   } else if (error.statusCode >= 400) {
-    console.warn('⚠️ Client Error:', errorInfo);
+    logger.warn('Client Error', errorInfo);
   } else {
     console.info('ℹ️ Info:', errorInfo);
   }

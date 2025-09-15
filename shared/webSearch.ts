@@ -7,6 +7,7 @@ import {
   validateApiResponse,
   type SearchListing
 } from "./apiSchemas.js";
+import { logInfo, logWarn, logError, LogCategory } from "./logging";
 
 // Web search functionality for price comparison
 export interface SearchResult {
@@ -20,7 +21,10 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 const circuitBreaker = new CircuitBreaker(5, 60000, 30000);
 
 export async function webSearch(query: string): Promise<SearchResult[]> {
-  console.log(`Searching for: ${query}`);
+  logInfo(`Initiating web search for: ${query}`, {
+    category: LogCategory.EXTERNAL_API,
+    operation: 'webSearch'
+  });
   
   if (!process.env.GEMINI_API_KEY) {
     throw new Error('Search service unavailable - API configuration required');
@@ -88,7 +92,10 @@ Include realistic seller details while respecting data usage rights and Indian l
     // First validate the Gemini API response structure
     const responseValidation = validateApiResponse(response, GeminiResponseSchema, 'Gemini API response');
     if (!responseValidation.success) {
-      console.warn('Gemini API response validation failed:', responseValidation.error);
+      logWarn(`Gemini API response validation failed: ${responseValidation.error}`, {
+        category: LogCategory.EXTERNAL_API,
+        operation: 'webSearch'
+      });
       // Continue with fallback instead of throwing
     }
     
@@ -117,19 +124,28 @@ Include realistic seller details while respecting data usage rights and Indian l
         });
         
         if (validatedListings.length > 0) {
-          console.log(`✅ Successfully validated ${validatedListings.length} search listings`);
+          logInfo(`Successfully validated ${validatedListings.length} search listings`, {
+            category: LogCategory.EXTERNAL_API,
+            operation: 'webSearch'
+          });
           return validatedListings;
         }
       }
       
-      console.warn('Schema validation failed for web search results');
+      logWarn('Schema validation failed for web search results', {
+        category: LogCategory.VALIDATION,
+        operation: 'webSearch'
+      });
     }
     
     // Unable to get valid data
     throw new Error('Unable to fetch valid search results - please try again later');
     
   } catch (error) {
-    console.error('Web search error:', error.message);
+    logError(`Web search error: ${error.message}`, {
+      category: LogCategory.EXTERNAL_API,
+      operation: 'webSearch'
+    });
     throw new Error('Search service temporarily unavailable');
   }
 }
