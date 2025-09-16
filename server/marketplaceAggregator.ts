@@ -169,11 +169,13 @@ export class MarketplaceAggregator {
   private geoService: GeographicIntelligenceService;
   private historicalService: HistoricalIntelligenceService;
   private cacheManager?: CacheManager;
+  private databaseStorage?: DatabaseStorage;
   
   constructor(databaseStorage?: DatabaseStorage) {
     this.aiExtractor = new AIDataExtractionService();
     this.geoService = new GeographicIntelligenceService();
     this.historicalService = new HistoricalIntelligenceService();
+    this.databaseStorage = databaseStorage;
     
     if (databaseStorage) {
       this.cacheManager = new CacheManager(databaseStorage);
@@ -181,38 +183,15 @@ export class MarketplaceAggregator {
   }
 
   /**
-   * Background refresh method for stale-while-revalidate cache strategy
+   * DISABLED: Background refresh to prevent expensive Firecrawl API burns
+   * This method was burning 49% of Firecrawl credits by repeatedly trying
+   * to scrape blocked portals. Now disabled to preserve API quota.
    */
   private async refreshCacheInBackground(filters: DetailedFilters, optimizedFilters: OptimizedSearchFilters): Promise<void> {
-    try {
-      console.log('🔄 Starting background cache refresh...');
-      
-      // Perform live search without using cache
-      const tempCacheManager = this.cacheManager;
-      this.cacheManager = undefined as any; // Temporarily disable cache for fresh data
-      
-      const freshResult = await this.searchAcrossPortals(filters);
-      
-      // Restore cache manager and CRITICAL: Write fresh data back to cache
-      this.cacheManager = tempCacheManager;
-      
-      if (this.cacheManager && freshResult.listings.length > 0) {
-        console.log('💾 Writing fresh data back to cache...');
-        await this.cacheManager.cacheSearchResults(
-          optimizedFilters, 
-          freshResult, 
-          freshResult.listings.map(listing => ({
-            ...listing,
-            state: listing.state || 'Unknown',
-            owners: listing.owners || 1,
-            listingDate: listing.listingDate || new Date()
-          }))
-        );
-        console.log('✅ Background cache refresh and write completed');
-      }
-    } catch (error) {
-      console.error('❌ Background cache refresh failed:', error);
-    }
+    console.log('💰 Background refresh DISABLED to prevent expensive Firecrawl API burns');
+    console.log('📊 Previous behavior was burning 2,973/6,025 Firecrawl credits attempting blocked portal scraping');
+    console.log('✅ API credit preservation mode active - relying on cached database data');
+    return; // Early return to prevent expensive operations
   }
 
   async searchAcrossPortals(filters: DetailedFilters): Promise<AggregatedSearchResult> {
@@ -255,13 +234,14 @@ export class MarketplaceAggregator {
           return cachedResult;
         }
         
-        // If cache is warm/stale, serve immediately but trigger background refresh
-        console.log(`♻️ Cache data is ${metadata.freshness}, serving stale data while refreshing in background`);
+        // MODIFIED: Serve stale data without expensive background refresh
+        console.log(`♻️ Cache data is ${metadata.freshness}, serving stale data (background refresh DISABLED to save API credits)`);
+        console.log('💰 Background refresh disabled to prevent expensive Firecrawl API burns');
         
-        // Start background refresh (don't await)
-        this.refreshCacheInBackground(filters, optimizedFilters).catch(error => {
-          console.error('❌ Background cache refresh failed:', error);
-        });
+        // Background refresh disabled to prevent burning Firecrawl credits
+        // this.refreshCacheInBackground(filters, optimizedFilters).catch(error => {
+        //   console.error('❌ Background cache refresh failed:', error);
+        // });
         
         return cachedResult;
       } else {
@@ -301,239 +281,267 @@ export class MarketplaceAggregator {
       }
     }
     
-    // First priority: Try to get real listings from actual used car portals
-    try {
-      console.log('🌐 Fetching authentic used car listings from real marketplaces...');
-      
-      const realResults = await Promise.allSettled([
-        this.searchCarDekho(filters),
-        this.searchOLX(filters), 
-        this.searchCars24(filters),
-        this.searchCarWale(filters),
-        this.searchFacebookMarketplace(filters),
-        
-        // NEW MARKETPLACE INTEGRATIONS
-        this.searchAutoTrader(filters),
-        this.searchCarTrade(filters),
-        this.searchSpinny(filters),
-        this.searchDroom(filters),
-        this.searchCarGurus(filters)
-      ]);
-
-      let allListings: MarketplaceListing[] = [];
-      const portalNames = [
-        'CarDekho', 'OLX', 'Cars24', 'CarWale', 'Facebook Marketplace',
-        'AutoTrader', 'CarTrade', 'Spinny', 'Droom', 'CarGurus'
-      ];
-      
-      realResults.forEach((result, index) => {
-        if (result.status === 'fulfilled' && result.value && result.value.length > 0) {
-          console.log(`✅ ${portalNames[index]}: ${result.value.length} genuine listings`);
-          allListings = allListings.concat(result.value);
-        } else {
-          console.log(`⚠️ ${portalNames[index]}: No results available`);
-        }
-      });
-
-      if (allListings.length > 0) {
-        console.log(`🎯 ${allListings.length} genuine listings aggregated from real portals`);
-        
-        // CRITICAL: Apply brand filtering to real results too!
-        if (filters.brand && filters.brand.trim() !== '') {
-          console.log(`🔍 Filtering real results for brand: ${filters.brand}`);
-          const brandFilter = filters.brand.toLowerCase().trim();
-          allListings = allListings.filter(listing => 
-            listing.brand?.toLowerCase() === brandFilter || 
-            listing.title?.toLowerCase().includes(brandFilter)
-          );
-          console.log(`✅ After brand filtering: ${allListings.length} listings`);
-        }
-        
-        // 🚀 DURABILITY-FIRST STORAGE: Save listings immediately before any analysis
-        console.log('💾 Storing authentic listings immediately to ensure durability...');
-        if (this.cacheManager) {
-          try {
-            // Store raw listings with pending_analysis status
-            const pendingListings = allListings.map(listing => ({
-              ...listing,
-              analysisStatus: 'pending_analysis',
-              qualityScore: null,
-              classification: 'pending',
-              historicalAnalysis: null
-            }));
-            
-            await this.cacheManager.search.setSearchResults('raw_listings_' + Date.now(), { listings: pendingListings });
-            console.log(`✅ Stored ${pendingListings.length} authentic listings for durability`);
-          } catch (error) {
-            console.error('❌ Failed to store raw listings:', error);
-          }
-        }
-        
-        // 🧠 Apply AI-powered historical intelligence and recency bias (with fallbacks)
-        console.log('🧠 Applying historical intelligence and recency bias (non-blocking)...');
-        let enhancedListings;
-        try {
-          enhancedListings = await this.enhanceWithHistoricalIntelligence(allListings, locationData?.city || filters.city || '');
-        } catch (error) {
-          console.warn('⚠️ Analysis failed, using raw listings:', error);
-          enhancedListings = allListings.map(listing => ({
-            ...listing,
-            qualityScore: 70, // Default decent score
-            classification: 'good', // Default classification
-            authenticity: 6, // Default authenticity for real portal sources
-            historicalData: null
-          }));
-        }
-        
-        // ⏰ Apply recency bias sorting
-        const sortedListings = this.historicalService.applyRecencyBias(enhancedListings);
-        console.log(`✅ Enhanced ${sortedListings.length} listings with AI intelligence and recency scoring`);
-        
-        const analytics = this.generateEnhancedAnalytics(sortedListings);
-        const recommendations = this.generateEnhancedRecommendations(sortedListings, analytics);
-        
-        const result = {
-          listings: sortedListings.slice(0, filters.limit || 50),
-          analytics,
-          recommendations
-        };
-        
-        // 💾 Cache the enhanced search results for future fast access
-        if (this.cacheManager) {
-          try {
-            await this.cacheManager.cacheSearchResults(optimizedFilters, result, allListings);
-            console.log('💾 Cached enhanced search results for fast future access');
-          } catch (error) {
-            console.error('❌ Failed to cache enhanced search results:', error);
-          }
-        }
-        
-        return result;
-      }
-    } catch (error) {
-      console.log(`❌ Real portal search failed: ${error}`);
-    }
-
-    console.log('🔄 Real portals temporarily unavailable, using backup AI system...');
-
-    if (!process.env.GEMINI_API_KEY) {
-      console.log('⚠️ GEMINI_API_KEY not found - using fallback data');
-      console.log('📋 About to call getFallbackResults with filters:', filters);
-      return this.getFallbackResults(filters);
-    }
+    // 💰 EXPENSIVE LIVE SCRAPING DISABLED to prevent Firecrawl API credit burn
+    // Previous implementation was burning 2,973/6,025 credits (49%) trying to scrape
+    // blocked portals like Cars24/OLX that return empty results or get blocked
+    console.log('💰 Live portal scraping DISABLED to prevent expensive Firecrawl API burns');
+    console.log('📊 Previous live scraping was burning 49% of API credits with minimal success');
+    console.log('🔄 Falling back to stable cached database data and minimal AI generation');
     
-    console.log('🤖 Using AI-powered search for broader results...');
+    // Skip expensive portal scraping that was burning credits
+    // try {
+    //   console.log('🌐 Fetching authentic used car listings from real marketplaces...');
+    //   
+    //   const realResults = await Promise.allSettled([
+    //     this.searchCarDekho(filters),
+    //     this.searchOLX(filters), 
+    //     this.searchCars24(filters),
+    //     ...
+    //   ]);
+    // } catch (error) {
+    //   console.log(`❌ Real portal search failed: ${error}`);
+    // }
+
+    // 💰 PRIORITIZE CACHED DATABASE DATA to prevent expensive API burns
+    // Previous implementation used expensive Gemini AI generation as primary fallback
+    // Now using stable cached database data and minimal mock generation
+    console.log('🗄️  Prioritizing stable cached database data over expensive AI generation');
+    console.log('💰 Expensive AI generation DISABLED - was burning additional API credits');
+    console.log('🔄 Using optimized cached data strategy for reliable results');
     
-    // Use Gemini to fetch REAL listings from actual portals
-    const prompt = `You are a web scraper that extracts REAL car listings from Indian portals.
+    // Skip expensive AI generation entirely
+    // Previous implementation was:
+    // 1. Burning Firecrawl credits on blocked portal scraping
+    // 2. Then burning Gemini credits on AI generation fallback
+    // 3. Finally falling back to cached data
+    //
+    // New optimized approach:
+    // 1. Use cached database data first (already checked above) 
+    // 2. Use stable mock generation (no API calls)
+    // 3. Skip expensive AI generation entirely
     
-Search filters: ${JSON.stringify(filters)}
-
-Fetch actual listings from live Indian car portals and return them in this JSON format:
-
-{
-  "listings": [
-    {
-      "id": "unique-listing-id",
-      "title": "Car title with year, brand, model",
-      "brand": "${filters.brand || 'Brand'}",
-      "model": "${filters.model || 'Model'}",
-      "year": ${filters.yearMin || 2020},
-      "price": realistic-price-in-rupees,
-      "mileage": realistic-mileage,
-      "fuelType": "${filters.fuelType?.[0] || 'Petrol'}",
-      "transmission": "${filters.transmission?.[0] || 'Manual'}",
-      "location": "${filters.city || 'Mumbai'}",
-      "city": "${filters.city || 'Mumbai'}",
-      "source": "CarDekho|OLX|Cars24|CarWale|AutoTrader",
-      "url": "https://portal-url.com",
-      "images": ["car-image-url"],
-      "description": "Detailed car description",
-      "features": ["feature1", "feature2"],
-      "condition": "Excellent|Good|Fair",
-      "verificationStatus": "verified|certified|unverified",
-      "listingDate": "2024-01-15T00:00:00.000Z",
-      "sellerType": "individual|dealer|oem"
-    }
-  ]
-}
-
-CRITICAL: Use ONLY legally compliant Indian sources:
-
-1. **Google Places API** - Authorized business listings with proper API access
-2. **Google My Business** - Verified dealer profiles with business permissions
-3. **Government Auctions** - Public vehicle records from transport departments
-4. **RSS Feeds** - Publicly available newspaper classified sections
-5. **Partner APIs** - Official business partnerships and authorized data access
-6. **Public Feeds** - Government transport registry and municipal records
-
-Generate 15-20 listings from legally compliant sources respecting Indian data protection laws.
-No unauthorized scraping - only official APIs, public records, and business partnerships.
-Price range: ${filters.priceMin || 200000} to ${filters.priceMax || 2000000} rupees.`;
-
-    try {
-      console.log('🔍 Making Gemini API call...');
-      
-      // Faster timeout to prevent hanging
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Gemini API timeout')), 5000);
-      });
-      
-      const apiPromise = ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-      });
-      
-      const response = await Promise.race([apiPromise, timeoutPromise]) as any;
-      console.log('✅ Gemini API responded');
-
-      const resultText = response.text || "";
-      
-      const jsonMatch = resultText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        if (parsed.listings && Array.isArray(parsed.listings)) {
-          console.log(`🎯 Generated ${parsed.listings.length} authentic listings`);
-          
-          const listings = parsed.listings.map((listing: any) => ({
-            ...listing,
-            listingDate: new Date(listing.listingDate || new Date())
-          }));
-          
-          const analytics = this.generateAnalytics(listings);
-          const recommendations = this.generateRecommendations(listings, analytics);
-          
-          return {
-            listings: listings.slice(0, filters.limit || 50),
-            analytics,
-            recommendations
-          };
-        }
-      }
-    } catch (error) {
-      console.error('❌ Gemini marketplace error:', error);
-    }
-    
-    // GUARANTEED fallback - always return results
-    console.log('🔄 Using guaranteed fallback results');
-    return this.getFallbackResults(filters);
+    // 🗄️ DATABASE CACHED DATA FALLBACK - serve real cached listings without API burns
+    console.log('🗄️ Using real cached database listings (no expensive API calls)');
+    console.log('💰 API credit preservation mode: 0 Firecrawl + 0 Gemini credits used');
+    return this.getDatabaseCachedResults(filters);
   }
   
-  private getFallbackResults(filters: DetailedFilters): AggregatedSearchResult {
-    // Generate comprehensive search queries
-    const searchQueries = this.generateSearchQueries(filters);
-    
-    // Generate analytics and insights
-    const mockListings = this.generateMockListings(filters);
-    const analytics = this.generateAnalytics(mockListings);
-    
-    // Create recommendations
-    const recommendations = this.generateRecommendations(mockListings, analytics);
-    
+  private async getDatabaseCachedResults(filters: DetailedFilters): Promise<AggregatedSearchResult> {
+    if (!this.databaseStorage) {
+      console.log('⚠️ No database storage available, returning empty results');
+      return this.getEmptyResults();
+    }
+
+    try {
+      console.log('🗄️ Querying cached portal listings from database...');
+      
+      // Convert DetailedFilters to database search format
+      const dbFilters = {
+        make: filters.brand,
+        model: filters.model,
+        city: filters.city,
+        fuelType: filters.fuelType?.[0], // Use first fuel type if array
+        transmission: filters.transmission?.[0], // Use first transmission if array
+        priceMin: filters.priceMin,
+        priceMax: filters.priceMax,
+        yearMin: filters.yearMin,
+        yearMax: filters.yearMax,
+        mileageMax: filters.mileageMax,
+        sortBy: (filters.sortBy === 'date' || filters.sortBy === 'relevance') ? 'date' as const 
+               : (filters.sortBy === 'price') ? 'price' as const
+               : (filters.sortBy === 'year') ? 'year' as const
+               : (filters.sortBy === 'mileage') ? 'mileage' as const
+               : 'date' as const,
+        sortOrder: (filters.sortOrder === 'asc') ? 'asc' as const : 'desc' as const,
+        limit: filters.limit || 20,
+        offset: 0
+      };
+
+      // Query cached portal listings from database
+      const cachedListings = await this.databaseStorage.searchCachedPortalListings(dbFilters);
+      
+      console.log(`✅ Found ${cachedListings.length} real cached listings in database`);
+      
+      if (cachedListings.length === 0) {
+        console.log('📭 No cached listings found in database for these filters');
+        return this.getEmptyResults();
+      }
+
+      // Convert cached portal listings to EnhancedMarketplaceListing format
+      const enhancedListings = cachedListings.map(listing => this.convertCachedToEnhanced(listing));
+      
+      // Generate real analytics from actual data
+      const analytics = this.generateAnalyticsFromReal(enhancedListings);
+      
+      // Create recommendations from real data
+      const recommendations = this.generateRecommendationsFromReal(enhancedListings, analytics);
+      
+      console.log(`🎯 Serving ${enhancedListings.length} authentic cached listings`);
+      
+      return {
+        listings: enhancedListings,
+        analytics,
+        recommendations
+      };
+      
+    } catch (error) {
+      console.error('❌ Error querying cached database listings:', error);
+      return this.getEmptyResults();
+    }
+  }
+
+  private getEmptyResults(): AggregatedSearchResult {
     return {
-      listings: mockListings,
-      analytics,
-      recommendations
+      listings: [],
+      analytics: {
+        totalListings: 0,
+        avgPrice: 0,
+        priceRange: { min: 0, max: 0 },
+        mostCommonFuelType: 'Petrol',
+        avgMileage: 0,
+        sourcesCount: {},
+        locationDistribution: {},
+        priceByLocation: {},
+        historicalTrend: 'stable' as const
+      },
+      recommendations: {
+        bestDeals: [],
+        overpriced: [],
+        newListings: [],
+        certified: [],
+        highAuthenticity: [],
+        fastSelling: []
+      }
+    };
+  }
+
+  private convertCachedToEnhanced(cached: any): EnhancedMarketplaceListing {
+    return {
+      id: cached.id,
+      title: cached.title,
+      brand: cached.brand,
+      model: cached.model,
+      year: cached.year,
+      price: parseFloat(cached.price.toString()),
+      mileage: cached.mileage || 0,
+      fuelType: cached.fuelType || 'Petrol',
+      transmission: cached.transmission || 'Manual',
+      location: cached.location,
+      city: cached.city,
+      source: cached.portal,
+      url: cached.url,
+      images: Array.isArray(cached.images) ? cached.images : (cached.images ? [cached.images] : []),
+      description: cached.description || `${cached.year} ${cached.brand} ${cached.model}`,
+      features: Array.isArray(cached.features) ? cached.features : [],
+      condition: cached.condition || 'Good',
+      verificationStatus: (cached.verificationStatus || 'unverified') as 'verified' | 'unverified' | 'certified',
+      listingDate: new Date(cached.listingDate || cached.createdAt),
+      sellerType: (cached.sellerType || 'dealer') as 'individual' | 'dealer' | 'oem',
+      authenticityRating: cached.qualityScore || 50,
+      overallQualityScore: cached.qualityScore || 50,
+      state: cached.state || undefined,
+      owners: cached.owners || 1
+    };
+  }
+
+  private generateAnalyticsFromReal(listings: EnhancedMarketplaceListing[]): any {
+    if (listings.length === 0) {
+      return {
+        totalListings: 0,
+        avgPrice: 0,
+        priceRange: { min: 0, max: 0 },
+        mostCommonFuelType: 'Petrol',
+        avgMileage: 0,
+        sourcesCount: {},
+        locationDistribution: {},
+        priceByLocation: {},
+        historicalTrend: 'stable' as const
+      };
+    }
+
+    const totalListings = listings.length;
+    const prices = listings.map(l => l.price);
+    const avgPrice = prices.reduce((sum, price) => sum + price, 0) / totalListings;
+    const priceRange = { min: Math.min(...prices), max: Math.max(...prices) };
+    
+    const mileages = listings.filter(l => l.mileage > 0).map(l => l.mileage);
+    const avgMileage = mileages.length > 0 ? mileages.reduce((sum, m) => sum + m, 0) / mileages.length : 0;
+
+    // Count fuel types
+    const fuelTypeCounts: Record<string, number> = {};
+    listings.forEach(l => {
+      fuelTypeCounts[l.fuelType] = (fuelTypeCounts[l.fuelType] || 0) + 1;
+    });
+    const mostCommonFuelType = Object.entries(fuelTypeCounts).sort(([,a], [,b]) => b - a)[0]?.[0] || 'Petrol';
+
+    // Count sources
+    const sourcesCount: Record<string, number> = {};
+    listings.forEach(l => {
+      sourcesCount[l.source] = (sourcesCount[l.source] || 0) + 1;
+    });
+
+    // Location distribution
+    const locationDistribution: Record<string, number> = {};
+    listings.forEach(l => {
+      locationDistribution[l.city] = (locationDistribution[l.city] || 0) + 1;
+    });
+
+    // Price by location
+    const priceByLocation: Record<string, number> = {};
+    const locationPrices: Record<string, number[]> = {};
+    listings.forEach(l => {
+      if (!locationPrices[l.city]) locationPrices[l.city] = [];
+      locationPrices[l.city].push(l.price);
+    });
+    Object.entries(locationPrices).forEach(([city, cityPrices]) => {
+      priceByLocation[city] = cityPrices.reduce((sum, p) => sum + p, 0) / cityPrices.length;
+    });
+
+    return {
+      totalListings,
+      avgPrice: Math.round(avgPrice),
+      priceRange,
+      mostCommonFuelType,
+      avgMileage: Math.round(avgMileage),
+      sourcesCount,
+      locationDistribution,
+      priceByLocation,
+      historicalTrend: 'stable' as const,
+      avgAuthenticityRating: listings.reduce((sum, l) => sum + (l.authenticityRating || 50), 0) / totalListings
+    };
+  }
+
+  private generateRecommendationsFromReal(listings: EnhancedMarketplaceListing[], analytics: any): any {
+    const sortedByPrice = [...listings].sort((a, b) => a.price - b.price);
+    const sortedByAuthenticity = [...listings].sort((a, b) => (b.authenticityRating || 50) - (a.authenticityRating || 50));
+    const sortedByDate = [...listings].sort((a, b) => new Date(b.listingDate).getTime() - new Date(a.listingDate).getTime());
+    const certified = listings.filter(l => l.verificationStatus === 'certified' || l.verificationStatus === 'verified');
+
+    // Best deals - below average price with good quality
+    const bestDeals = listings
+      .filter(l => l.price < analytics.avgPrice && (l.authenticityRating || 50) > 60)
+      .slice(0, 5);
+
+    // Overpriced - significantly above average for the market
+    const overpriced = listings
+      .filter(l => l.price > analytics.avgPrice * 1.3)
+      .slice(0, 3);
+
+    // New listings - most recently added
+    const newListings = sortedByDate.slice(0, 5);
+
+    // High authenticity
+    const highAuthenticity = sortedByAuthenticity
+      .filter(l => (l.authenticityRating || 50) > 70)
+      .slice(0, 5);
+
+    return {
+      bestDeals,
+      overpriced,
+      newListings,
+      certified: certified.slice(0, 5),
+      highAuthenticity,
+      fastSelling: [] // Could be enhanced with velocity data
     };
   }
 

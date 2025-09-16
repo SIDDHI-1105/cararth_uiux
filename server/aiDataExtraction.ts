@@ -51,7 +51,7 @@ export class AIDataExtractionService {
     this.dailyUsage = {
       firecrawlCalls: 0,
       lastResetDate: today,
-      dailyLimit: 500 // Limit to 500 Firecrawl calls per day (leaving buffer from 3,025 monthly)
+      dailyLimit: 25 // DRASTICALLY REDUCED: Limit to 25 Firecrawl calls per day to prevent credit burn
     };
     
     this.costMetrics = {
@@ -130,16 +130,20 @@ export class AIDataExtractionService {
       
       this.costMetrics.firecrawlCacheMisses++;
       
-      // Check URL deduplication
+      // ENHANCED URL deduplication to prevent redundant expensive calls
       if (await this.isUrlRecentlyProcessed(url)) {
-        console.log(`⏭️ Skipping recently processed URL: ${url.slice(0, 50)}...`);
+        console.log(`💰 Skipping recently processed URL to save API credits: ${url.slice(0, 50)}...`);
+        console.log('✅ URL deduplication active - preventing redundant Firecrawl API calls');
+        this.costMetrics.urlsDeduplicated++;
         return []; // Return empty if recently processed
       }
       
-      // Check daily rate limit
+      // STRICT daily rate limit to prevent credit burn
       if (!this.isUnderDailyLimit()) {
-        console.log(`🚫 Daily Firecrawl limit reached (${this.dailyUsage.firecrawlCalls}/${this.dailyUsage.dailyLimit})`);
-        throw new Error('Daily Firecrawl API limit reached - falling back to alternative extraction');
+        console.log(`💰 Daily Firecrawl limit reached (${this.dailyUsage.firecrawlCalls}/${this.dailyUsage.dailyLimit}) - CREDIT PRESERVATION MODE`);
+        console.log('🚫 Firecrawl API calls blocked to prevent expensive credit burn');
+        console.log('📉 Previous daily limit of 500 was burning credits - reduced to 25 for protection');
+        throw new Error('Daily Firecrawl API limit reached for credit preservation - using cached data instead');
       }
       
       // Track usage
