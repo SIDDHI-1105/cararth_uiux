@@ -2,22 +2,23 @@ import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { FullWidthLayout } from "@/components/layout";
 import HeroSection from "@/components/hero-section";
-import CarFilters from "@/components/car-filters";
+import UnifiedFilters from "@/components/unified-filters";
 import TheAssistant from "@/components/the-assistant";
-import CarCard from "@/components/car-card";
+import MinimalCarCard from "@/components/minimal-car-card";
 import MarketplaceResults from "@/components/marketplace-results";
 import FeaturedListingModal from "@/components/featured-listing-modal";
 import PremiumUpgrade from "@/components/premium-upgrade";
 import RecentlyViewed from "@/components/recently-viewed";
 import SearchLimitPopup from "@/components/search-limit-popup";
 import PriceSimulator from "@/components/price-simulator";
+import { HapticProvider, useHapticFeedback, HapticButton } from "@/components/haptic-feedback";
 import { SEOHead, createWebsiteSchema, createOrganizationSchema } from "@/components/seo-head";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, Search, Globe, Star, Crown, MessageSquare, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, Globe, Star, Crown, MessageSquare, Users, Phone } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { type CarListing } from "@shared/schema";
 
@@ -30,7 +31,7 @@ interface UsageStatus {
 import { BrandWordmark } from "@/components/brand-wordmark";
 import { Link } from "wouter";
 
-export default function Home() {
+function HomeContent() {
   const [filters, setFilters] = useState<Record<string, any>>({});
   const [sortBy, setSortBy] = useState("price-low");
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
@@ -44,6 +45,10 @@ export default function Home() {
   const [searchLimitData, setSearchLimitData] = useState<any>(null);
   const [usageStatus, setUsageStatus] = useState<any>(null);
   const [currentSearchQuery, setCurrentSearchQuery] = useState<string>('');
+  const [showContactDialog, setShowContactDialog] = useState(false);
+  const [selectedCarForContact, setSelectedCarForContact] = useState<{id: string, title: string} | null>(null);
+  
+  const { feedback } = useHapticFeedback();
 
   // Dynamic SEO based on search filters
   const dynamicSEO = useMemo(() => {
@@ -194,10 +199,12 @@ export default function Home() {
     }
     
     console.log('🔧 Applied filters:', newFilters);
+    feedback.selection(); // Haptic feedback on filter change
     setFilters(newFilters);
   };
 
   const handleFavoriteToggle = (carId: string) => {
+    feedback.heart(); // Haptic feedback for favorite action
     setFavorites(prev => {
       const newFavorites = new Set(prev);
       if (newFavorites.has(carId)) {
@@ -207,6 +214,53 @@ export default function Home() {
       }
       return newFavorites;
     });
+  };
+
+  const handleContactSeller = (carId: string) => {
+    const car = cars.find(c => c.id === carId);
+    if (car) {
+      feedback.button(); // Haptic feedback for button action
+      setSelectedCarForContact({ id: carId, title: car.title });
+      setShowContactDialog(true);
+    }
+  };
+
+  const handleAdvancedSearch = () => {
+    feedback.button(); // Haptic feedback for search action
+    
+    // Convert filters to marketplace search format
+    const searchFilters: any = {
+      sortBy: "price",
+      sortOrder: "asc"
+    };
+    
+    if (filters.brand && filters.brand !== "all") {
+      searchFilters.brand = filters.brand;
+    }
+    if (filters.city && filters.city !== "all") {
+      searchFilters.city = filters.city;
+    }
+    if (filters.fuelType && filters.fuelType !== "all") {
+      searchFilters.fuelType = [filters.fuelType];
+    }
+    if (filters.transmission && filters.transmission !== "all") {
+      searchFilters.transmission = filters.transmission;
+    }
+    if (filters.priceMin) {
+      searchFilters.priceMin = filters.priceMin;
+    }
+    if (filters.priceMax) {
+      searchFilters.priceMax = filters.priceMax;
+    }
+    if (filters.yearMin) {
+      searchFilters.yearMin = filters.yearMin;
+    }
+    if (filters.yearMax) {
+      searchFilters.yearMax = filters.yearMax;
+    }
+    
+    console.log('🔄 Advanced search with filters:', searchFilters);
+    handleMarketplaceSearch(searchFilters);
   };
 
   const handleMakeFeatured = (car: CarListing) => {
@@ -446,7 +500,11 @@ export default function Home() {
 
             <TabsContent value="local">
               <div className="flex flex-col lg:flex-row gap-8">
-                <CarFilters onApplyFilters={handleFilterChange} />
+                <UnifiedFilters 
+                  filters={filters}
+                  onFiltersChange={handleFilterChange}
+                  onSearch={handleAdvancedSearch}
+                />
                 
                 <div className="lg:w-3/4">
                   <div className="flex justify-between items-center mb-6">
@@ -485,13 +543,14 @@ export default function Home() {
                   
                   {!isLoading && (
                     <div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8" data-testid="grid-car-listings">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8" data-testid="grid-car-listings">
                         {sortedCars.map((car) => (
-                          <CarCard
+                          <MinimalCarCard
                             key={car.id}
                             car={car}
                             onFavoriteToggle={handleFavoriteToggle}
                             isFavorite={favorites.has(car.id)}
+                            onContactSeller={handleContactSeller}
                           />
                         ))}
                       </div>
@@ -558,6 +617,54 @@ export default function Home() {
         }}
         data={searchLimitData}
       />
+
+      {/* Contact Seller Dialog */}
+      <Dialog open={showContactDialog} onOpenChange={setShowContactDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Phone className="w-5 h-5" />
+              Contact Seller
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              {selectedCarForContact?.title && `Interested in "${selectedCarForContact.title}"`}
+            </p>
+            <div className="flex flex-col gap-3">
+              <HapticButton 
+                className="w-full" 
+                hapticType="button"
+                onClick={() => {
+                  feedback.success();
+                  // TODO: Implement contact seller functionality
+                  console.log('📞 Contact seller for car:', selectedCarForContact?.id);
+                  setShowContactDialog(false);
+                }}
+              >
+                <Phone className="w-4 h-4 mr-2" />
+                Get Seller Contact
+              </HapticButton>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowContactDialog(false)}
+                className="w-full"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </FullWidthLayout>
+  );
+}
+
+// Wrap everything in HapticProvider
+export default function Home() {
+  return (
+    <HapticProvider>
+      <HomeContent />
+    </HapticProvider>
   );
 }

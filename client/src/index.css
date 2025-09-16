@@ -313,6 +313,57 @@
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+/* Enhanced Haptic Feedback Styles */
+.haptic-button {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
+}
+
+.haptic-button:active {
+  transform: scale(0.95);
+}
+
+.haptic-button:focus {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+/* Improved Card Hover Effects with Haptic Feel */
+.card-hover {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+.card-hover:active {
+  transform: translateY(-1px);
+}
+
+/* Minimal Design Utilities */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Enhanced Interactive Elements */
+.interactive-element {
+  @apply transition-all duration-200 ease-in-out;
+  @apply hover:scale-[1.02] active:scale-[0.98];
+  @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+}
+
 /* Utility Classes */
 .container {
   @apply max-w-7xl mx-auto px-4 lg:px-8;
