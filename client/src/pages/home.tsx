@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ChevronLeft, ChevronRight, Search, Globe, Star, Crown, MessageSquare, Users } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { type CarListing } from "@shared/schema";
 
 // Type definition for usage status data
@@ -97,7 +97,11 @@ export default function Home() {
       try {
         const response = await apiRequest('POST', '/api/marketplace/search', searchFilters);
         const result = await response.json();
-        console.log('🔍 DEBUG API response images:', result.listings?.slice(0, 2)?.map(c => ({ title: c.title, images: c.images })));
+        console.log('🔍 DEBUG API response images:', result.listings?.slice(0, 2)?.map((c: CarListing) => ({ title: c.title, images: c.images })));
+        
+        // Manually refresh usage status after successful local search
+        queryClient.invalidateQueries({ queryKey: ["/api/usage/status"] });
+        
         return result.listings || [];
       } catch (error: any) {
         if (error.isSearchLimitExceeded) {
@@ -213,7 +217,9 @@ export default function Home() {
   // Usage status query for showing remaining searches
   const { data: usageStatusData } = useQuery({
     queryKey: ["/api/usage/status"],
-    refetchInterval: 10000, // Refresh every 10 seconds
+    refetchOnWindowFocus: true, // Refetch when user returns to window
+    staleTime: 5 * 60 * 1000, // Data is fresh for 5 minutes
+    // Removed excessive refetchInterval to reduce server load
   });
 
   const marketplaceSearch = useMutation({
@@ -254,6 +260,9 @@ export default function Home() {
     },
     onSuccess: (data) => {
       console.log('✅ Marketplace search successful:', data);
+      
+      // Manually refetch usage status after search to update remaining searches
+      queryClient.invalidateQueries({ queryKey: ["/api/usage/status"] });
       
       // Auto-switch to All Portals tab to show search results
       setActiveTab("marketplace");
