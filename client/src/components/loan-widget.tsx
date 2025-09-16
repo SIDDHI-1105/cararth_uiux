@@ -122,7 +122,7 @@ export default function LoanWidget({ carPrice, carTitle = "this car" }: LoanWidg
               Monthly EMI
             </div>
             <div className="text-2xl font-bold text-green-600" data-testid="text-widget-emi">
-              {formatInLakhs(result.monthlyEMI)}
+              {formatIndianCurrency(Number(result.monthlyEMI))}
             </div>
           </div>
           
@@ -131,19 +131,19 @@ export default function LoanWidget({ carPrice, carTitle = "this car" }: LoanWidg
             <div className="bg-white/50 dark:bg-gray-800/50 p-2 rounded">
               <div className="text-muted-foreground">Total Interest</div>
               <div className="font-semibold text-orange-600" data-testid="text-widget-interest">
-                {formatInLakhs(result.totalInterest)}
+                {formatIndianCurrency(Number(result.totalInterest))}
               </div>
             </div>
             <div className="bg-white/50 dark:bg-gray-800/50 p-2 rounded">
               <div className="text-muted-foreground">Total Payment</div>
               <div className="font-semibold" data-testid="text-widget-total">
-                {formatInLakhs(result.totalAmount)}
+                {formatIndianCurrency(Number(result.totalAmount))}
               </div>
             </div>
             <div className="bg-white/50 dark:bg-gray-800/50 p-2 rounded">
               <div className="text-muted-foreground">Principal</div>
               <div className="font-semibold text-blue-600" data-testid="text-widget-principal">
-                {formatInLakhs(result.totalPrincipal)}
+                {formatIndianCurrency(Number(result.totalPrincipal))}
               </div>
             </div>
           </div>
