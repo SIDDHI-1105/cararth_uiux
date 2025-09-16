@@ -437,13 +437,6 @@ function HomeContent() {
           <p className="text-lg text-muted-foreground text-center mb-8">
             Find your perfect car from CarDekho, OLX, Cars24, CarWale & more - all in one place.
           </p>
-          {/* Search Options: AI Assistant */}
-          <div className="mb-8 flex justify-center">
-            <TheAssistant 
-              isAuthenticated={false}
-              userEmail={null}
-            />
-          </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
             <TabsList className="grid w-full grid-cols-3">
@@ -474,11 +467,23 @@ function HomeContent() {
 
             <TabsContent value="local">
               <div className="flex flex-col lg:flex-row gap-8">
-                <UnifiedFilters 
-                  filters={filters}
-                  onFiltersChange={handleFilterChange}
-                  onSearch={handleAdvancedSearch}
-                />
+                <div className="lg:w-1/4 space-y-6">
+                  <UnifiedFilters 
+                    filters={filters}
+                    onFiltersChange={handleFilterChange}
+                    onSearch={handleAdvancedSearch}
+                  />
+                  
+                  {/* AI Assistant - Less prominent position */}
+                  <div className="hidden lg:block">
+                    <div className="scale-90 transform origin-top">
+                      <TheAssistant 
+                        isAuthenticated={false}
+                        userEmail={null}
+                      />
+                    </div>
+                  </div>
+                </div>
                 
                 <div className="lg:w-3/4">
                   <div className="flex justify-between items-center mb-6">
