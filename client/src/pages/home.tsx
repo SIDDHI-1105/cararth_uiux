@@ -169,13 +169,7 @@ function HomeContent() {
     handleMarketplaceSearch(marketplaceFilters);
   };
 
-  const handleFilterChange = (filterData: {
-    model?: string;
-    fuelType?: string;
-    transmission?: string;
-    location?: string;
-    budgetRange: [number, number];
-  }) => {
+  const handleFilterChange = (filterData: any) => {
     const newFilters: Record<string, any> = {};
     
     // Handle budget range
@@ -204,7 +198,7 @@ function HomeContent() {
   };
 
   const handleFavoriteToggle = (carId: string) => {
-    feedback.heart(); // Haptic feedback for favorite action
+    feedback.selection(); // Haptic feedback for favorite action
     setFavorites(prev => {
       const newFavorites = new Set(prev);
       if (newFavorites.has(carId)) {
@@ -443,26 +437,6 @@ function HomeContent() {
           <p className="text-lg text-muted-foreground text-center mb-8">
             Find your perfect car from CarDekho, OLX, Cars24, CarWale & more - all in one place.
           </p>
-          
-          {/* Enterprise Partnership Section */}
-          <div className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
-            <div className="text-center">
-              <h3 className="text-2xl font-bold text-blue-800 dark:text-blue-200 mb-3">Enterprise Partnerships & Subscriptions</h3>
-              <p className="text-blue-700 dark:text-blue-300 mb-4 max-w-2xl mx-auto">
-                Looking for bulk car data, API access, or custom automotive solutions? Partner with CarArth for enterprise-level services.
-              </p>
-              <Button 
-                onClick={() => {
-                  window.location.href = 'mailto:connect@cararth.com?subject=Enterprise Partnership Inquiry&body=Hi! I\'m interested in enterprise partnerships and subscriptions with CarArth. Please share more details about your enterprise services.';
-                }}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold"
-                data-testid="button-enterprise-contact"
-              >
-                📧 email us: connect@cararth.com
-              </Button>
-            </div>
-          </div>
-
           {/* Search Options: AI Assistant */}
           <div className="mb-8 flex justify-center">
             <TheAssistant 
@@ -600,6 +574,25 @@ function HomeContent() {
               <PriceSimulator />
             </TabsContent>
           </Tabs>
+          
+          {/* Enterprise Partnership Section */}
+          <div className="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
+            <div className="text-center">
+              <h3 className="text-2xl font-bold text-blue-800 dark:text-blue-200 mb-3">Enterprise Partnerships & Subscriptions</h3>
+              <p className="text-blue-700 dark:text-blue-300 mb-4 max-w-2xl mx-auto">
+                Looking for bulk car data, API access, or custom automotive solutions? Partner with CarArth for enterprise-level services.
+              </p>
+              <Button 
+                onClick={() => {
+                  window.location.href = 'mailto:connect@cararth.com?subject=Enterprise Partnership Inquiry&body=Hi! I\'m interested in enterprise partnerships and subscriptions with CarArth. Please share more details about your enterprise services.';
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold"
+                data-testid="button-enterprise-contact"
+              >
+                📧 email us: connect@cararth.com
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
