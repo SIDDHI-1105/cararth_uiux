@@ -173,9 +173,11 @@ function HomeContent() {
     const newFilters: Record<string, any> = {};
     
     // Handle budget range
-    if (filterData.budgetRange[0] > 0 || filterData.budgetRange[1] < 2000000) {
-      newFilters.priceMin = filterData.budgetRange[0];
-      newFilters.priceMax = filterData.budgetRange[1];
+    if (filterData.budgetRange && Array.isArray(filterData.budgetRange) && filterData.budgetRange.length >= 2) {
+      if (filterData.budgetRange[0] > 0 || filterData.budgetRange[1] < 2000000) {
+        newFilters.priceMin = filterData.budgetRange[0];
+        newFilters.priceMax = filterData.budgetRange[1];
+      }
     }
     
     // Handle other filters
