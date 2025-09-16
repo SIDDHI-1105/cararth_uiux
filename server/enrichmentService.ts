@@ -114,8 +114,8 @@ export class EnrichmentService {
    */
   private buildEnrichmentPrompt(listing: any): string {
     const currentYear = new Date().getFullYear();
-    const carAge = currentYear - listing.year;
-    const kmPerYear = listing.mileage ? Math.round(listing.mileage / carAge) : 0;
+    const carAge = Math.max(1, currentYear - listing.year); // Prevent division by zero
+    const kmPerYear = listing.mileage && carAge > 0 ? Math.round(listing.mileage / carAge) : 0;
     
     return `You are an expert automotive analyst specializing in the Indian used car market. Analyze this specific car listing with deep market knowledge and provide nuanced insights in JSON format:
 

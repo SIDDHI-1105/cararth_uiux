@@ -182,8 +182,8 @@ Base prices on current Indian market conditions for ${carData.year} ${carData.br
           price = price * 100000;
         }
         
-        // Filter reasonable car prices (1 lakh to 50 lakhs)
-        if (price >= 100000 && price <= 5000000) {
+        // Filter reasonable car prices (1 lakh to 1 crore for luxury cars)
+        if (price >= 100000 && price <= 10000000) {
           prices.push(price);
         }
       }
@@ -213,8 +213,8 @@ Base prices on current Indian market conditions for ${carData.year} ${carData.br
 
     // Advanced market trend analysis
     const currentYear = new Date().getFullYear();
-    const carAge = currentYear - carData.year;
-    const kmPerYear = carData.mileage ? carData.mileage / carAge : 0;
+    const carAge = Math.max(1, currentYear - carData.year); // Prevent division by zero
+    const kmPerYear = carData.mileage && carAge > 0 ? Math.round(carData.mileage / carAge) : 0;
     
     let marketTrend: 'rising' | 'falling' | 'stable' = 'stable';
     let demandLevel: 'high' | 'medium' | 'low' = 'medium';
@@ -264,7 +264,7 @@ Base prices on current Indian market conditions for ${carData.year} ${carData.br
       priceRange: { min: minPrice, max: maxPrice },
       marketTrend,
       recommendation,
-      sources: ['CarDekho', 'OLX', 'Cars24', 'CarWale', 'AutoTrader'],
+      sources: ['CarDekho', 'OLX', 'Cars24', 'CarWale', 'Spinny', 'Droom', 'ZigWheels'],
       lastUpdated: new Date()
     };
   }
@@ -316,8 +316,8 @@ Base prices on current Indian market conditions for ${carData.year} ${carData.br
     if (insights.averagePrice > 0) {
       const priceDifference = ((userPrice - insights.averagePrice) / insights.averagePrice) * 100;
       const currentYear = new Date().getFullYear();
-      const carAge = currentYear - carData.year;
-      const kmPerYear = carData.mileage ? carData.mileage / carAge : 0;
+      const carAge = Math.max(1, currentYear - carData.year); // Prevent division by zero
+      const kmPerYear = carData.mileage && carAge > 0 ? Math.round(carData.mileage / carAge) : 0;
       
       // More nuanced price comparison thresholds based on car characteristics
       let lowerThreshold = -10;
@@ -341,13 +341,37 @@ Base prices on current Indian market conditions for ${carData.year} ${carData.br
         comparison = 'fair';
       }
       
-      // Generate sophisticated suggestions
+      // Generate diversified suggestions with data-driven variety
+      const luxuryBrands = ['BMW', 'Mercedes', 'Audi', 'Jaguar', 'Volvo'];
+      const reliableBrands = ['Toyota', 'Honda', 'Maruti', 'Hyundai'];
+      const brandType = luxuryBrands.includes(carData.brand) ? 'luxury' : 
+                       reliableBrands.includes(carData.brand) ? 'reliable' : 'budget';
+      
       if (comparison === 'below') {
-        if (priceDifference < -20) {
-          suggestion = `Exceptional value! Your price is ${Math.abs(priceDifference).toFixed(1)}% below market average of ₹${(insights.averagePrice/100000).toFixed(2)} lakhs. ${kmPerYear > 20000 ? 'Higher mileage justifies the discount.' : 'Consider if there are any undisclosed issues at this price point.'} Excellent opportunity for buyers.`;
-        } else {
-          suggestion = `Great deal! Your price is ${Math.abs(priceDifference).toFixed(1)}% below market average. ${carAge > 5 ? 'Reasonable discount for age.' : 'Competitive pricing for quick sale.'} Strong value proposition for buyers.`;
-        }
+        const belowMessages = [
+          // For -20% and below  
+          ...(priceDifference < -20 ? [
+            `Outstanding value at ${Math.abs(priceDifference).toFixed(1)}% below market rate of ₹${(insights.averagePrice/100000).toFixed(2)} lakhs. ${kmPerYear > 20000 ? 'High usage explains attractive pricing' : 'Unusually low price warrants thorough inspection'}.`,
+            `Exceptional pricing opportunity - ${Math.abs(priceDifference).toFixed(1)}% under market value. ${brandType === 'luxury' ? 'Rare discount for premium brand' : 'Significant savings potential'}.`,
+            `Remarkable deal at ${Math.abs(priceDifference).toFixed(1)}% below average. ${carAge > 7 ? 'Age-appropriate discount' : 'Investigate reason for deep discount'}.`
+          ] : []),
+          // For -10% to -20%
+          ...(priceDifference >= -20 && priceDifference < -15 ? [
+            `Attractive pricing at ${Math.abs(priceDifference).toFixed(1)}% below market average. ${brandType} vehicles in this range offer solid value.`,
+            `Competitive advantage with ${Math.abs(priceDifference).toFixed(1)}% savings vs market rate of ₹${(insights.averagePrice/100000).toFixed(2)} lakhs. ${kmPerYear < 15000 ? 'Reasonable usage pattern' : 'Higher mileage reflected in price'}.`,
+            `Market-smart pricing ${Math.abs(priceDifference).toFixed(1)}% under average. ${carAge <= 5 ? 'Good value for age category' : 'Fair discount considering years of use'}.`
+          ] : []),
+          // For -8% to -15%  
+          ...(priceDifference >= -15 && priceDifference < -8 ? [
+            `Sensible pricing with ${Math.abs(priceDifference).toFixed(1)}% market advantage. ${brandType === 'reliable' ? 'Trust factor adds to value proposition' : 'Budget-conscious choice'}.`,
+            `Value-oriented listing at ${Math.abs(priceDifference).toFixed(1)}% below benchmark. ${kmPerYear > 0 ? `Usage of ${kmPerYear.toLocaleString('en-IN')} km/year is ${kmPerYear < 12000 ? 'excellent' : 'moderate'}` : 'Mileage details recommended'}.`,
+            `Buyer-friendly pricing ${Math.abs(priceDifference).toFixed(1)}% under market norm. ${carAge > 6 ? 'Depreciation factored appropriately' : 'Competitive for age segment'}.`
+          ] : [])
+        ];
+        
+        suggestion = belowMessages[Math.floor(Math.random() * belowMessages.length)] || 
+                    `Favorable pricing at ${Math.abs(priceDifference).toFixed(1)}% below market average.`;
+                    
       } else if (comparison === 'above') {
         if (priceDifference > 25) {
           suggestion = `Premium pricing: ${priceDifference.toFixed(1)}% above market average of ₹${(insights.averagePrice/100000).toFixed(2)} lakhs. ${kmPerYear < 10000 ? 'Low mileage may justify premium.' : 'Consider reducing price for faster sale.'} Ensure exceptional condition to justify pricing.`;
