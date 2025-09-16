@@ -198,7 +198,7 @@ Base prices on current Indian market conditions for ${carData.year} ${carData.br
         averagePrice: 0,
         priceRange: { min: 0, max: 0 },
         marketTrend: 'stable',
-        recommendation: 'Insufficient market data available',
+        recommendation: 'Insufficient market data available for this specific model and year combination',
         sources: [],
         lastUpdated: new Date()
       };
@@ -206,30 +206,57 @@ Base prices on current Indian market conditions for ${carData.year} ${carData.br
 
     const sortedPrices = prices.sort((a, b) => a - b);
     const averagePrice = prices.reduce((sum, price) => sum + price, 0) / prices.length;
+    const medianPrice = sortedPrices[Math.floor(sortedPrices.length / 2)];
     const minPrice = sortedPrices[0];
     const maxPrice = sortedPrices[sortedPrices.length - 1];
+    const priceVariance = maxPrice - minPrice;
 
-    // Calculate trend based on age and mileage
-    let marketTrend: 'rising' | 'falling' | 'stable' = 'stable';
+    // Advanced market trend analysis
     const currentYear = new Date().getFullYear();
     const carAge = currentYear - carData.year;
+    const kmPerYear = carData.mileage ? carData.mileage / carAge : 0;
     
-    if (carAge <= 2 && carData.mileage < 20000) {
+    let marketTrend: 'rising' | 'falling' | 'stable' = 'stable';
+    let demandLevel: 'high' | 'medium' | 'low' = 'medium';
+    
+    // Sophisticated trend analysis based on multiple factors
+    if (carAge <= 3 && kmPerYear < 15000) {
       marketTrend = 'rising';
-    } else if (carAge > 5 || carData.mileage > 80000) {
+      demandLevel = 'high';
+    } else if (carAge > 7 || kmPerYear > 25000) {
       marketTrend = 'falling';
+      demandLevel = 'low';
+    } else if (carAge <= 5 && kmPerYear < 20000) {
+      demandLevel = 'high';
     }
 
-    // Generate recommendation
-    let recommendation = '';
-    const priceInLakhs = averagePrice / 100000;
+    // Brand-specific market insights
+    const luxuryBrands = ['BMW', 'Mercedes', 'Audi', 'Jaguar', 'Volvo'];
+    const reliableBrands = ['Toyota', 'Honda', 'Maruti', 'Hyundai'];
+    const budgetBrands = ['Tata', 'Mahindra', 'Renault', 'Datsun'];
     
-    if (marketTrend === 'rising') {
-      recommendation = `Strong demand for ${carData.year} ${carData.brand} ${carData.model}. Average market price is ₹${priceInLakhs.toFixed(2)} lakhs. Good time to sell.`;
-    } else if (marketTrend === 'falling') {
-      recommendation = `Market price declining for older ${carData.brand} ${carData.model}. Consider competitive pricing around ₹${priceInLakhs.toFixed(2)} lakhs.`;
+    let brandInsight = '';
+    if (luxuryBrands.includes(carData.brand)) {
+      brandInsight = 'Premium brand with higher maintenance costs but strong resale value';
+    } else if (reliableBrands.includes(carData.brand)) {
+      brandInsight = 'Highly reliable brand with excellent service network and strong demand';
+    } else if (budgetBrands.includes(carData.brand)) {
+      brandInsight = 'Budget-friendly option with lower running costs';
+    }
+
+    // Generate sophisticated recommendation
+    const priceInLakhs = averagePrice / 100000;
+    const medianInLakhs = medianPrice / 100000;
+    const variancePercentage = (priceVariance / averagePrice) * 100;
+    
+    let recommendation = '';
+    
+    if (demandLevel === 'high' && marketTrend === 'rising') {
+      recommendation = `${carData.year} ${carData.brand} ${carData.model} shows strong market performance with ${demandLevel} demand. Average pricing: ₹${priceInLakhs.toFixed(2)} lakhs (median: ₹${medianInLakhs.toFixed(2)} lakhs). ${brandInsight}. Market variance: ${variancePercentage.toFixed(1)}% suggests ${variancePercentage > 20 ? 'significant price negotiation potential' : 'relatively stable pricing'}.`;
+    } else if (demandLevel === 'low' || marketTrend === 'falling') {
+      recommendation = `${carData.year} ${carData.brand} ${carData.model} facing market challenges with ${demandLevel} demand. Consider competitive pricing below ₹${medianInLakhs.toFixed(2)} lakhs (market average: ₹${priceInLakhs.toFixed(2)} lakhs). ${brandInsight}. ${kmPerYear > 20000 ? 'Higher mileage impacts resale value significantly.' : 'Reasonable usage pattern supports value retention.'}`;
     } else {
-      recommendation = `Stable market for ${carData.year} ${carData.brand} ${carData.model}. Fair pricing around ₹${priceInLakhs.toFixed(2)} lakhs.`;
+      recommendation = `${carData.year} ${carData.brand} ${carData.model} maintains ${marketTrend} market position with ${demandLevel} demand. Balanced pricing around ₹${medianInLakhs.toFixed(2)}-${priceInLakhs.toFixed(2)} lakhs recommended. ${brandInsight}. ${variancePercentage > 25 ? 'Wide price range suggests thorough market research needed before buying/selling.' : 'Consistent market pricing indicates stable demand.'}`;
     }
 
     return {
@@ -288,19 +315,50 @@ Base prices on current Indian market conditions for ${carData.year} ${carData.br
 
     if (insights.averagePrice > 0) {
       const priceDifference = ((userPrice - insights.averagePrice) / insights.averagePrice) * 100;
+      const currentYear = new Date().getFullYear();
+      const carAge = currentYear - carData.year;
+      const kmPerYear = carData.mileage ? carData.mileage / carAge : 0;
       
-      if (priceDifference < -10) {
+      // More nuanced price comparison thresholds based on car characteristics
+      let lowerThreshold = -10;
+      let upperThreshold = 10;
+      
+      // Adjust thresholds based on car age and market volatility
+      if (carAge > 7) {
+        lowerThreshold = -15; // Older cars have more price variation
+        upperThreshold = 15;
+      } else if (carAge <= 3) {
+        lowerThreshold = -8; // Newer cars have tighter pricing
+        upperThreshold = 8;
+      }
+      
+      // Determine comparison category
+      if (priceDifference < lowerThreshold) {
         comparison = 'below';
-        suggestion = `Your price is ${Math.abs(priceDifference).toFixed(1)}% below market average. Great deal for buyers!`;
-      } else if (priceDifference > 10) {
+      } else if (priceDifference > upperThreshold) {
         comparison = 'above';
-        suggestion = `Your price is ${priceDifference.toFixed(1)}% above market average. Consider reducing for faster sale.`;
       } else {
         comparison = 'fair';
-        suggestion = `Your price is within market range. Fair pricing for current market conditions.`;
+      }
+      
+      // Generate sophisticated suggestions
+      if (comparison === 'below') {
+        if (priceDifference < -20) {
+          suggestion = `Exceptional value! Your price is ${Math.abs(priceDifference).toFixed(1)}% below market average of ₹${(insights.averagePrice/100000).toFixed(2)} lakhs. ${kmPerYear > 20000 ? 'Higher mileage justifies the discount.' : 'Consider if there are any undisclosed issues at this price point.'} Excellent opportunity for buyers.`;
+        } else {
+          suggestion = `Great deal! Your price is ${Math.abs(priceDifference).toFixed(1)}% below market average. ${carAge > 5 ? 'Reasonable discount for age.' : 'Competitive pricing for quick sale.'} Strong value proposition for buyers.`;
+        }
+      } else if (comparison === 'above') {
+        if (priceDifference > 25) {
+          suggestion = `Premium pricing: ${priceDifference.toFixed(1)}% above market average of ₹${(insights.averagePrice/100000).toFixed(2)} lakhs. ${kmPerYear < 10000 ? 'Low mileage may justify premium.' : 'Consider reducing price for faster sale.'} Ensure exceptional condition to justify pricing.`;
+        } else {
+          suggestion = `Slightly above market: ${priceDifference.toFixed(1)}% higher than average. ${carAge <= 3 ? 'Acceptable for newer vehicle with good condition.' : 'Consider moderate price reduction for better market response.'}`;
+        }
+      } else {
+        suggestion = `Well-priced! Your asking price is ${Math.abs(priceDifference).toFixed(1)}% ${priceDifference >= 0 ? 'above' : 'below'} market average of ₹${(insights.averagePrice/100000).toFixed(2)} lakhs. ${kmPerYear > 0 ? `Usage pattern of ${kmPerYear.toLocaleString('en-IN')} km/year is ${kmPerYear < 15000 ? 'favorable' : kmPerYear < 20000 ? 'reasonable' : 'concerning'} for resale value.` : ''} Balanced pricing for current market conditions.`;
       }
     } else {
-      suggestion = 'Unable to compare with market data at this time.';
+      suggestion = `Market data limited for ${carData.year} ${carData.brand} ${carData.model}. Consider researching similar models in nearby cities or consulting with local dealers for accurate pricing guidance.`;
     }
 
     return {

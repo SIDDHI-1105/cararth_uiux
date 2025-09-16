@@ -113,33 +113,47 @@ export class EnrichmentService {
    * Build enrichment prompt for GPT-5
    */
   private buildEnrichmentPrompt(listing: any): string {
-    return `Analyze this Indian used car listing and provide insights in JSON format:
+    const currentYear = new Date().getFullYear();
+    const carAge = currentYear - listing.year;
+    const kmPerYear = listing.mileage ? Math.round(listing.mileage / carAge) : 0;
+    
+    return `You are an expert automotive analyst specializing in the Indian used car market. Analyze this specific car listing with deep market knowledge and provide nuanced insights in JSON format:
 
-Car Details:
-- Make: ${listing.make}
-- Model: ${listing.model}
-- Year: ${listing.year}
-- Price: ₹${listing.price?.toLocaleString('en-IN')}
-- Fuel: ${listing.fuelType || 'Unknown'}
-- Mileage: ${listing.mileage ? listing.mileage.toLocaleString('en-IN') + ' km' : 'Unknown'}
-- City: ${listing.city}
-- Description: ${listing.description || 'None provided'}
+**Car Specifications:**
+- Vehicle: ${listing.make} ${listing.model} (${listing.year})
+- Asking Price: ₹${listing.price?.toLocaleString('en-IN')}
+- Odometer: ${listing.mileage ? listing.mileage.toLocaleString('en-IN') + ' km' : 'Not disclosed'}
+- Fuel Type: ${listing.fuelType || 'Not specified'}
+- Location: ${listing.city}
+- Usage Pattern: ${kmPerYear ? `~${kmPerYear.toLocaleString('en-IN')} km/year` : 'Unknown'}
+- Car Age: ${carAge} years
+- Description: ${listing.description || 'No additional details provided'}
 
-Provide a JSON response with:
+**Market Context & Analysis Guidelines:**
+- Consider ${listing.city} regional preferences (traffic conditions, fuel costs, brand loyalty)
+- Evaluate ${listing.make} ${listing.model} model reputation, reliability, resale trends
+- Factor in ${listing.fuelType} fuel efficiency relevance for city driving
+- Assess mileage vs age ratio (ideal: 10,000-15,000 km/year for used cars)
+- Compare pricing against typical ${carAge}-year-old ${listing.make} models
+- Consider maintenance costs, spare parts availability, service network
+- Account for current market sentiment towards this specific model
+
+**Required JSON Response:**
 {
-  "summary": "One sentence highlighting the key selling points and value proposition",
-  "pros": ["Array of 2-3 positive aspects based on price, condition, features"],
-  "cons": ["Array of 1-2 potential concerns or areas to verify"],
-  "marketInsight": "Brief insight about this car's position in the current Indian market",
-  "confidence": 0.8
+  "summary": "One compelling sentence capturing the unique value proposition and market positioning",
+  "pros": ["2-3 specific advantages considering model reputation, pricing, condition, and local market factors"],
+  "cons": ["1-2 genuine concerns buyers should investigate, considering model-specific issues or market factors"],
+  "marketInsight": "Detailed assessment of this car's competitive position in ${listing.city} market with price justification",
+  "confidence": 0.85
 }
 
-Focus on:
-- Price competitiveness for Indian market
-- Age vs mileage appropriateness  
-- Fuel type suitability for the city
-- Overall value proposition
-- Practical concerns for Indian buyers`;
+**Analysis Depth Required:**
+- Price competitiveness vs similar ${listing.year} ${listing.make} ${listing.model} listings
+- Model-specific reliability and common issues
+- Regional fuel type preferences and infrastructure
+- Ownership cost implications (insurance, maintenance, depreciation)
+- Target buyer profile and demand patterns
+- Seasonal market trends affecting this vehicle category`;
   }
 
   /**
