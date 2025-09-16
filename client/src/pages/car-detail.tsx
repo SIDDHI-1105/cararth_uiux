@@ -128,7 +128,15 @@ export default function CarDetail() {
               <div className="text-3xl font-bold text-accent mb-2" data-testid="text-car-price">
                 {formatPrice(car.price)}
               </div>
-              <div className="text-muted-foreground mb-4">EMI starts at ₹{Math.round((parseFloat(car.price) * 80000) / 12)}/month</div>
+              <div className="text-muted-foreground mb-4">EMI starts at ₹{(() => {
+                const carPrice = parseFloat(car.price);
+                const principal = carPrice * 0.8; // 80% loan
+                const rate = 7.05; // Standard rate
+                const tenure = 5; // 5 years
+                const monthlyRate = rate / 12 / 100;
+                const emi = (principal * monthlyRate * Math.pow(1 + monthlyRate, tenure * 12)) / (Math.pow(1 + monthlyRate, tenure * 12) - 1);
+                return Math.round(emi).toLocaleString('en-IN');
+              })()}/month</div>
               
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div>
