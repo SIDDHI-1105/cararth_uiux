@@ -12,7 +12,7 @@ import {
   ExternalLink,
   TrendingDown
 } from "lucide-react";
-import { calculateLoanDetails, formatIndianCurrency, formatInLakhs } from "@/lib/loan";
+import { calculateLoanDetails, formatIndianCurrency } from "@/lib/loan";
 import { IndicativeLoanDisclaimer } from "@/components/ui/indicative-loan-disclaimer";
 
 interface LoanWidgetProps {
@@ -58,7 +58,7 @@ export default function LoanWidget({ carPrice, carTitle = "this car" }: LoanWidg
         {/* Car Price Display */}
         <div className="bg-muted/50 p-3 rounded-lg">
           <div className="text-sm text-muted-foreground">Car Price</div>
-          <div className="text-xl font-bold text-green-600">{formatInLakhs(carPrice)}</div>
+          <div className="text-xl font-bold text-green-600">{formatIndianCurrency(carPrice)}</div>
         </div>
 
         {/* Down Payment Input */}

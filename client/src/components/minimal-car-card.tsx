@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { type CarListing } from "@shared/schema";
-import { formatInLakhs } from "@/lib/loan";
+import { formatIndianCurrency, calculateLoanDetails } from "@/lib/loan";
 import { FALLBACK_CAR_IMAGE_URL } from '@/lib/constants';
 import { useHapticFeedback, HapticButton } from "@/components/haptic-feedback";
 import { cn } from "@/lib/utils";
@@ -182,10 +182,13 @@ export default function MinimalCarCard({
         {/* Price - Primary Focus */}
         <div className="mb-2">
           <div className="text-2xl font-bold text-foreground" data-testid={`text-price-${car.id}`}>
-            {formatInLakhs(parseFloat(car.price))}
+            {formatIndianCurrency(parseFloat(car.price))}
           </div>
           <div className="text-sm text-muted-foreground">
-            EMI from ₹{Math.round((parseFloat(car.price) * 80000) / 12)}/month
+            {(() => {
+              const { monthlyEMI } = calculateLoanDetails(parseFloat(car.price), 9, 7);
+              return `EMI from ${formatIndianCurrency(Number(monthlyEMI))}/month`;
+            })()}
           </div>
         </div>
 

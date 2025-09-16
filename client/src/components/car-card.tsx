@@ -6,7 +6,7 @@ import { type CarListing } from "@shared/schema";
 import SocialShare from "@/components/social-share";
 import AuthenticityScoreDisplay from "@/components/authenticity-score";
 import { FALLBACK_CAR_IMAGE_URL } from '@/lib/constants';
-import { formatInLakhs } from "@/lib/loan";
+import { formatIndianCurrency } from "@/lib/loan";
 
 interface CarCardProps {
   car: CarListing;
@@ -289,7 +289,7 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
         </div>
         
         <p className="text-2xl font-bold text-accent mb-2" data-testid={`text-price-${car.id}`}>
-          {formatInLakhs(car.price)}*
+          {formatIndianCurrency(parseFloat(car.price))}*
         </p>
         
         <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground mb-4">
@@ -376,7 +376,7 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
             <SocialShare 
               url={`/car/${car.id}`}
               title={car.title}
-              description={`${car.year} ${car.title} - ${formatInLakhs(car.price)} | ${car.city}, ${car.state}`}
+              description={`${car.year} ${car.title} - ${formatIndianCurrency(parseFloat(car.price))} | ${car.city}, ${car.state}`}
             />
             <Link href={`/car/${car.id}`}>
               <Button 
