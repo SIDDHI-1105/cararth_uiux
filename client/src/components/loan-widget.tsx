@@ -77,7 +77,7 @@ export default function LoanWidget({ carPrice, carTitle = "this car" }: LoanWidg
             />
           </div>
           <p className="text-xs text-muted-foreground">
-            Loan amount: {formatInLakhs(principal)}
+            Loan amount: {formatIndianCurrency(principal)}
           </p>
         </div>
 
