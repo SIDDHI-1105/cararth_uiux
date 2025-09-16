@@ -99,6 +99,13 @@ export interface IStorage {
   
   // Search activity tracking
   logUserSearchActivity(activity: InsertUserSearchActivity): Promise<UserSearchActivity>;
+  
+  // Claude AI rate limiting
+  getUserClaudeRequestCount(userId: string): Promise<number>;
+  incrementClaudeRequestCount(userId: string): Promise<void>;
+  
+  // Additional methods for backward compatibility
+  getCars(options?: { limit?: number }): Promise<Car[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -889,6 +896,15 @@ export class MemStorage implements IStorage {
         this.anonymousSearchActivity.delete(id);
       }
     }
+  }
+  
+  // Additional method for backward compatibility
+  async getCars(options?: { limit?: number }): Promise<Car[]> {
+    const cars = Array.from(this.cars.values());
+    if (options?.limit) {
+      return cars.slice(0, options.limit);
+    }
+    return cars;
   }
 }
 

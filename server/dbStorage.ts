@@ -1468,4 +1468,62 @@ export class DatabaseStorage implements IStorage {
       // Don't throw - cleanup failure shouldn't break the application
     }
   }
+
+  // Claude AI request rate limiting (10 requests per minute per user)
+  private claudeRequestCounts: Map<string, { count: number; resetTime: number }> = new Map();
+
+  async getUserClaudeRequestCount(userId: string): Promise<number> {
+    const now = Date.now();
+    const userLimit = this.claudeRequestCounts.get(userId);
+    
+    if (!userLimit || now > userLimit.resetTime) {
+      // Reset or initialize counter (1-minute window)
+      this.claudeRequestCounts.set(userId, {
+        count: 0,
+        resetTime: now + (60 * 1000) // 1 minute from now
+      });
+      return 0;
+    }
+    
+    return userLimit.count;
+  }
+
+  async incrementClaudeRequestCount(userId: string): Promise<void> {
+    const now = Date.now();
+    const userLimit = this.claudeRequestCounts.get(userId);
+    
+    if (!userLimit || now > userLimit.resetTime) {
+      // Initialize new window
+      this.claudeRequestCounts.set(userId, {
+        count: 1,
+        resetTime: now + (60 * 1000)
+      });
+    } else {
+      // Increment existing window
+      userLimit.count += 1;
+      this.claudeRequestCounts.set(userId, userLimit);
+    }
+  }
+
+  // Additional method for backward compatibility
+  async getCars(options?: { limit?: number }): Promise<Car[]> {
+    const cacheKey = `cars:all:${options?.limit || 'unlimited'}`;
+    const cached = this.getCached<Car[]>(cacheKey);
+    if (cached) return cached;
+
+    try {
+      let query = this.db.select().from(cars);
+      
+      if (options?.limit) {
+        query = query.limit(options.limit);
+      }
+      
+      const result = await query;
+      this.setCache(cacheKey, result);
+      return result;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getCars operation');
+      return [];
+    }
+  }
 }

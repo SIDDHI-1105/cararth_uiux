@@ -42,7 +42,7 @@ import {
   insertCommunityPostSchema,
   insertCommunityCommentSchema 
 } from "@shared/schema";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { assistantService, type AssistantQuery } from "./assistantService";
 import { cacheManager, withCache, HyderabadCacheWarmer } from "./advancedCaching.js";
 import { enhanceHyderabadSearch, HyderabadMarketIntelligence } from "./hyderabadOptimizations.js";
@@ -56,6 +56,30 @@ import { ImageProxyService } from "./imageProxyService.js";
 import { aiTrainingService } from "./aiTrainingService.js";
 import crypto from "crypto";
 import { logError, ErrorCategory, createAppError, asyncHandler } from "./errorHandling.js";
+
+// Security utility functions to prevent PII leakage in logs
+const maskPhoneNumber = (phone: string): string => {
+  if (!phone) return '****';
+  // For phone numbers like +919876543210, show +91****3210
+  if (phone.startsWith('+91') && phone.length >= 13) {
+    return `+91****${phone.slice(-4)}`;
+  }
+  // For other formats, show first 2 and last 4 characters
+  if (phone.length > 6) {
+    return `${phone.slice(0, 2)}****${phone.slice(-4)}`;
+  }
+  return '****';
+};
+
+const logOTPSecurely = (phone: string, otp: string, context: string) => {
+  // Only log OTP in development mode, and even then mask the phone
+  if (process.env.NODE_ENV === 'development' && process.env.ENABLE_DEVELOPER_MODE === 'true') {
+    console.log(`📱 [DEV] OTP for ${maskPhoneNumber(phone)}: ${otp} (${context})`);
+  } else {
+    // In production, log only that OTP was generated without exposing sensitive data
+    console.log(`📱 OTP generated for user (Context: ${context})`);
+  }
+};
 
 // Developer mode check
 const isDeveloperMode = (req: any) => {
@@ -1134,7 +1158,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               phoneMasked: seller.phone ? `${seller.phone.slice(0, 3)}****${seller.phone.slice(-2)}` : undefined,
               emailMasked: seller.email ? `${seller.email.split('@')[0].slice(0, 2)}***@${seller.email.split('@')[1]}` : undefined,
               profileImageUrl: seller.profileImageUrl || undefined,
-              verified: seller.phoneVerified,
+              verified: seller.phoneVerified ?? undefined,
               badges: seller.subscriptionTier !== 'free' ? ['Premium'] : undefined
             };
             return res.json(sellerInfo);
@@ -1205,7 +1229,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const cars = await storage.searchCars(filters);
       
       // Include search limit info in response for free users
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any)?.claims?.sub;
       const user = await storage.getUser(userId);
       const searchLimitInfo = await storage.checkUserSearchLimit(userId);
       
@@ -1269,9 +1293,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .onConflictDoUpdate({
           target: userReputation.userId,
           set: {
-            postsCount: db.sql`${userReputation.postsCount} + 1`,
-            postsScore: db.sql`${userReputation.postsScore} + 10`,
-            totalReputation: db.sql`${userReputation.totalReputation} + 10`,
+            postsCount: sql`${userReputation.postsCount} + 1`,
+            postsScore: sql`${userReputation.postsScore} + 10`,
+            totalReputation: sql`${userReputation.totalReputation} + 10`,
             lastActiveAt: new Date(),
           },
         });
@@ -1368,7 +1392,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Increment view count
       await db
         .update(communityPosts)
-        .set({ views: db.sql`${communityPosts.views} + 1` })
+        .set({ views: sql`${communityPosts.views} + 1` })
         .where(eq(communityPosts.id, id));
 
       // Get comments for the post
@@ -1435,9 +1459,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .onConflictDoUpdate({
           target: userReputation.userId,
           set: {
-            commentsCount: db.sql`${userReputation.commentsCount} + 1`,
-            commentsScore: db.sql`${userReputation.commentsScore} + 5`,
-            totalReputation: db.sql`${userReputation.totalReputation} + 5`,
+            commentsCount: sql`${userReputation.commentsCount} + 1`,
+            commentsScore: sql`${userReputation.commentsScore} + 5`,
+            totalReputation: sql`${userReputation.totalReputation} + 5`,
             lastActiveAt: new Date(),
           },
         });
@@ -1475,9 +1499,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Seller not found" });
       }
 
-      // Don't send sensitive info
-      const { password, ...sellerInfo } = seller;
-      res.json(sellerInfo);
+      // Don't send sensitive info - user type doesn't have password field
+      res.json(seller);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch seller information" });
     }
@@ -1490,7 +1513,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       isDeveloper: devMode,
       environment: process.env.NODE_ENV,
       authenticated: req.isAuthenticated ? req.isAuthenticated() : false,
-      userEmail: req.user?.claims?.email || null
+      userEmail: (req.user as any)?.claims?.email || null
     });
   });
 
@@ -1654,8 +1677,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Always include search info even in error responses (for authenticated users)
       let searchInfo = null;
       try {
-        if (req.user && req.user.claims && req.user.claims.sub && !isDeveloperMode(req)) {
-          const userId = req.user.claims.sub;
+        if (req.user && (req.user as any)?.claims?.sub && !isDeveloperMode(req)) {
+          const userId = (req.user as any).claims.sub;
           const user = await storage.getUser(userId);
           const searchLimitInfo = await storage.checkUserSearchLimit(userId);
           searchInfo = {
@@ -1814,7 +1837,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         });
       } else {
-        const userId = req.user.claims.sub;
+        const userId = (req.user as any)?.claims?.sub;
         const user = await storage.getUser(userId);
         const searchLimitInfo = await storage.checkUserSearchLimit(userId);
         
@@ -1914,10 +1937,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       
       // Store in session for demo
-      if (!req.session) req.session = {};
-      req.session.contactRequest = contactRequest;
+      if (!req.session) {
+        req.session = {} as any;
+      }
+      (req.session as any).contactRequest = contactRequest;
       
-      console.log(`📱 OTP for ${phone}: ${otp} (Listing: ${listingTitle})`);
+      logOTPSecurely(phone, otp, `Listing: ${listingTitle}`);
       
       res.json({ 
         success: true, 
@@ -1939,7 +1964,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Missing required fields' });
       }
 
-      const contactRequest = req.session?.contactRequest;
+      const contactRequest = (req.session as any)?.contactRequest;
       
       if (!contactRequest || 
           contactRequest.phone !== phone || 
@@ -1953,7 +1978,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       contactRequest.verifiedAt = new Date();
       
       // In production, save to database and notify seller
-      console.log(`✅ Contact verified: ${contactRequest.name} (${contactRequest.phone}) interested in ${contactRequest.listingTitle}`);
+      console.log(`✅ Contact verified: ${contactRequest.name} (${maskPhoneNumber(contactRequest.phone)}) interested in ${contactRequest.listingTitle}`);
       
       res.json({ 
         success: true, 
@@ -2205,9 +2230,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create contact record for tracking
       const contact = await storage.createContact({
-        name,
-        phone,
-        email: email || null,
+        buyerName: name,
+        buyerPhone: phone,
+        buyerEmail: email || '',
         message: message || null,
         carId: listingId,
       });
@@ -2216,7 +2241,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // 1. Send SMS with OTP to phone number
       // 2. Store OTP temporarily for verification
       
-      console.log(`📱 Contact request from ${name} (${phone}) for listing ${listingTitle}`);
+      console.log(`📱 Contact request from ${name} (${maskPhoneNumber(phone)}) for listing ${listingTitle}`);
       
       res.status(201).json({ 
         success: true,
@@ -2244,7 +2269,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid OTP format" });
       }
 
-      console.log(`✅ OTP verified for ${phone} - enabling messaging for listing ${listingId}`);
+      console.log(`✅ OTP verified for ${maskPhoneNumber(phone)} - enabling messaging for listing ${listingId}`);
       
       res.json({ 
         success: true,
@@ -3042,7 +3067,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { listing } = validatedData;
 
       console.log(`🧠 Claude classification request for listing: ${listing.id}`);
-      const classification = await claudeService.classifyListing(listing);
+      const classification = await claudeService.classifyListing({
+        ...listing,
+        description: listing.description || `${listing.year} ${listing.brand} ${listing.model} listing`
+      });
       
       res.json({
         success: true,
@@ -3078,7 +3106,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { listing } = validatedData;
 
       console.log(`🔍 Claude quality analysis request for listing: ${listing.id}`);
-      const qualityAnalysis = await claudeService.analyzeQuality(listing);
+      const qualityAnalysis = await claudeService.analyzeQuality({
+        ...listing,
+        description: listing.description || `${listing.year} ${listing.brand} ${listing.model} listing`
+      });
       
       res.json({
         success: true,
@@ -3150,7 +3181,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { listings } = validatedData;
 
       console.log(`📊 Claude batch analysis request for ${listings.length} listings`);
-      const batchResults = await claudeService.batchAnalyzeListings(listings);
+      const batchResults = await claudeService.batchAnalyzeListings(
+        listings.map(listing => ({
+          ...listing,
+          description: listing.description || `${listing.year} ${listing.brand} ${listing.model} listing`
+        }))
+      );
       
       res.json({
         success: true,
@@ -3188,7 +3224,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { listings, userIntent, searchFilters } = validatedData;
 
       console.log(`🎯 Claude intent-based ranking for ${listings.length} listings`);
-      const rankedListings = await claudeService.rankByIntent(listings, userIntent, searchFilters || {});
+      const rankedListings = await claudeService.rankByIntent(
+        listings.map(listing => ({
+          ...listing,
+          description: listing.description || `${listing.year} ${listing.brand} ${listing.model} listing`
+        })),
+        userIntent,
+        searchFilters || {}
+      );
       
       res.json({
         success: true,
