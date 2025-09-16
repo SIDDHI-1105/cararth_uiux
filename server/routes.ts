@@ -44,6 +44,7 @@ import {
 } from "@shared/schema";
 import { desc, eq, sql } from "drizzle-orm";
 import { assistantService, type AssistantQuery } from "./assistantService";
+import { conversationTrainingService } from "./conversationTrainingService.js";
 import { cacheManager, withCache, HyderabadCacheWarmer } from "./advancedCaching.js";
 import { enhanceHyderabadSearch, HyderabadMarketIntelligence } from "./hyderabadOptimizations.js";
 import { fastSearchService } from "./fastSearch.js";
@@ -1606,6 +1607,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { message, filters, context } = schema.parse(req.body);
       
+      // Get visitor ID for conversation tracking
+      const visitorId = req.get('X-Visitor-ID') || `visitor_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Start or continue conversation for training
+      const session = req.session as any;
+      if (!session.trainingConversationId) {
+        session.trainingConversationId = conversationTrainingService.startConversation(visitorId, isAuthenticated ? req.user?.id : undefined);
+      }
+      
       logError({ message: 'Assistant query received', statusCode: 200 }, 'Assistant query processing');
       
       const assistantQuery: AssistantQuery = {
@@ -1614,7 +1624,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         context: context || 'New conversation'
       };
 
-      const response = await assistantService.processQuery(assistantQuery);
+      const response = await assistantService.processQuery(assistantQuery, visitorId, session.trainingConversationId);
       
       logError({ message: `Assistant response completed: ${response.action}`, statusCode: 200 }, 'Assistant response generated');
       
@@ -1709,6 +1719,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.status(statusCode).json(errorResponse);
+    }
+  });
+
+  // Assistant feedback endpoint for training
+  app.post("/api/assistant/feedback", async (req, res) => {
+    try {
+      const schema = z.object({
+        rating: z.number().min(1).max(5),
+        isHelpful: z.boolean(),
+        userComment: z.string().optional(),
+        issueType: z.enum(['accuracy', 'relevance', 'tone', 'other']).optional()
+      });
+
+      const feedback = schema.parse(req.body);
+      const session = req.session as any;
+      
+      if (!session.trainingConversationId) {
+        return res.status(400).json({ error: "No active conversation to provide feedback for" });
+      }
+
+      conversationTrainingService.addConversationFeedback(session.trainingConversationId, feedback);
+      
+      logError({ message: `Feedback received: ${feedback.rating}/5 stars`, statusCode: 200 }, 'Training feedback collection');
+      
+      res.json({ success: true, message: "Thank you for your feedback! This helps improve Alex." });
+    } catch (error: any) {
+      logError(createAppError('Assistant feedback submission failed', 500, ErrorCategory.INTERNAL), 'Assistant feedback error');
+      
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid feedback data", details: error.errors });
+      }
+      
+      res.status(500).json({ error: "Failed to submit feedback" });
+    }
+  });
+
+  // Training data export endpoint (admin only)
+  app.get("/api/assistant/training-data", async (req, res) => {
+    try {
+      // Only allow in development mode for now
+      if (!isDeveloperMode(req)) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const minRating = req.query.minRating ? parseInt(req.query.minRating as string) : undefined;
+      const onlyHelpful = req.query.onlyHelpful === 'true';
+      
+      const trainingData = conversationTrainingService.exportTrainingData({
+        minRating,
+        onlyHelpful
+      });
+
+      res.json(trainingData);
+    } catch (error: any) {
+      logError(createAppError('Training data export failed', 500, ErrorCategory.INTERNAL), 'Training data export error');
+      res.status(500).json({ error: "Failed to export training data" });
+    }
+  });
+
+  // Training statistics endpoint
+  app.get("/api/assistant/training-stats", async (req, res) => {
+    try {
+      // Only allow in development mode for now
+      if (!isDeveloperMode(req)) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const stats = conversationTrainingService.getTrainingStatistics();
+      res.json(stats);
+    } catch (error: any) {
+      logError(createAppError('Training stats retrieval failed', 500, ErrorCategory.INTERNAL), 'Training stats error');
+      res.status(500).json({ error: "Failed to get training statistics" });
     }
   });
 

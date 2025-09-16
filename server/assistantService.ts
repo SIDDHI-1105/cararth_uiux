@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { logError, ErrorCategory, createAppError } from './errorHandling.js';
+import { conversationTrainingService } from './conversationTrainingService.js';
 
 // Initialize OpenAI client with timeout and retry configuration
 const openai = new OpenAI({
@@ -173,9 +174,14 @@ Always be helpful, conversational, and focused on understanding the user's car b
     this.metrics.errorRate = ((this.metrics.fallbackResponses + (this.metrics.totalRequests - this.metrics.successfulRequests - this.metrics.fallbackResponses)) / this.metrics.totalRequests) * 100;
   }
 
-  async processQuery(query: AssistantQuery): Promise<AssistantResponse> {
+  async processQuery(query: AssistantQuery, visitorId?: string, conversationId?: string): Promise<AssistantResponse> {
     const startTime = Date.now();
     let fallbackUsed = false;
+    
+    // Log user message for training
+    if (conversationId && visitorId) {
+      conversationTrainingService.logUserMessage(conversationId, query.message);
+    }
     
     try {
       // Input validation
@@ -217,6 +223,17 @@ Always be helpful, conversational, and focused on understanding the user's car b
       
       // Track metrics - fallback usage counts as error
       this.updateMetrics(startTime, sanitizedResponse.confidence || 0.5, !fallbackUsed, fallbackUsed);
+      
+      // Log assistant response for training
+      if (conversationId && visitorId) {
+        conversationTrainingService.logAssistantResponse(conversationId, sanitizedResponse.message, {
+          suggestedFilters: sanitizedResponse.suggestedFilters,
+          action: sanitizedResponse.action,
+          confidence: sanitizedResponse.confidence,
+          processingTime: Date.now() - startTime,
+          modelUsed: fallbackUsed ? 'rule-based-fallback' : 'gpt-4o'
+        });
+      }
       
       logError({ message: `Assistant response ${fallbackUsed ? '(fallback)' : ''} completed: ${sanitizedResponse.action}`, statusCode: 200 }, 'Assistant response generation');
       
