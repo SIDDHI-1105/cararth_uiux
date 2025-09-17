@@ -2891,6 +2891,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Worker image upload endpoint (authenticated and secured)  
+  app.post("/api/storage/upload", async (req, res) => {
+    try {
+      // Security: Check for worker token (basic auth)
+      const authHeader = req.headers.authorization;
+      const workerToken = process.env.WORKER_UPLOAD_TOKEN || "cararth-worker-2024";
+      
+      if (!authHeader || !authHeader.includes(workerToken)) {
+        return res.status(401).json({ error: "Unauthorized - worker token required" });
+      }
+
+      // File validation
+      if (!req.body || Buffer.byteLength(JSON.stringify(req.body)) > 5 * 1024 * 1024) {  // 5MB max
+        return res.status(413).json({ error: "File too large - max 5MB" });
+      }
+      
+      // Generate signed upload URL
+      const uploadUrl = await objectStorageService.getSellerUploadURL('worker-images');
+      
+      // Return presigned URL instead of proxying upload
+      res.json({ 
+        uploadUrl: uploadUrl,
+        message: "Upload directly to the provided URL"
+      });
+      
+    } catch (error) {
+      console.error("Upload endpoint error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   // Serve private object files
   app.get("/objects/:objectPath(*)", async (req, res) => {
     try {
