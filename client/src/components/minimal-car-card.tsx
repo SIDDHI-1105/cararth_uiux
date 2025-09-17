@@ -44,8 +44,9 @@ export default function MinimalCarCard({
       imageUrl.toLowerCase().includes(pattern.toLowerCase())
     );
     
-    if (isPlaceholder && fallbackIndex < 3) {
-      return getWorkingImageForBrand(car.title, fallbackIndex);
+    // PERMANENT FIX: No more misleading fallbacks! Show transparent "No Photo" instead.
+    if (isPlaceholder) {
+      return FALLBACK_CAR_IMAGE_URL; // Clear "No Image Available" message
     }
     
     // Use proxy for external images
@@ -62,16 +63,9 @@ export default function MinimalCarCard({
     return imageUrl;
   };
 
-  const getWorkingImageForBrand = (title: string, index: number): string => {
-    const workingImages = [
-      'https://images10.gaadi.com/usedcar_image/4677649/original/processed_39653f1b-0b47-4cbe-8ba6-71f96c250b21.jpg?imwidth=400',
-      'https://images10.gaadi.com/usedcar_image/4754653/original/013d8f9327e082b9ba10c09150677442.jpg?imwidth=400',
-      'https://images10.gaadi.com/usedcar_image/4783272/original/processed_ba2465534ac359ec641f5afef68e531e.jpg?imwidth=400',
-    ];
-    
-    const selectedImage = workingImages[index % workingImages.length];
-    return `/api/proxy/image?url=${encodeURIComponent(selectedImage)}`;
-  };
+  // REMOVED: getWorkingImageForBrand - NO MORE MISLEADING FALLBACKS
+  // This function showed unrelated car images and completely undermined authenticity!
+  // Now we show transparent "No verified photo" states instead of misleading images.
 
   const handleImageError = () => {
     if (imageAttempt < 4) {
@@ -167,11 +161,15 @@ export default function MinimalCarCard({
             />
           </button>
 
-          {/* Authenticity Score */}
-          {(car as any).authenticityScore && (car as any).authenticityScore > 70 && (
+          {/* Photo Verification Badge - PERMANENT FIX */}
+          {currentImageSrc !== FALLBACK_CAR_IMAGE_URL ? (
             <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-green-100 text-green-800 px-2 py-1 rounded-md text-xs font-medium">
               <Star className="w-3 h-3 fill-current" />
-              <span>{(car as any).authenticityScore}% Verified</span>
+              <span>Photos Verified</span>
+            </div>
+          ) : (
+            <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-yellow-100 text-yellow-800 px-2 py-1 rounded-md text-xs font-medium">
+              <span>No Verified Photos</span>
             </div>
           )}
         </AspectRatio>
