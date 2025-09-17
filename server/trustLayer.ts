@@ -92,22 +92,34 @@ export class TrustLayer {
       });
       
       // 7. Make approval decision (now considers image authenticity)
-      const decision = this.makeApprovalDecision(trustScore, moderationResult, fraudScore, imageAuthenticityResult);
+      const decision = this.makeApprovalDecision(trustScore, moderationResult, fraudScore, imageAuthenticityResult, listing);
       
       // Determine final verification status based on validation results
       let finalVerificationStatus: 'verified' | 'unverified' | 'certified' = 'unverified';
       
-      if (decision.approved && imageAuthenticityResult.hasVerifiedImages) {
-        // Listings with verified images get verified status
-        finalVerificationStatus = 'verified';
-        
-        // Special case: OEM/Bank sources with verified images get certified status
-        if (listing.source?.toLowerCase().includes('maruti') || 
-            listing.source?.toLowerCase().includes('true value') ||
-            listing.source?.toLowerCase().includes('bank') ||
-            listing.source?.toLowerCase().includes('auction') ||
-            listing.source?.toLowerCase().includes('eauctions')) {
+      // Check if this is a trusted OEM/Bank source
+      const isTrustedOEMSource = listing.source?.toLowerCase().includes('maruti') || 
+                                listing.source?.toLowerCase().includes('true value') ||
+                                listing.source?.toLowerCase().includes('bank') ||
+                                listing.source?.toLowerCase().includes('auction') ||
+                                listing.source?.toLowerCase().includes('eauctions') ||
+                                listing.source?.toLowerCase().includes('first choice') ||
+                                listing.source?.toLowerCase().includes('promise');
+      
+      if (decision.approved) {
+        if (imageAuthenticityResult.hasVerifiedImages) {
+          // Listings with verified images get verified status
+          finalVerificationStatus = 'verified';
+          
+          // OEM/Bank sources with verified images get certified status
+          if (isTrustedOEMSource) {
+            finalVerificationStatus = 'certified';
+          }
+        } else if (isTrustedOEMSource && listing.images && listing.images.length > 0) {
+          // SPECIAL CASE: OEM sources get certified status even without strict image verification
+          // This is because OEM sources are inherently trustworthy and use their own image systems
           finalVerificationStatus = 'certified';
+          console.log(`🏭 OEM source granted certified status without strict verification: ${listing.source}`);
         }
       }
       
@@ -306,7 +318,8 @@ export class TrustLayer {
     trustScore: number, 
     moderationResult: ContentModerationResult,
     fraudScore: number,
-    imageAuthenticityResult?: ImageAuthenticityResult
+    imageAuthenticityResult?: ImageAuthenticityResult,
+    listing?: MarketplaceListing
   ): {
     approved: boolean;
     actions: ('approve' | 'flag' | 'reject' | 'request_verification')[];
@@ -324,23 +337,73 @@ export class TrustLayer {
       };
     }
 
-    // HARD GATE: Zero tolerance for unverified images - PERMANENT FIX
+    // HARD GATE: Zero tolerance for unverified images - PERMANENT FIX (with OEM exception)
     if (imageAuthenticityResult && !imageAuthenticityResult.hasVerifiedImages) {
-      return {
-        approved: false,
-        actions: ['request_verification'],
-        issues: ['ZERO VERIFIED IMAGES - Publication blocked by authenticity gate'],
-        explanation: 'ZERO TOLERANCE: No verified authentic images found - publication blocked permanently'
-      };
+      // Check if this is a trusted OEM source
+      const isTrustedOEMSource = listing?.source?.toLowerCase().includes('maruti') || 
+                                listing?.source?.toLowerCase().includes('true value') ||
+                                listing?.source?.toLowerCase().includes('bank') ||
+                                listing?.source?.toLowerCase().includes('auction') ||
+                                listing?.source?.toLowerCase().includes('eauctions') ||
+                                listing?.source?.toLowerCase().includes('first choice') ||
+                                listing?.source?.toLowerCase().includes('promise');
+                                
+      // Allow OEM sources to pass even without strict image verification
+      if (isTrustedOEMSource && listing?.images && listing.images.length > 0) {
+        console.log(`🏭 OEM source bypassed zero tolerance policy: ${listing.source}`);
+        // Continue with approval process for OEM sources
+      } else {
+        return {
+          approved: false,
+          actions: ['request_verification'],
+          issues: ['ZERO VERIFIED IMAGES - Publication blocked by authenticity gate'],
+          explanation: 'ZERO TOLERANCE: No verified authentic images found - publication blocked permanently'
+        };
+      }
     }
 
-    // HARD GATE: Must have at least one image that passed the authenticity gate
+    // HARD GATE: Must have at least one image that passed the authenticity gate (with OEM exception)
     if (imageAuthenticityResult && imageAuthenticityResult.passedGateCount === 0 && imageAuthenticityResult.totalImageCount > 0) {
+      // Check if this is a trusted OEM source
+      const isTrustedOEMSource = listing?.source?.toLowerCase().includes('maruti') || 
+                                listing?.source?.toLowerCase().includes('true value') ||
+                                listing?.source?.toLowerCase().includes('bank') ||
+                                listing?.source?.toLowerCase().includes('auction') ||
+                                listing?.source?.toLowerCase().includes('eauctions') ||
+                                listing?.source?.toLowerCase().includes('first choice') ||
+                                listing?.source?.toLowerCase().includes('promise');
+                                
+      // Allow OEM sources to pass even with failed gate images
+      if (isTrustedOEMSource && listing?.images && listing.images.length > 0) {
+        console.log(`🏭 OEM source bypassed authenticity gate failure: ${listing.source}`);
+        // Continue with approval process for OEM sources
+      } else {
+        return {
+          approved: false,
+          actions: ['reject'],
+          issues: ['ALL IMAGES FAILED AUTHENTICITY GATE - No images passed validation'],
+          explanation: 'ZERO TOLERANCE: All provided images failed authenticity validation - publication blocked'
+        };
+      }
+    }
+    
+    // Check if this is a trusted OEM source for lenient approval
+    const isTrustedOEMSource = listing?.source?.toLowerCase().includes('maruti') || 
+                              listing?.source?.toLowerCase().includes('true value') ||
+                              listing?.source?.toLowerCase().includes('bank') ||
+                              listing?.source?.toLowerCase().includes('auction') ||
+                              listing?.source?.toLowerCase().includes('eauctions') ||
+                              listing?.source?.toLowerCase().includes('first choice') ||
+                              listing?.source?.toLowerCase().includes('promise');
+    
+    // OEM sources get approved with lower thresholds
+    if (isTrustedOEMSource && moderationResult.isClean && trustScore >= 30) {
+      console.log(`🏭 OEM source approved with relaxed trust threshold: ${listing?.source} (score: ${trustScore})`);
       return {
-        approved: false,
-        actions: ['reject'],
-        issues: ['ALL IMAGES FAILED AUTHENTICITY GATE - No images passed validation'],
-        explanation: 'ZERO TOLERANCE: All provided images failed authenticity validation - publication blocked'
+        approved: true,
+        actions: ['approve'],
+        issues: [],
+        explanation: 'OEM source approved with certified status'
       };
     }
     

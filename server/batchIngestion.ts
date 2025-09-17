@@ -18,6 +18,7 @@ import type { InsertCachedPortalListing } from '@shared/schema.js';
 import crypto from 'crypto';
 import { enrichmentService } from './enrichmentService.js';
 import carSpecValidator from './carSpecValidator.js';
+import { marutiTrueValueScraper } from './marutiTrueValueScraper.js';
 
 export class BatchIngestionService {
   private marketplaceAggregator: MarketplaceAggregator;
@@ -54,9 +55,29 @@ export class BatchIngestionService {
 
         const result = await this.marketplaceAggregator.searchAcrossPortals(searchFilters);
         
-        if (result.listings && result.listings.length > 0) {
-          // Normalize and store listings
-          const normalizedListings = this.normalizeListings(result.listings, []);
+        // 🏭 INTEGRATE MARUTI TRUE VALUE SCRAPER into batch ingestion
+        let marutiListings: any[] = [];
+        try {
+          console.log(`🏭 Scraping Maruti True Value certified listings for ${city}...`);
+          const marutiResult = await marutiTrueValueScraper.scrapeListings({ 
+            city: city.charAt(0).toUpperCase() + city.slice(1), // Capitalize city name
+            maxPages: 3 // Limit to 3 pages for batch ingestion
+          });
+          
+          if (marutiResult.listings && marutiResult.listings.length > 0) {
+            marutiListings = marutiResult.listings;
+            console.log(`✅ Found ${marutiListings.length} Maruti True Value certified listings`);
+          }
+        } catch (error) {
+          console.error(`❌ Maruti True Value scraping failed for ${city}:`, error);
+        }
+        
+        // Combine marketplace and Maruti True Value listings
+        const allListings = [...(result.listings || []), ...marutiListings];
+        
+        if (allListings.length > 0) {
+          // Normalize and store listings (including Maruti True Value)
+          const normalizedListings = this.normalizeListings(allListings, []);
           
           // Optional GPT-5 enrichment if OpenAI API key is available
           if (process.env.OPENAI_API_KEY && normalizedListings.length > 0) {
