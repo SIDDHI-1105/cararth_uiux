@@ -1,10 +1,15 @@
 import { ClaudeCarListingService } from './claudeService';
 import { MarketplaceListing } from './marketplaceAggregator';
+import { imageAssetService } from './imageAssetService.js';
+import { detailPageExtractor } from './detailPageExtractor.js';
+import { imageAuthenticityGate } from './imageAuthenticityGate.js';
 
 // Trust and compliance gate for all listings
 export interface TrustAnalysisResult {
   isApproved: boolean;
   trustScore: number; // 0-100
+  imageAuthenticityScore?: number; // 0-100, optional for listings without images
+  verifiedImageCount?: number;
   issues: string[];
   actions: ('approve' | 'flag' | 'reject' | 'request_verification')[];
   moderationRequired: boolean;
@@ -16,6 +21,15 @@ export interface ContentModerationResult {
   violations: string[];
   severity: 'low' | 'medium' | 'high' | 'critical';
   maskedContent?: Partial<MarketplaceListing>;
+}
+
+export interface ImageAuthenticityResult {
+  score: number; // 0-100
+  hasVerifiedImages: boolean;
+  verifiedImageCount: number;
+  totalImageCount: number;
+  issues: string[];
+  passedGateCount: number;
 }
 
 export class TrustLayer {
@@ -57,29 +71,35 @@ export class TrustLayer {
       // 2. Content moderation (Claude)
       const moderationResult = await this.moderateContent(listing);
       
-      // 3. Quality and authenticity assessment  
-      const qualityAnalysis = await this.claude.assessListingQuality(listing);
+      // 3. Image authenticity validation (NEW - PERMANENT FIX)
+      const imageAuthenticityResult = await this.validateImageAuthenticity(listing);
       
-      // 4. Fraud pattern detection
+      // 4. Quality and authenticity assessment  
+      const qualityAnalysis = await this.claude.analyzeListingQuality(listing);
+      
+      // 5. Fraud pattern detection
       const fraudScore = this.detectFraudPatterns(listing);
       
-      // 5. Calculate overall trust score
+      // 6. Calculate overall trust score (now includes image authenticity)
       const trustScore = this.calculateTrustScore({
         sourceScore,
         moderationScore: moderationResult.isClean ? 100 : 20,
         qualityScore: qualityAnalysis.overallQuality,
+        imageAuthenticityScore: imageAuthenticityResult.score,
         fraudScore
       });
       
-      // 6. Make approval decision
-      const decision = this.makeApprovalDecision(trustScore, moderationResult, fraudScore);
+      // 7. Make approval decision (now considers image authenticity)
+      const decision = this.makeApprovalDecision(trustScore, moderationResult, fraudScore, imageAuthenticityResult);
       
       return {
         isApproved: decision.approved,
         trustScore,
-        issues: [...moderationResult.violations, ...decision.issues],
+        imageAuthenticityScore: imageAuthenticityResult.score,
+        verifiedImageCount: imageAuthenticityResult.verifiedImageCount,
+        issues: [...moderationResult.violations, ...imageAuthenticityResult.issues, ...decision.issues],
         actions: decision.actions,
-        moderationRequired: !moderationResult.isClean || trustScore < 60,
+        moderationRequired: !moderationResult.isClean || trustScore < 60 || !imageAuthenticityResult.hasVerifiedImages,
         explanation: decision.explanation
       };
       
@@ -104,7 +124,7 @@ export class TrustLayer {
   async moderateContent(listing: MarketplaceListing): Promise<ContentModerationResult> {
     try {
       // Use Claude for content moderation
-      const moderationResult = await this.claude.moderateListingContent(listing);
+      const moderationResult = await this.claude.moderateContent(listing);
       
       // Apply PII masking if needed
       const maskedListing = this.maskSensitiveInfo(listing);
@@ -166,7 +186,7 @@ export class TrustLayer {
     // Check title and description for suspicious keywords
     const textContent = `${listing.title} ${listing.description || ''}`.toLowerCase();
     
-    for (const keyword of this.blacklistedKeywords) {
+    for (const keyword of Array.from(this.blacklistedKeywords)) {
       if (textContent.includes(keyword)) {
         suspiciousScore += 20;
       }
@@ -242,14 +262,19 @@ export class TrustLayer {
     sourceScore: number;
     moderationScore: number;
     qualityScore: number;
+    imageAuthenticityScore: number;
     fraudScore: number;
   }): number {
-    return Math.round(
-      (factors.sourceScore * 0.25) +
-      (factors.moderationScore * 0.25) +
-      (factors.qualityScore * 0.30) +
-      (factors.fraudScore * 0.20)
-    );
+    // FIXED: Weights now sum to 1.0 exactly
+    const rawScore = 
+      (factors.sourceScore * 0.15) +
+      (factors.moderationScore * 0.15) +
+      (factors.imageAuthenticityScore * 0.30) + // Image authenticity is MOST CRITICAL
+      (factors.qualityScore * 0.25) +
+      (factors.fraudScore * 0.15);
+    
+    // FIXED: Clamp score to [0, 100] to prevent inflation bugs
+    return Math.round(Math.max(0, Math.min(100, rawScore)));
   }
 
   /**
@@ -258,7 +283,8 @@ export class TrustLayer {
   private makeApprovalDecision(
     trustScore: number, 
     moderationResult: ContentModerationResult,
-    fraudScore: number
+    fraudScore: number,
+    imageAuthenticityResult?: ImageAuthenticityResult
   ): {
     approved: boolean;
     actions: ('approve' | 'flag' | 'reject' | 'request_verification')[];
@@ -273,6 +299,26 @@ export class TrustLayer {
         actions: ['reject'],
         issues: ['Critical content violations or fraud patterns detected'],
         explanation: 'Listing rejected due to critical trust issues'
+      };
+    }
+
+    // HARD GATE: Zero tolerance for unverified images - PERMANENT FIX
+    if (imageAuthenticityResult && !imageAuthenticityResult.hasVerifiedImages) {
+      return {
+        approved: false,
+        actions: ['request_verification'],
+        issues: ['ZERO VERIFIED IMAGES - Publication blocked by authenticity gate'],
+        explanation: 'ZERO TOLERANCE: No verified authentic images found - publication blocked permanently'
+      };
+    }
+
+    // HARD GATE: Must have at least one image that passed the authenticity gate
+    if (imageAuthenticityResult && imageAuthenticityResult.passedGateCount === 0 && imageAuthenticityResult.totalImageCount > 0) {
+      return {
+        approved: false,
+        actions: ['reject'],
+        issues: ['ALL IMAGES FAILED AUTHENTICITY GATE - No images passed validation'],
+        explanation: 'ZERO TOLERANCE: All provided images failed authenticity validation - publication blocked'
       };
     }
     
@@ -303,6 +349,100 @@ export class TrustLayer {
       issues: ['Low trust score - additional verification needed'],
       explanation: 'Trust score below threshold - verification required'
     };
+  }
+
+  /**
+   * IMAGE AUTHENTICITY VALIDATION - NEW PERMANENT FIX
+   */
+  private async validateImageAuthenticity(listing: MarketplaceListing): Promise<ImageAuthenticityResult> {
+    try {
+      console.log(`📸 Validating image authenticity for: ${listing.title}`);
+
+      // If listing has no images, provide neutral score
+      if (!listing.images || listing.images.length === 0) {
+        return {
+          score: 50, // Neutral score for no images
+          hasVerifiedImages: false,
+          verifiedImageCount: 0,
+          totalImageCount: 0,
+          issues: ['No images provided'],
+          passedGateCount: 0,
+        };
+      }
+
+      let verifiedCount = 0;
+      let passedGateCount = 0;
+      const issues: string[] = [];
+      const totalImages = listing.images.length;
+
+      // Process each image through the authenticity gate
+      for (const imageUrl of listing.images) {
+        try {
+          // Skip if already processed (check by URL)
+          const existingAssets = await imageAssetService.getVerifiedImagesForListing(listing.id || 'temp-' + Date.now());
+          const alreadyProcessed = existingAssets.some(asset => asset.originalUrl === imageUrl);
+          
+          if (alreadyProcessed) {
+            const verified = existingAssets.find(asset => asset.originalUrl === imageUrl && asset.passedGate);
+            if (verified) {
+              verifiedCount++;
+              passedGateCount++;
+            }
+            continue;
+          }
+
+          // Process through ImageAssetService
+          const result = await imageAssetService.processImageFromUrl({
+            listingId: listing.id || 'temp-' + Date.now(),
+            portal: listing.source || 'unknown',
+            pageUrl: listing.url || '',
+            imageUrl,
+          });
+
+          if (result.success && result.passedGate) {
+            verifiedCount++;
+            passedGateCount++;
+          } else if (result.rejectionReasons) {
+            issues.push(`Image ${imageUrl.substring(0, 50)}...: ${result.rejectionReasons.join(', ')}`);
+          }
+
+        } catch (error) {
+          console.error(`Failed to validate image ${imageUrl}:`, error);
+          issues.push(`Image validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
+
+      // Calculate authenticity score
+      const verificationRate = totalImages > 0 ? (verifiedCount / totalImages) : 0;
+      const baseScore = verificationRate * 100;
+      
+      // Bonus for having multiple verified images
+      const bonusScore = verifiedCount >= 2 ? 10 : 0;
+      
+      const finalScore = Math.min(100, baseScore + bonusScore);
+
+      console.log(`📊 Image authenticity: ${verifiedCount}/${totalImages} verified (score: ${finalScore})`);
+
+      return {
+        score: finalScore,
+        hasVerifiedImages: verifiedCount > 0,
+        verifiedImageCount: verifiedCount,
+        totalImageCount: totalImages,
+        issues,
+        passedGateCount,
+      };
+
+    } catch (error) {
+      console.error('🚨 Image authenticity validation failed:', error);
+      return {
+        score: 0,
+        hasVerifiedImages: false,
+        verifiedImageCount: 0,
+        totalImageCount: listing.images?.length || 0,
+        issues: ['Image authenticity validation system error'],
+        passedGateCount: 0,
+      };
+    }
   }
 
   /**
