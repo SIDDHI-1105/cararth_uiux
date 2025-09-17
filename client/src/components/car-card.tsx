@@ -9,6 +9,7 @@ import AuthenticityScoreDisplay from "@/components/authenticity-score";
 import { FALLBACK_CAR_IMAGE_URL } from '@/lib/constants';
 import { formatIndianCurrency } from "@/lib/loan";
 import { useHapticFeedback, HapticButton } from "@/components/haptic-feedback";
+import { getCarSource, getSourceBadgeColor } from "@/lib/car-utils";
 import { cn } from "@/lib/utils";
 
 interface CarCardProps {
@@ -18,10 +19,7 @@ interface CarCardProps {
   showAuthenticityScore?: boolean;
 }
 
-// Unified helper to get source from car data consistently across components
-const getCarSource = (car: CarListing): string | undefined => {
-  return (car as any).source || (car as any).portal || car.portal;
-};
+// Now using centralized helper from car-utils
 
 export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: CarCardProps) {
   const { feedback } = useHapticFeedback();
@@ -29,50 +27,7 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
   const [imageAttempt, setImageAttempt] = useState(0);
   const [currentImageSrc, setCurrentImageSrc] = useState<string>('');
 
-  // Enhanced source badge color system
-  const getSourceBadgeColor = (source?: string) => {
-    const sourceLower = source?.toLowerCase() || '';
-    
-    // OEM/CERTIFIED SOURCES - Premium Gold/Amber (Highest Trust)
-    if (sourceLower.includes('maruti') || sourceLower.includes('true value') || 
-        sourceLower.includes('certified') || sourceLower.includes('oem')) {
-      return 'bg-amber-100 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-700 font-semibold';
-    }
-    
-    // BANK/GOVERNMENT AUCTIONS - Blue Institutional (High Trust)
-    if (sourceLower.includes('bank') || sourceLower.includes('auction') || 
-        sourceLower.includes('government') || sourceLower.includes('eauctions') ||
-        sourceLower.includes('sbi') || sourceLower.includes('hdfc') || sourceLower.includes('icici')) {
-      return 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-700 font-medium';
-    }
-    
-    // PRIMARY MARKETPLACES - Distinct Colors for Major Platforms
-    switch (sourceLower) {
-      case 'cardekho':
-        return 'bg-indigo-100 dark:bg-indigo-900/20 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700';
-      case 'cars24':
-        return 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-700';
-      case 'olx':
-      case 'olx autos':
-        return 'bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-700';
-      case 'carwale':
-        return 'bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-300 border border-orange-200 dark:border-orange-700';
-        
-      // SECONDARY SOURCES - Muted Styling for Newer Platforms  
-      case 'autotrader':
-        return 'bg-slate-100 dark:bg-slate-800/20 text-slate-700 dark:text-slate-400 border border-slate-200 dark:border-slate-600';
-      case 'spinny':
-        return 'bg-teal-100 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-600';
-      case 'droom':
-        return 'bg-pink-100 dark:bg-pink-900/20 text-pink-700 dark:text-pink-400 border border-pink-200 dark:border-pink-600';
-      case 'cartrade':
-        return 'bg-cyan-100 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-600';
-        
-      // DEFAULT - Neutral for Unknown Sources
-      default:
-        return 'bg-gray-100 dark:bg-gray-800/20 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-600';
-    }
-  };
+  // Now using centralized getSourceBadgeColor from car-utils
 
   // Check if URL is a known placeholder/spacer image
   const isPlaceholderUrl = (url: string): boolean => {
@@ -93,102 +48,41 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
     );
   };
 
-  // Enhanced helper function to get image source with intelligent fallbacks
+  // Simplified image handling with intelligent fallbacks - AUTHENTICITY FIRST
   const getImageSrc = (images: string[] | null | undefined, fallbackIndex: number = 0): string => {
     // Final fallback after all attempts
-    if (fallbackIndex >= 8) {
-      console.log(`🚫 All attempts exhausted for ${car.title}, using FALLBACK_CAR_IMAGE_URL`);
+    if (fallbackIndex >= 5) {
       return FALLBACK_CAR_IMAGE_URL;
     }
 
-    // If we've exhausted proxy attempts, use working car images
-    if (fallbackIndex >= 3) {
-      return getWorkingCarImageForCar(car, fallbackIndex - 3);
-    }
-
     if (!images || !Array.isArray(images) || images.length === 0) {
-      return getWorkingCarImageForCar(car, 0);
+      return FALLBACK_CAR_IMAGE_URL;
     }
     
     const imageUrl = images[0];
     
-    // Skip known placeholder URLs
+    // Skip known placeholder URLs - PERMANENT FIX: No more misleading fallbacks!
     if (isPlaceholderUrl(imageUrl)) {
-      console.log(`🚫 Detected placeholder URL for ${car.title}: ${imageUrl}`);
-      return getWorkingCarImageForCar(car, fallbackIndex);
+      return FALLBACK_CAR_IMAGE_URL; // Clear "No Image Available" message
     }
     
-    // Check if it's an external trusted domain image
-    const trustedDomains = [
-      'images10.gaadi.com',
-      'stimg.cardekho.com', 
-      'stimg2.gaadi.com',
-      'images.cars24.com',
-      'img.cartrade.com',
-      'cdn.droom.in'
-    ];
-    
+    // Use proxy for external images
+    const trustedDomains = ['images10.gaadi.com', 'stimg.cardekho.com'];
     try {
       const url = new URL(imageUrl);
       if (trustedDomains.includes(url.hostname)) {
-        // Use enhanced proxy with fallback parameter
-        const params = new URLSearchParams({
-          url: imageUrl,
-          ...(fallbackIndex > 0 && { fallback: fallbackIndex.toString() })
-        });
-        return `/api/proxy/image?${params.toString()}`;
+        return `/api/proxy/image?url=${encodeURIComponent(imageUrl)}`;
       }
-    } catch (error) {
-      console.log(`❌ Invalid URL for ${car.title}: ${imageUrl}`);
-      return getWorkingCarImageForCar(car, fallbackIndex);
+    } catch {
+      return FALLBACK_CAR_IMAGE_URL;
     }
     
-    // For local images or other domains, use as-is
     return imageUrl;
   };
 
-  // Get working car image based on car brand/model
-  const getWorkingCarImageForCar = (car: CarListing, index: number = 0): string => {
-    // Extract brand and model from car title
-    const titleParts = car.title.toLowerCase().split(' ');
-    const brand = titleParts[1] || 'maruti'; // Assume format like "2018 Maruti Swift"
-    const model = titleParts[2] || 'alto';
-
-    // Use enhanced proxy for working images too (to handle CORS)
-    const workingImages = getWorkingImageUrls(brand, model);
-    const selectedImage = workingImages[index % workingImages.length];
-    
-    return `/api/proxy/image?url=${encodeURIComponent(selectedImage)}`;
-  };
-
-  // Get working image URLs for specific brand/model combinations
-  const getWorkingImageUrls = (brand: string, model: string): string[] => {
-    const brandModel = `${brand.replace(/\s+/g, '_')}_${model.split(' ')[0]}`;
-    
-    const workingImages: { [key: string]: string[] } = {
-      'maruti_alto': [
-        'https://images10.gaadi.com/usedcar_image/4677649/original/processed_39653f1b-0b47-4cbe-8ba6-71f96c250b21.jpg?imwidth=400',
-        'https://images10.gaadi.com/usedcar_image/4720431/original/processed_9b1a5bbdb32c131976dccd7b88ac65fe.jpg?imwidth=400'
-      ],
-      'maruti_swift': [
-        'https://images10.gaadi.com/usedcar_image/4754653/original/013d8f9327e082b9ba10c09150677442.jpg?imwidth=400'
-      ],
-      'maruti_dzire': [
-        'https://images10.gaadi.com/usedcar_image/4783272/original/processed_ba2465534ac359ec641f5afef68e531e.jpg?imwidth=400'
-      ],
-      'hyundai_i20': [
-        'https://images10.gaadi.com/usedcar_image/4720431/original/processed_9b1a5bbdb32c131976dccd7b88ac65fe.jpg?imwidth=400'
-      ],
-      'honda_amaze': [
-        'https://images10.gaadi.com/usedcar_image/4783272/original/processed_ba2465534ac359ec641f5afef68e531e.jpg?imwidth=400'
-      ],
-      'renault_kwid': [
-        'https://images10.gaadi.com/usedcar_image/4601327/original/f158917d-5e4b-40b3-8cc1-ba55f1745135.png?imwidth=400'
-      ]
-    };
-
-    return workingImages[brandModel] || workingImages['maruti_alto'];
-  };
+  // REMOVED: getWorkingCarImageForCar - NO MORE MISLEADING FALLBACKS
+  // This function showed unrelated car images and completely undermined authenticity!
+  // Now we show transparent "No verified photo" states instead of misleading images.
 
   // Enhanced image load handler with dimension verification
   const handleImageLoad = (event: React.SyntheticEvent<HTMLImageElement>) => {
@@ -214,18 +108,12 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
     setImageLoaded(true);
   };
 
-  // Handle image load failure with intelligent retry
   const handleImageError = () => {
-    console.log(`❌ Image failed to load for ${car.title}, attempt ${imageAttempt + 1}`);
-    
-    if (imageAttempt < 8) { // Try up to 8 different images including final fallback
+    if (imageAttempt < 4) {
       const nextAttempt = imageAttempt + 1;
       setImageAttempt(nextAttempt);
-      const nextImageSrc = getImageSrc(car.images as string[], nextAttempt);
-      console.log(`🔄 Trying fallback image ${nextAttempt}: ${nextImageSrc}`);
-      setCurrentImageSrc(nextImageSrc);
+      setCurrentImageSrc(getImageSrc(car.images as string[], nextAttempt));
     } else {
-      console.log(`❌ All image attempts failed for ${car.title}, using FALLBACK_CAR_IMAGE_URL`);
       setCurrentImageSrc(FALLBACK_CAR_IMAGE_URL);
       setImageLoaded(true);
     }
@@ -327,6 +215,37 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
           onLoad={handleImageLoad}
           onError={handleImageError}
         />
+        
+        {/* Source Badge with Haptic Feedback - CONSISTENT POSITIONING */}
+        {getCarSource(car) && (
+          <HapticButton
+            onClick={() => {
+              // Different haptic patterns for different source types
+              const sourceLower = (getCarSource(car) || '').toLowerCase();
+              if (sourceLower.includes('maruti') || sourceLower.includes('true value')) {
+                feedback.success(); // Premium feel for OEM sources
+              } else if (sourceLower.includes('bank') || sourceLower.includes('auction')) {
+                feedback.notification(); // Official feel for institutional sources
+              } else {
+                feedback.selection(); // Standard feel for marketplace sources
+              }
+            }}
+            hapticType="selection"
+            className="absolute top-2 left-2 bg-transparent border-none p-0 hover:bg-transparent"
+            aria-label={`Data source: ${getCarSource(car)} - tap for more info`}
+          >
+            <Badge 
+              className={cn(
+                "text-sm cursor-pointer hover:scale-105 transition-transform duration-200 shadow-sm font-medium",
+                getSourceBadgeColor(getCarSource(car))
+              )}
+              data-testid={`badge-source-${car.id}`}
+              title={`Sourced from: ${getCarSource(car)}`}
+            >
+              {getCarSource(car)}
+            </Badge>
+          </HapticButton>
+        )}
       </div>
       <div className="p-4">
         <div className="flex justify-between items-start mb-2">
@@ -365,38 +284,7 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
           </div>
         </div>
         
-        {/* Enhanced Portal Source Badge - Shows data source with haptic feedback */}
-        {getCarSource(car) && (
-          <div className="mb-3">
-            <HapticButton
-              onClick={() => {
-                // Different haptic patterns for different source types
-                const sourceLower = (getCarSource(car) || '').toLowerCase();
-                if (sourceLower.includes('maruti') || sourceLower.includes('true value')) {
-                  feedback.success(); // Premium feel for OEM sources
-                } else if (sourceLower.includes('bank') || sourceLower.includes('auction')) {
-                  feedback.notification(); // Official feel for institutional sources
-                } else {
-                  feedback.selection(); // Standard feel for marketplace sources
-                }
-              }}
-              hapticType="selection"
-              className="bg-transparent border-none p-0 hover:bg-transparent"
-              aria-label={`Data source: ${getCarSource(car)} - tap for more info`}
-            >
-              <Badge 
-                className={cn(
-                  "text-sm cursor-pointer hover:scale-105 transition-transform duration-200 shadow-sm font-medium",
-                  getSourceBadgeColor(getCarSource(car))
-                )}
-                data-testid={`badge-source-${car.id}`}
-                title={`Sourced from: ${getCarSource(car)}`}
-              >
-                {getCarSource(car)}
-              </Badge>
-            </HapticButton>
-          </div>
-        )}
+        {/* Source badge moved to image overlay for consistency */}
 
         {/* Seller Information - CarDekho inspired prominent display */}
         <div className="mb-4 space-y-2">
