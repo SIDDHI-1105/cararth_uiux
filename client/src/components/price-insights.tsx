@@ -24,7 +24,7 @@ interface PriceInsightsProps {
 }
 
 export default function PriceInsights({ car }: PriceInsightsProps) {
-  const [showInsights, setShowInsights] = useState(false);
+  const [showInsights, setShowInsights] = useState(true); // AUTO-LOAD AI INTELLIGENCE!
 
   const { data: insights, isLoading, refetch } = useQuery<PriceInsight>({
     queryKey: ["/api/cars", car.id, "price-insights"],
