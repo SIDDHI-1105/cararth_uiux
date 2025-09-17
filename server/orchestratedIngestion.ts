@@ -5,6 +5,8 @@ import { PerplexityValidator } from './perplexityValidator';
 import { MarketplaceListing, EnhancedMarketplaceListing } from './marketplaceAggregator';
 import { storage } from './storage';
 import { aiDataExtractionService } from './aiDataExtraction';
+import { detailPageExtractor } from './detailPageExtractor.js';
+import { imageAssetService } from './imageAssetService.js';
 
 // Orchestrated batch ingestion pipeline
 export interface OrchestratedIngestionResult {
@@ -29,6 +31,8 @@ export interface OrchestratedIngestionResult {
     validations: number;
     normalizations: number;
     deduplicationAttempts: number;
+    imageExtractions: number; // NEW: Provenance-anchored image extractions
+    authenticatedImages: number; // NEW: Images that passed authenticity gate
   };
 }
 
@@ -81,7 +85,9 @@ export class OrchestratedBatchIngestion {
         trustScreenings: 0,
         validations: 0,
         normalizations: 0,
-        deduplicationAttempts: 0
+        deduplicationAttempts: 0,
+        imageExtractions: 0, // NEW
+        authenticatedImages: 0 // NEW
       }
     };
 
@@ -96,24 +102,28 @@ export class OrchestratedBatchIngestion {
         return result;
       }
 
-      // Phase 2: Bulk Normalization (Gemini)
-      console.log(`🔧 Phase 2: Bulk Data Normalization`);
-      const normalizedListings = await this.bulkNormalization(rawListings, result);
+      // Phase 2: PROVENANCE-ANCHORED IMAGE EXTRACTION (NEW PERMANENT FIX)
+      console.log(`📸 Phase 2: Provenance-Anchored Image Extraction`);
+      const listingsWithAuthenticImages = await this.provenanceImageExtraction(rawListings, result);
       
-      // Phase 3: Trust Screening (Claude)
-      console.log(`🛡️ Phase 3: Trust Layer Screening`);
+      // Phase 3: Bulk Normalization (Gemini)
+      console.log(`🔧 Phase 3: Bulk Data Normalization`);
+      const normalizedListings = await this.bulkNormalization(listingsWithAuthenticImages, result);
+      
+      // Phase 4: Trust Screening (Claude) - Now includes image authenticity validation
+      console.log(`🛡️ Phase 4: Trust Layer Screening`);
       const trustedListings = await this.trustScreening(normalizedListings, result);
       
-      // Phase 4: Deduplication (OpenAI Embeddings)
-      console.log(`🔍 Phase 4: Intelligent Deduplication`);
+      // Phase 5: Deduplication (OpenAI Embeddings)
+      console.log(`🔍 Phase 5: Intelligent Deduplication`);
       const deduplicatedListings = await this.smartDeduplication(trustedListings, result);
       
-      // Phase 5: Selective Validation (Perplexity)
-      console.log(`✅ Phase 5: Selective Real-time Validation`);
+      // Phase 6: Selective Validation (Perplexity)
+      console.log(`✅ Phase 6: Selective Real-time Validation`);
       const validatedListings = await this.selectiveValidation(deduplicatedListings, result);
       
-      // Phase 6: Final Storage
-      console.log(`💾 Phase 6: Enhanced Storage`);
+      // Phase 7: Final Storage
+      console.log(`💾 Phase 7: Enhanced Storage`);
       await this.enhancedStorage(validatedListings, result);
       
       result.successful = validatedListings.length;
@@ -185,7 +195,110 @@ export class OrchestratedBatchIngestion {
   }
 
   /**
-   * PHASE 2: BULK NORMALIZATION
+   * PHASE 2: PROVENANCE-ANCHORED IMAGE EXTRACTION (NEW PERMANENT FIX)
+   * 
+   * Replaces AI-based image guessing with deterministic extraction from structured data sources.
+   * Each image is extracted with complete provenance and validated through the authenticity gate.
+   */
+  private async provenanceImageExtraction(rawListings: any[], result: OrchestratedIngestionResult): Promise<any[]> {
+    console.log(`📸 Starting provenance-anchored image extraction for ${rawListings.length} listings`);
+    
+    const processedListings = [];
+    let authenticatedImageCount = 0;
+    
+    for (const rawListing of rawListings) {
+      try {
+        // Extract listing URL - this is where we'll fetch images deterministically
+        const listingUrl = rawListing.url || rawListing.listing_url || rawListing.detailUrl;
+        
+        if (!listingUrl) {
+          console.log(`⚠️ No detail URL found for listing: ${rawListing.title || 'Unknown'}`);
+          processedListings.push({
+            ...rawListing,
+            images: [], // No images if no detail URL
+            imageExtractionStatus: 'no_detail_url'
+          });
+          continue;
+        }
+        
+        // Use DetailPageExtractor for deterministic image extraction
+        const extractionResult = await detailPageExtractor.extractFromUrl({
+          url: listingUrl,
+          listingId: rawListing.id || `temp-${Date.now()}`,
+          portal: this.extractPortalFromUrl(listingUrl) || 'unknown',
+          processImages: true // Process images through ImageAssetService immediately
+        });
+        
+        result.pipelineStats.imageExtractions++;
+        
+        if (!extractionResult.success) {
+          console.log(`❌ Image extraction failed for ${listingUrl}: ${extractionResult.errors?.join(', ')}`);
+          processedListings.push({
+            ...rawListing,
+            images: rawListing.images || [], // Fall back to original images if available
+            imageExtractionStatus: 'extraction_failed',
+            imageExtractionErrors: extractionResult.errors
+          });
+          continue;
+        }
+        
+        // Count authenticated images (those that passed the gate)
+        const authenticatedImages = extractionResult.processedImages?.filter(img => img.passedGate) || [];
+        authenticatedImageCount += authenticatedImages.length;
+        
+        // Replace AI-extracted images with provenance-anchored images
+        const provenanceImageUrls = extractionResult.images.map(img => img.url);
+        
+        console.log(`✅ Extracted ${extractionResult.images.length} images (${authenticatedImages.length} authenticated) from ${listingUrl}`);
+        
+        processedListings.push({
+          ...rawListing,
+          images: provenanceImageUrls, // REPLACE AI-guessed images with provenance-anchored ones
+          imageExtractionStatus: 'success',
+          authenticatedImageCount: authenticatedImages.length,
+          extractedImageCount: extractionResult.images.length,
+          imageMetadata: extractionResult.metadata // Additional metadata from structured data
+        });
+        
+      } catch (error) {
+        console.error(`🚨 Error in provenance image extraction:`, error);
+        processedListings.push({
+          ...rawListing,
+          images: rawListing.images || [], // Fall back to original
+          imageExtractionStatus: 'error',
+          imageExtractionError: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    }
+    
+    result.pipelineStats.authenticatedImages = authenticatedImageCount;
+    
+    console.log(`📊 Provenance extraction complete: ${authenticatedImageCount} authenticated images from ${rawListings.length} listings`);
+    console.log(`🎯 Success rate: ${Math.round((processedListings.filter(l => l.imageExtractionStatus === 'success').length / rawListings.length) * 100)}%`);
+    
+    return processedListings;
+  }
+
+  /**
+   * Extract portal name from URL for provenance tracking
+   */
+  private extractPortalFromUrl(url: string): string | null {
+    try {
+      const hostname = new URL(url).hostname.toLowerCase();
+      if (hostname.includes('cardekho')) return 'cardekho.com';
+      if (hostname.includes('cars24')) return 'cars24.com';
+      if (hostname.includes('carwale')) return 'carwale.com';
+      if (hostname.includes('olx')) return 'olx.in';
+      if (hostname.includes('droom')) return 'droom.in';
+      if (hostname.includes('autotrader')) return 'autotrader.in';
+      return hostname;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * PHASE 3: BULK NORMALIZATION
    */
   private async bulkNormalization(rawListings: any[], result: OrchestratedIngestionResult): Promise<MarketplaceListing[]> {
     const bulkResult = await this.geminiProcessor.bulkNormalizeListings(rawListings);

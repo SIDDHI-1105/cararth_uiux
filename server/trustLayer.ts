@@ -75,7 +75,7 @@ export class TrustLayer {
       const imageAuthenticityResult = await this.validateImageAuthenticity(listing);
       
       // 4. Quality and authenticity assessment  
-      const qualityAnalysis = await this.claude.analyzeListingQuality(listing);
+      const qualityAnalysis = await this.claude.analyzeQuality(listing);
       
       // 5. Fraud pattern detection
       const fraudScore = this.detectFraudPatterns(listing);
@@ -124,7 +124,7 @@ export class TrustLayer {
   async moderateContent(listing: MarketplaceListing): Promise<ContentModerationResult> {
     try {
       // Use Claude for content moderation
-      const moderationResult = await this.claude.moderateContent(listing);
+      const moderationResult = await this.claude.moderateContent(listing.title, listing.description || '');
       
       // Apply PII masking if needed
       const maskedListing = this.maskSensitiveInfo(listing);
