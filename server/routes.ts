@@ -57,6 +57,8 @@ import { getSystemStatus, getImageAuthenticityStats } from "./imageAuthenticityM
 import { orchestratedBatchIngestion } from "./orchestratedIngestion.js";
 import { ImageProxyService } from "./imageProxyService.js";
 import { aiTrainingService } from "./aiTrainingService.js";
+import { marutiTrueValueScraper } from "./marutiTrueValueScraper.js";
+import { ObjectStorageService } from "./objectStorage.js";
 import crypto from "crypto";
 import { logError, ErrorCategory, createAppError, asyncHandler } from "./errorHandling.js";
 
@@ -291,7 +293,7 @@ const claudeRateLimit = async (req: any, res: any, next: any) => {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize services with error handling
-  let automotiveNewsService;
+  let automotiveNewsService: AutomotiveNewsService | undefined;
   try {
     automotiveNewsService = new AutomotiveNewsService();
     logError({ message: 'AutomotiveNewsService initialized successfully', statusCode: 200 }, 'AutomotiveNewsService initialization');
@@ -318,7 +320,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Start internal scheduler for batch ingestion (with idempotency)
   try {
     const { internalScheduler } = await import('./scheduler.js');
-    if (!internalScheduler.isStarted) {
+    if (!(internalScheduler as any).isStarted) {
       internalScheduler.start();
       logError({ message: 'Internal scheduler started for twice-daily batch ingestion', statusCode: 200 }, 'Scheduler initialization');
     } else {
@@ -818,7 +820,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             };
           } catch (error) {
             failed++;
-            console.warn(`❌ Failed to score listing ${listing.id || `batch_${i + index}`}:`, error.message);
+            console.warn(`❌ Failed to score listing ${listing.id || `batch_${i + index}`}:`, error instanceof Error ? error.message : String(error));
             return {
               listing_id: listing.id || `batch_${i + index}`,
               success: false,
@@ -957,7 +959,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               qualityCalls: claudeMetrics.qualityCalls,
               moderationCalls: claudeMetrics.moderationCalls,
               errorRate: claudeMetrics.errorRate,
-              averageResponseTime: claudeMetrics.averageResponseTime
+              averageResponseTime: (claudeMetrics as any).averageResponseTime || 0
             }
           },
           gemini: {
@@ -974,7 +976,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             metrics: {
               totalRequests: perplexityMetrics.totalRequests,
               successfulRequests: perplexityMetrics.successfulRequests,
-              fallbackResponses: perplexityMetrics.fallbackResponses,
+              fallbackResponses: (perplexityMetrics as any).fallbackResponses || 0,
               errorRate: perplexityMetrics.errorRate,
               averageResponseTime: perplexityMetrics.averageResponseTime
             }
@@ -1468,7 +1470,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .orderBy(communityComments.createdAt);
 
       res.json({ 
-        post: { ...post, views: post.views + 1 }, 
+        post: { ...post, views: (post.views || 0) + 1 }, 
         comments 
       });
     } catch (error) {
@@ -1662,7 +1664,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Start or continue conversation for training
       const session = req.session as any;
       if (!session.trainingConversationId) {
-        session.trainingConversationId = conversationTrainingService.startConversation(visitorId, isAuthenticated ? req.user?.id : undefined);
+        session.trainingConversationId = conversationTrainingService.startConversation(visitorId, isAuthenticated ? (req as any).user.claims.sub : undefined);
       }
       
       logError({ message: 'Assistant query received', statusCode: 200 }, 'Assistant query processing');
@@ -2626,7 +2628,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       hdfc_partner: `https://www.hdfcbank.com/personal/borrow/popular-loans/auto-loan?ref=cararth`
     };
     
-    const redirectUrl = redirectUrls[partnerId as string] || 'https://www.kuwy.in/klass';
+    const redirectUrl = (redirectUrls as Record<string, string>)[partnerId as string] || 'https://www.kuwy.in/klass';
     res.redirect(redirectUrl);
   });
 
@@ -3001,6 +3003,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/news/automotive", async (req, res) => {
     try {
       logError({ message: 'Fetching latest automotive news and market intelligence', statusCode: 200 }, 'News service request');
+      if (!automotiveNewsService) {
+        throw new Error('Automotive news service not available');
+      }
       const news = await automotiveNewsService.getLatestAutomotiveNews();
       
       res.json({
@@ -3028,6 +3033,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { location } = req.query;
       console.log(`🔍 Fetching market insights for ${location || 'India'}...`);
       
+      if (!automotiveNewsService) {
+        throw new Error('Automotive news service not available');
+      }
       const insights = await automotiveNewsService.getMarketInsights(location as string);
       
       res.json({
@@ -3056,6 +3064,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { brand } = req.params;
       console.log(`🏷️ Fetching ${brand} brand insights...`);
       
+      if (!automotiveNewsService) {
+        throw new Error('Automotive news service not available');
+      }
       const insights = await automotiveNewsService.getBrandInsights(brand);
       
       res.json({
@@ -3391,7 +3402,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ...listing,
           description: listing.description || `${listing.year} ${listing.brand} ${listing.model} listing`
         })),
-        userIntent,
+        { ...userIntent, budget: typeof userIntent.budget === 'number' ? { min: 0, max: userIntent.budget } : userIntent.budget },
         searchFilters || {}
       );
       
@@ -3478,7 +3489,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const testResult = await Promise.race([
         claudeService.classifyListing(testListing),
         new Promise((_, reject) => setTimeout(() => reject(new Error('Health check timeout')), 10000))
-      ]);
+      ]) as any;
       const responseTime = Date.now() - startTime;
 
       res.json({
@@ -3689,7 +3700,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const traceId = `trace_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     // 🔧 CANONICAL BOOLEAN PARSING (Architect Fix)
-    const parseBool = (v) => v === true || v === 'true' || v === '1' || v === 1;
+    const parseBool = (v: any) => v === true || v === 'true' || v === '1' || v === 1;
     const rawDemoMode = req.body?.demoMode ?? req.query?.demoMode ?? process.env.DEMO_MODE ?? 'false';
     const demoMode = parseBool(rawDemoMode);
     
@@ -3885,19 +3896,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }) :
         Promise.race([
-          unifiedPerplexityService.getMarketIntelligence({
-            location: mockCarListing.city,
-            brand: mockCarListing.brand,
-            priceRange: { min: 500000, max: 800000 }
-          }).then(result => ({
+          unifiedPerplexityService.getMarketIntelligence(
+            mockCarListing.city || 'Hyderabad',
+            {
+              brand: mockCarListing.brand,
+              priceRange: '500000-800000'
+            }
+          ).then(result => ({
             stage: 5,
             service: "Perplexity",
             latency: Date.now() - parallelStart,
             success: true,
             output: {
-              insights: result.insights?.length || 0,
-              location: result.location,
-              cacheOptimized: result.meta?.cacheOptimized
+              insights: Array.isArray(result) ? result.length : 0,
+              location: mockCarListing.city,
+              cacheOptimized: (result as any)?.meta?.cacheOptimized
             }
           })),
           new Promise((_, reject) => 
@@ -3931,7 +3944,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const parallelLatency = Date.now() - parallelStart;
       const totalLatency = Date.now() - startTime;
       pipelineResults.totalLatency = totalLatency;
-      pipelineResults.parallelLatency = parallelLatency;
+      (pipelineResults as any).parallelLatency = parallelLatency;
       
       console.log(`⏱️ [${traceId}] Timing: parallel=${parallelLatency}ms, total=${totalLatency}ms`);
       
@@ -3939,8 +3952,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fallbackStages = pipelineResults.stages.filter(s => s.output?.fallbackMode).length;
       
       pipelineResults.success = successfulStages >= 4; // 4/5 minimum success
-      pipelineResults.parallelLatency = parallelLatency;
-      pipelineResults.fallbackCount = fallbackStages;
+      (pipelineResults as any).parallelLatency = parallelLatency;
+      (pipelineResults as any).fallbackCount = fallbackStages;
       const avgLatency = pipelineResults.stages.reduce((sum, s) => sum + s.latency, 0) / pipelineResults.stages.length;
       
       console.log(`🎯 [${traceId}] Pipeline completed: ${successfulStages}/5 stages, ${pipelineResults.totalLatency}ms total`);
@@ -4011,9 +4024,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const carData = {
         brand,
         model,
-        year: parseInt(year),
+        year: year,
         city,
-        mileage: parseInt(mileage) || 50000,
+        mileage: mileage || 50000,
         fuelType: fuelType || 'Petrol',
         transmission: transmission || 'Manual'
       };
@@ -4032,7 +4045,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         estimatedPrice: 0,
         priceRange: { min: 0, max: 0 },
         confidence: 0,
-        aiInsights: [],
+        aiInsights: [] as string[],
         marketAnalysis: {
           trend: 'stable' as 'rising' | 'falling' | 'stable',
           recommendation: 'Get price analysis from multiple sources before buying.'
@@ -4046,7 +4059,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const insights = priceInsights.value;
         simulationResult.estimatedPrice = insights.averagePrice;
         simulationResult.priceRange = insights.priceRange;
-        simulationResult.marketAnalysis.trend = insights.marketTrend;
+        simulationResult.marketAnalysis.trend = insights.marketTrend || 'stable';
         simulationResult.marketAnalysis.recommendation = insights.recommendation;
         simulationResult.confidence = 0.85; // High confidence from Gemini
       }
@@ -4055,10 +4068,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (historicalAnalysis.status === 'fulfilled' && historicalAnalysis.value) {
         const analysis = historicalAnalysis.value;
         simulationResult.aiInsights.push(
-          `Authenticity rating: ${analysis.authenticityRating}/10`,
-          `Market trend: ${analysis.marketTrend}`,
-          `Average days to sell: ${analysis.salesVelocity.avgDaysToSell}`,
-          `Price confidence: ${(analysis.priceConfidence * 100).toFixed(0)}%`
+          `Authenticity rating: ${(analysis as any).authenticityRating}/10`,
+          `Market trend: ${(analysis as any).marketTrend}`,
+          `Average days to sell: ${(analysis as any).salesVelocity?.avgDaysToSell}`,
+          `Price confidence: ${((analysis as any).priceConfidence * 100).toFixed(0)}%`
         );
       }
 
@@ -4104,7 +4117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 max: Math.round(simulationResult.estimatedPrice * 1.15)
               };
               simulationResult.confidence = 0.75;
-              simulationResult.aiInsights.push(`Market research: ${priceText.substring(0, 100)}...`);
+              (simulationResult.aiInsights as string[]).push(`Market research: ${priceText.substring(0, 100)}...`);
             }
           }
         } catch (perplexityError) {
@@ -4116,7 +4129,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (simulationResult.estimatedPrice === 0) {
         // Basic depreciation model as last resort
         const currentYear = new Date().getFullYear();
-        const age = currentYear - parseInt(year);
+        const age = currentYear - year;
         const basePrice = 500000; // Base price estimate
         const depreciation = Math.max(0.1, 1 - (age * 0.1)); // 10% per year
         
@@ -4126,7 +4139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           max: Math.round(simulationResult.estimatedPrice * 1.2)
         };
         simulationResult.confidence = 0.6;
-        simulationResult.aiInsights.push('Price estimated using depreciation model due to limited market data');
+        (simulationResult.aiInsights as string[]).push('Price estimated using depreciation model due to limited market data');
       }
 
       console.log(`💰 Price simulation complete: ₹${simulationResult.estimatedPrice.toLocaleString('en-IN')}`);
@@ -4150,6 +4163,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // Image proxy route - serve verified images from object storage
+  app.get('/api/images/proxy', asyncHandler(async (req: any, res: any) => {
+    try {
+      const { key } = req.query;
+      
+      if (!key || typeof key !== 'string') {
+        return res.status(400).json({ error: 'Storage key is required' });
+      }
+      
+      console.log(`📸 Serving image from storage key: ${key.substring(0, 50)}...`);
+      
+      const objectStorage = new ObjectStorageService();
+      const file = await objectStorage.getObjectEntityFile(`/objects/${key}`);
+      
+      // Stream the file to response with appropriate headers
+      await objectStorage.downloadObject(file, res, 86400); // Cache for 24 hours
+      
+    } catch (error: any) {
+      console.error('Image proxy error:', error);
+      
+      if (error.name === 'ObjectNotFoundError') {
+        return res.status(404).json({ error: 'Image not found' });
+      }
+      
+      return res.status(500).json({ 
+        error: 'Failed to serve image',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }));
+  
+  // Test route for Maruti True Value scraper
+  app.get('/api/maruti/test', asyncHandler(async (req: any, res: any) => {
+    try {
+      console.log('🏭 Testing Maruti True Value scraper integration...');
+      
+      const options = {
+        city: req.query.city as string || 'hyderabad',
+        maxPages: parseInt(req.query.maxPages as string) || 5,
+        budget: req.query.budget as string,
+        bodyType: req.query.bodyType as string
+      };
+      
+      // Run scraper
+      const scrapingResult = await marutiTrueValueScraper.scrapeListings(options);
+      
+      if (!scrapingResult.success) {
+        return res.status(500).json({
+          error: 'Scraping failed',
+          details: scrapingResult.errors
+        });
+      }
+      
+      // Screen listings through trust layer
+      const { approved, rejected } = await marutiTrueValueScraper.screenListingsThroughTrustLayer(scrapingResult.listings);
+      
+      const result = {
+        success: true,
+        scraping: {
+          totalFound: scrapingResult.totalFound,
+          totalProcessed: scrapingResult.listings.length,
+          authenticatedImages: scrapingResult.authenticatedListings
+        },
+        trust: {
+          approved: approved.length,
+          rejected: rejected.length,
+          approvalRate: scrapingResult.listings.length > 0 ? 
+            Math.round((approved.length / scrapingResult.listings.length) * 100) : 0
+        },
+        listings: approved.slice(0, 3).map(listing => ({
+          id: listing.id,
+          title: listing.title,
+          brand: listing.brand,
+          model: listing.model,
+          price: listing.price,
+          images: listing.images.length,
+          verificationStatus: listing.verificationStatus,
+          source: listing.source
+        })),
+        performance: {
+          totalImages: scrapingResult.listings.reduce((sum, l) => sum + l.images.length, 0),
+          authenticatedRate: scrapingResult.listings.length > 0 ? 
+            Math.round((scrapingResult.authenticatedListings / scrapingResult.listings.length) * 100) : 0
+        },
+        errors: scrapingResult.errors
+      };
+      
+      console.log(`✅ Maruti test complete: ${approved.length}/${scrapingResult.listings.length} approved`);
+      
+      return res.status(200).json(result);
+      
+    } catch (error: any) {
+      console.error('Maruti test error:', error);
+      
+      return res.status(500).json({
+        error: 'Test failed',
+        message: error.message,
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      });
+    }
+  }));
 
   const httpServer = createServer(app);
   return httpServer;

@@ -591,6 +591,49 @@ export class DetailPageExtractor {
         ],
       },
     });
+
+    // Maruti True Value configuration - CERTIFIED PRE-OWNED INTEGRATION
+    this.portalConfigs.set('marutisuzukitruevalue.com', {
+      name: 'Maruti True Value',
+      selectors: {
+        gallery: [
+          '.car-gallery img',
+          '.image-gallery img',
+          '.car-images img',
+          '.listing-images img',
+          '[class*="gallery"] img',
+          '[class*="slider"] img',
+          '[class*="carousel"] img'
+        ],
+        heroImage: [
+          '.hero-image img',
+          '.main-car-image img',
+          '.primary-image img'
+        ],
+        thumbnails: [
+          '.thumbnail-gallery img',
+          '.thumb-images img',
+          '.small-images img'
+        ]
+      },
+      imageUrlPatterns: [
+        /dt5rjsxbvck7d\.cloudfront\.net/, // Primary CDN
+        /az-ci-afde-prd-trv-01-.*\.azurefd\.net/, // Azure CDN
+        /images\.marutisuzukitruevalue\.com/,
+        /assets\.truevalue\.com/
+      ],
+      excludePatterns: [
+        /logo/i,
+        /banner/i,
+        /watermark/i,
+        /placeholder/i,
+        /default/i,
+        /icon/i,
+        /header/i,
+        /footer/i,
+        /masterloader/i // Exclude loading animations
+      ]
+    });
   }
 
   /**
