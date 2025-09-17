@@ -51,10 +51,11 @@ export default function PriceSimulator() {
   };
 
   const formatPrice = (price: number) => {
-    if (price >= 100000) {
-      return `₹${(price / 100000).toFixed(1)} Lakh`;
-    }
-    return `₹${price.toLocaleString('en-IN')}`;
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(price);
   };
 
   const getTrendIcon = (trend: 'rising' | 'falling' | 'stable') => {

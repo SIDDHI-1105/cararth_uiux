@@ -127,8 +127,11 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
   }
 
   const formatPrice = (price: number) => {
-    const lakhs = price / 100000;
-    return `₹${lakhs.toFixed(2)} Lakh`;
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(price);
   };
 
   const formatMileage = (mileage: number) => {

@@ -61,13 +61,9 @@ export function formatIndianCurrency(amount: number | string): string {
 }
 
 /**
- * Format amount in lakhs for easier readability
+ * Format amount in proper Indian currency format (removed Lakh/Crore references)
  */
 export function formatInLakhs(amount: number | string): string {
   const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
-  if (numAmount >= 100000) {
-    const lakhs = numAmount / 100000;
-    return `₹${lakhs.toFixed(1)} Lakh${lakhs !== 1 ? 's' : ''}`;
-  }
   return formatIndianCurrency(numAmount);
 }

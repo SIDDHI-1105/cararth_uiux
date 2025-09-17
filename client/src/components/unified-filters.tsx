@@ -202,9 +202,9 @@ export default function UnifiedFilters({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Any Budget</SelectItem>
-                <SelectItem value="2-5L">₹2-5 Lakh</SelectItem>
-                <SelectItem value="5-10L">₹5-10 Lakh</SelectItem>
-                <SelectItem value="10-20L">₹10-20 Lakh</SelectItem>
+                <SelectItem value="2-5L">₹2,00,000-5,00,000</SelectItem>
+                <SelectItem value="5-10L">₹5,00,000-10,00,000</SelectItem>
+                <SelectItem value="10-20L">₹10,00,000-20,00,000</SelectItem>
                 <SelectItem value="custom">Custom Range</SelectItem>
               </SelectContent>
             </Select>

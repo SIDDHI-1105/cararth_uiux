@@ -49,8 +49,11 @@ export default function PriceRecommendation({ carData, onPriceRecommend }: Price
   });
 
   const formatPrice = (price: number) => {
-    const lakhs = price / 100000;
-    return `₹${lakhs.toFixed(2)} Lakh`;
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(price);
   };
 
   const getTrendIcon = (trend: string) => {
@@ -200,7 +203,7 @@ export default function PriceRecommendation({ carData, onPriceRecommend }: Price
                   className="bg-green-600 hover:bg-green-700 text-white"
                   data-testid="button-use-suggested-price"
                 >
-                  Use Market Price (₹{(priceComparison.data.insights.averagePrice / 100000).toFixed(2)} Lakh)
+                  Use Market Price ({formatPrice(priceComparison.data.insights.averagePrice)})
                 </Button>
               )}
             </div>

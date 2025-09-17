@@ -33,10 +33,11 @@ export default function MarketplaceListing() {
   });
 
   const formatPrice = (price: number) => {
-    if (price >= 100000) {
-      return `₹${(price / 100000).toFixed(1)} Lakh`;
-    }
-    return `₹${price.toLocaleString()}`;
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(price);
   };
 
   const formatMileage = (mileage: number) => {

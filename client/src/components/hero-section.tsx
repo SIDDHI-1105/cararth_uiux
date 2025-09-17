@@ -111,16 +111,16 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Any Budget</SelectItem>
-                  <SelectItem value="0-200000">Under ₹2 Lakh</SelectItem>
-                  <SelectItem value="200000-500000">₹2-5 Lakh</SelectItem>
-                  <SelectItem value="500000-1000000">₹5-10 Lakh</SelectItem>
-                  <SelectItem value="1000000-1500000">₹10-15 Lakh</SelectItem>
-                  <SelectItem value="1500000-2000000">₹15-20 Lakh</SelectItem>
-                  <SelectItem value="2000000-3000000">₹20-30 Lakh</SelectItem>
-                  <SelectItem value="3000000-5000000">₹30-50 Lakh</SelectItem>
-                  <SelectItem value="5000000-7500000">₹50-75 Lakh</SelectItem>
-                  <SelectItem value="7500000-10000000">₹75 Lakh-1 Cr</SelectItem>
-                  <SelectItem value="10000000-99999999">Above ₹1 Cr</SelectItem>
+                  <SelectItem value="0-200000">Under ₹2,00,000</SelectItem>
+                  <SelectItem value="200000-500000">₹2,00,000-5,00,000</SelectItem>
+                  <SelectItem value="500000-1000000">₹5,00,000-10,00,000</SelectItem>
+                  <SelectItem value="1000000-1500000">₹10,00,000-15,00,000</SelectItem>
+                  <SelectItem value="1500000-2000000">₹15,00,000-20,00,000</SelectItem>
+                  <SelectItem value="2000000-3000000">₹20,00,000-30,00,000</SelectItem>
+                  <SelectItem value="3000000-5000000">₹30,00,000-50,00,000</SelectItem>
+                  <SelectItem value="5000000-7500000">₹50,00,000-75,00,000</SelectItem>
+                  <SelectItem value="7500000-10000000">₹75,00,000-1,00,00,000</SelectItem>
+                  <SelectItem value="10000000-99999999">Above ₹1,00,00,000</SelectItem>
                 </SelectContent>
               </Select>
             </div>

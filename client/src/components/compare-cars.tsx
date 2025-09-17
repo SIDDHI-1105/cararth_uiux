@@ -22,11 +22,11 @@ export default function CompareCars({ selectedCars, onRemoveCar, open, onOpenCha
 
   const formatPrice = (price: string) => {
     const numPrice = parseFloat(price);
-    if (numPrice >= 1) {
-      return `₹${numPrice.toFixed(2)} Lakh`;
-    } else {
-      return `₹${(numPrice * 100).toFixed(0)} Thousand`;
-    }
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(numPrice);
   };
 
   const formatMileage = (mileage: number) => {
