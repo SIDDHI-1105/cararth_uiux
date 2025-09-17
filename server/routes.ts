@@ -58,6 +58,7 @@ import { orchestratedBatchIngestion } from "./orchestratedIngestion.js";
 import { ImageProxyService } from "./imageProxyService.js";
 import { aiTrainingService } from "./aiTrainingService.js";
 import { marutiTrueValueScraper } from "./marutiTrueValueScraper.js";
+import { eauctionsIndiaScraper } from "./eauctionsIndiaScraper.js";
 import { ObjectStorageService } from "./objectStorage.js";
 import crypto from "crypto";
 import { logError, ErrorCategory, createAppError, asyncHandler } from "./errorHandling.js";
@@ -4260,6 +4261,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       return res.status(500).json({
         error: 'Test failed',
+        message: error.message,
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      });
+    }
+  }));
+
+  // Test route for EauctionsIndia bank auction scraper
+  app.get('/api/eauctions/test', asyncHandler(async (req: any, res: any) => {
+    try {
+      console.log('🏦 Testing EauctionsIndia bank auction scraper integration...');
+      
+      const options = {
+        bank: (req.query.bank as 'sbi' | 'hdfc' | 'icici' | 'all') || 'sbi',
+        city: req.query.city as string || 'hyderabad',
+        maxPages: parseInt(req.query.maxPages as string) || 10,
+        vehicleType: (req.query.vehicleType as 'car' | 'vehicle' | 'all') || 'car'
+      };
+      
+      console.log(`🔍 Testing with options:`, options);
+      
+      // Run scraper (already includes TrustLayer validation)
+      const scrapingResult = await eauctionsIndiaScraper.scrapeListings(options);
+      
+      if (!scrapingResult.success) {
+        return res.status(500).json({
+          error: 'Bank auction scraping failed',
+          details: scrapingResult.errors
+        });
+      }
+      
+      const result = {
+        success: true,
+        scraping: {
+          totalFound: scrapingResult.totalFound,
+          totalProcessed: scrapingResult.listings.length,
+          authenticatedListings: scrapingResult.authenticatedListings,
+          bankAuctions: scrapingResult.listings.filter(l => l.condition === 'bank_auction').length
+        },
+        bankBreakdown: {
+          targetBank: options.bank,
+          processedListings: scrapingResult.listings.length,
+          authenticatedRate: scrapingResult.totalFound > 0 ? 
+            Math.round((scrapingResult.authenticatedListings / scrapingResult.totalFound) * 100) : 0
+        },
+        listings: scrapingResult.listings.slice(0, 3).map(listing => ({
+          id: listing.id,
+          title: listing.title,
+          brand: listing.brand,
+          model: listing.model,
+          price: listing.price,
+          location: listing.location,
+          images: listing.images.length,
+          verificationStatus: listing.verificationStatus,
+          condition: listing.condition,
+          source: listing.source,
+          sellerType: listing.sellerType
+        })),
+        performance: {
+          totalImages: scrapingResult.listings.reduce((sum, l) => sum + l.images.length, 0),
+          authenticatedRate: scrapingResult.totalFound > 0 ? 
+            Math.round((scrapingResult.authenticatedListings / scrapingResult.totalFound) * 100) : 0,
+          averageImagesPerListing: scrapingResult.listings.length > 0 ? 
+            Math.round(scrapingResult.listings.reduce((sum, l) => sum + l.images.length, 0) / scrapingResult.listings.length) : 0
+        },
+        errors: scrapingResult.errors
+      };
+      
+      console.log(`✅ EauctionsIndia test complete: ${scrapingResult.authenticatedListings}/${scrapingResult.totalFound} authenticated from ${options.bank} bank auctions`);
+      
+      return res.status(200).json(result);
+      
+    } catch (error: any) {
+      console.error('EauctionsIndia test error:', error);
+      
+      return res.status(500).json({
+        error: 'Bank auction test failed',
         message: error.message,
         details: process.env.NODE_ENV === 'development' ? error.stack : undefined
       });

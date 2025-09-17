@@ -640,31 +640,29 @@ export class DetailPageExtractor {
       name: 'EauctionsIndia',
       selectors: {
         gallery: [
-          '.property-images img',
-          '.auction-gallery img',
-          '.vehicle-images img',
-          '.listing-images img',
-          '[class*="gallery"] img',
-          '[class*="slider"] img',
-          '[class*="image"] img'
+          '.cover-image',               // Main car images on listing pages
+          '.property-image img',
+          '.car-image img',
+          '.vehicle-image img',
+          '[src*="cars-image"]',        // Specific pattern for car images
+          '[src*="vehicle-image"]',
+          '[src*="property"]'
         ],
         heroImage: [
+          '.cover-image',               // Cover images are the main car photos
           '.main-property-image img',
-          '.hero-image img',
-          '.primary-image img',
           '.featured-image img'
         ],
         thumbnails: [
-          '.thumbnail-gallery img',
-          '.thumb-images img',
-          '.small-images img'
+          '.thumbnail img',
+          '.small-image img'
         ]
       },
       imageUrlPatterns: [
-        /eauctionsindia\.com\/storage\//,  // Primary storage
-        /storage\/propertytypes\//,        // Property type images
-        /storage\/website\//,              // Website assets
-        /storage\/banks\//                 // Bank logos (may be excluded)
+        /\/storage\/propertytypes\//,      // Property type images (main pattern)
+        /cars-image\d+\.jpg/,             // Car image filename pattern
+        /vehicle-image\d+\.jpg/,          // Vehicle image pattern
+        /eauctionsindia\.com\/storage\//   // General storage
       ],
       excludePatterns: [
         /logo/i,
@@ -676,8 +674,10 @@ export class DetailPageExtractor {
         /header/i,
         /footer/i,
         /favicon/i,
-        /eauction_india/i,    // Site branding
-        /welcome/i            // Welcome banners
+        /eauction_india/i,      // Site branding
+        /welcome/i,             // Welcome banners
+        /whatsapp/i,            // Social icons
+        /telegram/i             // Social icons
       ]
     });
   }
