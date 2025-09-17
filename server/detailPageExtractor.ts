@@ -634,6 +634,52 @@ export class DetailPageExtractor {
         /masterloader/i // Exclude loading animations
       ]
     });
+
+    // EauctionsIndia configuration - BANK AUCTION INTEGRATION
+    this.portalConfigs.set('eauctionsindia.com', {
+      name: 'EauctionsIndia',
+      selectors: {
+        gallery: [
+          '.property-images img',
+          '.auction-gallery img',
+          '.vehicle-images img',
+          '.listing-images img',
+          '[class*="gallery"] img',
+          '[class*="slider"] img',
+          '[class*="image"] img'
+        ],
+        heroImage: [
+          '.main-property-image img',
+          '.hero-image img',
+          '.primary-image img',
+          '.featured-image img'
+        ],
+        thumbnails: [
+          '.thumbnail-gallery img',
+          '.thumb-images img',
+          '.small-images img'
+        ]
+      },
+      imageUrlPatterns: [
+        /eauctionsindia\.com\/storage\//,  // Primary storage
+        /storage\/propertytypes\//,        // Property type images
+        /storage\/website\//,              // Website assets
+        /storage\/banks\//                 // Bank logos (may be excluded)
+      ],
+      excludePatterns: [
+        /logo/i,
+        /banner/i,
+        /watermark/i,
+        /placeholder/i,
+        /default/i,
+        /icon/i,
+        /header/i,
+        /footer/i,
+        /favicon/i,
+        /eauction_india/i,    // Site branding
+        /welcome/i            // Welcome banners
+      ]
+    });
   }
 
   /**
