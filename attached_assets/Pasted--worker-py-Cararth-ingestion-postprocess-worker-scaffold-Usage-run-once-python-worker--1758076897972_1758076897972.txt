@@ -1,0 +1,420 @@
+"""
+worker.py
+Cararth ingestion & postprocess worker scaffold.
+
+Usage:
+  # run once
+  python worker.py --run-once
+
+  # run scheduler (long-running)
+  python worker.py
+"""
+
+import os, sys, time, json, math, logging, argparse, datetime, threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import requests
+import psycopg2
+from psycopg2.extras import Json, execute_batch
+import schedule
+
+# 3rd-party libs: pip install psycopg2-binary requests schedule
+# Environment variables (example):
+#   DATABASE_URL, FIRECRAWL_API_KEY, GEMINI_KEY, ANTHROPIC_KEY, PERPLEXITY_KEY, GPT5_KEY
+#   CDN_BUCKET, DAILY_GPT5_BUDGET_USD, DAILY_PERPLEXITY_BUDGET_USD
+
+LOG = logging.getLogger("cararth_worker")
+LOG.setLevel(logging.INFO)
+ch = logging.StreamHandler(sys.stdout)
+ch.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
+LOG.addHandler(ch)
+
+# --- CONFIG (tweak thresholds & budgets) ---
+CONFIDENCE_THRESHOLD = float(os.getenv("CONFIDENCE_THRESHOLD", "0.7"))
+TRUST_SCORE_PUBLISH = float(os.getenv("TRUST_SCORE_PUBLISH", "0.6"))
+PRICE_ANOMALY_PCT = float(os.getenv("PRICE_ANOMALY_PCT", "20"))
+DEDUPE_SIMILARITY = float(os.getenv("DEDUPE_SIMILARITY", "0.92"))
+GPT5_PRICE_THRESHOLD = int(os.getenv("GPT5_PRICE_THRESHOLD", "300000"))  # INR
+DAILY_GPT5_BUDGET = float(os.getenv("DAILY_GPT5_BUDGET_USD", "50.0"))
+DAILY_PERPLEXITY_BUDGET = float(os.getenv("DAILY_PERPLEXITY_BUDGET_USD", "40.0"))
+
+BATCH_CONCURRENCY = int(os.getenv("BATCH_CONCURRENCY", "8"))
+IMAGE_DOWNLOAD_CONCURRENCY = int(os.getenv("IMAGE_DOWNLOAD_CONCURRENCY", "6"))
+
+# --- Simple in-memory spend counters (persist externally for robustness) ---
+model_spend = {
+    "gpt5": 0.0,
+    "perplexity": 0.0,
+    # add others if you measure cost
+}
+
+# --- DB helpers ---
+def get_db_conn():
+    DATABASE_URL = os.getenv("DATABASE_URL")
+    if not DATABASE_URL:
+        raise RuntimeError("DATABASE_URL not set")
+    return psycopg2.connect(DATABASE_URL, sslmode="require")
+
+# --- Firecrawl / MCP fetch stub ---
+def call_firecrawl_api(batch_ts):
+    """
+    Replace with actual Firecrawl API call.
+    Should return iterable of raw listings in JSON. Example structure per item:
+    {
+      "source":"CarDekho",
+      "source_id":"12345",
+      "raw_html": "...",
+      "extracted": {...}  # optional, if Firecrawl returns structured data
+    }
+    """
+    LOG.info("DEBUG: call_firecrawl_api stub called for batch_ts=%s", batch_ts)
+    # TODO: replace with real call; here we return empty list for safety
+    return []
+
+# --- Normalization (simple deterministic rules; extend as needed) ---
+def normalize_item(raw_item):
+    """
+    Convert raw extraction into normalized dict with required keys.
+    Return (normalized_dict, confidence_score)
+    """
+    normalized = {}
+    confidence = 0.9  # optimistic default; drop if fields missing
+    # Example: map fields if present
+    ex = raw_item.get("extracted", {}) if raw_item else {}
+    normalized["title"] = ex.get("title") or raw_item.get("title") or ex.get("name")
+    price = ex.get("price") or ex.get("price_inr") or raw_item.get("price")
+    try:
+        if price is not None:
+            # strip non-digits
+            p = int("".join(ch for ch in str(price) if ch.isdigit()))
+            normalized["price"] = p
+        else:
+            normalized["price"] = None
+            confidence -= 0.4
+    except Exception:
+        normalized["price"] = None
+        confidence -= 0.4
+    normalized["make"] = ex.get("make") or ex.get("brand")
+    normalized["model"] = ex.get("model")
+    normalized["year"] = ex.get("year")
+    normalized["mileage"] = ex.get("mileage")
+    normalized["city"] = ex.get("city") or raw_item.get("city")
+    normalized["images"] = ex.get("images") or raw_item.get("images") or []
+    normalized["contact"] = ex.get("contact") or raw_item.get("contact")
+    # Basic confidence adjustments
+    if not normalized["images"]:
+        confidence -= 0.3
+    if not normalized["contact"]:
+        confidence -= 0.2
+    # clamp
+    confidence = max(0.0, min(1.0, confidence))
+    return normalized, confidence
+
+# --- Placeholder LLM & embedding calls (implement real API calls here) ---
+def call_gemini_batch(items):
+    """Batch fallback extraction via Gemini. Replace with API calls. Returns dict mapping source_id->extracted."""
+    LOG.info("DEBUG: call_gemini_batch stub for %d items", len(items))
+    # TODO: implement actual Gemini calls
+    return {}
+
+def call_anthropic_validation(normalized):
+    """Return dict: {trust_score: float, fraud_reasons: []}"""
+    # TODO: implement Anthropic call; this is a cheap classifier
+    return {"trust_score": 0.85, "fraud_reasons": []}
+
+def call_perplexity_check(normalized):
+    """Return research enrichment or None"""
+    # TODO: call Perplexity only for anomalies
+    return {"notes": "perplexity-check-ok"}
+
+def call_gpt5_finalize(normalized, similar_list):
+    """
+    Final model: returns structure {
+      "approve": True/False,
+      "price_band": {"low": .., "median": .., "high": .., "confidence": 0.8},
+      "summary": "short buyer-ready summary",
+      "final_trust_score": 0.82
+    }
+    """
+    # TODO: integrate real GPT-5 SDK/HTTP calls; consider prompt templates and RAG context
+    LOG.info("DEBUG: call_gpt5_finalize stub")
+    return {
+        "approve": True if (normalized.get("price") or 0) > 0,
+        "price_band": {"low": int((normalized.get("price") or 0) * 0.95),
+                       "median": int((normalized.get("price") or 0)),
+                       "high": int((normalized.get("price") or 0) * 1.05),
+                       "confidence": 0.75},
+        "summary": "Auto summary: price looks plausible.",
+        "final_trust_score": 0.8
+    }
+
+def get_embedding(text):
+    """Return vector (list of floats). Use cheaper embedding model for dedupe"""
+    # TODO: replace with embedding API call
+    return [0.0]*1536
+
+# --- Embedding & dedupe storage helpers (simple placeholders) ---
+def save_cached_listing(conn, raw_item, normalized, confidence, batch_ts):
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO cached_portal_listings (source, source_id, normalized, raw, fetched_at, ingest_batch_ts, status, confidence)
+        VALUES (%s,%s,%s,%s,now(),%s,%s,%s)
+        ON CONFLICT (source, source_id, ingest_batch_ts) DO UPDATE
+        SET normalized=EXCLUDED.normalized, raw=EXCLUDED.raw, confidence=EXCLUDED.confidence
+        RETURNING id
+    """, (raw_item.get("source"), raw_item.get("source_id"), Json(normalized), Json(raw_item), batch_ts, 'raw', confidence))
+    id = cur.fetchone()[0]
+    conn.commit()
+    cur.close()
+    return id
+
+def save_embedding(conn, listing_id, vector):
+    cur = conn.cursor()
+    # if using pgvector, use proper insert - here abstracted
+    cur.execute("INSERT INTO embeddings (listing_id, vector, created_at) VALUES (%s, %s, now())", (listing_id, Json(vector)))
+    conn.commit()
+    cur.close()
+
+def find_similar_by_embedding(conn, vector, threshold=DEDUPE_SIMILARITY):
+    """
+    Query vector DB for nearest neighbors and return matching listing ids if any above threshold.
+    Placeholder: returns [].
+    """
+    # TODO: implement pgvector similarity search
+    return []
+
+# --- Image caching helpers ---
+def download_image(url, local_dir="/tmp/cararth_images"):
+    try:
+        os.makedirs(local_dir, exist_ok=True)
+        r = requests.get(url, timeout=12)
+        if r.status_code == 200:
+            fname = os.path.join(local_dir, str(abs(hash(url))) + os.path.splitext(url.split("?")[0])[-1][:6])
+            with open(fname, "wb") as f:
+                f.write(r.content)
+            # optionally validate mime & size
+            return fname
+        else:
+            return None
+    except Exception as e:
+        LOG.warning("download_image error for %s: %s", url, e)
+        return None
+
+def upload_to_cdn(local_path):
+    """
+    Replace with S3 / CDN upload. Return publicly accessible url.
+    """
+    # TODO: Implement S3 upload / CDN put
+    # For now return local path as placeholder
+    return "file://" + local_path
+
+# --- Postprocess core for an ingest batch ---
+def process_ingest_batch(batch_ts, run_once=False):
+    LOG.info("Starting ingest batch for %s", batch_ts)
+    conn = get_db_conn()
+    try:
+        raw_items = call_firecrawl_api(batch_ts)  # list of raw listing dicts
+        LOG.info("Fetched %d raw items from Firecrawl", len(raw_items))
+
+        # Save raw + initial normalization
+        to_fallback = []
+        saved_mappings = []  # tuples (listing_db_id, raw_item, normalized, confidence)
+        for raw in raw_items:
+            normalized, confidence = normalize_item(raw)
+            listing_db_id = save_cached_listing(conn, raw, normalized, confidence, batch_ts)
+            saved_mappings.append((listing_db_id, raw, normalized, confidence))
+            if confidence < CONFIDENCE_THRESHOLD or not normalized.get("price") or not normalized.get("images"):
+                to_fallback.append((listing_db_id, raw))
+
+        # Gemini fallback (batch) for low-confidence items
+        if to_fallback:
+            LOG.info("Calling Gemini fallback for %d items", len(to_fallback))
+            # Batch up ids and raw items
+            raw_batch = [r for (_, r) in to_fallback]
+            gemini_results = call_gemini_batch(raw_batch)
+            # Merge gemini results back
+            for (listing_db_id, raw) in to_fallback:
+                gem = gemini_results.get(raw.get("source_id"))
+                if gem:
+                    norm2, conf2 = normalize_item({"extracted": gem})
+                    # update cached_portal_listings
+                    cur = conn.cursor()
+                    cur.execute("""
+                        UPDATE cached_portal_listings SET normalized=%s, confidence=%s WHERE id=%s
+                    """, (Json(norm2), conf2, listing_db_id))
+                    conn.commit()
+                    cur.close()
+
+        # Postprocess each saved listing: QA -> Anthropic -> selective Perplexity -> embeddings/dedupe -> GPT5 finalize -> cache images -> write to validated set
+        validated_ids = []
+        needs_human = []
+        # Use threadpool for image downloads and parallel tasks where appropriate
+        for (listing_db_id, raw, normalized, confidence) in saved_mappings:
+            # re-load normalized in case gemini updated it
+            cur = conn.cursor()
+            cur.execute("SELECT normalized, confidence FROM cached_portal_listings WHERE id=%s", (listing_db_id,))
+            row = cur.fetchone()
+            cur.close()
+            if row:
+                normalized = row[0]
+                confidence = float(row[1] or 0.0)
+            # deterministic QA gate
+            if not normalized.get("price") or not normalized.get("images"):
+                LOG.info("Listing %s missing critical fields -> needs_human", raw.get("source_id"))
+                needs_human.append(listing_db_id)
+                cur = conn.cursor()
+                cur.execute("UPDATE cached_portal_listings SET status='needs_human' WHERE id=%s", (listing_db_id,))
+                conn.commit()
+                cur.close()
+                continue
+
+            # Anthropic validation for high-value or flagged heuristic
+            price = normalized.get("price") or 0
+            if price >= GPT5_PRICE_THRESHOLD or confidence < 0.85:
+                val = call_anthropic_validation(normalized)
+                trust_score = val.get("trust_score", 0.0)
+            else:
+                val = {"trust_score": 0.9, "fraud_reasons": []}
+                trust_score = val["trust_score"]
+
+            # selective perplexity
+            median = price  # placeholder: fetch city-model median from your historical table
+            if median and abs(price - median) / max(1, median) * 100 > PRICE_ANOMALY_PCT:
+                perf = call_perplexity_check(normalized)
+            else:
+                perf = None
+
+            # embeddings & dedupe
+            text_for_embed = " ".join(str(normalized.get(k,"")) for k in ("title","make","model","year","city"))
+            emb = get_embedding(text_for_embed)
+            save_embedding(conn, listing_db_id, emb)
+            similar = find_similar_by_embedding(conn, emb)
+            # If dedupe conflict resolution needed, you may merge here (omitted for brevity)
+
+            # final GPT-5 (selective)
+            needs_final = (price >= GPT5_PRICE_THRESHOLD) or (trust_score < TRUST_SCORE_PUBLISH) or (len(similar) > 0)
+            final = None
+            if needs_final and model_spend["gpt5"] < DAILY_GPT5_BUDGET:
+                final = call_gpt5_finalize(normalized, similar)
+                # update spend estimate (you must compute / approximate per-call cost)
+                model_spend["gpt5"] += 0.05  # placeholder USD
+            else:
+                # default final result if not called
+                final = {"approve": True, "price_band": None, "summary": None, "final_trust_score": trust_score}
+
+            # decide publish vs human
+            final_trust = final.get("final_trust_score", trust_score)
+            approved = final.get("approve", False) and final_trust >= TRUST_SCORE_PUBLISH
+            if approved:
+                # cache images: download & upload to CDN
+                cdn_urls = []
+                # download concurrently (but simple loop here)
+                for img_url in normalized.get("images", []):
+                    local = download_image(img_url)
+                    if local:
+                        cdn = upload_to_cdn(local)
+                        cdn_urls.append(cdn)
+                # write final validated row to a staging table or mark as validated
+                cur = conn.cursor()
+                cur.execute("""
+                    UPDATE cached_portal_listings
+                    SET status='validated', trust_score=%s, normalized=%s, validation_notes=%s
+                    WHERE id=%s
+                """, (final_trust, Json(normalized), Json({"summary": final.get("summary"), "price_band": final.get("price_band")}), listing_db_id))
+                conn.commit()
+                cur.close()
+                validated_ids.append(listing_db_id)
+            else:
+                cur = conn.cursor()
+                cur.execute("UPDATE cached_portal_listings SET status='needs_human' WHERE id=%s", (listing_db_id,))
+                conn.commit()
+                cur.close()
+                needs_human.append(listing_db_id)
+
+        LOG.info("Batch done: validated=%d needs_human=%d", len(validated_ids), len(needs_human))
+
+        # Build trusted_listings_new from validated cached_portal_listings for this batch
+        LOG.info("Building trusted_listings_new and performing atomic swap")
+        cur = conn.cursor()
+        # Example approach: create temp table and copy validated rows in, then swap names in a transaction
+        cur.execute("BEGIN")
+        cur.execute("CREATE TABLE IF NOT EXISTS trusted_listings_new (LIKE trusted_listings INCLUDING ALL)")
+        # remove rows from trusted_listings_new to avoid duplicates
+        cur.execute("TRUNCATE trusted_listings_new")
+        # Insert validated rows for this batch
+        cur.execute("""
+            INSERT INTO trusted_listings_new (id, canonical, trust_score, source_list, published_at, status)
+            SELECT gen_random_uuid(), normalized, trust_score,
+                   jsonb_build_array(jsonb_build_object('source', source, 'source_id', source_id, 'fetched_at', fetched_at)),
+                   now(), status
+            FROM cached_portal_listings
+            WHERE ingest_batch_ts=%s AND status='validated'
+        """, (batch_ts,))
+        # swap: drop old, rename
+        cur.execute("ALTER TABLE IF EXISTS trusted_listings RENAME TO trusted_listings_old")
+        cur.execute("ALTER TABLE trusted_listings_new RENAME TO trusted_listings")
+        cur.execute("ALTER TABLE IF EXISTS trusted_listings_old RENAME TO trusted_listings_archive")
+        cur.execute("COMMIT")
+        cur.close()
+
+        # Removal job - check yesterday vs today and soft-delete (set status='removed') in trusted_listings
+        run_removal_job(conn, batch_ts)
+
+    finally:
+        conn.close()
+
+def run_removal_job(conn, batch_ts):
+    """
+    Soft-remove listings which were present in yesterday snapshot but not present in today snapshot.
+    """
+    LOG.info("Running removal job")
+    cur = conn.cursor()
+    # Use dates based on ingest batch_ts (UTC dates)
+    today_date = batch_ts.date()
+    yesterday_date = today_date - datetime.timedelta(days=1)
+    cur.execute("""
+        WITH yesterday AS (
+          SELECT source, source_id FROM cached_portal_listings
+          WHERE ingest_batch_ts::date = %s
+        ),
+        today AS (
+          SELECT source, source_id FROM cached_portal_listings
+          WHERE ingest_batch_ts::date = %s
+        )
+        SELECT y.source, y.source_id
+        FROM yesterday y
+        LEFT JOIN today t USING (source, source_id)
+        WHERE t.source_id IS NULL
+    """, (yesterday_date, today_date))
+    missing = cur.fetchall()
+    LOG.info("Found %d missing items between %s and %s", len(missing), yesterday_date, today_date)
+    for source, source_id in missing:
+        # Soft-delete in trusted_listings by matching sources array (simple approach)
+        cur.execute("""
+            UPDATE trusted_listings
+            SET status='removed', removed_at=now()
+            WHERE (COALESCE(source_list, '[]'::jsonb) @> jsonb_build_array(jsonb_build_object('source', %s, 'source_id', %s)))
+        """, (source, source_id))
+    conn.commit()
+    cur.close()
+
+# --- Scheduler / CLI run ---
+def schedule_jobs():
+    # times in IST were 06:00 and 18:00; convert to UTC: 00:30 and 12:30 (if using exact times with tz handling use APScheduler)
+    schedule.every().day.at("00:30").do(lambda: process_ingest_batch(datetime.datetime.utcnow()))
+    schedule.every().day.at("12:30").do(lambda: process_ingest_batch(datetime.datetime.utcnow()))
+    LOG.info("Scheduler started - awaiting jobs")
+    while True:
+        schedule.run_pending()
+        time.sleep(5)
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--run-once", action="store_true", help="run a single ingest & postprocess (useful for manual run)")
+    args = parser.parse_args()
+    if args.run_once:
+        process_ingest_batch(datetime.datetime.utcnow(), run_once=True)
+    else:
+        schedule_jobs()
+
+if __name__ == "__main__":
+    main()
