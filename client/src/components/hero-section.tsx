@@ -4,6 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search } from "lucide-react";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import { TooltipWrapper } from "@/components/tooltip-wrapper";
+import { HapticButton } from "@/components/haptic-feedback";
 
 interface HeroSearchProps {
   onSearch: (filters: {
@@ -12,9 +13,11 @@ interface HeroSearchProps {
     city?: string;
     fuelType?: string;
   }) => void;
+  hasSearched?: boolean;
+  isSearching?: boolean;
 }
 
-export default function HeroSection({ onSearch }: HeroSearchProps) {
+export default function HeroSection({ onSearch, hasSearched = false, isSearching = false }: HeroSearchProps) {
   const [brand, setBrand] = useState("");
   const [budget, setBudget] = useState("");
   const [city, setCity] = useState("");
@@ -30,44 +33,54 @@ export default function HeroSection({ onSearch }: HeroSearchProps) {
   };
 
   return (
-    <section className="bg-background dark:bg-background py-16 md:py-20 px-4">
+    <section className={`bg-background dark:bg-background px-4 transition-all duration-700 ease-in-out ${
+      hasSearched ? 'py-8' : 'py-16 md:py-20'
+    }`}>
       <div className="max-w-6xl mx-auto text-center">
         {/* CarArth Logo */}
         <div className="mb-6">
           <BrandWordmark variant="hero" showTagline={false} className="justify-center items-center" />
         </div>
-        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 text-foreground leading-tight">India's First Used Car Search Engine</h1>
-        <p className="text-lg sm:text-xl md:text-2xl mb-6 text-muted-foreground max-w-4xl mx-auto leading-relaxed">
-          Your dream car is out there. We'll find it across every platform in India. One search, endless possibilities.
-        </p>
         
-        {/* Legal Compliance Badge */}
-        <div className="mb-6">
-          <div className="inline-flex items-center px-4 py-2 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-full text-sm font-medium text-blue-700 dark:text-blue-300">
-            <span className="mr-2">🔒</span>
-            <span>We index public listings from multiple platforms</span>
-          </div>
-        </div>
-        
-        {/* Platform Sources - Legally Compliant Display */}
-        <div className="mb-8">
-          <p className="text-sm text-muted-foreground mb-4">Data sources (public listings aggregated with compliance):</p>
-          <div className="flex flex-wrap justify-center items-center gap-3 opacity-80">
-            {[
-              "CarDekho", "OLX Autos", "Cars24", "CarWale", "AutoTrader", "Spinny"
-            ].map((source) => (
-              <div 
-                key={source} 
-                className="text-sm font-medium px-3 py-1.5 rounded-md border shadow-sm text-muted-foreground bg-background/70 dark:bg-card/70 border-border"
-              >
-                <span>{source}</span>
+        {/* Contextual Content - Only show if no search has been performed */}
+        {!hasSearched && (
+          <div className="transition-all duration-700 ease-in-out">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 text-foreground leading-tight">
+              Every car, every platform, one search.
+            </h1>
+            <p className="text-lg sm:text-xl md:text-2xl mb-6 text-muted-foreground max-w-4xl mx-auto leading-relaxed">
+              Find your perfect car from CarDekho, OLX, Cars24, CarWale & more - all in one place.
+            </p>
+            
+            {/* Legal Compliance Badge */}
+            <div className="mb-6">
+              <div className="inline-flex items-center px-4 py-2 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-full text-sm font-medium text-blue-700 dark:text-blue-300">
+                <span className="mr-2">🔒</span>
+                <span>We aggregate millions of listings from dealers and private sellers across India</span>
               </div>
-            ))}
-            <div className="text-sm font-medium text-primary font-bold px-3 py-1.5 bg-primary/10 rounded-md border border-primary/20">
-              + Government Auctions & More
+            </div>
+            
+            {/* Platform Sources - Legally Compliant Display */}
+            <div className="mb-8">
+              <p className="text-sm text-muted-foreground mb-4">Data sources (public listings aggregated with compliance):</p>
+              <div className="flex flex-wrap justify-center items-center gap-3 opacity-80">
+                {[
+                  "CarDekho", "OLX Autos", "Cars24", "CarWale", "AutoTrader", "Spinny"
+                ].map((source) => (
+                  <div 
+                    key={source} 
+                    className="text-sm font-medium px-3 py-1.5 rounded-md border shadow-sm text-muted-foreground bg-background/70 dark:bg-card/70 border-border"
+                  >
+                    <span>{source}</span>
+                  </div>
+                ))}
+                <div className="text-sm font-medium text-primary font-bold px-3 py-1.5 bg-primary/10 rounded-md border border-primary/20">
+                  + Government Auctions & More
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        )}
         
         <TooltipWrapper trigger="hero-search-form">
           <div className="bg-background/95 dark:bg-card/95 backdrop-blur-sm rounded-xl p-6 md:p-8 border shadow-lg max-w-4xl mx-auto" data-testid="hero-search-form">
@@ -147,21 +160,22 @@ export default function HeroSection({ onSearch }: HeroSearchProps) {
             </div>
           </div>
           
-          <Button 
+          <HapticButton 
             onClick={handleSearch}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-4 px-6 rounded-lg font-bold text-base md:text-lg tracking-wide transition-all duration-200 shadow-lg hover:shadow-xl min-h-[44px] touch-manipulation"
+            disabled={isSearching}
+            hapticType="button"
+            className={`w-full py-4 px-6 rounded-lg font-bold text-base md:text-lg tracking-wide min-h-[44px] touch-manipulation transition-all duration-300 transform ${
+              isSearching 
+                ? 'bg-primary/70 cursor-not-allowed scale-98 shadow-inner' 
+                : 'bg-primary hover:bg-primary/90 hover:scale-102 active:scale-98 shadow-lg hover:shadow-xl active:shadow-inner'
+            } text-primary-foreground`}
             data-testid="button-search-cars"
           >
-            <Search className="mr-2 h-5 w-5" />
-            Search Cars
-          </Button>
+            <Search className={`mr-2 h-5 w-5 transition-transform duration-300 ${isSearching ? 'animate-pulse' : ''}`} />
+            {isSearching ? 'Searching...' : 'Search Cars'}
+          </HapticButton>
           </div>
         </TooltipWrapper>
-        
-        <p className="text-sm text-muted-foreground mt-8 max-w-3xl mx-auto">
-          We aggregate millions of listings from dealers and private sellers across India. 
-          Our goal is to capture all the results in a single search, to save you time and help you find your ideal next car.
-        </p>
       </div>
     </section>
   );

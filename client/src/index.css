@@ -3,6 +3,28 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Enhanced Search Button Animations */
+@keyframes searchButtonPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+@keyframes searchButtonPress {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.98); }
+  100% { transform: scale(1); }
+}
+
+/* Custom utility classes for enhanced feedback */
+.scale-98 {
+  transform: scale(0.98);
+}
+
+.scale-102 {
+  transform: scale(1.02);
+}
+
 :root {
   /* Clean Minimal Color System - High Contrast */
   --background: hsl(0 0% 100%);

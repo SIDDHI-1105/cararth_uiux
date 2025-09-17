@@ -47,6 +47,7 @@ function HomeContent() {
   const [currentSearchQuery, setCurrentSearchQuery] = useState<string>('');
   const [showContactDialog, setShowContactDialog] = useState(false);
   const [selectedCarForContact, setSelectedCarForContact] = useState<{id: string, title: string} | null>(null);
+  const [hasSearched, setHasSearched] = useState<boolean>(false);
   
   const { feedback } = useHapticFeedback();
 
@@ -124,6 +125,7 @@ function HomeContent() {
 
   const handleHeroSearch = (searchFilters: any) => {
     console.log('🔍 Hero search called with:', searchFilters);
+    setHasSearched(true);
     setActiveTab("marketplace");
     
     // Create search query string for AI display
@@ -223,6 +225,7 @@ function HomeContent() {
 
   const handleAdvancedSearch = () => {
     feedback.button(); // Haptic feedback for search action
+    setHasSearched(true);
     
     // Convert filters to marketplace search format
     const searchFilters: any = {
@@ -432,14 +435,13 @@ function HomeContent() {
         canonical="https://cararth.com/"
       />
       <div>
-        <HeroSection onSearch={handleHeroSearch} />
+        <HeroSection 
+          onSearch={handleHeroSearch}
+          hasSearched={hasSearched}
+          isSearching={marketplaceSearch.isPending}
+        />
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h2 className="text-3xl font-bold mb-4 text-center">Every car, every platform, one search.</h2>
-          <p className="text-lg text-muted-foreground text-center mb-8">
-            Find your perfect car from CarDekho, OLX, Cars24, CarWale & more - all in one place.
-          </p>
-
           <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="local" className="flex items-center gap-2">
