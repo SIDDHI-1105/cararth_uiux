@@ -57,7 +57,7 @@ export class EnrichmentService {
           }
         ],
         response_format: { type: "json_object" },
-        max_tokens: 500,
+        max_completion_tokens: 500,
         temperature: 0.7,
       });
 
@@ -168,7 +168,7 @@ export class EnrichmentService {
       const response = await openai.chat.completions.create({
         model: "gpt-5", // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
         messages: [{ role: "user", content: prompt }],
-        max_tokens: 100,
+        max_completion_tokens: 100,
         temperature: 0.5,
       });
 
