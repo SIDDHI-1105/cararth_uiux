@@ -19,6 +19,7 @@ import crypto from 'crypto';
 import { enrichmentService } from './enrichmentService.js';
 import carSpecValidator from './carSpecValidator.js';
 import { marutiTrueValueScraper } from './marutiTrueValueScraper.js';
+import { hyundaiPromiseScraper } from './hyundaiPromiseScraper.js';
 
 export class BatchIngestionService {
   private marketplaceAggregator: MarketplaceAggregator;
@@ -71,9 +72,27 @@ export class BatchIngestionService {
         } catch (error) {
           console.error(`❌ Maruti True Value scraping failed for ${city}:`, error);
         }
+
+        // 🚗 INTEGRATE HYUNDAI H-PROMISE SCRAPER into batch ingestion
+        let hyundaiListings: any[] = [];
+        try {
+          console.log(`🚗 Scraping Hyundai H-Promise certified listings for ${city}...`);
+          const hyundaiResult = await hyundaiPromiseScraper.scrapeListings({ 
+            city: city.charAt(0).toUpperCase() + city.slice(1), // Capitalize city name
+            maxPages: 15, // Get more Hyundai listings as they have higher search volume
+            dealerSite: 'Advaith' // Start with Advaith Hyundai
+          });
+          
+          if (hyundaiResult.listings && hyundaiResult.listings.length > 0) {
+            hyundaiListings = hyundaiResult.listings;
+            console.log(`✅ Found ${hyundaiListings.length} Hyundai H-Promise certified listings`);
+          }
+        } catch (error) {
+          console.error(`❌ Hyundai H-Promise scraping failed for ${city}:`, error);
+        }
         
-        // Combine marketplace and Maruti True Value listings
-        const allListings = [...(result.listings || []), ...marutiListings];
+        // Combine marketplace, Maruti True Value, and Hyundai H-Promise listings
+        const allListings = [...(result.listings || []), ...marutiListings, ...hyundaiListings];
         
         if (allListings.length > 0) {
           // Normalize and store listings (including Maruti True Value)
