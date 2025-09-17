@@ -94,8 +94,8 @@ export class MarutiTrueValueScraper {
               authenticatedCount++;
               console.log(`✅ Listing authenticated and certified: ${listing.title} (trust score: ${trustResult.trustScore})`);
             } else {
-              // Listing failed trust validation - mark as rejected
-              listing.verificationStatus = 'rejected';
+              // Listing failed trust validation - mark as unverified
+              listing.verificationStatus = 'unverified';
               console.log(`❌ Listing failed trust validation: ${listing.title} - ${trustResult.explanation}`);
               // Note: We don't add rejected listings to allListings to prevent them from being stored
             }
@@ -238,7 +238,7 @@ export class MarutiTrueValueScraper {
       listing.source = 'Maruti True Value'; // Use source field
       // CRITICAL: Do NOT set verificationStatus='certified' here
       // This will be set ONLY after TrustLayer validation passes
-      listing.verificationStatus = 'pending'; // Will be updated after trust validation
+      listing.verificationStatus = 'unverified'; // Will be updated after trust validation
 
       return listing;
 
@@ -327,7 +327,7 @@ export class MarutiTrueValueScraper {
         description: `Maruti True Value certified pre-owned ${title}`,
         features: this.extractFeatures($),
         condition: 'certified', // Maruti True Value is pre-owned certified program
-        verificationStatus: 'pending' as const, // Will be set after TrustLayer validation
+        verificationStatus: 'unverified' as const, // Will be set after TrustLayer validation
         listingDate: new Date(),
         sellerType: 'dealer' as const
       };
