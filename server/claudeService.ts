@@ -8,6 +8,7 @@ import {
   CircuitBreaker,
   isRetryableError 
 } from './optimizedTimeouts.js';
+import { llmLearningSystem } from './llmLearningSystem.js';
 
 /*
 <important_code_snippet_instructions>
@@ -276,6 +277,10 @@ Respond with ONLY JSON in this exact format:
   "confidence": 0.89
 }`;
 
+      // Get contextual mileage insights from learning system  
+      const mileageInsight = await llmLearningSystem.getContextualMileageInsight(listing);
+      const enhancedContext = llmLearningSystem.getEnhancedPromptContext('mileage', listing.city);
+
       const userPrompt = `Assess quality for this car listing:
 
 LISTING DATA:
@@ -289,6 +294,8 @@ LISTING DATA:
 - Description Length: ${listing.description.length} characters
 - Listed: ${listing.listingDate.toDateString()}
 - Source: ${listing.source}
+
+MILEAGE INTELLIGENCE: ${mileageInsight}${enhancedContext}
 
 DESCRIPTION PREVIEW:
 ${listing.description.substring(0, 500)}${listing.description.length > 500 ? '...' : ''}

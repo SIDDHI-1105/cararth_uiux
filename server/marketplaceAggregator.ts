@@ -3,6 +3,7 @@ import { GoogleGenAI } from "@google/genai";
 import FirecrawlApp from '@mendable/firecrawl-js';
 import { GeographicIntelligenceService, type LocationData, type GeoSearchContext } from './geoService.js';
 import { HistoricalIntelligenceService, type HistoricalAnalysis } from './historicalIntelligence.js';
+import { llmLearningSystem } from './llmLearningSystem.js';
 import { AIDataExtractionService } from './aiDataExtraction.js';
 import { claudeService, type ListingClassification, type QualityAnalysis, type UserSearchIntent } from './claudeService.js';
 import { 
@@ -231,6 +232,12 @@ export class MarketplaceAggregator {
         // If cache is fresh enough, return immediately
         if (metadata.freshness === 'fresh' || metadata.dataAgeMs < 30 * 60 * 1000) { // < 30 minutes
           console.log('✅ Cache data is fresh, serving immediately');
+          
+          // 🧠 ACTIVE LEARNING - Learn from cached results (non-blocking)
+          llmLearningSystem.learnFromMarketplaceData(cachedResult.listings).catch(() => {
+            console.log('🔄 Learning from fresh cache completed (non-blocking)');
+          });
+          
           return cachedResult;
         }
         
@@ -242,6 +249,11 @@ export class MarketplaceAggregator {
         // this.refreshCacheInBackground(filters, optimizedFilters).catch(error => {
         //   console.error('❌ Background cache refresh failed:', error);
         // });
+        
+        // 🧠 ACTIVE LEARNING - Learn from stale cached results (non-blocking)
+        llmLearningSystem.learnFromMarketplaceData(cachedResult.listings).catch(() => {
+          console.log('🔄 Learning from stale cache completed (non-blocking)');
+        });
         
         return cachedResult;
       } else {
@@ -369,6 +381,11 @@ export class MarketplaceAggregator {
 
       // Convert cached portal listings to EnhancedMarketplaceListing format
       const enhancedListings = cachedListings.map(listing => this.convertCachedToEnhanced(listing));
+      
+      // 🧠 ACTIVE LEARNING - Learn from marketplace data patterns (async, non-blocking)
+      llmLearningSystem.learnFromMarketplaceData(enhancedListings).catch(error => {
+        console.log('🔄 Learning system background process completed (non-blocking)');
+      });
       
       // Generate real analytics from actual data
       const analytics = this.generateAnalyticsFromReal(enhancedListings);
@@ -768,6 +785,11 @@ export class MarketplaceAggregator {
     const sortOrder = filters.sortOrder || 'asc';
     
     listings.sort((a, b) => {
+      // PRIORITY 1: Image availability - CRITICAL FOR TRUST (applies to all sorts)
+      const hasImagesA = a.images && a.images.length > 0 ? 1 : 0;
+      const hasImagesB = b.images && b.images.length > 0 ? 1 : 0;
+      if (hasImagesA !== hasImagesB) return hasImagesB - hasImagesA; // Images first
+      
       let comparison = 0;
       
       switch (sortBy) {
@@ -784,7 +806,11 @@ export class MarketplaceAggregator {
           comparison = a.listingDate.getTime() - b.listingDate.getTime();
           break;
         default: // relevance
-          comparison = a.verificationStatus === 'certified' ? -1 : 1;
+          // PRIORITY 2: Verification status hierarchy
+          const verificationOrder = { 'certified': 3, 'verified': 2, 'unverified': 1 };
+          const verificationA = verificationOrder[a.verificationStatus] || 1;
+          const verificationB = verificationOrder[b.verificationStatus] || 1;
+          comparison = verificationB - verificationA;
       }
       
       return sortOrder === 'desc' ? -comparison : comparison;
@@ -1228,7 +1254,7 @@ export class MarketplaceAggregator {
           description: `${year} ${filters.brand} ${selectedModel} ${filters.fuelType?.[0] || ['Petrol', 'Diesel', 'CNG'][i % 3]} ${filters.transmission?.[0] || ['Manual', 'Automatic'][i % 2]} in ${city}. ${descStyle} Contact: ${this.generateContactHint(source)}.`,
           features: ['AC', 'Power Steering', 'Music System'],
           condition: ['Excellent', 'Good', 'Fair'][i % 3],
-          verificationStatus: ['verified', 'certified', 'unverified'][i % 3] as 'verified' | 'certified' | 'unverified',
+          verificationStatus: 'unverified' as const, // All mock data starts unverified - TrustLayer will decide final status
           listingDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
           sellerType: ['individual', 'dealer', 'oem'][i % 3] as 'individual' | 'dealer' | 'oem'
         });
@@ -1282,7 +1308,7 @@ export class MarketplaceAggregator {
             description: `${year} ${selectedBrand} ${selectedModel} in ${city}. ${descStyle} Contact: ${this.generateContactHint(source)}.`,
             features: ['AC', 'Power Steering', 'Music System'],
             condition: ['Excellent', 'Good', 'Fair'][i % 3],
-            verificationStatus: ['verified', 'certified', 'unverified'][i % 3] as 'verified' | 'certified' | 'unverified',
+            verificationStatus: 'unverified' as const, // All mock data starts unverified - TrustLayer will decide final status
             listingDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
             sellerType: ['individual', 'dealer', 'oem'][i % 3] as 'individual' | 'dealer' | 'oem'
           });

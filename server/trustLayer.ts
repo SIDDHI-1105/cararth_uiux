@@ -11,6 +11,7 @@ export interface TrustAnalysisResult {
   trustScore: number; // 0-100
   imageAuthenticityScore?: number; // 0-100, optional for listings without images
   verifiedImageCount?: number;
+  finalVerificationStatus: 'verified' | 'unverified' | 'certified'; // CRITICAL: Final status based on validation
   issues: string[];
   actions: ('approve' | 'flag' | 'reject' | 'request_verification')[];
   moderationRequired: boolean;
@@ -93,11 +94,29 @@ export class TrustLayer {
       // 7. Make approval decision (now considers image authenticity)
       const decision = this.makeApprovalDecision(trustScore, moderationResult, fraudScore, imageAuthenticityResult);
       
+      // Determine final verification status based on validation results
+      let finalVerificationStatus: 'verified' | 'unverified' | 'certified' = 'unverified';
+      
+      if (decision.approved && imageAuthenticityResult.hasVerifiedImages) {
+        // Listings with verified images get verified status
+        finalVerificationStatus = 'verified';
+        
+        // Special case: OEM/Bank sources with verified images get certified status
+        if (listing.source?.toLowerCase().includes('maruti') || 
+            listing.source?.toLowerCase().includes('true value') ||
+            listing.source?.toLowerCase().includes('bank') ||
+            listing.source?.toLowerCase().includes('auction') ||
+            listing.source?.toLowerCase().includes('eauctions')) {
+          finalVerificationStatus = 'certified';
+        }
+      }
+      
       return {
         isApproved: decision.approved,
         trustScore,
         imageAuthenticityScore: imageAuthenticityResult.score,
         verifiedImageCount: imageAuthenticityResult.verifiedImageCount,
+        finalVerificationStatus, // CRITICAL: This sets the final verification status
         issues: [...moderationResult.violations, ...imageAuthenticityResult.issues, ...decision.issues],
         actions: decision.actions,
         moderationRequired: !moderationResult.isClean || trustScore < 60 || !imageAuthenticityResult.hasVerifiedImages,
@@ -111,6 +130,7 @@ export class TrustLayer {
       return {
         isApproved: false,
         trustScore: 0,
+        finalVerificationStatus: 'unverified', // CRITICAL: Always unverified on error
         issues: ['Trust screening system error'],
         actions: ['flag'],
         moderationRequired: true,
@@ -125,7 +145,8 @@ export class TrustLayer {
   async moderateContent(listing: MarketplaceListing): Promise<ContentModerationResult> {
     try {
       // Use Claude for content moderation
-      const moderationResult = await this.claude.moderateContent(listing.title, listing.description || '');
+      const contentToModerate = `${listing.title}\n\n${listing.description || ''}`.trim();
+      const moderationResult = await this.claude.moderateContent(contentToModerate, 'listing');
       
       // Apply PII masking if needed
       const maskedListing = this.maskSensitiveInfo(listing);
