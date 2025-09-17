@@ -109,7 +109,7 @@ export class BatchIngestionService {
               if (enrichment) {
                 listing.description = enrichment.summary;
                 listing.sourceMeta = {
-                  ...(listing.sourceMeta || {}),
+                  ...(typeof listing.sourceMeta === 'object' && listing.sourceMeta !== null ? listing.sourceMeta : {}),
                   aiEnrichment: enrichment
                 };
               }
@@ -174,7 +174,7 @@ export class BatchIngestionService {
           transmission: listing.transmission,
           year: year,
           price: price,
-          mileage: parseInt(String(listing.mileage || '0')) || null
+          mileage: parseInt(String(listing.mileage || '0')) || undefined
         });
         
         const qualityScore = carSpecValidator.calculateQualityScore(listing, listing.source || 'unknown');
@@ -191,7 +191,7 @@ export class BatchIngestionService {
           model: listing.model || 'Unknown',
           year: year,
           price: price.toString(),
-          mileage: parseInt(String(listing.mileage || '0')) || null,
+          mileage: parseInt(String(listing.mileage || '0')) || undefined,
           fuelType: listing.fuelType || listing.fuel || null,
           transmission: listing.transmission || null,
           owners: parseInt(String(listing.owners || '1')) || 1,
@@ -211,14 +211,16 @@ export class BatchIngestionService {
           
           // Quality scoring
           qualityScore: qualityScore,
-          sourceWeight: {
-            'CarDekho': 100,
-            'CarWale': 90,
-            'Spinny': 85,
-            'Cars24': 65,
-            'OLX': 50,
-            'Facebook Marketplace': 30
-          }[listing.source] || 20,
+          sourceWeight: (
+            {
+              'CarDekho': 100,
+              'CarWale': 90,
+              'Spinny': 85,
+              'Cars24': 65,
+              'OLX': 50,
+              'Facebook Marketplace': 30
+            } as Record<string, number>
+          )[listing.source] || 20,
           hasRealImage: hasRealImage,
           specValid: validation.isValid,
           imageAuthenticity: hasRealImage ? (listing.source === 'CarDekho' ? 90 : 60) : 0,
