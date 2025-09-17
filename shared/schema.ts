@@ -426,6 +426,7 @@ export type InsertAiAnalysisMetrics = z.infer<typeof insertAiAnalysisMetricsSche
 export type InsertFeaturedListing = z.infer<typeof insertFeaturedListingSchema>;
 export type FeaturedListing = typeof featuredListings.$inferSelect;
 
+
 // Seller listings with comprehensive data
 export const sellerListings = pgTable("seller_listings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -545,6 +546,46 @@ export const insertPlatformPostingLogSchema = createInsertSchema(platformPosting
   id: true,
   createdAt: true,
 });
+
+// Image Assets with Provenance Tracking - PERMANENT FIX for image authenticity
+export const imageAssets = pgTable("image_assets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Provenance Chain - Complete traceability from source to storage
+  listingId: varchar("listing_id").notNull(), // Reference to cached_portal_listings
+  portal: text("portal").notNull(), // Source portal (cardekho.com, cars24.com, etc.)
+  pageUrl: text("page_url").notNull(), // Original listing detail page URL
+  selector: text("selector"), // DOM selector/XPath used to extract image
+  originalUrl: text("original_url").notNull(), // Original image URL from portal
+  
+  // Storage and Content
+  storageKey: text("storage_key"), // Object storage path after download
+  width: integer("width"), // Image dimensions for validation
+  height: integer("height"),
+  fileSizeBytes: integer("file_size_bytes"),
+  contentType: text("content_type"), // image/jpeg, image/png, etc.
+  
+  // Content Integrity
+  sha256Hash: text("sha256_hash").notNull(), // Content hash for exact deduplication
+  perceptualHash: text("perceptual_hash"), // pHash for visual similarity detection
+  
+  // Authenticity Validation
+  authenticityScore: integer("authenticity_score").notNull().default(0), // 0-100 quality score
+  passedGate: boolean("passed_gate").notNull().default(false), // TRUE = verified authentic
+  rejectionReasons: text("rejection_reasons").array().default([]), // Why it failed gate
+  
+  // Metadata
+  extractedAt: timestamp("extracted_at").defaultNow(), // When image was first found
+  validatedAt: timestamp("validated_at"), // When authenticity gate was run
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_image_assets_listing").on(table.listingId),
+  index("idx_image_assets_sha256").on(table.sha256Hash),
+  index("idx_image_assets_passed_gate").on(table.passedGate),
+]);
+
+
 
 export type InsertSellerListing = z.infer<typeof insertSellerListingSchema>;
 export type SellerListing = typeof sellerListings.$inferSelect;
@@ -858,6 +899,71 @@ export const insertCachedPortalListingSchema = createInsertSchema(cachedPortalLi
 
 export type InsertCachedPortalListing = z.infer<typeof insertCachedPortalListingSchema>;
 export type CachedPortalListing = typeof cachedPortalListings.$inferSelect;
+
+// Trusted Listings - Only published after passing authenticity gate
+export const trustedListings = pgTable("trusted_listings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Reference to source data
+  sourceListingId: varchar("source_listing_id").notNull(), // References cachedPortalListings
+  
+  // Verified Information (copied from source after validation)
+  title: text("title").notNull(),
+  brand: text("brand").notNull(),
+  make: text("make").notNull(),
+  model: text("model").notNull(),
+  year: integer("year").notNull(),
+  price: integer("price").notNull(),
+  mileage: integer("mileage"),
+  fuelType: text("fuel_type"),
+  transmission: text("transmission"),
+  ownerCount: integer("owner_count"),
+  location: text("location").notNull(),
+  city: text("city").notNull(),
+  state: text("state"),
+  description: text("description"),
+  features: text("features").array().default([]),
+  condition: text("condition"),
+  sellerType: text("seller_type"),
+  
+  // Portal Information
+  portal: text("portal").notNull(),
+  url: text("url").notNull(),
+  
+  // Verification Results
+  verifiedImageCount: integer("verified_image_count").notNull(), // Must be >= 2 for publication
+  qualityScore: integer("quality_score").notNull(), // Overall 0-100 quality score
+  trustScore: decimal("trust_score", { precision: 3, scale: 2 }).notNull(), // 0.00-1.00 trust rating
+  
+  // Publication Control
+  isPublished: boolean("is_published").default(true),
+  publishedAt: timestamp("published_at").defaultNow(),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_trusted_listings_city").on(table.city),
+  index("idx_trusted_listings_make").on(table.make),  
+  index("idx_trusted_listings_price").on(table.price),
+  index("idx_trusted_listings_published").on(table.isPublished),
+]);
+
+// Schema Types for New Tables
+export const insertImageAssetSchema = createInsertSchema(imageAssets).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertTrustedListingSchema = createInsertSchema(trustedListings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertImageAsset = z.infer<typeof insertImageAssetSchema>;
+export type ImageAsset = typeof imageAssets.$inferSelect;
+export type InsertTrustedListing = z.infer<typeof insertTrustedListingSchema>;
+export type TrustedListing = typeof trustedListings.$inferSelect;
 
 // Use cached portal listings as normalized car listings for fast search
 export type CarListing = CachedPortalListing;
