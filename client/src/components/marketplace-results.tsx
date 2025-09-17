@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import CarDetailModal from "@/components/car-detail-modal";
 import AIProcessingPipeline from "@/components/ai-processing-pipeline";
+import DataSourceLegend from "@/components/data-source-legend";
 import { 
   TrendingUp, TrendingDown, Minus, ExternalLink, Verified, 
   MapPin, Calendar, Gauge, Fuel, Settings, Star, Filter,
@@ -748,8 +749,11 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
         <TabsContent value="all" className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">All Listings</h3>
-            <div className="text-sm text-muted-foreground">
-              Showing {searchResult.listings.length} results from {Object.keys(searchResult.analytics.sourcesCount).length} sources
+            <div className="flex items-center gap-3">
+              <div className="text-sm text-muted-foreground">
+                Showing {searchResult.listings.length} results from {Object.keys(searchResult.analytics.sourcesCount).length} sources
+              </div>
+              <DataSourceLegend compact className="text-xs" />
             </div>
           </div>
 
