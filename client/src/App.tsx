@@ -18,6 +18,7 @@ import TermsOfService from "./pages/terms-of-service";
 import DataSourcesPolicy from "./pages/data-sources-policy";
 import ApiCompliance from "./pages/api-compliance";
 import AiTrainingDashboard from "./pages/ai-training-dashboard";
+import FinancingPage from "./pages/financing";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -38,6 +39,7 @@ function Router() {
       <Route path="/data-sources-policy" component={DataSourcesPolicy} />
       <Route path="/api-compliance" component={ApiCompliance} />
       <Route path="/ai-training-dashboard" component={AiTrainingDashboard} />
+      <Route path="/financing" component={FinancingPage} />
       <Route component={NotFound} />
     </Switch>
   );
