@@ -4,6 +4,7 @@ import { ObjectStorageService, objectStorageClient } from './objectStorage.js';
 import { imageAssets, insertImageAssetSchema, InsertImageAsset } from '@shared/schema';
 import { db } from './db.js';
 import { eq, and, desc } from 'drizzle-orm';
+import { recordImageProcessing } from './imageAuthenticityMonitor.js';
 
 // Image quality validation constants
 const MIN_WIDTH = 200;
@@ -55,6 +56,14 @@ export class ImageAssetService {
 
   constructor() {
     this.objectStorage = new ObjectStorageService();
+  }
+
+  /**
+   * Detect if URL contains placeholder patterns for monitoring
+   */
+  private detectPlaceholderFromUrl(url: string): boolean {
+    const urlLower = url.toLowerCase();
+    return PLACEHOLDER_PATTERNS.some(pattern => pattern.test(urlLower));
   }
 
   /**
@@ -115,6 +124,16 @@ export class ImageAssetService {
       const duplicate = await this.findDuplicateBySHA256(sha256Hash);
       if (duplicate) {
         console.log(`🔍 Found exact duplicate by SHA256: ${duplicate.id}`);
+        
+        // Record duplicate detection for monitoring
+        recordImageProcessing({
+          imageProcessed: true,
+          passedGate: duplicate.passedGate,
+          wasPlaceholder: false, // Existing duplicates were already processed
+          wasDuplicate: true,
+          listingId: params.listingId
+        });
+        
         return {
           success: duplicate.passedGate,
           passedGate: duplicate.passedGate,
@@ -129,6 +148,16 @@ export class ImageAssetService {
       const perceptualDuplicate = await this.findPerceptualDuplicate(perceptualHash);
       if (perceptualDuplicate) {
         console.log(`👁️ Found perceptual duplicate: ${perceptualDuplicate.id}`);
+        
+        // Record perceptual duplicate for monitoring
+        recordImageProcessing({
+          imageProcessed: true,
+          passedGate: false,
+          wasPlaceholder: false,
+          wasDuplicate: true,
+          listingId: params.listingId
+        });
+        
         return {
           success: false,
           passedGate: false,
@@ -152,6 +181,23 @@ export class ImageAssetService {
         storageKey = await this.storeImage(buffer, contentType);
       }
 
+      // Detect placeholders for monitoring (check URL patterns and rejection reasons)
+      const wasPlaceholder = this.detectPlaceholderFromUrl(params.imageUrl) || 
+        validation.rejectionReasons.some(reason => 
+          reason.toLowerCase().includes('placeholder') ||
+          reason.toLowerCase().includes('logo') ||
+          reason.toLowerCase().includes('generic')
+        );
+      
+      // Record image processing for monitoring
+      recordImageProcessing({
+        imageProcessed: true,
+        passedGate: validation.isValid,
+        wasPlaceholder,
+        wasDuplicate: false,
+        listingId: params.listingId
+      });
+      
       // Create database record with complete provenance
       return await this.createImageAsset({
         ...params,
@@ -169,6 +215,16 @@ export class ImageAssetService {
 
     } catch (error) {
       console.error(`❌ Error processing image: ${error}`);
+      
+      // Record failed image processing for monitoring
+      recordImageProcessing({
+        imageProcessed: false,
+        passedGate: false,
+        wasPlaceholder: false, // Unknown due to error
+        wasDuplicate: false,
+        listingId: params.listingId
+      });
+      
       return {
         success: false,
         passedGate: false,

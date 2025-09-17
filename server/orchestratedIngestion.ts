@@ -7,6 +7,7 @@ import { storage } from './storage';
 import { aiDataExtractionService } from './aiDataExtraction';
 import { detailPageExtractor } from './detailPageExtractor.js';
 import { imageAssetService } from './imageAssetService.js';
+import { recordImageProcessing, recordListingProcessing } from './imageAuthenticityMonitor.js';
 
 // Orchestrated batch ingestion pipeline
 export interface OrchestratedIngestionResult {
@@ -251,6 +252,14 @@ export class OrchestratedBatchIngestion {
         
         console.log(`✅ Extracted ${extractionResult.images.length} images (${authenticatedImages.length} authenticated) from ${listingUrl}`);
         
+        // Record listing-level metrics for monitoring
+        recordListingProcessing({
+          listingId: rawListing.id || `temp-${Date.now()}`,
+          totalImages: extractionResult.images.length,
+          verifiedImages: authenticatedImages.length,
+          hasVerifiedImages: authenticatedImages.length > 0
+        });
+        
         processedListings.push({
           ...rawListing,
           images: provenanceImageUrls, // REPLACE AI-guessed images with provenance-anchored ones
@@ -273,8 +282,14 @@ export class OrchestratedBatchIngestion {
     
     result.pipelineStats.authenticatedImages = authenticatedImageCount;
     
+    // Record batch-level metrics for monitoring dashboard
+    const successfulExtractions = processedListings.filter(l => l.imageExtractionStatus === 'success').length;
+    const totalImages = processedListings.reduce((sum, listing) => sum + (listing.extractedImageCount || 0), 0);
+    const successRate = rawListings.length > 0 ? (successfulExtractions / rawListings.length) * 100 : 0;
+    
     console.log(`📊 Provenance extraction complete: ${authenticatedImageCount} authenticated images from ${rawListings.length} listings`);
-    console.log(`🎯 Success rate: ${Math.round((processedListings.filter(l => l.imageExtractionStatus === 'success').length / rawListings.length) * 100)}%`);
+    console.log(`🎯 Success rate: ${Math.round(successRate)}%`);
+    console.log(`📈 Batch metrics: ${totalImages} total images, ${authenticatedImageCount} authenticated (${totalImages > 0 ? Math.round((authenticatedImageCount/totalImages)*100) : 0}% pass rate)`);
     
     return processedListings;
   }

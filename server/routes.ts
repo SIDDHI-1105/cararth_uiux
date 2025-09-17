@@ -50,8 +50,10 @@ import { enhanceHyderabadSearch, HyderabadMarketIntelligence } from "./hyderabad
 import { fastSearchService } from "./fastSearch.js";
 import { claudeService } from "./claudeService.js";
 import { unifiedPerplexityService } from "./unifiedPerplexityService.js";
-import { aiMetricsMonitor } from "./aiMetricsMonitor.js";
+// REMOVED: Old conflicting instance import - using singleton helpers instead
+// import { aiMetricsMonitor } from "./aiMetricsMonitor.js";
 import { metricsIntegration } from "./aiMetricsIntegration.js";
+import { getSystemStatus, getImageAuthenticityStats } from "./imageAuthenticityMonitor.js";
 import { orchestratedBatchIngestion } from "./orchestratedIngestion.js";
 import { ImageProxyService } from "./imageProxyService.js";
 import { aiTrainingService } from "./aiTrainingService.js";
@@ -411,6 +413,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Status endpoint error:', error);
       res.status(500).json({ error: 'Failed to get status' });
+    }
+  });
+
+  // Image authenticity monitoring endpoints
+  app.get('/api/monitoring/image-authenticity', async (req, res) => {
+    try {
+      console.log('📊 Image authenticity metrics requested');
+      const metrics = getImageAuthenticityStats();
+      
+      res.json({
+        success: true,
+        metrics,
+        timestamp: new Date().toISOString(),
+        meta: {
+          version: '1.0.0',
+          source: 'image-authenticity-monitor'
+        }
+      });
+    } catch (error) {
+      console.error('❌ Error fetching image authenticity metrics:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch image authenticity metrics',
+        timestamp: new Date().toISOString() 
+      });
+    }
+  });
+
+  app.get('/api/monitoring/status', async (req, res) => {
+    try {
+      console.log('🔍 System status monitoring requested');
+      const systemStatus = getSystemStatus();
+      
+      res.json({
+        success: true,
+        ...systemStatus,
+        timestamp: new Date().toISOString(),
+        meta: {
+          version: '1.0.0',
+          source: 'ai-metrics-monitor'
+        }
+      });
+    } catch (error) {
+      console.error('❌ Error fetching system status:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch system status',
+        timestamp: new Date().toISOString() 
+      });
     }
   });
 

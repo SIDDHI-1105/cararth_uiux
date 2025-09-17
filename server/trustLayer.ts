@@ -3,6 +3,7 @@ import { MarketplaceListing } from './marketplaceAggregator';
 import { imageAssetService } from './imageAssetService.js';
 import { detailPageExtractor } from './detailPageExtractor.js';
 import { imageAuthenticityGate } from './imageAuthenticityGate.js';
+import { recordListingProcessing } from './imageAuthenticityMonitor.js';
 
 // Trust and compliance gate for all listings
 export interface TrustAnalysisResult {
@@ -422,6 +423,14 @@ export class TrustLayer {
       const finalScore = Math.min(100, baseScore + bonusScore);
 
       console.log(`📊 Image authenticity: ${verifiedCount}/${totalImages} verified (score: ${finalScore})`);
+
+      // Record listing-level metrics for monitoring
+      recordListingProcessing({
+        listingId: listing.id || 'temp-' + Date.now(),
+        totalImages,
+        verifiedImages: verifiedCount,
+        hasVerifiedImages: verifiedCount > 0
+      });
 
       return {
         score: finalScore,

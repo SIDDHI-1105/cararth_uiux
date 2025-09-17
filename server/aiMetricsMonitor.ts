@@ -21,6 +21,12 @@ export interface SystemPerformanceMetrics {
   trustApprovalRate: number;
   deduplicationRate: number;
   validationAccuracy: number;
+  // NEW: Image authenticity metrics for permanent fix monitoring
+  imageAuthenticityPassRate: number; // % of images that passed authenticity gate
+  averageImagesPerListing: number; // Average verified images per listing
+  placeholderDetectionRate: number; // % of images detected as placeholders
+  duplicateDetectionRate: number; // % of images detected as duplicates
+  authenticityGateEfficiency: number; // Overall authenticity system efficiency
   overallSystemHealth: 'healthy' | 'warning' | 'critical';
 }
 
@@ -41,19 +47,42 @@ export interface AlertThresholds {
   errorRate: number; // Alert if >10%
   responseTime: number; // Alert if >5000ms
   systemHealth: 'warning' | 'critical';
+  // NEW: Image authenticity alert thresholds for permanent fix
+  imageAuthenticityPassRate: number; // Alert if <70% pass rate
+  placeholderDetectionRate: number; // Alert if >20% placeholder rate
+  duplicateDetectionRate: number; // Alert if >15% duplicate rate
+  averageImagesPerListing: number; // Alert if <1.5 images per listing
 }
 
 export class AIMetricsMonitor {
+  private static instance: AIMetricsMonitor;
+  
   private serviceMetrics: Map<string, AIServiceMetrics> = new Map();
   private systemStartTime: number = Date.now();
   private dailyResetDate: string = new Date().toISOString().split('T')[0];
+  
+  // NEW: Image authenticity metrics tracking for permanent fix
+  private imageAuthenticityMetrics = {
+    totalImagesProcessed: 0,
+    imagesPassedGate: 0,
+    placeholdersDetected: 0,
+    duplicatesDetected: 0,
+    listingsProcessed: 0,
+    listingsWithVerifiedImages: 0,
+    dailyResetDate: this.dailyResetDate
+  };
   
   // Alert system
   private alertThresholds: AlertThresholds = {
     budgetUtilization: 80,
     errorRate: 10,
     responseTime: 5000,
-    systemHealth: 'warning'
+    systemHealth: 'warning',
+    // NEW: Image authenticity thresholds for permanent fix monitoring
+    imageAuthenticityPassRate: 70, // Alert if <70% pass rate
+    placeholderDetectionRate: 20, // Alert if >20% placeholder rate  
+    duplicateDetectionRate: 15, // Alert if >15% duplicate rate
+    averageImagesPerListing: 1.5 // Alert if <1.5 images per listing
   };
   
   // Performance tracking
@@ -65,6 +94,34 @@ export class AIMetricsMonitor {
   constructor() {
     this.initializeServiceMetrics();
     this.startDailyReset();
+    this.startImageAuthenticityDailyReset(); // NEW: Timer-based reset for image metrics
+  }
+
+  /**
+   * Get singleton instance for application-wide monitoring
+   */
+  public static getInstance(): AIMetricsMonitor {
+    if (!AIMetricsMonitor.instance) {
+      AIMetricsMonitor.instance = new AIMetricsMonitor();
+    }
+    return AIMetricsMonitor.instance;
+  }
+
+  /**
+   * PUBLIC: Get current image authenticity metrics for dashboard/API
+   */
+  public getImageAuthenticityMetrics() {
+    return {
+      ...this.calculateImageAuthenticityMetrics(),
+      raw: {
+        totalImagesProcessed: this.imageAuthenticityMetrics.totalImagesProcessed,
+        imagesPassedGate: this.imageAuthenticityMetrics.imagesPassedGate,
+        placeholdersDetected: this.imageAuthenticityMetrics.placeholdersDetected,
+        duplicatesDetected: this.imageAuthenticityMetrics.duplicatesDetected,
+        listingsProcessed: this.imageAuthenticityMetrics.listingsProcessed,
+        listingsWithVerifiedImages: this.imageAuthenticityMetrics.listingsWithVerifiedImages
+      }
+    };
   }
 
   /**
@@ -129,6 +186,173 @@ export class AIMetricsMonitor {
   }
 
   /**
+   * NEW: Record image authenticity metrics for permanent fix monitoring
+   */
+  recordImageAuthenticity(data: {
+    imageProcessed: boolean;
+    passedGate: boolean;
+    wasPlaceholder: boolean;
+    wasDuplicate: boolean;
+    listingId?: string;
+  }): void {
+    // Reset daily counters if needed
+    this.resetImageAuthenticityIfNeeded();
+
+    if (data.imageProcessed) {
+      this.imageAuthenticityMetrics.totalImagesProcessed++;
+      
+      if (data.passedGate) {
+        this.imageAuthenticityMetrics.imagesPassedGate++;
+      }
+      
+      if (data.wasPlaceholder) {
+        this.imageAuthenticityMetrics.placeholdersDetected++;
+      }
+      
+      if (data.wasDuplicate) {
+        this.imageAuthenticityMetrics.duplicatesDetected++;
+      }
+      
+      // Log significant events for monitoring
+      if (!data.passedGate) {
+        console.log(`📊 Image authenticity gate blocked: ${data.wasPlaceholder ? 'placeholder' : ''} ${data.wasDuplicate ? 'duplicate' : ''} - Listing: ${data.listingId || 'unknown'}`);
+      }
+    }
+    
+    // Check for alerts after updating metrics
+    this.checkImageAuthenticityAlerts();
+  }
+
+  /**
+   * NEW: Record listing-level authenticity metrics
+   */
+  recordListingAuthenticity(data: {
+    listingId: string;
+    totalImages: number;
+    verifiedImages: number;
+    hasVerifiedImages: boolean;
+  }): void {
+    this.resetImageAuthenticityIfNeeded();
+    
+    this.imageAuthenticityMetrics.listingsProcessed++;
+    
+    if (data.hasVerifiedImages) {
+      this.imageAuthenticityMetrics.listingsWithVerifiedImages++;
+    }
+    
+    // Log concerning patterns
+    if (data.totalImages > 0 && data.verifiedImages === 0) {
+      console.log(`⚠️ Listing with zero verified images: ${data.listingId} (${data.totalImages} total images)`);
+    }
+    
+    // Check for alerts after updating metrics
+    this.checkImageAuthenticityAlerts();
+  }
+
+  /**
+   * NEW: Reset daily image authenticity metrics  
+   */
+  private resetImageAuthenticityIfNeeded(): void {
+    const today = new Date().toISOString().split('T')[0];
+    if (this.imageAuthenticityMetrics.dailyResetDate !== today) {
+      console.log(`🔄 Resetting image authenticity metrics for ${today}`);
+      
+      // Log yesterday's final metrics before reset
+      const metrics = this.calculateImageAuthenticityMetrics();
+      console.log(`📊 Yesterday's image authenticity summary: ${metrics.imageAuthenticityPassRate.toFixed(1)}% pass rate, ${metrics.placeholderDetectionRate.toFixed(1)}% placeholders, ${metrics.averageImagesPerListing.toFixed(1)} avg images/listing`);
+      
+      this.imageAuthenticityMetrics = {
+        totalImagesProcessed: 0,
+        imagesPassedGate: 0,
+        placeholdersDetected: 0,
+        duplicatesDetected: 0,
+        listingsProcessed: 0,
+        listingsWithVerifiedImages: 0,
+        dailyResetDate: today
+      };
+    }
+  }
+
+  /**
+   * NEW: Calculate image authenticity performance metrics
+   */
+  private calculateImageAuthenticityMetrics(): {
+    imageAuthenticityPassRate: number;
+    averageImagesPerListing: number;
+    placeholderDetectionRate: number;
+    duplicateDetectionRate: number;
+    authenticityGateEfficiency: number;
+  } {
+    const metrics = this.imageAuthenticityMetrics;
+    
+    return {
+      imageAuthenticityPassRate: metrics.totalImagesProcessed > 0 
+        ? (metrics.imagesPassedGate / metrics.totalImagesProcessed) * 100 
+        : 100,
+        
+      averageImagesPerListing: metrics.listingsProcessed > 0 
+        ? metrics.imagesPassedGate / metrics.listingsProcessed 
+        : 0,
+        
+      placeholderDetectionRate: metrics.totalImagesProcessed > 0 
+        ? (metrics.placeholdersDetected / metrics.totalImagesProcessed) * 100 
+        : 0,
+        
+      duplicateDetectionRate: metrics.totalImagesProcessed > 0 
+        ? (metrics.duplicatesDetected / metrics.totalImagesProcessed) * 100 
+        : 0,
+        
+      authenticityGateEfficiency: metrics.listingsProcessed > 0 
+        ? (metrics.listingsWithVerifiedImages / metrics.listingsProcessed) * 100 
+        : 0
+    };
+  }
+
+  /**
+   * NEW: Check for critical image authenticity alerts and surface them
+   */
+  private checkImageAuthenticityAlerts(): void {
+    const metrics = this.calculateImageAuthenticityMetrics();
+    const thresholds = this.alertThresholds;
+
+    // Alert: Critical pass rate (<50%)
+    if (metrics.imageAuthenticityPassRate < 50 && this.imageAuthenticityMetrics.totalImagesProcessed >= 10) {
+      console.error(`🚨 CRITICAL IMAGE AUTHENTICITY ALERT: Pass rate dangerously low at ${metrics.imageAuthenticityPassRate.toFixed(1)}% (threshold: 50%)`);
+      console.error(`   📊 Status: ${this.imageAuthenticityMetrics.imagesPassedGate}/${this.imageAuthenticityMetrics.totalImagesProcessed} images passed gate`);
+      console.error(`   🔍 Action Required: Investigate image authenticity gate configuration`);
+    }
+
+    // Alert: Low pass rate (below warning threshold)
+    else if (metrics.imageAuthenticityPassRate < thresholds.imageAuthenticityPassRate && this.imageAuthenticityMetrics.totalImagesProcessed >= 5) {
+      console.warn(`⚠️ IMAGE AUTHENTICITY WARNING: Pass rate below threshold at ${metrics.imageAuthenticityPassRate.toFixed(1)}% (threshold: ${thresholds.imageAuthenticityPassRate}%)`);
+      console.warn(`   📊 Status: ${this.imageAuthenticityMetrics.imagesPassedGate}/${this.imageAuthenticityMetrics.totalImagesProcessed} images passed gate`);
+    }
+
+    // Alert: High placeholder detection rate
+    if (metrics.placeholderDetectionRate > thresholds.placeholderDetectionRate && this.imageAuthenticityMetrics.totalImagesProcessed >= 5) {
+      console.warn(`⚠️ HIGH PLACEHOLDER DETECTION: ${metrics.placeholderDetectionRate.toFixed(1)}% placeholders detected (threshold: ${thresholds.placeholderDetectionRate}%)`);
+      console.warn(`   📊 Status: ${this.imageAuthenticityMetrics.placeholdersDetected}/${this.imageAuthenticityMetrics.totalImagesProcessed} images flagged as placeholders`);
+    }
+
+    // Alert: High duplicate detection rate
+    if (metrics.duplicateDetectionRate > thresholds.duplicateDetectionRate && this.imageAuthenticityMetrics.totalImagesProcessed >= 5) {
+      console.warn(`⚠️ HIGH DUPLICATE DETECTION: ${metrics.duplicateDetectionRate.toFixed(1)}% duplicates detected (threshold: ${thresholds.duplicateDetectionRate}%)`);
+      console.warn(`   📊 Status: ${this.imageAuthenticityMetrics.duplicatesDetected}/${this.imageAuthenticityMetrics.totalImagesProcessed} images flagged as duplicates`);
+    }
+
+    // Alert: Low images per listing
+    if (metrics.averageImagesPerListing < thresholds.averageImagesPerListing && this.imageAuthenticityMetrics.listingsProcessed >= 5) {
+      console.warn(`⚠️ LOW IMAGES PER LISTING: ${metrics.averageImagesPerListing.toFixed(1)} avg images/listing (threshold: ${thresholds.averageImagesPerListing})`);
+      console.warn(`   📊 Status: ${this.imageAuthenticityMetrics.listingsWithVerifiedImages}/${this.imageAuthenticityMetrics.listingsProcessed} listings have verified images`);
+    }
+
+    // Positive feedback for good performance
+    if (metrics.imageAuthenticityPassRate >= 90 && this.imageAuthenticityMetrics.totalImagesProcessed >= 10) {
+      console.log(`✅ IMAGE AUTHENTICITY PERFORMING WELL: ${metrics.imageAuthenticityPassRate.toFixed(1)}% pass rate (excellent performance)`);
+    }
+  }
+
+  /**
    * GET COMPREHENSIVE SYSTEM STATUS
    */
   getSystemStatus(): {
@@ -174,12 +398,14 @@ export class AIMetricsMonitor {
     
     const overallSuccessRate = totalRequests > 0 ? (totalSuccessful / totalRequests) * 100 : 100;
     
-    // Estimate specific metrics based on service performance
+    // Get real-time image authenticity metrics (PERMANENT FIX MONITORING)
+    const imageAuthenticityData = this.calculateImageAuthenticityMetrics();
+    
+    // Service-based metrics
     const orchestrationDecisions = this.serviceMetrics.get('openai')?.totalRequests || 0;
     const extractionSuccess = this.serviceMetrics.get('firecrawl')?.successfulRequests || 0;
     const normalizationSuccess = this.serviceMetrics.get('gemini')?.successfulRequests || 0;
-    const trustApprovalRate = 85; // Estimated based on trust layer performance
-    const deduplicationRate = 15; // Estimated duplicate detection rate
+    const trustApprovalRate = 85; // Estimated based on trust layer performance  
     const validationAccuracy = this.serviceMetrics.get('perplexity')?.successfulRequests || 0;
     
     // Determine system health
@@ -204,8 +430,14 @@ export class AIMetricsMonitor {
       extractionSuccess,
       normalizationSuccess,
       trustApprovalRate,
-      deduplicationRate,
+      deduplicationRate: imageAuthenticityData.duplicateDetectionRate, // Real duplicate detection from permanent fix
       validationAccuracy,
+      // NEW: Real-time image authenticity metrics from permanent fix
+      imageAuthenticityPassRate: imageAuthenticityData.imageAuthenticityPassRate,
+      averageImagesPerListing: imageAuthenticityData.averageImagesPerListing,
+      placeholderDetectionRate: imageAuthenticityData.placeholderDetectionRate,
+      duplicateDetectionRate: imageAuthenticityData.duplicateDetectionRate,
+      authenticityGateEfficiency: imageAuthenticityData.authenticityGateEfficiency,
       overallSystemHealth: systemHealth
     };
   }
@@ -260,6 +492,51 @@ export class AIMetricsMonitor {
       message: string;
       service?: string;
     }> = [];
+
+    // NEW: Check image authenticity alerts (PERMANENT FIX MONITORING)
+    const imageAuthenticityData = this.calculateImageAuthenticityMetrics();
+    
+    // Critical: Low pass rate indicates permanent fix is failing
+    if (imageAuthenticityData.imageAuthenticityPassRate < 50) {
+      alerts.push({
+        type: 'performance',
+        severity: 'critical',
+        message: `IMAGE AUTHENTICITY CRITICAL: Only ${imageAuthenticityData.imageAuthenticityPassRate.toFixed(1)}% pass rate - Permanent fix failing!`
+      });
+    } else if (imageAuthenticityData.imageAuthenticityPassRate < this.alertThresholds.imageAuthenticityPassRate) {
+      alerts.push({
+        type: 'performance',
+        severity: 'warning',
+        message: `Image authenticity pass rate low: ${imageAuthenticityData.imageAuthenticityPassRate.toFixed(1)}% (threshold: ${this.alertThresholds.imageAuthenticityPassRate}%)`
+      });
+    }
+    
+    // High placeholder detection indicates quality issues
+    if (imageAuthenticityData.placeholderDetectionRate > this.alertThresholds.placeholderDetectionRate) {
+      alerts.push({
+        type: 'performance',
+        severity: 'warning',
+        message: `High placeholder detection: ${imageAuthenticityData.placeholderDetectionRate.toFixed(1)}% of images are placeholders`
+      });
+    }
+    
+    // High duplicate rate indicates ingestion issues
+    if (imageAuthenticityData.duplicateDetectionRate > this.alertThresholds.duplicateDetectionRate) {
+      alerts.push({
+        type: 'performance', 
+        severity: 'warning',
+        message: `High duplicate detection: ${imageAuthenticityData.duplicateDetectionRate.toFixed(1)}% of images are duplicates`
+      });
+    }
+    
+    // Low images per listing indicates sourcing issues
+    if (imageAuthenticityData.averageImagesPerListing < this.alertThresholds.averageImagesPerListing) {
+      alerts.push({
+        type: 'performance',
+        severity: 'warning',
+        message: `Low verified images per listing: ${imageAuthenticityData.averageImagesPerListing.toFixed(1)} average (threshold: ${this.alertThresholds.averageImagesPerListing})`
+      });
+    }
 
     // Check service-specific alerts
     this.serviceMetrics.forEach((metrics, serviceName) => {
@@ -362,6 +639,32 @@ export class AIMetricsMonitor {
       if (today !== this.dailyResetDate) {
         this.resetDailyMetrics();
         this.dailyResetDate = today;
+      }
+    }, 60000); // Check every minute
+  }
+
+  /**
+   * NEW: TIMER-BASED DAILY RESET FOR IMAGE AUTHENTICITY METRICS
+   */
+  private startImageAuthenticityDailyReset(): void {
+    setInterval(() => {
+      const today = new Date().toISOString().split('T')[0];
+      if (today !== this.imageAuthenticityMetrics.dailyResetDate) {
+        console.log(`🔄 Timer-based reset: Image authenticity metrics for ${today}`);
+        
+        // Log yesterday's final metrics before reset
+        const metrics = this.calculateImageAuthenticityMetrics();
+        console.log(`📊 Yesterday's image authenticity summary: ${metrics.imageAuthenticityPassRate.toFixed(1)}% pass rate, ${metrics.placeholderDetectionRate.toFixed(1)}% placeholders, ${metrics.averageImagesPerListing.toFixed(1)} avg images/listing`);
+        
+        this.imageAuthenticityMetrics = {
+          totalImagesProcessed: 0,
+          imagesPassedGate: 0,
+          placeholdersDetected: 0,
+          duplicatesDetected: 0,
+          listingsProcessed: 0,
+          listingsWithVerifiedImages: 0,
+          dailyResetDate: today
+        };
       }
     }, 60000); // Check every minute
   }
@@ -470,4 +773,5 @@ export class AIMetricsMonitor {
   }
 }
 
-export const aiMetricsMonitor = new AIMetricsMonitor();
+// REMOVED: Conflicting instance export - Use singleton via imageAuthenticityMonitor.ts instead
+// This was causing metrics fragmentation across multiple instances
