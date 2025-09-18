@@ -249,9 +249,21 @@ except Exception as e:
           }
 
           try {
-            const results = JSON.parse(output);
-            console.log(`✅ Collected ${results.length} real data points from Google Trends`);
-            resolve(results);
+            const rawResults = JSON.parse(output);
+            
+            // CRITICAL FIX: Normalize data types - convert ISO strings to Date objects and ensure consistent types
+            const normalizedResults = rawResults.map((item: any) => ({
+              ...item,
+              date: new Date(item.date), // Convert ISO string to Date object
+              relatedQueries: Array.isArray(item.relatedQueries) 
+                ? item.relatedQueries 
+                : JSON.parse(item.relatedQueries || '[]'), // Ensure array type
+              dataSource: item.dataSource || 'GoogleTrends',
+              category: item.category || 'Automotive'
+            }));
+            
+            console.log(`✅ Collected ${normalizedResults.length} real data points from Google Trends`);
+            resolve(normalizedResults);
           } catch (parseError) {
             console.error('JSON parse error:', parseError);
             resolve([]);
@@ -303,7 +315,7 @@ except Exception as e:
         category: 'Automotive',
         dataSource: 'FallbackData',
         changePercent: (Math.random() * 20 - 10).toFixed(1), // -10% to +10%
-        relatedQueries: JSON.stringify([`${searchTerm} price`, `${searchTerm} review`])
+        relatedQueries: [`${searchTerm} price`, `${searchTerm} review`] // Keep as array, not JSON string
       });
     }
     
