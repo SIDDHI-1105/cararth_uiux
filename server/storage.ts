@@ -23,7 +23,11 @@ import {
   type PhoneVerification,
   type InsertPhoneVerification,
   type AnonymousSearchActivity,
-  type InsertAnonymousSearchActivity
+  type InsertAnonymousSearchActivity,
+  type SarfaesiJob,
+  type InsertSarfaesiJob,
+  type AdminAuditLog,
+  type InsertAdminAuditLog
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -107,6 +111,20 @@ export interface IStorage {
   
   // Additional methods for backward compatibility
   getCars(options?: { limit?: number }): Promise<Car[]>;
+  
+  // Admin role management
+  setUserRole(userId: string, role: 'user' | 'admin'): Promise<User>;
+  isAdmin(userId: string): Promise<boolean>;
+  listUsers(options?: { q?: string; limit?: number; offset?: number }): Promise<User[]>;
+  
+  // SARFAESI job management
+  createSarfaesiJob(job: InsertSarfaesiJob): Promise<SarfaesiJob>;
+  updateSarfaesiJob(id: string, updates: Partial<SarfaesiJob>): Promise<SarfaesiJob | undefined>;
+  getSarfaesiJobs(options?: { limit?: number; status?: string }): Promise<SarfaesiJob[]>;
+  getSarfaesiJob(id: string): Promise<SarfaesiJob | undefined>;
+  
+  // Admin audit logging
+  logAdminAction(entry: InsertAdminAuditLog): Promise<AdminAuditLog>;
 }
 
 export class MemStorage implements IStorage {
@@ -158,6 +176,7 @@ export class MemStorage implements IStorage {
       subscriptionExpiresAt: null,
       searchCount: 0,
       searchCountResetAt: new Date(),
+      role: "user", // Add missing role field
       isPremium: false,
       premiumExpiresAt: null,
       createdAt: new Date(),
@@ -344,6 +363,7 @@ export class MemStorage implements IStorage {
       lastName: insertUser.lastName ?? null,
       profileImageUrl: insertUser.profileImageUrl ?? null,
       phone: insertUser.phone ?? null,
+      role: insertUser.role ?? "user", // Add role field with default
       id,
       phoneVerified: false,
       phoneVerifiedAt: null,
@@ -391,6 +411,7 @@ export class MemStorage implements IStorage {
         phone: null,
         phoneVerified: false,
         phoneVerifiedAt: null,
+        role: "user", // Add missing role field
         subscriptionTier: "free",
         subscriptionStatus: "active",
         subscriptionExpiresAt: null,
@@ -518,7 +539,11 @@ export class MemStorage implements IStorage {
     // Return all contacts for those cars
     return Array.from(this.contacts.values())
       .filter(contact => sellerCarIds.includes(contact.carId))
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()); // Latest first
+      .sort((a, b) => {
+        const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return bTime - aTime; // Latest first
+      });
   }
 
   // Premium subscription operations
@@ -917,6 +942,90 @@ export class MemStorage implements IStorage {
       return cars.slice(0, options.limit);
     }
     return cars;
+  }
+
+  // Admin role management stub implementations (in-memory only)
+  async setUserRole(userId: string, role: 'user' | 'admin'): Promise<User> {
+    const user = this.users.get(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    user.role = role;
+    user.updatedAt = new Date();
+    this.users.set(userId, user);
+    return user;
+  }
+
+  async isAdmin(userId: string): Promise<boolean> {
+    const user = this.users.get(userId);
+    return user?.role === 'admin' || false;
+  }
+
+  async listUsers(options?: { q?: string; limit?: number; offset?: number }): Promise<User[]> {
+    let users = Array.from(this.users.values());
+    
+    if (options?.q) {
+      const query = options.q.toLowerCase();
+      users = users.filter(user => 
+        user.email?.toLowerCase().includes(query) ||
+        user.firstName?.toLowerCase().includes(query) ||
+        user.lastName?.toLowerCase().includes(query)
+      );
+    }
+    
+    const offset = options?.offset || 0;
+    const limit = options?.limit || 50;
+    
+    return users.slice(offset, offset + limit);
+  }
+
+  // SARFAESI job management stub implementations
+  async createSarfaesiJob(job: InsertSarfaesiJob): Promise<SarfaesiJob> {
+    const id = randomUUID();
+    const newJob: SarfaesiJob = {
+      id,
+      ...job,
+      status: 'queued',
+      totalFound: 0,
+      authenticatedListings: 0,
+      errors: [],
+      startedAt: null,
+      finishedAt: null,
+      createdAt: new Date(),
+    };
+    // In-memory storage doesn't persist SARFAESI jobs
+    return newJob;
+  }
+
+  async updateSarfaesiJob(id: string, updates: Partial<SarfaesiJob>): Promise<SarfaesiJob | undefined> {
+    // In-memory storage doesn't persist SARFAESI jobs
+    return undefined;
+  }
+
+  async getSarfaesiJobs(options?: { limit?: number; status?: string }): Promise<SarfaesiJob[]> {
+    // In-memory storage doesn't persist SARFAESI jobs
+    return [];
+  }
+
+  async getSarfaesiJob(id: string): Promise<SarfaesiJob | undefined> {
+    // In-memory storage doesn't persist SARFAESI jobs
+    return undefined;
+  }
+
+  // Admin audit logging stub implementation
+  async logAdminAction(entry: InsertAdminAuditLog): Promise<AdminAuditLog> {
+    const id = randomUUID();
+    const auditLog: AdminAuditLog = {
+      id,
+      actorUserId: entry.actorUserId,
+      action: entry.action,
+      targetType: entry.targetType ?? null,
+      targetId: entry.targetId ?? null,
+      metadata: entry.metadata ?? {},
+      createdAt: new Date(),
+    };
+    // In-memory storage doesn't persist audit logs
+    return auditLog;
   }
 }
 

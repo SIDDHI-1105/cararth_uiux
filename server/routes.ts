@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, RequestHandler } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
@@ -28,6 +28,12 @@ import {
   type AuthenticityRequest,
   type BatchAuthenticityRequest
 } from "@shared/aiTrainingSchema";
+import {
+  insertSarfaesiJobSchema,
+  insertAdminAuditLogSchema,
+  type SarfaesiJob,
+  type InsertSarfaesiJob
+} from "@shared/schema";
 import { priceComparisonService } from "./priceComparison";
 import { marketplaceAggregator, initializeMarketplaceAggregator } from "./marketplaceAggregator";
 import { AutomotiveNewsService } from "./automotiveNews";
@@ -4391,18 +4397,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }));
 
-  // SECURED Test route for SARFAESI government auction scraper - ADMIN ONLY
-  app.get('/api/sarfaesi/test', isAuthenticated, asyncHandler(async (req: any, res: any) => {
-    // CRITICAL: Admin-only access for compliance
-    if (!req.user || req.user.role !== 'admin') {
-      return res.status(403).json({
-        error: 'Forbidden',
-        message: 'SARFAESI scraping requires admin privileges for compliance',
-        complianceNote: 'Government portal access restricted to authorized administrators'
+  // =============================================================================
+  // ADMIN MIDDLEWARE DEFINITION (Must be defined before use)
+  // =============================================================================
+
+  // Admin guard middleware - requires authentication AND admin role
+  const isAdmin: RequestHandler = async (req, res, next) => {
+    try {
+      // First check if user is authenticated
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({
+          error: 'Unauthorized',
+          message: 'Authentication required'
+        });
+      }
+
+      const userId = (req.user as any).claims?.sub;
+      if (!userId) {
+        return res.status(401).json({
+          error: 'Unauthorized', 
+          message: 'Invalid user session'
+        });
+      }
+
+      // Check if user has admin role
+      const isUserAdmin = await storage.isAdmin(userId);
+      if (!isUserAdmin) {
+        console.log(`🔒 Admin access denied for user ${userId}`);
+        
+        // Log the admin access attempt
+        await storage.logAdminAction({
+          actorUserId: userId,
+          action: 'admin_access_denied',
+          targetType: 'admin_endpoint',
+          targetId: req.path,
+          metadata: {
+            ip: req.ip,
+            userAgent: req.get('User-Agent'),
+            timestamp: new Date().toISOString()
+          }
+        });
+
+        return res.status(403).json({
+          error: 'Forbidden',
+          message: 'Admin privileges required',
+          note: 'This action requires administrator permissions'
+        });
+      }
+
+      console.log(`✅ Admin access granted for user ${userId}`);
+      next();
+    } catch (error) {
+      console.error('Admin guard error:', error);
+      return res.status(500).json({
+        error: 'Internal server error',
+        message: 'Failed to verify admin privileges'
       });
     }
+  };
+
+  // SECURED Test route for SARFAESI government auction scraper - ADMIN ONLY
+  app.get('/api/sarfaesi/test', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
     try {
       console.log('🏛️ Testing SARFAESI government auction scraper integration...');
+      
+      // Log admin action
+      await storage.logAdminAction({
+        actorUserId: req.user.claims.sub,
+        action: 'test_sarfaesi_scraper',
+        targetType: 'sarfaesi_test',
+        metadata: { 
+          source: req.query.source,
+          testMode: true,
+          timestamp: new Date().toISOString()
+        }
+      });
       
       const options = {
         source: (req.query.source as 'ibapi' | 'bankEauctions' | 'sarfaesiAuctions' | 'all') || 'ibapi',
@@ -4487,6 +4556,241 @@ export async function registerRoutes(app: Express): Promise<Server> {
         details: process.env.NODE_ENV === 'development' ? error.stack : undefined
       });
     }
+  }));
+
+  // =============================================================================
+  // ADMIN API ENDPOINTS
+  // =============================================================================
+
+  // List all users (admin only)
+  app.get('/api/admin/users', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    const query = req.query.q as string;
+    const limit = parseInt(req.query.limit as string) || 50;
+    const offset = parseInt(req.query.offset as string) || 0;
+
+    const users = await storage.listUsers({ q: query, limit, offset });
+
+    // Log admin action
+    await storage.logAdminAction({
+      actorUserId: req.user.claims.sub,
+      action: 'list_users',
+      targetType: 'user_management',
+      metadata: { query, limit, offset, resultCount: users.length }
+    });
+
+    res.json({
+      users: users.map(user => ({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        subscriptionTier: user.subscriptionTier,
+        createdAt: user.createdAt,
+        phoneVerified: user.phoneVerified
+      })),
+      pagination: { limit, offset, hasMore: users.length === limit }
+    });
+  }));
+
+  // Update user role (admin only)
+  app.patch('/api/admin/users/:userId/role', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    const userId = req.params.userId;
+    const { role } = req.body;
+
+    if (!role || !['user', 'admin'].includes(role)) {
+      return res.status(400).json({
+        error: 'Invalid role',
+        message: 'Role must be either "user" or "admin"'
+      });
+    }
+
+    const updatedUser = await storage.setUserRole(userId, role);
+
+    // Log admin action
+    await storage.logAdminAction({
+      actorUserId: req.user.claims.sub,
+      action: 'set_user_role',
+      targetType: 'user',
+      targetId: userId,
+      metadata: { newRole: role, previousRole: updatedUser.role }
+    });
+
+    res.json({
+      success: true,
+      user: {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        role: updatedUser.role
+      }
+    });
+  }));
+
+  // =============================================================================
+  // ADMIN SARFAESI JOB MANAGEMENT
+  // =============================================================================
+
+  // Create SARFAESI job (admin only)
+  app.post('/api/admin/sarfaesi/run', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    const validatedData = insertSarfaesiJobSchema.parse(req.body);
+    
+    // Check if there's already a running job for this source
+    const runningJobs = await storage.getSarfaesiJobs({ status: 'running', limit: 10 });
+    const sourceRunning = runningJobs.find(job => job.source === validatedData.source);
+    
+    if (sourceRunning) {
+      return res.status(429).json({
+        error: 'Job already running',
+        message: `A SARFAESI job for ${validatedData.source} is already running`,
+        runningJobId: sourceRunning.id
+      });
+    }
+
+    // Create the job
+    const job = await storage.createSarfaesiJob({
+      ...validatedData,
+      triggeredByUserId: req.user.claims.sub
+    });
+
+    // Log admin action
+    await storage.logAdminAction({
+      actorUserId: req.user.claims.sub,
+      action: 'trigger_sarfaesi',
+      targetType: 'sarfaesi_job',
+      targetId: job.id,
+      metadata: { source: job.source, parameters: job.parameters }
+    });
+
+    // Start the job asynchronously (don't wait for completion)
+    setImmediate(async () => {
+      try {
+        // Update job status to running
+        await storage.updateSarfaesiJob(job.id, {
+          status: 'running',
+          startedAt: new Date()
+        });
+
+        // Run the actual scraping
+        const scrapingResult = await sarfaesiScraper.scrapeListings(validatedData.parameters as any);
+
+        // Update job with results
+        await storage.updateSarfaesiJob(job.id, {
+          status: scrapingResult.success ? 'success' : 'failed',
+          finishedAt: new Date(),
+          totalFound: scrapingResult.totalFound,
+          authenticatedListings: scrapingResult.authenticatedListings,
+          errors: scrapingResult.errors || []
+        });
+
+      } catch (error: any) {
+        console.error(`SARFAESI job ${job.id} failed:`, error);
+        
+        await storage.updateSarfaesiJob(job.id, {
+          status: 'failed',
+          finishedAt: new Date(),
+          errors: [{ message: error.message, timestamp: new Date() }]
+        });
+      }
+    });
+
+    res.status(201).json({
+      success: true,
+      job: {
+        id: job.id,
+        source: job.source,
+        status: job.status,
+        createdAt: job.createdAt
+      }
+    });
+  }));
+
+  // List SARFAESI jobs (admin only)
+  app.get('/api/admin/sarfaesi/jobs', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    const status = req.query.status as string;
+    const limit = parseInt(req.query.limit as string) || 50;
+
+    const jobs = await storage.getSarfaesiJobs({ status, limit });
+
+    res.json({
+      jobs: jobs.map(job => ({
+        id: job.id,
+        source: job.source,
+        status: job.status,
+        totalFound: job.totalFound,
+        authenticatedListings: job.authenticatedListings,
+        startedAt: job.startedAt,
+        finishedAt: job.finishedAt,
+        createdAt: job.createdAt,
+        triggeredByUserId: job.triggeredByUserId,
+        hasErrors: job.errors && Array.isArray(job.errors) && job.errors.length > 0
+      }))
+    });
+  }));
+
+  // Get SARFAESI job details (admin only)
+  app.get('/api/admin/sarfaesi/jobs/:jobId', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    const jobId = req.params.jobId;
+    const job = await storage.getSarfaesiJob(jobId);
+
+    if (!job) {
+      return res.status(404).json({
+        error: 'Job not found',
+        message: `SARFAESI job ${jobId} not found`
+      });
+    }
+
+    res.json({ job });
+  }));
+
+  // =============================================================================
+  // ADMIN COMPLIANCE MONITORING
+  // =============================================================================
+
+  // Get compliance status (admin only)
+  app.get('/api/admin/sarfaesi/compliance', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    // Get recent job statistics
+    const recentJobs = await storage.getSarfaesiJobs({ limit: 20 });
+    const runningJobs = recentJobs.filter(job => job.status === 'running');
+    const failedJobs = recentJobs.filter(job => job.status === 'failed');
+    
+    const complianceStatus = {
+      systemStatus: {
+        activeJobs: runningJobs.length,
+        failedJobsLast24h: failedJobs.filter(job => 
+          job.createdAt && job.createdAt > new Date(Date.now() - 24 * 60 * 60 * 1000)
+        ).length,
+        lastSuccessfulRun: recentJobs.find(job => job.status === 'success')?.finishedAt || null
+      },
+      rateLimiting: {
+        userAgent: 'CarArth-Scraper/1.0 (+https://cararth.com/robots; contact@cararth.com)',
+        defaultCrawlDelay: '5000ms',
+        respectsRobotsTxt: true,
+        exponentialBackoff: true
+      },
+      legalCompliance: {
+        authorities: [
+          'Indian Banks Association (IBA)',
+          'Ministry of Finance, Govt of India', 
+          'Reserve Bank of India (RBI)',
+          'SARFAESI Act 2002'
+        ],
+        imageHandling: 'government_proxy',
+        dataAttribution: 'Source attribution maintained',
+        contactInfo: 'contact@cararth.com'
+      },
+      recentActivity: recentJobs.slice(0, 10).map(job => ({
+        id: job.id,
+        source: job.source,
+        status: job.status,
+        duration: job.startedAt && job.finishedAt ? 
+          job.finishedAt.getTime() - job.startedAt.getTime() : null,
+        createdAt: job.createdAt
+      }))
+    };
+
+    res.json(complianceStatus);
   }));
 
   const httpServer = createServer(app);

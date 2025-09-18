@@ -16,6 +16,8 @@ import {
   anonymousSearchActivity,
   cachedPortalListings,
   aiModelCache,
+  sarfaesiJobs,
+  adminAuditLogs,
   type User, 
   type InsertUser, 
   type UpsertUser,
@@ -44,7 +46,11 @@ import {
   type CachedPortalListing,
   type InsertCachedPortalListing,
   type AiModelCache,
-  type InsertAiModelCache
+  type InsertAiModelCache,
+  type SarfaesiJob,
+  type InsertSarfaesiJob,
+  type AdminAuditLog,
+  type InsertAdminAuditLog
 } from "@shared/schema";
 import type { IStorage } from "./storage.js";
 import { logError, ErrorCategory, createAppError } from "./errorHandling.js";
@@ -1555,6 +1561,196 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getCars operation');
       return [];
+    }
+  }
+
+  // Admin role management
+  async setUserRole(userId: string, role: 'user' | 'admin'): Promise<User> {
+    try {
+      const result = await this.db
+        .update(users)
+        .set({ 
+          role,
+          updatedAt: sql`now()`
+        })
+        .where(eq(users.id, userId))
+        .returning();
+      
+      const updatedUser = result[0];
+      if (!updatedUser) {
+        throw new Error('User not found');
+      }
+      
+      // Invalidate user cache
+      this.cache.delete(`user:${userId}`);
+      
+      logError({ message: `User role updated to ${role}`, statusCode: 200 }, 'setUserRole success');
+      return updatedUser;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'setUserRole operation');
+      throw new Error('Failed to update user role');
+    }
+  }
+
+  async isAdmin(userId: string): Promise<boolean> {
+    try {
+      const user = await this.getUser(userId);
+      return user?.role === 'admin' || false;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'isAdmin operation');
+      return false;
+    }
+  }
+
+  async listUsers(options?: { q?: string; limit?: number; offset?: number }): Promise<User[]> {
+    const cacheKey = `users:list:${JSON.stringify(options)}`;
+    const cached = this.getCached<User[]>(cacheKey);
+    if (cached) return cached;
+
+    try {
+      let query = this.db.select().from(users);
+
+      // Add search filter if provided
+      if (options?.q) {
+        const searchTerm = `%${options.q}%`;
+        query = query.where(
+          sql`${users.email} ILIKE ${searchTerm} OR 
+              ${users.firstName} ILIKE ${searchTerm} OR 
+              ${users.lastName} ILIKE ${searchTerm}`
+        );
+      }
+
+      // Add pagination
+      const limit = options?.limit || 50;
+      const offset = options?.offset || 0;
+      
+      query = query
+        .orderBy(desc(users.createdAt))
+        .limit(limit)
+        .offset(offset);
+
+      const result = await query;
+      this.setCache(cacheKey, result, 60000); // Cache for 1 minute
+      return result;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'listUsers operation');
+      return [];
+    }
+  }
+
+  // SARFAESI job management
+  async createSarfaesiJob(job: InsertSarfaesiJob): Promise<SarfaesiJob> {
+    try {
+      const result = await this.db
+        .insert(sarfaesiJobs)
+        .values(job)
+        .returning();
+      
+      const newJob = result[0];
+      
+      // Invalidate job list caches
+      Array.from(this.cache.keys())
+        .filter(key => key.startsWith('sarfaesi_jobs:'))
+        .forEach(key => this.cache.delete(key));
+      
+      logError({ message: 'SARFAESI job created successfully', statusCode: 200 }, 'createSarfaesiJob success');
+      return newJob;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'createSarfaesiJob operation');
+      throw new Error('Failed to create SARFAESI job');
+    }
+  }
+
+  async updateSarfaesiJob(id: string, updates: Partial<SarfaesiJob>): Promise<SarfaesiJob | undefined> {
+    try {
+      const result = await this.db
+        .update(sarfaesiJobs)
+        .set(updates)
+        .where(eq(sarfaesiJobs.id, id))
+        .returning();
+      
+      const updatedJob = result[0];
+      if (updatedJob) {
+        // Invalidate job caches
+        this.cache.delete(`sarfaesi_job:${id}`);
+        Array.from(this.cache.keys())
+          .filter(key => key.startsWith('sarfaesi_jobs:'))
+          .forEach(key => this.cache.delete(key));
+      }
+      
+      return updatedJob;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'updateSarfaesiJob operation');
+      return undefined;
+    }
+  }
+
+  async getSarfaesiJobs(options?: { limit?: number; status?: string }): Promise<SarfaesiJob[]> {
+    const cacheKey = `sarfaesi_jobs:list:${JSON.stringify(options)}`;
+    const cached = this.getCached<SarfaesiJob[]>(cacheKey);
+    if (cached) return cached;
+
+    try {
+      let query = this.db.select().from(sarfaesiJobs);
+
+      // Add status filter if provided
+      if (options?.status) {
+        query = query.where(eq(sarfaesiJobs.status, options.status));
+      }
+
+      // Add limit and ordering
+      const limit = options?.limit || 50;
+      query = query
+        .orderBy(desc(sarfaesiJobs.createdAt))
+        .limit(limit);
+
+      const result = await query;
+      this.setCache(cacheKey, result, 30000); // Cache for 30 seconds
+      return result;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getSarfaesiJobs operation');
+      return [];
+    }
+  }
+
+  async getSarfaesiJob(id: string): Promise<SarfaesiJob | undefined> {
+    const cacheKey = `sarfaesi_job:${id}`;
+    const cached = this.getCached<SarfaesiJob>(cacheKey);
+    if (cached) return cached;
+
+    try {
+      const result = await this.db
+        .select()
+        .from(sarfaesiJobs)
+        .where(eq(sarfaesiJobs.id, id))
+        .limit(1);
+      
+      const job = result[0];
+      if (job) {
+        this.setCache(cacheKey, job);
+      }
+      return job;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getSarfaesiJob operation');
+      return undefined;
+    }
+  }
+
+  // Admin audit logging
+  async logAdminAction(entry: InsertAdminAuditLog): Promise<AdminAuditLog> {
+    try {
+      const result = await this.db
+        .insert(adminAuditLogs)
+        .values(entry)
+        .returning();
+      
+      const auditLog = result[0];
+      
+      logError({ message: `Admin action logged: ${entry.action}`, statusCode: 200 }, 'logAdminAction success');
+      return auditLog;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'logAdminAction operation');
+      throw new Error('Failed to log admin action');
     }
   }
 }

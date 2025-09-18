@@ -34,6 +34,9 @@ export const users = pgTable("users", {
   searchCount: integer("search_count").default(0),
   searchCountResetAt: timestamp("search_count_reset_at").defaultNow(),
   
+  // Admin role system
+  role: text("role").default('user'), // 'user' | 'admin'
+  
   // Legacy fields for compatibility
   isPremium: boolean("is_premium").default(false),
   premiumExpiresAt: timestamp("premium_expires_at"),
@@ -1144,6 +1147,48 @@ export const marketTrends = pgTable("market_trends", {
   index("idx_trends_significance").on(table.significance),
 ]);
 
+// SARFAESI Government Auction Jobs - Admin-controlled scraping operations
+export const sarfaesiJobs = pgTable("sarfaesi_jobs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  source: text("source").notNull(), // 'ibapi', 'bankeauctions', 'sarfaesieauctions'
+  parameters: jsonb("parameters").notNull(), // Search filters, banks, states, etc.
+  status: text("status").notNull().default('queued'), // 'queued', 'running', 'success', 'failed', 'cancelled'
+  
+  // Results tracking
+  totalFound: integer("total_found").default(0),
+  authenticatedListings: integer("authenticated_listings").default(0),
+  errors: jsonb("errors").default([]), // Array of error summaries
+  
+  // Time tracking
+  startedAt: timestamp("started_at"),
+  finishedAt: timestamp("finished_at"),
+  
+  // Audit trail
+  triggeredByUserId: varchar("triggered_by_user_id").notNull(),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_sarfaesi_jobs_status").on(table.status),
+  index("idx_sarfaesi_jobs_source").on(table.source),
+  index("idx_sarfaesi_jobs_user").on(table.triggeredByUserId),
+]);
+
+// Admin Audit Logs - Compliance tracking for admin actions
+export const adminAuditLogs = pgTable("admin_audit_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  actorUserId: varchar("actor_user_id").notNull(),
+  action: text("action").notNull(), // 'assign_admin_role', 'trigger_sarfaesi', 'cancel_job', etc.
+  targetType: text("target_type"), // 'user', 'sarfaesi_job', etc.
+  targetId: varchar("target_id"),
+  metadata: jsonb("metadata").default({}), // Additional context data
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_admin_audit_actor").on(table.actorUserId),
+  index("idx_admin_audit_action").on(table.action),
+  index("idx_admin_audit_created").on(table.createdAt),
+]);
+
 // Schema Types for New Tables
 export const insertImageAssetSchema = createInsertSchema(imageAssets).omit({
   id: true,
@@ -1180,6 +1225,18 @@ export const insertMarketTrendsSchema = createInsertSchema(marketTrends).omit({
   createdAt: true,
 });
 
+export const insertSarfaesiJobSchema = createInsertSchema(sarfaesiJobs).omit({
+  id: true,
+  createdAt: true,
+  startedAt: true,
+  finishedAt: true,
+});
+
+export const insertAdminAuditLogSchema = createInsertSchema(adminAuditLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertImageAsset = z.infer<typeof insertImageAssetSchema>;
 export type ImageAsset = typeof imageAssets.$inferSelect;
 export type InsertTrustedListing = z.infer<typeof insertTrustedListingSchema>;
@@ -1194,6 +1251,12 @@ export type InsertVehicleRegistrations = z.infer<typeof insertVehicleRegistratio
 export type VehicleRegistrations = typeof vehicleRegistrations.$inferSelect;
 export type InsertMarketTrends = z.infer<typeof insertMarketTrendsSchema>;
 export type MarketTrends = typeof marketTrends.$inferSelect;
+
+// Admin system types
+export type InsertSarfaesiJob = z.infer<typeof insertSarfaesiJobSchema>;
+export type SarfaesiJob = typeof sarfaesiJobs.$inferSelect;
+export type InsertAdminAuditLog = z.infer<typeof insertAdminAuditLogSchema>;
+export type AdminAuditLog = typeof adminAuditLogs.$inferSelect;
 
 // Use cached portal listings as normalized car listings for fast search
 export type CarListing = CachedPortalListing;
