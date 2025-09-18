@@ -993,6 +993,157 @@ export const trustedListings = pgTable("trusted_listings", {
   index("idx_trusted_listings_published").on(table.isPublished),
 ]);
 
+// ============================================================================
+// REAL MARKET INTELLIGENCE DATA TABLES
+// Replace AI hallucinations with authentic SIAM, RTA & Google Trends data
+// ============================================================================
+
+// SIAM Monthly Sales Data - Real OEM sales figures by brand/model
+export const siamSalesData = pgTable("siam_sales_data", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Time Period
+  year: integer("year").notNull(),
+  month: integer("month").notNull(), // 1-12
+  reportPeriod: text("report_period").notNull(), // "2025-07", "Q2-2025"
+  
+  // Vehicle Details
+  brand: text("brand").notNull(), // Maruti Suzuki, Hyundai, Tata
+  model: text("model"), // Swift, i20, Nexon (can be null for brand totals)
+  segment: text("segment").notNull(), // Hatchback, Sedan, SUV, etc.
+  
+  // Sales Figures - Real SIAM data
+  unitsSold: integer("units_sold").notNull(),
+  growthYoY: decimal("growth_yoy", { precision: 5, scale: 2 }), // Year-over-year % growth
+  growthMoM: decimal("growth_mom", { precision: 5, scale: 2 }), // Month-over-month % growth
+  marketShare: decimal("market_share", { precision: 5, scale: 2 }), // % of total market
+  
+  // Data Source & Quality
+  dataSource: text("data_source").notNull().default('SIAM'), // SIAM, MarkLines, CEIC
+  sourceUrl: text("source_url"), // URL of press release or data source
+  verifiedAt: timestamp("verified_at").defaultNow(),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_siam_period").on(table.year, table.month),
+  index("idx_siam_brand_model").on(table.brand, table.model),
+  index("idx_siam_units").on(table.unitsSold),
+]);
+
+// Google Trends Data - Real search interest patterns
+export const googleTrendsData = pgTable("google_trends_data", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Search Term
+  searchTerm: text("search_term").notNull(), // "Maruti Swift", "Hyundai Creta"
+  category: text("category").default('automotive'), // automotive, etc.
+  
+  // Location
+  region: text("region").notNull(), // 'IN' for India, 'IN-MH' for Maharashtra
+  regionName: text("region_name"), // "India", "Maharashtra", "Mumbai"
+  
+  // Time Data
+  date: timestamp("date").notNull(), // Weekly data points
+  year: integer("year").notNull(),
+  month: integer("month").notNull(),
+  week: integer("week"), // Week of year
+  
+  // Trends Data
+  searchVolume: integer("search_volume").notNull(), // 0-100 relative scale
+  relatedQueries: text("related_queries").array().default([]), // Top related searches
+  
+  // Calculated Fields
+  trendDirection: text("trend_direction"), // "rising", "falling", "stable"
+  changePercent: decimal("change_percent", { precision: 5, scale: 2 }), // Week-over-week change
+  
+  // Data Quality
+  dataSource: text("data_source").notNull().default('GoogleTrends'),
+  collectedAt: timestamp("collected_at").defaultNow(),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_trends_term").on(table.searchTerm),
+  index("idx_trends_region").on(table.region),
+  index("idx_trends_date").on(table.date),
+  index("idx_trends_volume").on(table.searchVolume),
+]);
+
+// Vehicle Registrations by Region - Real RTA/VAHAN data
+export const vehicleRegistrations = pgTable("vehicle_registrations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Location Data
+  state: text("state").notNull(), // Maharashtra, Telangana, etc.
+  city: text("city"), // Mumbai, Hyderabad (can be null for state totals)
+  
+  // Vehicle Specifications
+  brand: text("brand").notNull(),
+  model: text("model").notNull(),
+  variant: text("variant"), // VXI, ZXI, etc.
+  fuelType: text("fuel_type").notNull(), // Petrol, Diesel, CNG, Electric
+  transmission: text("transmission").notNull(), // Manual, Automatic, CVT
+  
+  // Time Period
+  year: integer("year").notNull(),
+  month: integer("month").notNull(),
+  
+  // Registration Data - Real RTA figures
+  registrationsCount: integer("registrations_count").notNull(),
+  popularityRank: integer("popularity_rank"), // 1 = most popular in region
+  
+  // Calculated Metrics
+  regionalMarketShare: decimal("regional_market_share", { precision: 5, scale: 2 }),
+  
+  // Data Source
+  dataSource: text("data_source").notNull().default('VAHAN'), // VAHAN, RTA, CarRegistrationAPI
+  verifiedAt: timestamp("verified_at").defaultNow(),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_registrations_location").on(table.state, table.city),
+  index("idx_registrations_vehicle").on(table.brand, table.model, table.fuelType),
+  index("idx_registrations_period").on(table.year, table.month),
+  index("idx_registrations_count").on(table.registrationsCount),
+]);
+
+// Market Trends Analysis - Aggregated insights from real data
+export const marketTrends = pgTable("market_trends", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Trend Identification
+  trendType: text("trend_type").notNull(), // "sales_growth", "search_interest", "regional_demand"
+  region: text("region").notNull(), // "Hyderabad", "Maharashtra", "National"
+  
+  // Vehicle Category
+  brand: text("brand"),
+  model: text("model"),
+  segment: text("segment"), // Hatchback, SUV, etc.
+  
+  // Trend Data
+  currentValue: decimal("current_value", { precision: 10, scale: 2 }),
+  previousValue: decimal("previous_value", { precision: 10, scale: 2 }),
+  changePercent: decimal("change_percent", { precision: 5, scale: 2 }),
+  trendDirection: text("trend_direction").notNull(), // "rising", "falling", "stable"
+  
+  // Time Period
+  periodStart: timestamp("period_start").notNull(),
+  periodEnd: timestamp("period_end").notNull(),
+  
+  // Analysis
+  significance: text("significance").notNull(), // "high", "medium", "low"
+  description: text("description"), // Human-readable trend description
+  
+  // Data Quality
+  dataPoints: integer("data_points").notNull(), // Number of data points used
+  confidence: decimal("confidence", { precision: 3, scale: 2 }).notNull(), // 0.00-1.00
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_trends_type_region").on(table.trendType, table.region),
+  index("idx_trends_vehicle").on(table.brand, table.model),
+  index("idx_trends_significance").on(table.significance),
+]);
+
 // Schema Types for New Tables
 export const insertImageAssetSchema = createInsertSchema(imageAssets).omit({
   id: true,
@@ -1005,10 +1156,44 @@ export const insertTrustedListingSchema = createInsertSchema(trustedListings).om
   updatedAt: true,
 });
 
+// Real Market Intelligence Schema Types
+export const insertSiamSalesDataSchema = createInsertSchema(siamSalesData).omit({
+  id: true,
+  createdAt: true,
+  verifiedAt: true,
+});
+
+export const insertGoogleTrendsDataSchema = createInsertSchema(googleTrendsData).omit({
+  id: true,
+  createdAt: true,
+  collectedAt: true,
+});
+
+export const insertVehicleRegistrationsSchema = createInsertSchema(vehicleRegistrations).omit({
+  id: true,
+  createdAt: true,
+  verifiedAt: true,
+});
+
+export const insertMarketTrendsSchema = createInsertSchema(marketTrends).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertImageAsset = z.infer<typeof insertImageAssetSchema>;
 export type ImageAsset = typeof imageAssets.$inferSelect;
 export type InsertTrustedListing = z.infer<typeof insertTrustedListingSchema>;
 export type TrustedListing = typeof trustedListings.$inferSelect;
+
+// Real Market Intelligence Types
+export type InsertSiamSalesData = z.infer<typeof insertSiamSalesDataSchema>;
+export type SiamSalesData = typeof siamSalesData.$inferSelect;
+export type InsertGoogleTrendsData = z.infer<typeof insertGoogleTrendsDataSchema>;
+export type GoogleTrendsData = typeof googleTrendsData.$inferSelect;
+export type InsertVehicleRegistrations = z.infer<typeof insertVehicleRegistrationsSchema>;
+export type VehicleRegistrations = typeof vehicleRegistrations.$inferSelect;
+export type InsertMarketTrends = z.infer<typeof insertMarketTrendsSchema>;
+export type MarketTrends = typeof marketTrends.$inferSelect;
 
 // Use cached portal listings as normalized car listings for fast search
 export type CarListing = CachedPortalListing;
