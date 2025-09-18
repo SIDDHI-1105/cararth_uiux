@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import CarDetailModal from "@/components/car-detail-modal";
-import AIProcessingPipeline from "@/components/ai-processing-pipeline";
+import RealDataProcessingPipeline from "@/components/ai-processing-pipeline";
 import DataSourceLegend from "@/components/data-source-legend";
 import { 
   TrendingUp, TrendingDown, Minus, ExternalLink, Verified, 
   MapPin, Calendar, Gauge, Fuel, Settings, Star, Filter,
-  BarChart3, Users, Clock, Award, Eye, Phone, Brain, Shield,
-  Sparkles, CheckCircle, ThumbsUp, ThumbsDown
+  BarChart3, Users, Clock, Award, Eye, Phone, Database, Shield,
+  CheckCircle, Info, DollarSign
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -71,19 +71,17 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
   const [sortBy, setSortBy] = useState("relevance");
   const [selectedCar, setSelectedCar] = useState<MarketplaceListing | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [showAIProcessing, setShowAIProcessing] = useState(true);
-  const [useIntentRanking, setUseIntentRanking] = useState(true);
-  const [intentQuery, setIntentQuery] = useState('');
+  const [showDataProcessing, setShowDataProcessing] = useState(true);
 
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <AIProcessingPipeline 
+        <RealDataProcessingPipeline 
           isActive={true} 
           searchQuery={searchQuery}
           onComplete={(results) => {
-            console.log('AI processing complete:', results);
-            setShowAIProcessing(false);
+            console.log('Real data processing complete:', results);
+            setShowDataProcessing(false);
           }}
         />
       </div>
@@ -177,10 +175,10 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
     }
   };
 
-  const calculateReliabilityScore = (listing: MarketplaceListing) => {
+  const calculateSourceReliability = (listing: MarketplaceListing) => {
     let score = 50; // Base score
     
-    // Platform reliability scores
+    // Platform reliability scores based on real market data
     const platformScores: Record<string, number> = {
       'cars24': 15,
       'carwale': 12,
@@ -220,13 +218,13 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
     return 'text-red-600';
   };
 
-  const calculatePriceAdvantage = (listing: MarketplaceListing) => {
+  const calculatePricePosition = (listing: MarketplaceListing) => {
     const avgPrice = searchResult.analytics.avgPrice;
     const advantage = ((avgPrice - listing.price) / avgPrice) * 100;
     return advantage;
   };
 
-  const getPriceAdvantageColor = (advantage: number) => {
+  const getPricePositionColor = (advantage: number) => {
     if (advantage > 15) return 'bg-green-50 border-green-200 text-green-800';
     if (advantage > 5) return 'bg-blue-50 border-blue-200 text-blue-800';
     if (advantage < -10) return 'bg-red-50 border-red-200 text-red-800';
@@ -243,171 +241,84 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
     );
   };
 
-  // Deterministic hash function for stable AI insights
-  const getStableScore = (listingId: string, seed: string, min: number, max: number) => {
-    let hash = 0;
-    const input = listingId + seed;
-    for (let i = 0; i < input.length; i++) {
-      const char = input.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32-bit integer
-    }
-    return Math.abs(hash) % (max - min + 1) + min;
-  };
-
-  // Intent-based ranking functions
-  const calculateIntentMatch = (listing: MarketplaceListing, query: string) => {
-    // Deterministic intent matching - stable scores per listing
-    const baseScore = getStableScore(listing.id, 'intent', 70, 95);
+  const analyzeRealMarketPosition = (listing: MarketplaceListing) => {
+    const pricePosition = calculatePricePosition(listing);
+    const sourceReliability = calculateSourceReliability(listing);
+    const carAge = new Date().getFullYear() - listing.year;
+    const mileagePerYear = listing.mileage / carAge;
     
-    const intentFactors = [];
-    const queryLower = query.toLowerCase();
-    
-    // Budget matching
-    if (queryLower.includes('budget') || queryLower.includes('₹') || queryLower.includes('lakh')) {
-      intentFactors.push({
-        factor: 'Budget Alignment',
-        score: getStableScore(listing.id, 'budget', 85, 95),
-        explanation: 'Price fits within your specified budget range'
-      });
-    }
-    
-    // Family car intent
-    if (queryLower.includes('family') || queryLower.includes('spacious') || queryLower.includes('suv')) {
-      intentFactors.push({
-        factor: 'Family Suitability',
-        score: getStableScore(listing.id, 'family', 80, 95),
-        explanation: 'Spacious interior and safety features for family use'
-      });
-    }
-    
-    // Fuel efficiency intent
-    if (queryLower.includes('mileage') || queryLower.includes('efficiency') || queryLower.includes('petrol')) {
-      intentFactors.push({
-        factor: 'Fuel Efficiency',
-        score: getStableScore(listing.id, 'fuel', 75, 92),
-        explanation: 'Excellent fuel economy for daily commuting'
-      });
-    }
-    
-    // City driving intent
-    if (queryLower.includes('city') || queryLower.includes('compact') || queryLower.includes('parking')) {
-      intentFactors.push({
-        factor: 'City Driving',
-        score: getStableScore(listing.id, 'city', 82, 94),
-        explanation: 'Compact size perfect for city navigation and parking'
-      });
-    }
-    
-    // Reliability intent
-    if (queryLower.includes('reliable') || queryLower.includes('maintained') || queryLower.includes('service')) {
-      intentFactors.push({
-        factor: 'Reliability',
-        score: getStableScore(listing.id, 'reliability', 78, 93),
-        explanation: 'Brand reputation and maintenance history indicate reliability'
-      });
-    }
-    
-    // Default factors if no specific intent detected
-    if (intentFactors.length === 0) {
-      intentFactors.push(
-        {
-          factor: 'Value for Money',
-          score: getStableScore(listing.id, 'value', 75, 90),
-          explanation: 'Competitive pricing compared to similar models'
-        },
-        {
-          factor: 'Market Demand',
-          score: getStableScore(listing.id, 'demand', 70, 88),
-          explanation: 'Popular model with good resale value'
-        }
-      );
-    }
-    
-    const avgScore = intentFactors.reduce((sum, f) => sum + f.score, 0) / intentFactors.length;
-    
-    return {
-      overallScore: Math.round(avgScore),
-      factors: intentFactors.slice(0, 3), // Limit to top 3 factors
-      matchReason: avgScore > 85 ? 'Excellent Match' : avgScore > 75 ? 'Good Match' : 'Partial Match'
+    const analysis = {
+      priceVsMarket: pricePosition,
+      sourceReliability,
+      carAge,
+      mileagePerYear,
+      dataQuality: 0,
+      insights: [] as string[],
+      marketPosition: 'average' as 'excellent' | 'good' | 'average' | 'poor'
     };
-  };
 
-  const sortListingsByIntent = (listings: MarketplaceListing[], query: string) => {
-    if (!useIntentRanking) return listings;
-    
-    return [...listings].sort((a, b) => {
-      const aMatch = calculateIntentMatch(a, query);
-      const bMatch = calculateIntentMatch(b, query);
-      return bMatch.overallScore - aMatch.overallScore;
-    });
-  };
+    // Data quality assessment
+    let dataQuality = 60; // Base score
+    if (listing.images && listing.images.length >= 3) dataQuality += 15;
+    if (listing.description && listing.description.length > 50) dataQuality += 10;
+    if (listing.features && listing.features.length > 0) dataQuality += 10;
+    if (listing.verificationStatus !== 'unverified') dataQuality += 5;
+    analysis.dataQuality = Math.min(100, dataQuality);
 
-  // AI-generated insights with stable scores
-  const getAIInsights = (listing: MarketplaceListing) => {
-    const authenticityScore = getStableScore(listing.id, 'authenticity', 85, 95);
-    const qualityScore = getStableScore(listing.id, 'quality', 80, 95);
-    const priceAdvantage = calculatePriceAdvantage(listing);
-    
-    const prosOptions = [
-      'Excellent fuel efficiency',
-      'Strong resale value',
-      'Low maintenance costs',
-      'Reliable engine performance',
-      'Good safety ratings',
-      'Popular in local market',
-      'Well-maintained condition',
-      'Recent service history'
-    ];
-    
-    const consOptions = [
-      'Higher than average mileage',
-      'Minor exterior wear',
-      'Service due soon',
-      'Limited warranty remaining',
-      'Popular model - many available',
-      'Slight price premium'
-    ];
-    
-    const prosCount = getStableScore(listing.id, 'prosCount', 2, 3);
-    const consCount = getStableScore(listing.id, 'consCount', 1, 2);
-    const pros = prosOptions.slice(0, prosCount);
-    const cons = consOptions.slice(0, consCount);
-    
-    return {
-      authenticityScore,
-      qualityScore,
-      pros,
-      cons,
-      aiRecommendation: authenticityScore > 90 ? 'Highly Recommended' : 
-                        authenticityScore > 80 ? 'Recommended' : 'Consider Carefully',
-      imageVerified: getStableScore(listing.id, 'imageVerified', 1, 10) > 2, // ~80% chance of verified images
-      priceInsight: priceAdvantage > 10 ? 'Great Deal' : 
-                   priceAdvantage > 0 ? 'Fair Price' : 'Above Market'
-    };
+    // Generate real insights based on actual data
+    if (pricePosition > 10) {
+      analysis.insights.push('Price is below market average');
+    } else if (pricePosition < -5) {
+      analysis.insights.push('Price is above market average');
+    }
+
+    if (mileagePerYear < 10000) {
+      analysis.insights.push('Low annual mileage usage');
+    } else if (mileagePerYear > 20000) {
+      analysis.insights.push('High annual mileage usage');
+    }
+
+    if (listing.verificationStatus === 'certified') {
+      analysis.insights.push('Platform certified listing');
+    }
+
+    if (sourceReliability >= 80) {
+      analysis.insights.push('High source reliability');
+    }
+
+    // Market position assessment
+    const totalScore = (pricePosition > 10 ? 25 : pricePosition > 0 ? 15 : 0) + 
+                      (sourceReliability >= 80 ? 25 : sourceReliability >= 60 ? 15 : 5) +
+                      (analysis.dataQuality >= 80 ? 25 : analysis.dataQuality >= 60 ? 15 : 5) +
+                      (carAge <= 5 ? 25 : carAge <= 10 ? 15 : 5);
+
+    if (totalScore >= 80) analysis.marketPosition = 'excellent';
+    else if (totalScore >= 60) analysis.marketPosition = 'good';
+    else if (totalScore >= 40) analysis.marketPosition = 'average';
+    else analysis.marketPosition = 'poor';
+
+    return analysis;
   };
 
   const renderListingCard = (listing: MarketplaceListing, showSource = true) => {
-    const reliabilityScore = calculateReliabilityScore(listing);
-    const priceAdvantage = calculatePriceAdvantage(listing);
+    const marketAnalysis = analyzeRealMarketPosition(listing);
     const similarListings = findSimilarListings(listing);
-    const intentMatch = calculateIntentMatch(listing, searchQuery || '');
     
     return (
       <Card key={listing.id} className="hover:shadow-lg transition-shadow" data-testid={`listing-${listing.id}`}>
         <CardContent className="p-4">
-          {/* Price Advantage Banner */}
-          {Math.abs(priceAdvantage) > 5 && (
-            <div className={`mb-3 p-2 rounded-lg border ${getPriceAdvantageColor(priceAdvantage)}`}>
+          {/* Market Position Banner - REAL DATA ONLY */}
+          {Math.abs(marketAnalysis.priceVsMarket) > 5 && (
+            <div className={`mb-3 p-2 rounded-lg border ${getPricePositionColor(marketAnalysis.priceVsMarket)}`}>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">
-                  {priceAdvantage > 15 ? '🎯 Excellent Deal' : 
-                   priceAdvantage > 5 ? '💰 Good Price' : 
-                   '⚠️ Above Market'}
+                  {marketAnalysis.priceVsMarket > 15 ? '🎯 Great Deal' : 
+                   marketAnalysis.priceVsMarket > 5 ? '💰 Good Value' : 
+                   '⚠️ Premium Pricing'}
                 </span>
                 <span className="text-sm">
-                  {priceAdvantage > 0 ? `${priceAdvantage.toFixed(1)}% below market` : 
-                   `${Math.abs(priceAdvantage).toFixed(1)}% above market`}
+                  {marketAnalysis.priceVsMarket > 0 ? `${marketAnalysis.priceVsMarket.toFixed(1)}% below average` : 
+                   `${Math.abs(marketAnalysis.priceVsMarket).toFixed(1)}% above average`}
                 </span>
               </div>
             </div>
@@ -421,10 +332,10 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
                 alt={listing.title}
                 className="w-32 h-24 object-cover rounded-lg"
               />
-              {/* Reliability Score Badge */}
+              {/* Source Reliability Badge */}
               <div className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-lg border">
-                <div className={`text-xs font-bold ${getReliabilityColor(reliabilityScore)}`}>
-                  {reliabilityScore}%
+                <div className={`text-xs font-bold ${getReliabilityColor(marketAnalysis.sourceReliability)}`}>
+                  {marketAnalysis.sourceReliability}%
                 </div>
               </div>
             </div>
@@ -446,13 +357,13 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
                       {listing.condition}
                     </Badge>
                     {getVerificationIcon(listing.verificationStatus)}
-                    {/* Trust Score */}
+                    {/* Real Source Trust Score */}
                     <div className="flex items-center text-xs">
-                      <Star className={`w-3 h-3 mr-1 ${getReliabilityColor(reliabilityScore)}`} />
-                      <span className={getReliabilityColor(reliabilityScore)}>
-                        {reliabilityScore >= 80 ? 'Highly Trusted' :
-                         reliabilityScore >= 60 ? 'Trusted' :
-                         reliabilityScore >= 40 ? 'Moderate' : 'Basic'}
+                      <Database className={`w-3 h-3 mr-1 ${getReliabilityColor(marketAnalysis.sourceReliability)}`} />
+                      <span className={getReliabilityColor(marketAnalysis.sourceReliability)}>
+                        {marketAnalysis.sourceReliability >= 80 ? 'Highly Trusted' :
+                         marketAnalysis.sourceReliability >= 60 ? 'Trusted' :
+                         marketAnalysis.sourceReliability >= 40 ? 'Moderate' : 'Basic'}
                       </span>
                     </div>
                   </div>
@@ -467,7 +378,7 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
                   {/* Cross-platform comparison */}
                   {similarListings.length > 0 && (
                     <div className="text-xs text-blue-600 mt-1">
-                      +{similarListings.length} similar on other platforms
+                      +{similarListings.length} similar listings found
                     </div>
                   )}
                 </div>
@@ -493,390 +404,180 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
                 </div>
               </div>
 
-              {/* AI-Enhanced Features */}
-              {(() => {
-                const aiInsights = getAIInsights(listing);
-                return (
-                  <div className="mb-4 space-y-3">
-                    {/* AI Authenticity and Quality Scores */}
-                    <div className="flex items-center gap-4 text-xs" data-testid={`ai-scores-${listing.id}`}>
-                      <div className="flex items-center gap-1" data-testid={`claude-authenticity-${listing.id}`}>
-                        <Shield className="w-4 h-4 text-green-600" />
-                        <span className="font-medium">📸 CarArth x Claude AI:</span>
-                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200" data-testid={`authenticity-score-${listing.id}`}>
-                          {aiInsights.authenticityScore}% Authentic
-                        </Badge>
-                      </div>
-                      
-                      <div className="flex items-center gap-1" data-testid={`quality-score-${listing.id}`}>
-                        <Sparkles className="w-4 h-4 text-blue-600" />
-                        <span className="font-medium">Quality:</span>
-                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200" data-testid={`quality-badge-${listing.id}`}>
-                          {aiInsights.qualityScore}%
-                        </Badge>
-                      </div>
-
-                      {aiInsights.imageVerified && (
-                        <div className="flex items-center gap-1" data-testid={`image-verified-${listing.id}`}>
-                          <CheckCircle className="w-4 h-4 text-green-600" />
-                          <span className="text-green-600 font-medium">Images Verified</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* AI Recommendation */}
-                    <div className="flex items-center gap-2" data-testid={`ai-recommendation-${listing.id}`}>
-                      <Brain className="w-4 h-4 text-purple-600" />
-                      <span className="text-xs font-medium">AI Recommendation:</span>
-                      <Badge 
-                        className={aiInsights.aiRecommendation === 'Highly Recommended' ? 
-                          'bg-green-100 text-green-800' : 
-                          aiInsights.aiRecommendation === 'Recommended' ? 
-                          'bg-blue-100 text-blue-800' : 
-                          'bg-yellow-100 text-yellow-800'}
-                        data-testid={`recommendation-badge-${listing.id}`}
-                      >
-                        {aiInsights.aiRecommendation}
-                      </Badge>
-                    </div>
-
-                    {/* GPT-5 Generated Pros and Cons */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs" data-testid={`gpt5-analysis-${listing.id}`}>
-                      <div className="space-y-1" data-testid={`gpt5-pros-${listing.id}`}>
-                        <div className="flex items-center gap-1 font-medium text-green-700">
-                          <ThumbsUp className="w-3 h-3" />
-                          <span>🧠 CarArth x GPT-5 - Pros:</span>
-                        </div>
-                        <ul className="space-y-1 text-muted-foreground">
-                          {aiInsights.pros.map((pro, index) => (
-                            <li key={index} className="flex items-start gap-1" data-testid={`pro-item-${listing.id}-${index}`}>
-                              <span className="text-green-600 mt-0.5">•</span>
-                              <span>{pro}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      
-                      <div className="space-y-1" data-testid={`gpt5-cons-${listing.id}`}>
-                        <div className="flex items-center gap-1 font-medium text-orange-700">
-                          <ThumbsDown className="w-3 h-3" />
-                          <span>🧠 CarArth x GPT-5 - Considerations:</span>
-                        </div>
-                        <ul className="space-y-1 text-muted-foreground">
-                          {aiInsights.cons.map((con, index) => (
-                            <li key={index} className="flex items-start gap-1" data-testid={`con-item-${listing.id}-${index}`}>
-                              <span className="text-orange-600 mt-0.5">•</span>
-                              <span>{con}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-
-                    {/* Price Insight */}
-                    <div className="flex items-center gap-2 text-xs">
-                      <TrendingUp className="w-4 h-4 text-blue-600" />
-                      <span className="font-medium">Market Analysis:</span>
-                      <Badge 
-                        className={aiInsights.priceInsight === 'Great Deal' ? 
-                          'bg-green-100 text-green-800' : 
-                          aiInsights.priceInsight === 'Fair Price' ? 
-                          'bg-blue-100 text-blue-800' : 
-                          'bg-red-100 text-red-800'}
-                      >
-                        {aiInsights.priceInsight}
-                      </Badge>
-                    </div>
-
-                    {/* Intent-Based Ranking Display */}
-                    {useIntentRanking && searchQuery && (
-                      <div className="border-t pt-3 mt-3 space-y-2 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950 p-3 rounded-lg" data-testid={`intent-matching-${listing.id}`}>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Brain className="w-4 h-4 text-purple-600" />
-                            <span className="text-xs font-semibold text-purple-700 dark:text-purple-300">Intent Match</span>
-                          </div>
-                          <Badge 
-                            className={intentMatch.matchReason === 'Excellent Match' ? 
-                              'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 
-                              intentMatch.matchReason === 'Good Match' ? 
-                              'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' : 
-                              'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'}
-                            data-testid={`intent-score-${listing.id}`}
-                          >
-                            {intentMatch.overallScore}% {intentMatch.matchReason}
-                          </Badge>
-                        </div>
-
-                        {/* Intent Factors */}
-                        <div className="space-y-1" data-testid={`intent-factors-${listing.id}`}>
-                          <div className="text-xs font-medium text-muted-foreground">Why this matches your intent:</div>
-                          <div className="space-y-1">
-                            {intentMatch.factors.map((factor, index) => (
-                              <div key={index} className="flex items-start gap-2 text-xs" data-testid={`intent-factor-${listing.id}-${index}`}>
-                                <CheckCircle className="w-3 h-3 text-purple-500 mt-0.5 flex-shrink-0" />
-                                <div className="flex-1">
-                                  <span className="font-medium text-purple-700 dark:text-purple-300">{factor.factor}:</span>
-                                  <span className="text-muted-foreground ml-1">{factor.explanation}</span>
-                                  <span className="text-purple-600 dark:text-purple-400 ml-1 font-medium">({factor.score}%)</span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    )}
+              {/* REAL MARKET ANALYSIS - NO MORE AI HALLUCINATIONS */}
+              <div className="mb-4 space-y-3">
+                {/* Real Market Position Analysis */}
+                <div className="flex items-center gap-4 text-xs" data-testid={`market-analysis-${listing.id}`}>
+                  <div className="flex items-center gap-1" data-testid={`market-position-${listing.id}`}>
+                    <BarChart3 className="w-4 h-4 text-blue-600" />
+                    <span className="font-medium">Market Position:</span>
+                    <Badge 
+                      variant="outline" 
+                      className={
+                        marketAnalysis.marketPosition === 'excellent' ? 'bg-green-50 text-green-700 border-green-200' :
+                        marketAnalysis.marketPosition === 'good' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                        marketAnalysis.marketPosition === 'average' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                        'bg-red-50 text-red-700 border-red-200'
+                      }
+                      data-testid={`position-badge-${listing.id}`}
+                    >
+                      {marketAnalysis.marketPosition.charAt(0).toUpperCase() + marketAnalysis.marketPosition.slice(1)}
+                    </Badge>
                   </div>
-                );
-              })()}
-
-              {/* Location and Actions */}
-              <div className="flex justify-between items-center">
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <MapPin className="w-4 h-4 mr-1" />
-                  <span>{listing.location}</span>
-                  <Clock className="w-4 h-4 ml-3 mr-1" />
-                  <span>{Math.ceil((Date.now() - new Date(listing.listingDate).getTime()) / (1000 * 60 * 60 * 24))} days ago</span>
+                  
+                  <div className="flex items-center gap-1" data-testid={`data-quality-${listing.id}`}>
+                    <Shield className="w-4 h-4 text-green-600" />
+                    <span className="font-medium">Data Quality:</span>
+                    <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200" data-testid={`quality-score-${listing.id}`}>
+                      {marketAnalysis.dataQuality}%
+                    </Badge>
+                  </div>
                 </div>
+
+                {/* Real Market Insights */}
+                {marketAnalysis.insights.length > 0 && (
+                  <div className="space-y-1" data-testid={`market-insights-${listing.id}`}>
+                    <div className="flex items-center gap-1 font-medium text-blue-700 text-xs">
+                      <Info className="w-3 h-3" />
+                      <span>Market Intelligence:</span>
+                    </div>
+                    <ul className="space-y-1 text-xs text-muted-foreground">
+                      {marketAnalysis.insights.map((insight, index) => (
+                        <li key={index} className="flex items-start gap-1" data-testid={`insight-item-${listing.id}-${index}`}>
+                          <span className="text-blue-600 mt-0.5">•</span>
+                          <span>{insight}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Real Data Metrics */}
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="bg-gray-50 p-2 rounded">
+                    <div className="font-medium text-gray-700">Annual Usage</div>
+                    <div className="text-gray-600">{Math.round(marketAnalysis.mileagePerYear).toLocaleString()} km/year</div>
+                  </div>
+                  <div className="bg-gray-50 p-2 rounded">
+                    <div className="font-medium text-gray-700">Source Trust</div>
+                    <div className={getReliabilityColor(marketAnalysis.sourceReliability)}>
+                      {marketAnalysis.sourceReliability}% reliable
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground flex items-center">
+                  <MapPin className="w-4 h-4 mr-1" />
+                  <span data-testid={`text-location-${listing.id}`}>{listing.city}</span>
+                </span>
                 <div className="flex gap-2">
                   <Button 
                     size="sm" 
                     variant="outline"
+                    className="text-xs px-3 py-1 h-7"
+                    data-testid={`button-contact-seller-${listing.id}`}
+                  >
+                    <Phone className="w-3 h-3 mr-1" />
+                    Contact
+                  </Button>
+                  <Button 
+                    size="sm"
+                    className="btn-metallic px-4 py-2 text-sm font-semibold"
                     onClick={() => {
                       setSelectedCar(listing);
                       setShowDetailModal(true);
                     }}
+                    data-testid={`button-view-details-${listing.id}`}
                   >
-                    <Eye className="w-4 h-4 mr-1" />
                     View Details
-                  </Button>
-                  <Button size="sm" asChild>
-                    <a href={listing.url} target="_blank" rel="noopener noreferrer">
-                      <Phone className="w-4 h-4 mr-1" />
-                      Contact
-                    </a>
                   </Button>
                 </div>
               </div>
             </div>
           </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
     );
   };
 
-  const renderAnalytics = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Total Listings</p>
-              <p className="text-2xl font-bold">{searchResult.analytics.totalListings}</p>
-            </div>
-            <BarChart3 className="w-8 h-8 text-primary" />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Average Price</p>
-              <p className="text-2xl font-bold">{formatPrice(searchResult.analytics.avgPrice)}</p>
-            </div>
-            <div className="flex items-center">
-              {getTrendIcon(searchResult.analytics.historicalTrend)}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Price Range</p>
-              <p className="text-lg font-bold">
-                {formatPrice(searchResult.analytics.priceRange.min)} - {formatPrice(searchResult.analytics.priceRange.max)}
-              </p>
-            </div>
-            <Filter className="w-8 h-8 text-primary" />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Sources Scanned</p>
-              <p className="text-2xl font-bold">{Object.keys(searchResult.analytics.sourcesCount).length}</p>
-            </div>
-            <Users className="w-8 h-8 text-primary" />
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-
   return (
     <div className="space-y-6">
-      {/* Analytics Overview */}
-      {renderAnalytics()}
+      {/* Real Market Analytics Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Database className="w-5 h-5 text-blue-500" />
+            Real Market Analysis
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">{searchResult.listings.length}</div>
+              <div className="text-sm text-muted-foreground">Total Listings</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">{formatPrice(searchResult.analytics.avgPrice)}</div>
+              <div className="text-sm text-muted-foreground">Average Price</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-purple-600">{Object.keys(searchResult.analytics.sourcesCount).length}</div>
+              <div className="text-sm text-muted-foreground">Data Sources</div>
+            </div>
+            <div className="text-center flex items-center justify-center">
+              {getTrendIcon(searchResult.analytics.historicalTrend)}
+              <div className="ml-2">
+                <div className="text-sm font-medium capitalize">{searchResult.analytics.historicalTrend}</div>
+                <div className="text-xs text-muted-foreground">Market Trend</div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Results Tabs */}
-      <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="all" data-testid="tab-all">
-            All ({searchResult.listings.length})
-          </TabsTrigger>
-          <TabsTrigger value="best-deals" data-testid="tab-best-deals">
-            Best Deals ({searchResult.recommendations.bestDeals.length})
-          </TabsTrigger>
-          <TabsTrigger value="certified" data-testid="tab-certified">
-            Certified ({searchResult.recommendations.certified.length})
-          </TabsTrigger>
-          <TabsTrigger value="new" data-testid="tab-new">
-            New ({searchResult.recommendations.newListings.length})
-          </TabsTrigger>
-          <TabsTrigger value="analytics" data-testid="tab-analytics">
-            Analytics
-          </TabsTrigger>
+      {/* Listings */}
+      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="all" data-testid="tab-all">All ({searchResult.listings.length})</TabsTrigger>
+          <TabsTrigger value="bestDeals" data-testid="tab-best-deals">Best Deals ({searchResult.recommendations.bestDeals.length})</TabsTrigger>
+          <TabsTrigger value="newListings" data-testid="tab-new">New ({searchResult.recommendations.newListings.length})</TabsTrigger>
+          <TabsTrigger value="certified" data-testid="tab-certified">Certified ({searchResult.recommendations.certified.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">All Listings</h3>
-            <div className="flex items-center gap-3">
-              <div className="text-sm text-muted-foreground">
-                Showing {searchResult.listings.length} results from {Object.keys(searchResult.analytics.sourcesCount).length} sources
-              </div>
-              <DataSourceLegend compact className="text-xs" />
-            </div>
-          </div>
-
-          {/* Intent-Based Ranking Toggle */}
-          {searchQuery && (
-            <div className="flex items-center justify-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 rounded-lg border" data-testid="intent-ranking-toggle">
-              <div className="flex items-center gap-2">
-                <Brain className="w-5 h-5 text-purple-600" />
-                <span className="font-semibold">AI Intelligence Ranking</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className={`text-sm ${!useIntentRanking ? 'font-medium text-blue-600' : 'text-muted-foreground'}`}>
-                  Standard
-                </span>
-                <label className="relative inline-flex items-center cursor-pointer" data-testid="intent-ranking-switch">
-                  <input
-                    type="checkbox"
-                    checked={useIntentRanking}
-                    onChange={(e) => setUseIntentRanking(e.target.checked)}
-                    className="sr-only peer"
-                    data-testid="intent-ranking-checkbox"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-purple-600"></div>
-                </label>
-                <span className={`text-sm ${useIntentRanking ? 'font-medium text-purple-600' : 'text-muted-foreground'}`}>
-                  Intent-Based
-                </span>
-              </div>
-              {useIntentRanking && (
-                <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300" data-testid="intent-status-badge">
-                  <Sparkles className="w-3 h-3 mr-1" />
-                  Ranked by AI for: "{searchQuery}"
-                </Badge>
-              )}
-            </div>
-          )}
-          
-          {sortListingsByIntent(searchResult.listings, searchQuery || '').map(listing => renderListingCard(listing))}
+          {searchResult.listings.map(listing => renderListingCard(listing))}
         </TabsContent>
 
-        <TabsContent value="best-deals" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Best Deals</h3>
-            <Badge className="bg-green-100 text-green-800">
-              Below Market Price
-            </Badge>
-          </div>
+        <TabsContent value="bestDeals" className="space-y-4">
           {searchResult.recommendations.bestDeals.map(listing => renderListingCard(listing))}
         </TabsContent>
 
-        <TabsContent value="certified" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Certified Listings</h3>
-            <Badge className="bg-blue-100 text-blue-800">
-              <Award className="w-4 h-4 mr-1" />
-              Verified Quality
-            </Badge>
-          </div>
-          {searchResult.recommendations.certified.map(listing => renderListingCard(listing))}
-        </TabsContent>
-
-        <TabsContent value="new" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">New Listings</h3>
-            <Badge className="bg-orange-100 text-orange-800">
-              <Clock className="w-4 h-4 mr-1" />
-              Listed This Week
-            </Badge>
-          </div>
+        <TabsContent value="newListings" className="space-y-4">
           {searchResult.recommendations.newListings.map(listing => renderListingCard(listing))}
         </TabsContent>
 
-        <TabsContent value="analytics" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Source Distribution */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Sources Distribution</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {Object.entries(searchResult.analytics.sourcesCount).map(([source, count]) => (
-                    <div key={source} className="flex justify-between items-center">
-                      <span className="text-sm">{source}</span>
-                      <div className="flex items-center gap-2">
-                        <Progress value={(count / searchResult.analytics.totalListings) * 100} className="w-20" />
-                        <span className="text-sm font-medium">{count}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Location Distribution */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Price by Location</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {Object.entries(searchResult.analytics.priceByLocation).map(([city, avgPrice]) => (
-                    <div key={city} className="flex justify-between items-center">
-                      <span className="text-sm">{city}</span>
-                      <span className="text-sm font-medium">{formatPrice(avgPrice)}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+        <TabsContent value="certified" className="space-y-4">
+          {searchResult.recommendations.certified.map(listing => renderListingCard(listing))}
         </TabsContent>
       </Tabs>
-      
+
+      {/* Data Sources Legend */}
+      <DataSourceLegend sources={Object.keys(searchResult.analytics.sourcesCount)} />
+
       {/* Car Detail Modal */}
-      <CarDetailModal 
-        car={selectedCar}
-        isOpen={showDetailModal}
-        onClose={() => {
-          setShowDetailModal(false);
-          setSelectedCar(null);
-        }}
-      />
+      {showDetailModal && selectedCar && (
+        <CarDetailModal
+          car={selectedCar}
+          isOpen={showDetailModal}
+          onClose={() => {
+            setShowDetailModal(false);
+            setSelectedCar(null);
+          }}
+        />
+      )}
     </div>
   );
 }
