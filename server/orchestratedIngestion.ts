@@ -8,6 +8,7 @@ import { aiDataExtractionService } from './aiDataExtraction';
 import { detailPageExtractor } from './detailPageExtractor.js';
 import { imageAssetService } from './imageAssetService.js';
 import { recordImageProcessing, recordListingProcessing } from './imageAuthenticityMonitor.js';
+import { sarfaesiScraper } from './sarfaesiScraper.js';
 
 // Orchestrated batch ingestion pipeline
 export interface OrchestratedIngestionResult {
@@ -149,7 +150,7 @@ export class OrchestratedBatchIngestion {
    * PHASE 1: AI-ORCHESTRATED DATA EXTRACTION
    */
   private async orchestratedExtraction(cities: string[], result: OrchestratedIngestionResult): Promise<any[]> {
-    const portals = ['cardekho.com', 'cars24.com', 'carwale.com', 'olx.in', 'droom.in'];
+    const portals = ['cardekho.com', 'cars24.com', 'carwale.com', 'olx.in', 'droom.in', 'sarfaesi.gov'];
     const allRawData: any[] = [];
     
     for (const city of cities) {
@@ -175,8 +176,16 @@ export class OrchestratedBatchIngestion {
             continue;
           }
           
-          // Execute extraction based on routing decision
-          const extractedData = await this.executeExtraction(portalUrl, routingDecision, city);
+          // Execute extraction based on routing decision and portal type
+          let extractedData;
+          if (portal === 'sarfaesi.gov') {
+            // Use SARFAESI scraper for government auction data
+            extractedData = await this.executeSarfaesiExtraction(city, result);
+          } else {
+            // Use standard extraction for marketplace portals
+            extractedData = await this.executeExtraction(portalUrl, routingDecision, city);
+          }
+          
           if (extractedData && extractedData.length > 0) {
             allRawData.push(...extractedData);
             
@@ -495,6 +504,63 @@ export class OrchestratedBatchIngestion {
       return listings || [];
     } catch (error) {
       console.error(`🚨 Extraction execution failed for ${url}:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Execute SARFAESI government auction extraction
+   */
+  private async executeSarfaesiExtraction(city: string, result: OrchestratedIngestionResult): Promise<any[]> {
+    try {
+      console.log(`🏛️ Executing SARFAESI government auction extraction for ${city}`);
+      
+      // Convert city to state mapping for SARFAESI
+      const stateMapping: { [key: string]: string } = {
+        'hyderabad': 'telangana',
+        'mumbai': 'maharashtra',
+        'bangalore': 'karnataka',
+        'delhi': 'delhi',
+        'chennai': 'tamil nadu',
+        'kolkata': 'west bengal',
+        'pune': 'maharashtra',
+        'ahmedabad': 'gujarat'
+      };
+      
+      const state = stateMapping[city.toLowerCase()] || 'telangana';
+      
+      // Run SARFAESI scraper with orchestrated parameters
+      const scrapingResult = await sarfaesiScraper.scrapeListings({
+        source: 'all', // Process all government sources
+        state: state,
+        propertyType: 'vehicle',
+        maxPages: 3 // Limited for batch ingestion efficiency
+      });
+      
+      if (scrapingResult.success && scrapingResult.listings.length > 0) {
+        console.log(`✅ SARFAESI extraction: ${scrapingResult.authenticatedListings}/${scrapingResult.totalFound} authenticated from ${scrapingResult.sourcesProcessed.length} sources`);
+        
+        // Add SARFAESI-specific metadata to listings
+        const enhancedListings = scrapingResult.listings.map(listing => ({
+          ...listing,
+          extractionMethod: 'sarfaesi_government',
+          governmentVerified: true,
+          legalStatus: 'sarfaesi_compliant',
+          authorities: ['Indian Banks Association', 'Ministry of Finance'],
+          originalSource: listing.source
+        }));
+        
+        return enhancedListings;
+      } else {
+        console.log(`⚠️ SARFAESI extraction failed or no results for ${city}`);
+        if (scrapingResult.errors && scrapingResult.errors.length > 0) {
+          console.log(`   Errors: ${scrapingResult.errors.join(', ')}`);
+        }
+        return [];
+      }
+      
+    } catch (error) {
+      console.error(`🚨 SARFAESI extraction failed for ${city}:`, error);
       return [];
     }
   }

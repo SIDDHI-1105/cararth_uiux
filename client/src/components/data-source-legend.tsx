@@ -20,13 +20,14 @@ export default function DataSourceLegend({ className = "", compact = false }: Da
       ]
     },
     {
-      title: "Bank/Government Auctions", 
-      description: "Institutional sellers with verified authenticity",
+      title: "Government/SARFAESI Auctions", 
+      description: "Official government portals and SARFAESI Act compliance",
       icon: Building,
       sources: [
+        { name: "IBAPI - Official Government Portal", color: "bg-emerald-100 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700 font-semibold" },
+        { name: "SARFAESI Government Auctions", color: "bg-emerald-100 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700 font-semibold" },
         { name: "SBI Bank Auction", color: "bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-700 font-medium" },
-        { name: "HDFC Bank Auction", color: "bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-700 font-medium" },
-        { name: "Government Auctions", color: "bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-700 font-medium" }
+        { name: "HDFC Bank Auction", color: "bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-700 font-medium" }
       ]
     },
     {
@@ -70,6 +71,10 @@ export default function DataSourceLegend({ className = "", compact = false }: Da
                 <div className="flex items-center gap-2">
                   <Badge className="bg-amber-100 text-amber-800 border border-amber-200 text-xs">OEM</Badge>
                   <span className="text-xs">Certified Programs</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs">SARFAESI</Badge>
+                  <span className="text-xs">Government Auctions</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge className="bg-blue-100 text-blue-800 border border-blue-200 text-xs">Bank</Badge>

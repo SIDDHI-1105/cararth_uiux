@@ -59,6 +59,7 @@ import { ImageProxyService } from "./imageProxyService.js";
 import { aiTrainingService } from "./aiTrainingService.js";
 import { marutiTrueValueScraper } from "./marutiTrueValueScraper.js";
 import { eauctionsIndiaScraper } from "./eauctionsIndiaScraper.js";
+import { sarfaesiScraper } from "./sarfaesiScraper.js";
 import { ObjectStorageService } from "./objectStorage.js";
 import crypto from "crypto";
 import { logError, ErrorCategory, createAppError, asyncHandler } from "./errorHandling.js";
@@ -4384,6 +4385,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       return res.status(500).json({
         error: 'Bank auction test failed',
+        message: error.message,
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      });
+    }
+  }));
+
+  // Test route for SARFAESI government auction scraper
+  app.get('/api/sarfaesi/test', asyncHandler(async (req: any, res: any) => {
+    try {
+      console.log('🏛️ Testing SARFAESI government auction scraper integration...');
+      
+      const options = {
+        source: (req.query.source as 'ibapi' | 'bankEauctions' | 'sarfaesiAuctions' | 'all') || 'ibapi',
+        bank: req.query.bank as string,
+        state: req.query.state as string || 'telangana',
+        district: req.query.district as string,
+        propertyType: (req.query.propertyType as 'vehicle' | 'movable' | 'all') || 'vehicle',
+        maxPages: parseInt(req.query.maxPages as string) || 5
+      };
+      
+      console.log(`🔍 Testing SARFAESI with options:`, options);
+      
+      // Run SARFAESI scraper (already includes TrustLayer validation)
+      const scrapingResult = await sarfaesiScraper.scrapeListings(options);
+      
+      if (!scrapingResult.success) {
+        return res.status(500).json({
+          error: 'SARFAESI auction scraping failed',
+          details: scrapingResult.errors
+        });
+      }
+      
+      const result = {
+        success: true,
+        scraping: {
+          totalFound: scrapingResult.totalFound,
+          totalProcessed: scrapingResult.listings.length,
+          authenticatedListings: scrapingResult.authenticatedListings,
+          sarfaesiAuctions: scrapingResult.listings.filter(l => l.condition === 'sarfaesi_auction').length
+        },
+        governmentBreakdown: {
+          sourcesProcessed: scrapingResult.sourcesProcessed,
+          targetSource: options.source,
+          authenticatedRate: scrapingResult.totalFound > 0 ? 
+            Math.round((scrapingResult.authenticatedListings / scrapingResult.totalFound) * 100) : 0,
+          complianceStatus: 'Legal - Official Government Portals'
+        },
+        listings: scrapingResult.listings.slice(0, 3).map(listing => ({
+          id: listing.id,
+          title: listing.title,
+          brand: listing.brand,
+          model: listing.model,
+          price: listing.price,
+          location: listing.location,
+          images: listing.images.length,
+          verificationStatus: listing.verificationStatus,
+          condition: listing.condition,
+          source: listing.source,
+          sellerType: listing.sellerType
+        })),
+        performance: {
+          totalImages: scrapingResult.listings.reduce((sum, l) => sum + l.images.length, 0),
+          authenticatedRate: scrapingResult.totalFound > 0 ? 
+            Math.round((scrapingResult.authenticatedListings / scrapingResult.totalFound) * 100) : 0,
+          averageImagesPerListing: scrapingResult.listings.length > 0 ? 
+            Math.round(scrapingResult.listings.reduce((sum, l) => sum + l.images.length, 0) / scrapingResult.listings.length) : 0,
+          sourcesScanned: scrapingResult.sourcesProcessed.length
+        },
+        legalCompliance: {
+          status: 'COMPLIANT',
+          sources: scrapingResult.sourcesProcessed,
+          authorities: [
+            'Indian Banks Association (IBA)',
+            'Ministry of Finance, Govt of India',
+            'Reserve Bank of India (RBI)',
+            'SARFAESI Act 2002'
+          ]
+        },
+        errors: scrapingResult.errors
+      };
+      
+      console.log(`✅ SARFAESI test complete: ${scrapingResult.authenticatedListings}/${scrapingResult.totalFound} authenticated from government auctions`);
+      
+      return res.status(200).json(result);
+      
+    } catch (error: any) {
+      console.error('SARFAESI test error:', error);
+      
+      return res.status(500).json({
+        error: 'SARFAESI government auction test failed',
         message: error.message,
         details: process.env.NODE_ENV === 'development' ? error.stack : undefined
       });
