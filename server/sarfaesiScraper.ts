@@ -382,14 +382,15 @@ export class SarfaesiScraper {
       // Generate unique listing ID
       const listingId = `sarfaesi_${source}_${this.extractListingId(listingUrl)}`;
       
-      console.log(`🔄 Processing images through authenticity pipeline for: ${listingUrl}`);
+      console.log(`🔄 Processing images with government compliance for: ${listingUrl}`);
 
-      // Extract images and metadata using DetailPageExtractor
+      // CRITICAL: For government portals, we only extract image references without rehosting
       const extractionResult = await this.detailExtractor.extractFromUrl({
         url: listingUrl,
         listingId,
         portal: `${source}.sarfaesi`,
-        processImages: true // Enable image processing for authenticity validation
+        processImages: false, // DISABLED: No rehosting of government images for compliance
+        governmentCompliance: true // Special flag for government sources
       });
 
       if (!extractionResult.success || extractionResult.images.length === 0) {
@@ -399,8 +400,8 @@ export class SarfaesiScraper {
 
       console.log(`📸 ${extractionResult.images.length} images passed authenticity gate`);
 
-      // Convert storage keys to public URLs
-      const publicImageUrls = this.convertStorageKeysToPublicUrls(extractionResult.images);
+      // COMPLIANCE: For government sources, use proxied references instead of rehosted images
+      const compliantImageUrls = this.generateCompliantImageReferences(extractionResult.images || [], listingUrl, source);
 
       // Extract vehicle metadata from the listing page
       const vehicleData = await this.extractVehicleData(listingUrl, source);
@@ -424,7 +425,9 @@ export class SarfaesiScraper {
         city: vehicleData.city,
         source: `${this.portals[source].name} - SARFAESI`,
         url: listingUrl,
-        images: publicImageUrls,
+        images: compliantImageUrls,
+        imageDisclaimer: 'Images sourced from official government portals. CarArth is not affiliated with government agencies.',
+        imageCompliance: 'government_proxy', // Special compliance flag
         description: vehicleData.description,
         features: vehicleData.features || [],
         condition: 'sarfaesi_auction', // Special condition for SARFAESI auctions
@@ -539,34 +542,118 @@ export class SarfaesiScraper {
   }
 
   /**
-   * Fetch page HTML with proper error handling and user agent
+   * Check robots.txt compliance before scraping
+   */
+  private async checkRobotsCompliance(url: string): Promise<{ allowed: boolean; crawlDelay?: number }> {
+    try {
+      const urlObj = new URL(url);
+      const robotsUrl = `${urlObj.protocol}//${urlObj.hostname}/robots.txt`;
+      
+      console.log(`🤖 Checking robots.txt compliance for ${urlObj.hostname}`);
+      
+      const response = await fetch(robotsUrl, {
+        headers: {
+          'User-Agent': 'CarArth-Scraper/1.0 (+https://cararth.com/robots; contact@cararth.com)',
+        },
+        signal: AbortSignal.timeout(10000)
+      });
+      
+      if (!response.ok) {
+        console.log(`⚠️ robots.txt not found for ${urlObj.hostname}, proceeding with default delay`);
+        return { allowed: true, crawlDelay: 5000 }; // Default 5 second delay
+      }
+      
+      const robotsText = await response.text();
+      const lines = robotsText.split('\n').map(line => line.trim().toLowerCase());
+      
+      let crawlDelay = 5000; // Default 5 seconds
+      let currentUserAgent = '';
+      let isApplicable = false;
+      
+      for (const line of lines) {
+        if (line.startsWith('user-agent:')) {
+          currentUserAgent = line.split(':')[1].trim();
+          isApplicable = currentUserAgent === '*' || currentUserAgent.includes('cararthscraper') || currentUserAgent.includes('cararth');
+        } else if (isApplicable && line.startsWith('crawl-delay:')) {
+          const delay = parseInt(line.split(':')[1].trim());
+          if (!isNaN(delay)) {
+            crawlDelay = delay * 1000; // Convert to milliseconds
+          }
+        } else if (isApplicable && line.startsWith('disallow:')) {
+          const disallowPath = line.split(':')[1].trim();
+          if (disallowPath === '/' || urlObj.pathname.startsWith(disallowPath)) {
+            console.log(`❌ robots.txt disallows access to ${url}`);
+            return { allowed: false };
+          }
+        }
+      }
+      
+      console.log(`✅ robots.txt compliance check passed for ${urlObj.hostname} (delay: ${crawlDelay}ms)`);
+      return { allowed: true, crawlDelay };
+      
+    } catch (error) {
+      console.error(`⚠️ Error checking robots.txt for ${url}:`, error);
+      return { allowed: true, crawlDelay: 5000 }; // Conservative default
+    }
+  }
+
+  /**
+   * Fetch page HTML with full compliance and legal safeguards
    */
   private async fetchPage(url: string): Promise<string | null> {
     try {
-      console.log(`📄 Fetching page: ${url}`);
+      // CRITICAL: Check robots.txt compliance first
+      const robotsCheck = await this.checkRobotsCompliance(url);
+      
+      if (!robotsCheck.allowed) {
+        console.error(`❌ robots.txt disallows scraping of ${url} - ABORTING`);
+        return null;
+      }
+      
+      // Respect crawl delay
+      if (robotsCheck.crawlDelay && robotsCheck.crawlDelay > 1000) {
+        console.log(`⏱️ Respecting robots.txt crawl-delay: ${robotsCheck.crawlDelay}ms`);
+        await this.delay(robotsCheck.crawlDelay);
+      }
+      
+      console.log(`📄 Fetching page with compliance: ${url}`);
       
       const response = await fetch(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; CarArth-Aggregator/1.0; +https://cararth.com)',
+          // CRITICAL: Proper identification with contact info for government sites
+          'User-Agent': 'CarArth-Scraper/1.0 (+https://cararth.com/robots; contact@cararth.com) India Car Marketplace Compliance',
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
           'Accept-Language': 'en-US,en;q=0.5',
           'Accept-Encoding': 'gzip, deflate',
           'Connection': 'keep-alive',
+          'From': 'contact@cararth.com', // RFC compliant contact header
+          'Cache-Control': 'no-cache' // Respect caching policies
         },
-        signal: AbortSignal.timeout(30000) // 30 second timeout
+        signal: AbortSignal.timeout(45000) // Longer timeout for government sites
       });
 
       if (!response.ok) {
         console.error(`❌ HTTP ${response.status} for ${url}`);
+        
+        // Rate limiting response - back off exponentially
+        if (response.status === 429 || response.status === 503) {
+          console.log(`🛑 Rate limited by ${url} - implementing exponential backoff`);
+          await this.delay(60000); // 1 minute backoff
+          return null;
+        }
+        
         return null;
       }
 
       const html = await response.text();
-      console.log(`✅ Successfully fetched ${html.length} characters from ${url}`);
+      console.log(`✅ Compliance-fetched ${html.length} characters from ${url}`);
       return html;
 
     } catch (error) {
-      console.error(`❌ Error fetching ${url}:`, error);
+      console.error(`❌ Compliant fetch error for ${url}:`, error);
+      
+      // Implement exponential backoff on network errors
+      await this.delay(10000); // 10 second backoff
       return null;
     }
   }
@@ -591,7 +678,43 @@ export class SarfaesiScraper {
   }
 
   /**
-   * Convert object storage keys to public URLs for serving
+   * Generate compliant image references for government sources (NO REHOSTING)
+   */
+  private generateCompliantImageReferences(images: any[], listingUrl: string, source: keyof typeof this.portals): string[] {
+    if (!images || images.length === 0) {
+      return [];
+    }
+    
+    const sourceHost = new URL(listingUrl).hostname;
+    
+    return images.map((img, index) => {
+      let originalUrl = '';
+      
+      if (typeof img === 'string') {
+        originalUrl = img;
+      } else {
+        originalUrl = img.url || img.src || img.originalUrl || '';
+      }
+      
+      if (!originalUrl) {
+        return '';
+      }
+      
+      // Ensure absolute URL
+      if (originalUrl.startsWith('/')) {
+        const baseUrl = this.portals[source].baseUrl;
+        originalUrl = `${baseUrl}${originalUrl}`;
+      }
+      
+      // COMPLIANCE: Return proxied URL that preserves attribution and respects caching
+      // This allows us to serve the image while maintaining compliance and source attribution
+      return `/api/proxy/government-image?source=${encodeURIComponent(originalUrl)}&authority=${encodeURIComponent(this.portals[source].authority)}&disclaimer=true`;
+      
+    }).filter(url => url.length > 0);
+  }
+
+  /**
+   * Convert object storage keys to public URLs for serving (NON-GOVERNMENT SOURCES ONLY)
    */
   private convertStorageKeysToPublicUrls(images: any[]): string[] {
     return images.map(img => {

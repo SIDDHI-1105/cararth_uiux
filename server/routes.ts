@@ -4391,8 +4391,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }));
 
-  // Test route for SARFAESI government auction scraper
-  app.get('/api/sarfaesi/test', asyncHandler(async (req: any, res: any) => {
+  // SECURED Test route for SARFAESI government auction scraper - ADMIN ONLY
+  app.get('/api/sarfaesi/test', isAuthenticated, asyncHandler(async (req: any, res: any) => {
+    // CRITICAL: Admin-only access for compliance
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'SARFAESI scraping requires admin privileges for compliance',
+        complianceNote: 'Government portal access restricted to authorized administrators'
+      });
+    }
     try {
       console.log('🏛️ Testing SARFAESI government auction scraper integration...');
       
