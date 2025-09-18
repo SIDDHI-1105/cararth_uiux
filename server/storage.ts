@@ -56,6 +56,7 @@ export interface IStorage {
   // Contact operations
   createContact(contact: InsertContact): Promise<Contact>;
   getContactsForCar(carId: string): Promise<Contact[]>;
+  getContactsForSeller(sellerId: string): Promise<Contact[]>;
   
   // Premium subscription operations
   createSubscription(subscription: InsertSubscription): Promise<Subscription>;
@@ -507,6 +508,17 @@ export class MemStorage implements IStorage {
 
   async getContactsForCar(carId: string): Promise<Contact[]> {
     return Array.from(this.contacts.values()).filter(contact => contact.carId === carId);
+  }
+
+  async getContactsForSeller(sellerId: string): Promise<Contact[]> {
+    // Find all cars belonging to the seller
+    const sellerCars = Array.from(this.cars.values()).filter(car => car.sellerId === sellerId);
+    const sellerCarIds = sellerCars.map(car => car.id);
+    
+    // Return all contacts for those cars
+    return Array.from(this.contacts.values())
+      .filter(contact => sellerCarIds.includes(contact.carId))
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()); // Latest first
   }
 
   // Premium subscription operations

@@ -1307,12 +1307,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const contactData = insertContactSchema.parse(req.body);
       const contact = await storage.createContact(contactData);
+      console.log(`📧 New contact inquiry created: ${contact.buyerName} interested in car ${contact.carId}`);
       res.status(201).json(contact);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ error: "Invalid contact data", details: error.errors });
       }
       res.status(500).json({ error: "Failed to create contact inquiry" });
+    }
+  });
+
+  // Get contact inquiries for a seller (protected route)
+  app.get("/api/contacts/seller/:sellerId", isAuthenticated, async (req: any, res) => {
+    try {
+      const sellerId = req.params.sellerId;
+      
+      // In development mode with SKIP_AUTH, use the sellerId from URL
+      let userId = sellerId;
+      if (req.user && req.user.claims) {
+        userId = req.user.claims.sub;
+        // Verify the authenticated user is requesting their own inquiries
+        if (sellerId !== userId) {
+          return res.status(403).json({ error: "Access denied" });
+        }
+      }
+      
+      const contacts = await storage.getContactsForSeller(sellerId);
+      console.log(`📋 Retrieved ${contacts.length} contact inquiries for seller ${sellerId}`);
+      res.json(contacts);
+    } catch (error) {
+      console.error('Failed to get contact inquiries:', error);
+      res.status(500).json({ error: "Failed to retrieve contact inquiries" });
+    }
+  });
+
+  // Development endpoint to test contact viewing without authentication
+  app.get("/api/contacts/test/seller/:sellerId", async (req, res) => {
+    if (process.env.NODE_ENV !== 'development') {
+      return res.status(404).json({ error: "Not found" });
+    }
+    
+    try {
+      const sellerId = req.params.sellerId;
+      const contacts = await storage.getContactsForSeller(sellerId);
+      console.log(`🧪 [TEST] Retrieved ${contacts.length} contact inquiries for seller ${sellerId}`);
+      res.json({
+        message: "Development test endpoint - showing contact inquiries",
+        sellerId,
+        contactCount: contacts.length,
+        contacts
+      });
+    } catch (error) {
+      console.error('Failed to get contact inquiries:', error);
+      res.status(500).json({ error: "Failed to retrieve contact inquiries" });
     }
   });
 

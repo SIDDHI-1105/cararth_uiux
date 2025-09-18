@@ -14,8 +14,10 @@ if (!process.env.REPLIT_DOMAINS) {
 
 const getOidcConfig = memoize(
   async () => {
+    const issuerUrl = process.env.ISSUER_URL || "https://replit.com/oidc";
+    console.log(`🔐 OIDC Config: Using issuer ${issuerUrl} with client ID ${process.env.REPL_ID}`);
     return await client.discovery(
-      new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
+      new URL(issuerUrl),
       process.env.REPL_ID!
     );
   },
@@ -38,7 +40,7 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
       maxAge: sessionTtl,
     },
   });
@@ -130,7 +132,19 @@ export async function setupAuth(app: Express) {
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
 
-  if (!req.isAuthenticated() || !user.expires_at) {
+  // Skip authentication in development mode for testing
+  if (process.env.NODE_ENV === 'development' && process.env.SKIP_AUTH === 'true') {
+    console.log('🔓 Development mode: Skipping authentication');
+    return next();
+  }
+
+  if (!req.isAuthenticated() || !user) {
+    console.log('🔒 Authentication failed: User not authenticated or missing');
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  if (!user.expires_at) {
+    console.log('🔒 Authentication failed: No expiration time');
     return res.status(401).json({ message: "Unauthorized" });
   }
 
@@ -141,6 +155,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 
   const refreshToken = user.refresh_token;
   if (!refreshToken) {
+    console.log('🔒 Authentication failed: No refresh token');
     res.status(401).json({ message: "Unauthorized" });
     return;
   }
@@ -149,8 +164,10 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     const config = await getOidcConfig();
     const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
     updateUserSession(user, tokenResponse);
+    console.log('🔄 Token refreshed successfully');
     return next();
   } catch (error) {
+    console.log('🔒 Token refresh failed:', error);
     res.status(401).json({ message: "Unauthorized" });
     return;
   }

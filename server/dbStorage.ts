@@ -551,6 +551,34 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async getContactsForSeller(sellerId: string): Promise<Contact[]> {
+    try {
+      // First, find all cars belonging to the seller
+      const sellerCars = await this.db
+        .select({ id: cars.id })
+        .from(cars)
+        .where(eq(cars.sellerId, sellerId));
+      
+      const sellerCarIds = sellerCars.map(car => car.id);
+      
+      if (sellerCarIds.length === 0) {
+        return [];
+      }
+      
+      // Then get all contacts for those cars
+      const result = await this.db
+        .select()
+        .from(contacts)
+        .where(inArray(contacts.carId, sellerCarIds))
+        .orderBy(desc(contacts.createdAt));
+      
+      return result;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getContactsForSeller operation');
+      return [];
+    }
+  }
+
   // Subscription operations
   async createSubscription(subscription: InsertSubscription): Promise<Subscription> {
     try {
