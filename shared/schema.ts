@@ -900,6 +900,51 @@ export const insertCachedPortalListingSchema = createInsertSchema(cachedPortalLi
 export type InsertCachedPortalListing = z.infer<typeof insertCachedPortalListingSchema>;
 export type CachedPortalListing = typeof cachedPortalListings.$inferSelect;
 
+// AI model response cache for cost optimization
+export const aiModelCache = pgTable("ai_model_cache", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Cache key and model info
+  cacheKey: text("cache_key").notNull().unique(),
+  model: text("model").notNull(), // openai-gpt4, gemini-pro, perplexity-sonar, claude-sonnet
+  provider: text("provider").notNull(), // openai, google, perplexity, anthropic
+  
+  // Request details
+  prompt: text("prompt").notNull(),
+  promptHash: text("prompt_hash").notNull(), // For fast lookups
+  
+  // Response data
+  response: jsonb("response").notNull(),
+  tokenUsage: jsonb("token_usage"), // Track token consumption
+  
+  // Cache management
+  hitCount: integer("hit_count").default(0),
+  lastAccessed: timestamp("last_accessed").defaultNow(),
+  ttlHours: integer("ttl_hours").default(24), // TTL in hours
+  
+  // Cost tracking
+  estimatedCost: decimal("estimated_cost", { precision: 8, scale: 4 }), // USD cost
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_ai_cache_key").on(table.cacheKey),
+  index("idx_ai_cache_prompt_hash").on(table.promptHash),
+  index("idx_ai_cache_model_provider").on(table.model, table.provider),
+  index("idx_ai_cache_last_accessed").on(table.lastAccessed),
+]);
+
+export const insertAiModelCacheSchema = createInsertSchema(aiModelCache).omit({
+  id: true,
+  hitCount: true,
+  lastAccessed: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertAiModelCache = z.infer<typeof insertAiModelCacheSchema>;
+export type AiModelCache = typeof aiModelCache.$inferSelect;
+
 // Trusted Listings - Only published after passing authenticity gate
 export const trustedListings = pgTable("trusted_listings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

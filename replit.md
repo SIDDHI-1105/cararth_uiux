@@ -92,6 +92,32 @@ The application uses three main entities:
 - Toast notifications for user feedback
 - Loading states and skeleton components for better UX
 
+## Cost Optimization Implementation
+
+### AI Model Response Caching
+- **Database-backed persistent cache**: Added `aiModelCache` table to store AI responses
+- **Multi-provider support**: Caches OpenAI, Gemini, Perplexity, and Claude responses
+- **TTL management**: Configurable cache expiration (default 24 hours)
+- **Cost tracking**: Monitors estimated API costs saved through caching
+- **Smart deduplication**: Uses SHA256 hashes for prompt deduplication
+
+### Environment Variables for Cost Control
+Set these in your Replit environment:
+- `PUBLISH_SHADOW_MODE=true` - Reduces publishing costs
+- `BATCH_CONCURRENCY=1` - Limits concurrent batch operations
+- `IMAGE_DOWNLOAD_CONCURRENCY=1` - Reduces image processing overhead
+
+### Reserved VM Management
+To stop billing for Reserved VM Deployments:
+1. Go to Publishing tool in your Repl
+2. Select "Manage" tab
+3. Choose "Shut Down" to delete published app and stop billing cycle
+
+### Implementation Files
+- `server/aiDatabaseCache.ts` - Database-backed AI response cache service
+- `shared/schema.ts` - AI cache table schema with indexes
+- Cost monitoring and statistics tracking built-in
+
 ## External Dependencies
 
 ### Database & Storage

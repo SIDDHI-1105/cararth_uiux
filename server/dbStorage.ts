@@ -15,6 +15,7 @@ import {
   phoneVerifications,
   anonymousSearchActivity,
   cachedPortalListings,
+  aiModelCache,
   type User, 
   type InsertUser, 
   type UpsertUser,
@@ -41,7 +42,9 @@ import {
   type AnonymousSearchActivity,
   type InsertAnonymousSearchActivity,
   type CachedPortalListing,
-  type InsertCachedPortalListing
+  type InsertCachedPortalListing,
+  type AiModelCache,
+  type InsertAiModelCache
 } from "@shared/schema";
 import type { IStorage } from "./storage.js";
 import { logError, ErrorCategory, createAppError } from "./errorHandling.js";
