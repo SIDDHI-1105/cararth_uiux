@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import { logError, ErrorCategory, createAppError } from './errorHandling.js';
 import { conversationTrainingService } from './conversationTrainingService.js';
+import { aiDatabaseCache } from './aiDatabaseCache.js';
 
 // Initialize OpenAI client with timeout and retry configuration
 const openai = new OpenAI({
@@ -112,20 +113,44 @@ Response: {
 Always be helpful, conversational, and focused on understanding the user's car buying needs. When in doubt, ask clarifying questions to better understand their requirements.`;
 
   private async callOpenAIWithRetry(messages: any[], retries = 2): Promise<any> {
+    // Create cache key from messages and request parameters
+    const cacheKey = JSON.stringify(messages);
+    const requestParams = {
+      model: 'gpt-4o',
+      messages,
+      max_tokens: 500,
+      temperature: 0.7,
+      response_format: { type: "json_object" }
+    };
+
+    // Check AI cache first for cost savings
+    const cacheResult = await aiDatabaseCache.get(cacheKey, {
+      model: 'gpt-4o',
+      provider: 'openai',
+      estimatedCost: 0.03 // Estimated cost per request
+    }, requestParams);
+
+    if (cacheResult.hit) {
+      console.log(`💾 AI Cache HIT: Saved $${cacheResult.costSaved} on OpenAI API call`);
+      return cacheResult.response;
+    }
+
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
         const completion = await Promise.race([
-          openai.chat.completions.create({
-            model: 'gpt-4o',
-            messages,
-            max_tokens: 500,
-            temperature: 0.7,
-            response_format: { type: "json_object" }
-          }),
+          openai.chat.completions.create(requestParams),
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error('Request timeout')), 15000)
           )
         ]);
+
+        // Cache the successful response for future cost savings
+        await aiDatabaseCache.set(cacheKey, completion, {
+          model: 'gpt-4o',
+          provider: 'openai',
+          estimatedCost: 0.03
+        }, completion.usage, requestParams);
+
         return completion;
       } catch (error: any) {
         const isLastAttempt = attempt === retries;

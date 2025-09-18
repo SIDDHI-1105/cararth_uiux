@@ -49,10 +49,20 @@ export class AiDatabaseCache {
   }
 
   /**
-   * Generate a consistent cache key for the request
+   * Generate a consistent cache key for the request including all relevant parameters
    */
-  private generateCacheKey(prompt: string, options: AiCacheOptions): string {
-    const keyData = `${options.provider}:${options.model}:${prompt}`;
+  private generateCacheKey(prompt: string, options: AiCacheOptions, requestParams?: any): string {
+    // Include critical parameters that affect the response
+    const keyData = JSON.stringify({
+      provider: options.provider,
+      model: options.model,
+      prompt: prompt,
+      temperature: requestParams?.temperature || 0.7,
+      maxTokens: requestParams?.max_tokens || requestParams?.maxTokens,
+      systemPrompt: requestParams?.system || requestParams?.systemPrompt,
+      tools: requestParams?.tools,
+      topP: requestParams?.top_p || requestParams?.topP
+    });
     return createHash('sha256').update(keyData).digest('hex');
   }
 
@@ -66,9 +76,9 @@ export class AiDatabaseCache {
   /**
    * Get cached AI response if available and not expired
    */
-  async get(prompt: string, options: AiCacheOptions): Promise<AiCacheResult> {
+  async get(prompt: string, options: AiCacheOptions, requestParams?: any): Promise<AiCacheResult> {
     try {
-      const cacheKey = this.generateCacheKey(prompt, options);
+      const cacheKey = this.generateCacheKey(prompt, options, requestParams);
       
       // Calculate expiry time based on TTL
       const ttlHours = options.ttlHours || 24;
@@ -127,10 +137,11 @@ export class AiDatabaseCache {
     prompt: string, 
     response: any, 
     options: AiCacheOptions,
-    tokenUsage?: any
+    tokenUsage?: any,
+    requestParams?: any
   ): Promise<void> {
     try {
-      const cacheKey = this.generateCacheKey(prompt, options);
+      const cacheKey = this.generateCacheKey(prompt, options, requestParams);
       const promptHash = this.generatePromptHash(prompt);
 
       const cacheEntry: InsertAiModelCache = {

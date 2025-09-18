@@ -20,6 +20,7 @@ import { enrichmentService } from './enrichmentService.js';
 import carSpecValidator from './carSpecValidator.js';
 import { marutiTrueValueScraper } from './marutiTrueValueScraper.js';
 import { hyundaiPromiseScraper } from './hyundaiPromiseScraper.js';
+import { mahindraFirstChoiceScraper } from './mahindraFirstChoiceScraper.js';
 
 export class BatchIngestionService {
   private marketplaceAggregator: MarketplaceAggregator;
@@ -90,9 +91,26 @@ export class BatchIngestionService {
         } catch (error) {
           console.error(`❌ Hyundai H-Promise scraping failed for ${city}:`, error);
         }
+
+        // 🚘 INTEGRATE MAHINDRA FIRST CHOICE SCRAPER into batch ingestion
+        let mahindraListings: any[] = [];
+        try {
+          console.log(`🚘 Scraping Mahindra First Choice certified listings for ${city}...`);
+          const mahindraResult = await mahindraFirstChoiceScraper.scrapeListings({ 
+            city: city.charAt(0).toUpperCase() + city.slice(1), // Capitalize city name
+            maxPages: 3 // Limit to 3 pages for batch ingestion
+          });
+          
+          if (mahindraResult.listings && mahindraResult.listings.length > 0) {
+            mahindraListings = mahindraResult.listings;
+            console.log(`✅ Found ${mahindraListings.length} Mahindra First Choice certified listings`);
+          }
+        } catch (error) {
+          console.error(`❌ Mahindra First Choice scraping failed for ${city}:`, error);
+        }
         
-        // Combine marketplace, Maruti True Value, and Hyundai H-Promise listings
-        const allListings = [...(result.listings || []), ...marutiListings, ...hyundaiListings];
+        // Combine marketplace, Maruti True Value, Hyundai H-Promise, and Mahindra First Choice listings
+        const allListings = [...(result.listings || []), ...marutiListings, ...hyundaiListings, ...mahindraListings];
         
         if (allListings.length > 0) {
           // Normalize and store listings (including Maruti True Value)

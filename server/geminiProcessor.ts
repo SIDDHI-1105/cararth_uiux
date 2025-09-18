@@ -1,5 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 import { MarketplaceListing } from './marketplaceAggregator';
+import { aiDatabaseCache } from './aiDatabaseCache.js';
 
 // Bulk processing capabilities for Gemini
 export interface BulkProcessingResult {
@@ -253,16 +254,38 @@ Return clean JSON array with normalized data following this structure:
 }`;
 
     try {
-      const response = await this.gemini.models.generateContent({
+      // Create cache key for cost savings
+      const cacheKey = JSON.stringify({ prompt, model: 'gemini-1.5-flash' });
+      const requestParams = { model: 'gemini-1.5-flash', contents: prompt };
+
+      // Check AI cache first for cost savings
+      const cacheResult = await aiDatabaseCache.get(cacheKey, {
         model: 'gemini-1.5-flash',
-        contents: prompt
-      });
+        provider: 'google',
+        estimatedCost: 0.01 // Estimated cost per request
+      }, requestParams);
+
+      if (cacheResult.hit) {
+        console.log(`💾 AI Cache HIT: Saved $${cacheResult.costSaved} on Gemini API call`);
+        const parsed = JSON.parse(cacheResult.response);
+        return parsed.listings || [];
+      }
+
+      const response = await this.gemini.models.generateContent(requestParams);
       
       const responseText = response.text || "";
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
+        
+        // Cache the successful response for future cost savings
+        await aiDatabaseCache.set(cacheKey, jsonMatch[0], {
+          model: 'gemini-1.5-flash',
+          provider: 'google',
+          estimatedCost: 0.01
+        }, null, requestParams);
+
         return parsed.listings || [];
       }
       

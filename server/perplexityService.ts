@@ -37,6 +37,8 @@ interface BlogArticle {
   image?: string;
 }
 
+import { aiDatabaseCache } from './aiDatabaseCache.js';
+
 class PerplexityService {
   private apiKey: string;
   private baseUrl = 'https://api.perplexity.ai/chat/completions';
@@ -72,32 +74,49 @@ Include relevant hashtags like #cararth #automotiveindia #preownedcars
 Target length: 800-1200 words.`;
 
     try {
+      // Create cache key for cost savings
+      const messages = [
+        {
+          role: 'system',
+          content: 'You are an expert automotive journalist specializing in the Indian car market. Write informative, engaging articles that help consumers make better car buying and selling decisions.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ];
+      const cacheKey = JSON.stringify({ messages, topic, category });
+      const requestParams = {
+        model: 'sonar-pro',
+        messages,
+        max_tokens: 2000,
+        temperature: 0.7,
+        top_p: 0.9,
+        search_recency_filter: 'month',
+        return_images: false,
+        return_related_questions: false,
+        stream: false
+      };
+
+      // Check AI cache first for cost savings
+      const cacheResult = await aiDatabaseCache.get(cacheKey, {
+        model: 'sonar-pro',
+        provider: 'perplexity',
+        estimatedCost: 0.05 // Estimated cost per request
+      }, requestParams);
+
+      if (cacheResult.hit) {
+        console.log(`💾 AI Cache HIT: Saved $${cacheResult.costSaved} on Perplexity API call`);
+        return cacheResult.response;
+      }
+
       const response = await fetch(this.baseUrl, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          model: 'sonar-pro',
-          messages: [
-            {
-              role: 'system',
-              content: 'You are an expert automotive journalist specializing in the Indian car market. Write informative, engaging articles that help consumers make better car buying and selling decisions.'
-            },
-            {
-              role: 'user',
-              content: prompt
-            }
-          ],
-          max_tokens: 2000,
-          temperature: 0.7,
-          top_p: 0.9,
-          search_recency_filter: 'month',
-          return_images: false,
-          return_related_questions: false,
-          stream: false
-        })
+        body: JSON.stringify(requestParams)
       });
 
       if (!response.ok) {
@@ -128,7 +147,7 @@ Target length: 800-1200 words.`;
         'automotive': '/api/placeholder/automotive-hero-image'
       };
 
-      return {
+      const blogArticle = {
         id: `article-${Date.now()}`,
         title: title.substring(0, 100),
         content,
