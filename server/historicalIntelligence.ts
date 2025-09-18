@@ -87,7 +87,9 @@ export class HistoricalIntelligenceService {
    */
   async analyzeHistoricalData(vehicleProfile: VehicleProfile): Promise<HistoricalAnalysis> {
     try {
-      const prompt = `You are an automotive market intelligence expert with access to historical car sales data in India.
+      const prompt = `You are an automotive expert analyzing this specific car listing. 
+
+IMPORTANT: You do NOT have access to real historical sales data, regional sales volumes, or actual market transaction data. Base your analysis only on general automotive knowledge and the listing information provided.
 
 Vehicle Profile:
 - ${vehicleProfile.year} ${vehicleProfile.brand} ${vehicleProfile.model}
@@ -97,7 +99,7 @@ Vehicle Profile:
 - Listed Price: ₹${vehicleProfile.price.toLocaleString()}
 - Listing Age: ${Math.floor((new Date().getTime() - vehicleProfile.listingDate.getTime()) / (1000 * 60 * 60 * 24))} days
 
-Based on historical market data, analyze this listing and provide intelligence in JSON format:
+Based on general automotive knowledge (NOT real sales data), analyze this listing and provide conservative estimates in JSON format:
 
 {
   "authenticityRating": number (1-10, where 10 is most authentic),
@@ -114,18 +116,18 @@ Based on historical market data, analyze this listing and provide intelligence i
   "recommendations": ["recommendation1", "recommendation2"]
 }
 
-ANALYSIS CRITERIA:
-- Authenticity: Check price vs market average, seller credibility indicators, listing details completeness
-- Mean Price: Historical average for similar year/brand/model/city/mileage
-- Sales Velocity: How quickly similar vehicles sell in ${vehicleProfile.city}
-- Risk Factors: Overpricing, underpricing, high mileage, age concerns
-- Recommendations: Actionable insights for buyers
+ANALYSIS CRITERIA (Based on general knowledge only):
+- Authenticity: General price reasonableness based on age/mileage
+- Mean Price: Estimate based on typical market patterns (label as "estimated")
+- Sales Velocity: General estimates for similar vehicles (label as "estimated") 
+- Risk Factors: Age, mileage, and general market concerns
+- Recommendations: General automotive advice only
 
-INDIAN MARKET CONTEXT:
-- Consider city-specific pricing (${vehicleProfile.city} market conditions)
-- Factor in fuel type preferences (Petrol/Diesel/CNG demand)
-- Include monsoon/festive season impact on sales velocity
-- Account for brand reputation and resale value trends`;
+IMPORTANT DISCLAIMERS:
+- All data points are estimates based on general automotive knowledge
+- This is NOT based on real regional sales data or actual market transactions
+- Users should verify pricing through multiple real sources
+- Consider this analysis as general guidance only`;
 
       const response = await this.ai.models.generateContent({
         model: "gemini-2.5-flash",
