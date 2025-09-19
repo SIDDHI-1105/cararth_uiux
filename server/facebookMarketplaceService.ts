@@ -108,6 +108,63 @@ export class FacebookMarketplaceService {
   }
 
   /**
+   * Auto-setup Facebook integration with current token
+   */
+  async autoSetup(): Promise<{
+    success: boolean;
+    tokenType?: string;
+    pages?: Array<{ id: string; name: string }>;
+    permissions?: string[];
+    error?: string;
+  }> {
+    try {
+      console.log('🔧 Auto-setting up Facebook integration...');
+      
+      // Test current token and get info
+      const tokenInfo = await this.validateCredentials();
+      if (!tokenInfo.valid) {
+        return { success: false, error: tokenInfo.error };
+      }
+
+      // Try to get pages if it's a user token
+      let pages: Array<{ id: string; name: string }> = [];
+      try {
+        const pagesResponse = await axios.get(`${this.baseUrl}/me/accounts?fields=id,name,access_token`, {
+          headers: { Authorization: `Bearer ${this.config.accessToken}` }
+        });
+        
+        if (pagesResponse.data.data && pagesResponse.data.data.length > 0) {
+          pages = pagesResponse.data.data.map((page: any) => ({
+            id: page.id,
+            name: page.name
+          }));
+          
+          // Auto-set the first page as default
+          if (pages.length > 0 && !this.config.pageId) {
+            this.config.pageId = pages[0].id;
+            console.log(`📄 Auto-selected page: ${pages[0].name} (${pages[0].id})`);
+          }
+        }
+      } catch (pageError) {
+        console.log('📝 Could not fetch pages (might be app token)');
+      }
+
+      return {
+        success: true,
+        tokenType: tokenInfo.tokenType,
+        pages,
+        permissions: tokenInfo.scopes || []
+      };
+
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
    * Post car listing to Facebook Marketplace using Graph API
    */
   async postToMarketplace(listing: SellerListing): Promise<{

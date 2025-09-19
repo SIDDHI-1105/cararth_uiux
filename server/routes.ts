@@ -1017,6 +1017,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Facebook integration test endpoint
+  app.get('/api/facebook/test-setup', async (req, res) => {
+    try {
+      console.log('🔧 Testing Facebook integration setup...');
+      
+      // Import and configure Facebook service
+      const { FacebookMarketplaceService } = await import('./facebookMarketplaceService');
+      
+      const config = {
+        accessToken: process.env.FACEBOOK_ACCESS_TOKEN || '',
+        appId: process.env.FACEBOOK_APP_ID || '',
+        appSecret: process.env.FACEBOOK_APP_SECRET || '',
+        pageId: process.env.FACEBOOK_PAGE_ID || undefined,
+        enabled: true
+      };
+      
+      // Check if basic credentials are present
+      if (!config.accessToken) {
+        return res.json({
+          success: false,
+          error: 'FACEBOOK_ACCESS_TOKEN not found in environment variables'
+        });
+      }
+      
+      if (!config.appId || !config.appSecret) {
+        return res.json({
+          success: false,
+          error: 'FACEBOOK_APP_ID or FACEBOOK_APP_SECRET not found in environment variables'
+        });
+      }
+      
+      // Initialize Facebook service and run auto-setup
+      const facebookService = new FacebookMarketplaceService(config);
+      const setupResult = await facebookService.autoSetup();
+      
+      console.log('📋 Facebook setup result:', setupResult);
+      
+      // Return comprehensive test results
+      res.json({
+        success: setupResult.success,
+        credentials: {
+          accessTokenPresent: !!config.accessToken,
+          appIdPresent: !!config.appId,
+          appSecretPresent: !!config.appSecret,
+          pageIdPresent: !!config.pageId
+        },
+        setup: setupResult,
+        nextSteps: setupResult.success ? [
+          'Facebook integration is ready!',
+          setupResult.pages && setupResult.pages.length > 0 
+            ? `Found ${setupResult.pages.length} pages available for posting`
+            : 'No pages found - may need page permissions',
+          'Test marketplace posting with /api/post-to-platforms'
+        ] : [
+          'Fix token validation issues',
+          'Ensure all Facebook credentials are properly set'
+        ]
+      });
+      
+    } catch (error) {
+      console.error('❌ Facebook test setup error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Facebook setup test failed',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
