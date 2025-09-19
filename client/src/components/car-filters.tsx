@@ -2,9 +2,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Brain, Sparkles, Zap, Target } from "lucide-react";
 
 interface CarFiltersProps {
   onApplyFilters: (filters: {
@@ -22,59 +19,6 @@ export default function CarFilters({ onApplyFilters }: CarFiltersProps) {
   const [transmission, setTransmission] = useState<string>("");
   const [location, setLocation] = useState<string>("");
   const [budgetRange, setBudgetRange] = useState<[number, number]>([0, 10000000]);
-  const [showAISuggestions, setShowAISuggestions] = useState(true);
-
-  // AI-powered search suggestions
-  const aiSuggestions = [
-    {
-      id: 'family-budget',
-      title: 'Family Car Under ₹8L',
-      description: 'Good mileage, spacious, reliable',
-      icon: '👨‍👩‍👧‍👦',
-      filters: { model: 'swift', fuelType: 'petrol', budgetRange: [300000, 800000], location: 'Hyderabad' },
-      popularity: 'Most Popular'
-    },
-    {
-      id: 'daily-commute',
-      title: 'Reliable Sedan for Commute',
-      description: 'Fuel efficient, comfortable, automatic',
-      icon: '🚗',
-      filters: { model: 'city', fuelType: 'petrol', transmission: 'automatic', budgetRange: [500000, 1200000], location: 'Hyderabad' },
-      popularity: 'Trending'
-    },
-    {
-      id: 'luxury-suv',
-      title: 'Premium SUV Experience',
-      description: 'Feature-rich, spacious, low maintenance',
-      icon: '🚙',
-      filters: { model: 'creta', fuelType: 'diesel', transmission: 'automatic', budgetRange: [1000000, 2000000], location: 'Hyderabad' },
-      popularity: 'AI Recommended'
-    },
-    {
-      id: 'first-car',
-      title: 'Perfect First Car',
-      description: 'Easy to drive, affordable, good resale',
-      icon: '🔰',
-      filters: { model: 'i20', fuelType: 'petrol', transmission: 'manual', budgetRange: [400000, 700000], location: 'Hyderabad' },
-      popularity: 'Great for Beginners'
-    },
-    {
-      id: 'eco-friendly',
-      title: 'Eco-Friendly Choice',
-      description: 'Electric/hybrid, low emissions, modern',
-      icon: '🌱',
-      filters: { fuelType: 'electric', budgetRange: [800000, 1500000], location: 'Hyderabad' },
-      popularity: 'Future Ready'
-    },
-    {
-      id: 'weekend-adventure',
-      title: 'Weekend Adventure Car',
-      description: 'Rugged SUV, high ground clearance',
-      icon: '🏔️',
-      filters: { model: 'nexon', fuelType: 'diesel', budgetRange: [700000, 1200000], location: 'Hyderabad' },
-      popularity: 'Adventure Ready'
-    }
-  ];
 
   const formatPrice = (value: number) => {
     if (value >= 10000000) return `₹${(value / 10000000).toFixed(1)}Cr`;
@@ -99,42 +43,14 @@ export default function CarFilters({ onApplyFilters }: CarFiltersProps) {
     setTransmission("");
     setLocation("");
     setBudgetRange([0, 10000000]);
-    setShowAISuggestions(true);
   };
 
-  const handleAISuggestionClick = (suggestion: typeof aiSuggestions[0]) => {
-    const filters = suggestion.filters;
-    
-    // Apply suggestion filters
-    if (filters.model) setModel(filters.model);
-    if (filters.fuelType) setFuelType(filters.fuelType);
-    if (filters.transmission) setTransmission(filters.transmission);
-    if (filters.location) setLocation(filters.location);
-    if (filters.budgetRange) setBudgetRange(filters.budgetRange as [number, number]);
-    
-    // Hide suggestions after selection
-    setShowAISuggestions(false);
-    
-    // Automatically apply the filters
-    setTimeout(() => {
-      onApplyFilters({
-        model: filters.model,
-        fuelType: filters.fuelType,
-        transmission: filters.transmission,
-        location: filters.location,
-        budgetRange: filters.budgetRange as [number, number] || [0, 10000000]
-      });
-    }, 100);
-  };
 
   return (
     <aside className="lg:w-1/4">
       <div className="bg-card rounded-lg border border-border p-6 filter-sidebar">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            <Brain className="w-5 h-5 text-blue-600" />
-            AI-Powered Search
-          </h3>
+          <h3 className="text-lg font-semibold">Search Filters</h3>
           <Button 
             variant="ghost" 
             size="sm" 
@@ -146,63 +62,6 @@ export default function CarFilters({ onApplyFilters }: CarFiltersProps) {
           </Button>
         </div>
         
-        {/* AI Search Suggestions */}
-        {showAISuggestions && (
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-medium text-sm flex items-center gap-1">
-                <Sparkles className="w-4 h-4 text-purple-600" />
-                Smart Suggestions
-              </h4>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setShowAISuggestions(false)}
-                className="text-xs text-muted-foreground hover:text-primary"
-              >
-                Hide
-              </Button>
-            </div>
-            <div className="space-y-2">
-              {aiSuggestions.map((suggestion) => (
-                <Card 
-                  key={suggestion.id} 
-                  className="cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-blue-500"
-                  onClick={() => handleAISuggestionClick(suggestion)}
-                  data-testid={`ai-suggestion-${suggestion.id}`}
-                >
-                  <CardContent className="p-3">
-                    <div className="flex items-start gap-2">
-                      <span className="text-lg">{suggestion.icon}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <h5 className="font-medium text-sm">{suggestion.title}</h5>
-                          <Badge 
-                            variant="outline" 
-                            className="text-xs bg-blue-50 text-blue-700 border-blue-200"
-                          >
-                            {suggestion.popularity}
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground">{suggestion.description}</p>
-                        <div className="flex items-center gap-1 mt-2">
-                          <Target className="w-3 h-3 text-green-600" />
-                          <span className="text-xs text-green-600 font-medium">AI Matched</span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-            <div className="mt-3 p-2 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex items-center gap-2 text-xs text-blue-700">
-                <Zap className="w-3 h-3" />
-                <span className="font-medium">Click any suggestion to auto-fill your search criteria</span>
-              </div>
-            </div>
-          </div>
-        )}
         
         {/* Budget Slider */}
         <div className="mb-6">
