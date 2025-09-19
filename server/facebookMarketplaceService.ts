@@ -407,11 +407,23 @@ export class FacebookMarketplaceService {
         expiresAt: tokenData.expires_at
       });
 
-      // Enforce PAGE token requirement for marketplace posting
-      if (tokenType !== 'PAGE') {
+      // Check token type and adjust functionality accordingly
+      if (tokenType === 'APP') {
+        console.log('📱 Using App Token - limited marketplace functionality available');
+        
+        return {
+          valid: true,
+          tokenType: 'APP',
+          scopes: scopes,
+          hasMarketplaceAccess: false, // App tokens have limited marketplace access
+          error: undefined
+        };
+      }
+      
+      if (tokenType !== 'PAGE' && tokenType !== 'USER') {
         return {
           valid: false,
-          error: `Invalid token type: ${tokenType}. PAGE token required for marketplace posting.`,
+          error: `Unsupported token type: ${tokenType}. Supported types: PAGE, USER, APP`,
           tokenType,
           hasMarketplaceAccess: false
         };
