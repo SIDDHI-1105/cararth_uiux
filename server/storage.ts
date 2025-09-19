@@ -213,6 +213,13 @@ export class MemStorage implements IStorage {
       phone: "+91 98765 43210",
       phoneVerified: true,
       phoneVerifiedAt: new Date(),
+      emailVerified: true,
+      verificationToken: null,
+      verificationTokenExpiresAt: null,
+      sellerType: 'private',
+      consentSyndication: true,
+      legalAgreementVersion: '1.0',
+      legalAgreementAcceptedAt: new Date(),
       subscriptionTier: "free",
       subscriptionStatus: "active",
       subscriptionExpiresAt: null,
@@ -405,7 +412,14 @@ export class MemStorage implements IStorage {
       lastName: insertUser.lastName ?? null,
       profileImageUrl: insertUser.profileImageUrl ?? null,
       phone: insertUser.phone ?? null,
-      role: insertUser.role ?? "user", // Add role field with default
+      role: insertUser.role ?? "user",
+      emailVerified: false,
+      verificationToken: null,
+      verificationTokenExpiresAt: null,
+      sellerType: null,
+      consentSyndication: null,
+      legalAgreementVersion: null,
+      legalAgreementAcceptedAt: null,
       id,
       phoneVerified: false,
       phoneVerifiedAt: null,
@@ -453,7 +467,14 @@ export class MemStorage implements IStorage {
         phone: null,
         phoneVerified: false,
         phoneVerifiedAt: null,
-        role: "user", // Add missing role field
+        emailVerified: false,
+        verificationToken: null,
+        verificationTokenExpiresAt: null,
+        sellerType: null,
+        consentSyndication: null,
+        legalAgreementVersion: null,
+        legalAgreementAcceptedAt: null,
+        role: "user",
         subscriptionTier: "free",
         subscriptionStatus: "active",
         subscriptionExpiresAt: null,
@@ -1080,12 +1101,9 @@ export class MemStorage implements IStorage {
   }
 
   async getUserByVerificationToken(token: string): Promise<User | undefined> {
-    for (const user of this.users.values()) {
-      if ((user as any).verificationToken === token) {
-        return user;
-      }
-    }
-    return undefined;
+    return Array.from(this.users.values()).find(user => 
+      (user as any).verificationToken === token
+    );
   }
 
   async setUserEmailVerified(userId: string, verified: boolean): Promise<void> {

@@ -234,66 +234,43 @@ Response format:
     return results;
   }
 
-  // Simulate posting to Cars24
-  private async postToCars24(listing: SellerListing): Promise<{ success: boolean; listingId: string; error?: never } | { success: boolean; listingId?: never; error: string }> {
-    // In a real implementation, this would make actual API calls to Cars24
-    // For now, we'll simulate the process
+  // Simulate posting to Cars24 - DEVELOPMENT MODE
+  private async postToCars24(listing: SellerListing): Promise<{ success: boolean; listingId?: string; error?: string }> {
+    // SIMULATION: Real API integration pending partnership agreements
+    // This creates a placeholder entry for development/testing purposes
     return new Promise((resolve) => {
       setTimeout(() => {
-        // Simulate 90% success rate
-        const success = Math.random() > 0.1;
-        if (success) {
-          resolve({
-            success: true,
-            listingId: `CARS24_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-          });
-        } else {
-          resolve({
-            success: false,
-            error: 'Cars24 API temporarily unavailable'
-          });
-        }
-      }, 2000);
+        resolve({
+          success: false,
+          error: 'Multi-platform syndication coming soon - partnerships in development'
+        });
+      }, 1000);
     });
   }
 
-  // Simulate posting to CarDekho
-  private async postToCarDekho(listing: SellerListing): Promise<{ success: boolean; listingId: string; error?: never } | { success: boolean; listingId?: never; error: string }> {
+  // Simulate posting to CarDekho - DEVELOPMENT MODE  
+  private async postToCarDekho(listing: SellerListing): Promise<{ success: boolean; listingId?: string; error?: string }> {
+    // SIMULATION: Real API integration pending partnership agreements
     return new Promise((resolve) => {
       setTimeout(() => {
-        const success = Math.random() > 0.15;
-        if (success) {
-          resolve({
-            success: true,
-            listingId: `CARDEKHO_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-          });
-        } else {
-          resolve({
-            success: false,
-            error: 'CarDekho API rate limit exceeded'
-          });
-        }
-      }, 1500);
+        resolve({
+          success: false,
+          error: 'Multi-platform syndication coming soon - partnerships in development'
+        });
+      }, 1000);
     });
   }
 
-  // Simulate posting to Facebook Marketplace
-  private async postToFacebookMarketplace(listing: SellerListing): Promise<{ success: boolean; listingId: string; error?: never } | { success: boolean; listingId?: never; error: string }> {
+  // Simulate posting to Facebook Marketplace - DEVELOPMENT MODE
+  private async postToFacebookMarketplace(listing: SellerListing): Promise<{ success: boolean; listingId?: string; error?: string }> {
+    // SIMULATION: Real API integration pending partnership agreements
     return new Promise((resolve) => {
       setTimeout(() => {
-        const success = Math.random() > 0.2;
-        if (success) {
-          resolve({
-            success: true,
-            listingId: `FB_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-          });
-        } else {
-          resolve({
-            success: false,
-            error: 'Facebook Marketplace requires manual verification'
-          });
-        }
-      }, 3000);
+        resolve({
+          success: false,
+          error: 'Multi-platform syndication coming soon - partnerships in development'
+        });
+      }, 1000);
     });
   }
 

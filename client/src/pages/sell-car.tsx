@@ -182,17 +182,22 @@ export default function SellCar() {
               <div className="text-gray-400">→</div>
               <div className="flex items-center gap-2">
                 <Eye className="h-4 w-4 text-green-600" />
-                <span>Multiple Platforms</span>
+                <span>Internal Network</span>
               </div>
               <div className="text-gray-400">→</div>
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-orange-600" />
-                <span>Maximum Visibility</span>
+                <span>Growing Reach</span>
               </div>
             </div>
             <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">
-              Reach thousands of buyers across CarDekho, OLX, Cars24, and more with verified listings
+              List your car on Cararth's platform with authentic verification
             </p>
+            <div className="bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 p-3 rounded-lg">
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                🚀 <strong>Coming Soon:</strong> Multi-platform syndication to CarDekho, OLX, Cars24 and other major platforms. Currently building partnerships for maximum distribution.
+              </p>
+            </div>
           </div>
         </div>
 
