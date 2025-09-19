@@ -25,7 +25,7 @@ function checkRequiredSecrets() {
   const missing = required.filter(key => !process.env[key]);
   
   if (missing.length > 0) {
-    logError(createAppError('Missing social auth configuration', 500, ErrorCategory.CONFIGURATION), 'Social auth secrets validation');
+    logError(createAppError('Missing social auth configuration', 500, ErrorCategory.AUTHENTICATION), 'Social auth secrets validation');
     logError({ message: 'Social login disabled - missing configuration', statusCode: 500 }, 'Social auth configuration validation');
     return false;
   }
