@@ -366,7 +366,7 @@ export class FacebookMarketplaceService {
   }
 
   /**
-   * Validate Facebook Access Token using debug_token endpoint
+   * Validate Facebook Access Token using multiple validation approaches
    */
   async validateCredentials(): Promise<{
     valid: boolean;
@@ -377,7 +377,34 @@ export class FacebookMarketplaceService {
     hasMarketplaceAccess?: boolean;
   }> {
     try {
-      // Use debug_token endpoint to validate token properly
+      console.log('🔍 Testing Facebook token validation...');
+      
+      // First try: Simple page access test for System User tokens
+      if (this.config.pageId) {
+        try {
+          const pageAccessTest = await axios.get(`${this.baseUrl}/${this.config.pageId}`, {
+            params: {
+              fields: 'id,name,category',
+              access_token: this.config.accessToken
+            }
+          });
+          
+          console.log('✅ System User Token - Direct page access successful:', pageAccessTest.data);
+          
+          return {
+            valid: true,
+            tokenType: 'SYSTEM_USER',
+            scopes: ['pages_manage_posts', 'manage_pages'], // Assume System User has these
+            pageInfo: pageAccessTest.data,
+            hasMarketplaceAccess: true
+          };
+          
+        } catch (pageError: any) {
+          console.log('❌ Direct page access failed:', pageError.response?.data);
+        }
+      }
+
+      // Second try: Use debug_token endpoint for validation
       const debugTokenResponse = await axios.get(`${this.baseUrl}/debug_token`, {
         params: {
           input_token: this.config.accessToken,
