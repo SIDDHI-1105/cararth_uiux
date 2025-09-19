@@ -65,9 +65,9 @@ export default function UnifiedFilters({
   return (
     <div className="bg-background border-b border-border sticky top-0 z-40 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-3">
-        {/* Main Filter Bar */}
+        {/* Streamlined Filter Bar */}
         <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-          {/* Primary Filters - Always Visible */}
+          {/* Essential Filters */}
           <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 flex-1 min-w-0">
             {/* Brand */}
             <Select value={filters.brand || 'all'} onValueChange={(value) => handleFilterChange('brand', value)}>
