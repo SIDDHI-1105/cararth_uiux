@@ -246,27 +246,29 @@ Response format:
     return results;
   }
 
-  // Simulate posting to Cars24 - DEVELOPMENT MODE
-  private async postToCars24(listing: SellerListing): Promise<{ success: boolean; listingId?: string; error?: string }> {
+  // Simulate posting to Cars24 - DEVELOPMENT MODE  
+  private async postToCars24(listing: SellerListing): Promise<{ success: boolean; listingId: string | undefined; error: string | undefined }> {
     // SIMULATION: Real API integration pending partnership agreements
     // This creates a placeholder entry for development/testing purposes
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({
           success: false,
+          listingId: undefined,
           error: 'Multi-platform syndication coming soon - partnerships in development'
         });
       }, 1000);
     });
   }
 
-  // Simulate posting to CarDekho - DEVELOPMENT MODE  
-  private async postToCarDekho(listing: SellerListing): Promise<{ success: boolean; listingId?: string; error?: string }> {
+  // Simulate posting to CarDekho - DEVELOPMENT MODE
+  private async postToCarDekho(listing: SellerListing): Promise<{ success: boolean; listingId: string | undefined; error: string | undefined }> {
     // SIMULATION: Real API integration pending partnership agreements
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({
           success: false,
+          listingId: undefined,
           error: 'Multi-platform syndication coming soon - partnerships in development'
         });
       }, 1000);
@@ -274,10 +276,11 @@ Response format:
   }
 
   // Real Facebook Marketplace posting using Graph API
-  private async postToFacebookMarketplace(listing: SellerListing): Promise<{ success: boolean; listingId?: string; error?: string }> {
+  private async postToFacebookMarketplace(listing: SellerListing): Promise<{ success: boolean; listingId: string | undefined; error: string | undefined }> {
     if (!this.facebookService) {
       return {
         success: false,
+        listingId: undefined,
         error: 'Facebook API credentials not configured. Please add FACEBOOK_ACCESS_TOKEN, FACEBOOK_APP_ID, and FACEBOOK_APP_SECRET to environment variables.'
       };
     }
@@ -288,6 +291,7 @@ Response format:
       if (!validation.valid) {
         return {
           success: false,
+          listingId: undefined,
           error: `Facebook API validation failed: ${validation.error}`
         };
       }
@@ -301,11 +305,16 @@ Response format:
         console.error(`❌ Failed to post listing ${listing.id} to Facebook Marketplace: ${result.error}`);
       }
 
-      return result;
+      return {
+        success: result.success,
+        listingId: result.listingId,
+        error: result.error
+      };
     } catch (error) {
       console.error('Facebook Marketplace posting error:', error);
       return {
         success: false,
+        listingId: undefined,
         error: `Facebook posting failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       };
     }
@@ -319,7 +328,7 @@ Response format:
       // Update the listing status in database
       await db
         .update(sellerListings)
-        .set({ soldDate: new Date() })
+        .set({ listingStatus: 'sold' })
         .where(eq(sellerListings.id, listingId));
 
       // Get all platform posting logs for this listing
