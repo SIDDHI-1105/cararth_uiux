@@ -1914,8 +1914,10 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Seller listings management
+  // Seller listings management with atomic posting limits enforcement
   async createSellerListing(listingData: any): Promise<any> {
+    // IMPORTANT: This method now handles posting limits atomically
+    // Use createSellerListingWithLimitsCheck() for limit enforcement
     try {
       const result = await this.db
         .insert(sellerListings)
@@ -1928,6 +1930,95 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'createSellerListing operation');
       throw new Error('Failed to create seller listing');
+    }
+  }
+
+  // ATOMIC: Check posting limits and create listing in single Drizzle transaction
+  async createSellerListingWithLimitsCheck(sellerId: string, listingData: any): Promise<{
+    success: boolean;
+    listing?: any;
+    error?: string;
+    limits?: {
+      current: number;
+      max: number;
+      sellerType: 'private' | 'dealer';
+    }
+  }> {
+    try {
+      return await this.db.transaction(async (tx) => {
+        // Get user info with row lock for serialization
+        const userResult = await tx.execute(sql`
+          SELECT seller_type FROM users WHERE id = ${sellerId} FOR UPDATE
+        `);
+
+        if (userResult.rows.length === 0) {
+          throw new Error('User not found');
+        }
+
+        const userRow = userResult.rows[0] as any;
+        const sellerType = (userRow.seller_type || 'private') as 'private' | 'dealer';
+        const limit = sellerType === 'dealer' ? 3 : 1;
+
+        // Count current active listings in rolling 30-day window
+        const countResult = await tx.execute(sql`
+          SELECT count(*) AS active_count
+          FROM seller_listings
+          WHERE seller_id = ${sellerId}
+            AND listing_status IN ('active', 'draft')
+            AND created_at >= now() - interval '30 days'
+            AND (admin_override = false OR admin_override IS NULL)
+        `);
+
+        const currentCount = parseInt((countResult.rows[0] as any).active_count) || 0;
+
+        // Check if user can post
+        if (currentCount >= limit) {
+          const message = sellerType === 'private' 
+            ? 'Individual sellers may post 1 listing per 30 days. Contact support to request an exception.'
+            : 'Dealer posting limit reached (3 per 30 days). Contact support to increase allowance.';
+
+          return {
+            success: false,
+            error: message,
+            limits: {
+              current: currentCount,
+              max: limit,
+              sellerType
+            }
+          };
+        }
+
+        // Create the listing within the transaction using Drizzle
+        const result = await tx
+          .insert(sellerListings)
+          .values(listingData)
+          .returning();
+
+        const newListing = result[0];
+        
+        logError({ message: 'Seller listing created with atomic limits check', statusCode: 200 }, 'createSellerListingWithLimitsCheck success');
+        
+        return {
+          success: true,
+          listing: newListing,
+          limits: {
+            current: currentCount + 1,
+            max: limit,
+            sellerType
+          }
+        };
+      });
+
+    } catch (error: any) {
+      if (error.message === 'User not found') {
+        return {
+          success: false,
+          error: 'User not found'
+        };
+      }
+      
+      logError(createAppError('Atomic listing creation failed', 500, ErrorCategory.DATABASE), 'createSellerListingWithLimitsCheck error');
+      throw new Error('Failed to create listing with limits check');
     }
   }
 

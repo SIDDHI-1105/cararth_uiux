@@ -155,6 +155,18 @@ export interface IStorage {
   createSellerListing(listingData: any): Promise<any>;
   getSellerListings(sellerId: string, options?: { limit?: number; status?: string }): Promise<any[]>;
   updateSellerListing(listingId: string, updates: any): Promise<any>;
+  
+  // Atomic listing creation with posting limits enforcement
+  createSellerListingWithLimitsCheck(sellerId: string, listingData: any): Promise<{
+    success: boolean;
+    listing?: any;
+    error?: string;
+    limits?: {
+      current: number;
+      max: number;
+      sellerType: 'private' | 'dealer';
+    }
+  }>;
 }
 
 export class MemStorage implements IStorage {
@@ -1186,6 +1198,41 @@ export class MemStorage implements IStorage {
   async updateSellerListing(listingId: string, updates: any): Promise<any> {
     // In-memory storage doesn't persist seller listings
     return undefined;
+  }
+
+  // Atomic listing creation with limits check - in-memory stub
+  async createSellerListingWithLimitsCheck(sellerId: string, listingData: any): Promise<{
+    success: boolean;
+    listing?: any;
+    error?: string;
+    limits?: {
+      current: number;
+      max: number;
+      sellerType: 'private' | 'dealer';
+    }
+  }> {
+    // In-memory implementation - always allows posting for development
+    const user = this.users.get(sellerId);
+    if (!user) {
+      return {
+        success: false,
+        error: 'User not found'
+      };
+    }
+
+    const sellerType = ((user as any).sellerType || 'private') as 'private' | 'dealer';
+    const limit = sellerType === 'dealer' ? 3 : 1;
+
+    const listing = await this.createSellerListing(listingData);
+    return {
+      success: true,
+      listing,
+      limits: {
+        current: 1,
+        max: limit,
+        sellerType
+      }
+    };
   }
 }
 

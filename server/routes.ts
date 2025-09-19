@@ -5067,9 +5067,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('🚗 New listing creation request from user:', userId);
 
-      // Check if user is email verified
+      // Check if user is email verified AND has syndication consent
       const user = await storage.getUser(userId);
-      if (!user || !user.emailVerified) {
+      if (!user) {
+        return res.status(404).json({
+          error: 'User not found',
+          message: 'User account not found'
+        });
+      }
+
+      if (!user.emailVerified) {
         return res.status(403).json({
           error: 'Email verification required',
           message: 'Please verify your email address before creating listings',
@@ -5077,38 +5084,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Check posting limits BEFORE processing the listing
-      const limitsCheck = await storage.checkPostingLimits(userId);
-      if (!limitsCheck.canPost) {
-        console.log(`🚫 Posting limit exceeded for user ${userId}: ${limitsCheck.currentCount}/${limitsCheck.limit} (${limitsCheck.sellerType})`);
-        
-        return res.status(429).json({
-          error: 'Posting limit reached',
-          message: limitsCheck.message,
-          limits: {
-            current: limitsCheck.currentCount,
-            max: limitsCheck.limit,
-            sellerType: limitsCheck.sellerType,
-            windowDays: 30
-          },
-          suggestion: 'Contact support to request a limit increase or upgrade to dealer account'
+      // Check syndication consent is required for all listings
+      const userHasConsent = (user as any).consentSyndication;
+      if (!userHasConsent) {
+        return res.status(403).json({
+          error: 'Syndication consent required',
+          message: 'You must agree to syndicate your listings across platforms before creating listings',
+          action: 'consent_required',
+          suggestion: 'Please re-register with syndication consent to enable listing creation'
         });
       }
 
       // Validate listing data
       const validatedData = createListingSchema.parse(req.body);
 
-      // Create the listing with initial status 'draft'
-      const newListing = await storage.createSellerListing({
+      // ATOMIC: Check posting limits and create listing in single transaction
+      // SECURITY: Never allow clients to set adminOverride - only admins via separate endpoint
+      const result = await storage.createSellerListingWithLimitsCheck(userId, {
         sellerId: userId,
         ...validatedData,
         listingStatus: 'draft', // Start as draft, will be activated after verification
         documentVerificationStatus: validatedData.rcBookDocument && validatedData.insuranceDocument ? 'pending' : 'incomplete',
         photoVerificationStatus: 'pending',
-        adminOverride: false
+        adminOverride: false // Always false for client requests
       });
 
-      console.log(`✅ Listing created successfully: ${newListing.id} for user ${userId}`);
+      if (!result.success) {
+        console.log(`🚫 Posting limit exceeded for user ${userId}: ${result.error}`);
+        
+        return res.status(429).json({
+          error: 'Posting limit reached',
+          message: result.error,
+          limits: result.limits ? {
+            current: result.limits.current,
+            max: result.limits.max,
+            sellerType: result.limits.sellerType,
+            windowDays: 30
+          } : undefined,
+          suggestion: 'Contact support to request a limit increase or upgrade to dealer account'
+        });
+      }
+
+      const newListing = result.listing;
+      console.log(`✅ Listing created successfully: ${newListing.id} for user ${userId} (atomic)`);
 
       res.status(201).json({
         success: true,
@@ -5130,12 +5148,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           3: 'Once verified, your listing will be syndicated across multiple platforms',
           4: 'You will receive inquiries through your masked contact ID'
         },
-        limits: {
-          used: limitsCheck.currentCount + 1,
-          total: limitsCheck.limit,
-          remaining: limitsCheck.limit - limitsCheck.currentCount - 1,
-          sellerType: limitsCheck.sellerType
-        }
+        limits: result.limits ? {
+          used: result.limits.current,
+          total: result.limits.max,
+          remaining: result.limits.max - result.limits.current,
+          sellerType: result.limits.sellerType
+        } : undefined
       });
 
     } catch (error: any) {
