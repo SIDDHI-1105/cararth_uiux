@@ -937,8 +937,8 @@ export class MarketplaceAggregator {
           const classification = claudeClassification.status === 'fulfilled' ? claudeClassification.value : undefined;
           const quality = claudeQuality.status === 'fulfilled' ? claudeQuality.value : undefined;
           
-          // Calculate combined quality score
-          const overallQualityScore = this.calculateCombinedQualityScore(historical, quality, classification);
+          // Calculate combined quality score (now includes image-based ranking boost)
+          const overallQualityScore = this.calculateCombinedQualityScore(historical, quality, classification, listing);
           
           return {
             ...listing,
@@ -974,28 +974,78 @@ export class MarketplaceAggregator {
   private calculateCombinedQualityScore(
     historical: any, 
     quality: QualityAnalysis | undefined, 
-    classification: ListingClassification | undefined
+    classification: ListingClassification | undefined,
+    listing?: MarketplaceListing
   ): number {
     let combinedScore = 70; // Base score
     
-    // Historical analysis contribution (30% weight)
+    // Historical analysis contribution (25% weight - reduced to make room for image boost)
     if (historical?.authenticityRating) {
-      combinedScore += (historical.authenticityRating - 7.5) * 4; // Scale to impact
+      combinedScore += (historical.authenticityRating - 7.5) * 3; // Reduced scaling
     }
     
-    // Claude quality analysis contribution (40% weight)
+    // Claude quality analysis contribution (35% weight - reduced)
     if (quality) {
       const claudeQualityScore = quality.overallQuality;
-      combinedScore = (combinedScore * 0.6) + (claudeQualityScore * 0.4);
+      combinedScore = (combinedScore * 0.65) + (claudeQualityScore * 0.35);
     }
     
-    // Claude classification contribution (30% weight)
+    // Claude classification contribution (25% weight - reduced)
     if (classification) {
       const classificationBonus = this.getClassificationBonus(classification.overallClassification);
-      combinedScore += classificationBonus;
+      combinedScore += classificationBonus * 0.8; // Reduced impact
+    }
+    
+    // NEW: Image-based ranking boost (15% weight) - PRIORITIZE LISTINGS WITH PHOTOS
+    if (listing) {
+      const imageBoost = this.calculateImageQualityBoost(listing, quality);
+      combinedScore += imageBoost;
+      console.log(`🖼️ Image boost for ${listing.brand} ${listing.model}: +${imageBoost} points (${listing.images.length} images)`);
     }
     
     return Math.min(100, Math.max(0, Math.round(combinedScore)));
+  }
+
+  // NEW: Calculate image-based ranking boost for better user experience
+  private calculateImageQualityBoost(listing: MarketplaceListing, quality?: QualityAnalysis): number {
+    let imageBoost = 0;
+    const imageCount = listing.images?.length || 0;
+    
+    // No images = significant penalty (buyers want to see cars!)
+    if (imageCount === 0) {
+      imageBoost = -15; // Strong penalty for listings without photos
+      return imageBoost;
+    }
+    
+    // Base boost for having any images at all
+    imageBoost += 5; // Reward for having photos
+    
+    // Progressive boost for more images (diminishing returns)
+    if (imageCount >= 2) imageBoost += 3; // 2+ images
+    if (imageCount >= 4) imageBoost += 2; // 4+ images  
+    if (imageCount >= 6) imageBoost += 2; // 6+ images
+    if (imageCount >= 8) imageBoost += 1; // 8+ images (max boost)
+    
+    // Quality-based bonuses from Claude's image analysis
+    if (quality?.imageQuality) {
+      const imageQualityScore = quality.imageQuality;
+      if (imageQualityScore >= 80) {
+        imageBoost += 5; // High quality images
+      } else if (imageQualityScore >= 60) {
+        imageBoost += 3; // Good quality images  
+      } else if (imageQualityScore < 40) {
+        imageBoost -= 2; // Poor quality images penalty
+      }
+    }
+    
+    // Verification status bonus (trusted images)
+    if (listing.verificationStatus === 'verified' && imageCount > 0) {
+      imageBoost += 3; // Verified listings with photos get extra boost
+    } else if (listing.verificationStatus === 'certified' && imageCount > 0) {
+      imageBoost += 5; // Certified listings with photos get maximum boost
+    }
+    
+    return Math.min(15, Math.max(-15, imageBoost)); // Cap between -15 to +15
   }
   
   // Helper method to convert classification to quality bonus
