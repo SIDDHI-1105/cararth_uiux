@@ -1,0 +1,55 @@
+Task: Implement Cararth Seller MVP + scheduled verification + syndication pipeline (Hyderabad pilot) — now with seller-type posting limits:
+- Individual sellers: max **1** active posting per rolling 30-day window.
+- Dealer sellers: max **3** active postings per rolling 30-day window.
+- Admin/ops can override limits per listing.
+
+Goal: Sellers post once → images/docs upload to S3/R2 → quick authenticity checks run → Verified (Syndication Ready) or Needs Review → queued for partner syndication. Dealers can optionally upload bulk CSV with up to 3 listings per dealer per 30 days (enforced).
+
+MVP scope & implementation (in priority order):
+
+1) Frontend + API (auth)
+   - POST /api/seller/signup   {phone,type,name,email,city} -> sends OTP
+   - POST /api/seller/verify-otp {phone,otp} -> returns seller_id + JWT
+   - POST /api/listings (auth required)
+       • Accepts form fields + **exactly 5 images** + RC + insurance OR reject.
+       • Immediate server-side checks:
+           - phone_verified true
+           - consent_syndication checked -> store `consent_ts`
+           - image count == 5 and files uploaded to S3 (return CDN URLs)
+           - docs present (RC, insurance) with HEAD check 200
+       • Enforce posting limits BEFORE create (see SQL check below).
+       • Save listing with status = `received`. Return `{listing_id, status}`.
+   - POST /api/dealer/listings/bulk (auth dealer)
+       • Accept CSV (S3 upload link or multipart). CSV columns = header from partner CSV template (external_id,make,model,variant,year,registration_no,...). No more than `remaining_allowance` rows allowed (see enforcement below).
+       • On upload: parse rows, validate (images exist or S3 placeholders), create `received` rows for each valid listing and return a report (created_count, rejected_rows with reasons).
+   - GET /api/listings/{id}, GET /api/seller/{seller}/listings, POST /api/listings/{id}/withdraw
+   - POST /api/listings/{id}/accept-offer {offer_id} -> routes next steps
+
+2) DB notes (Postgres — add indexes)
+   - Use existing tables: sellers(type), listings, listing_images, listing_docs, publish_jobs, offers, audit_logs.
+   - Add column `seller_type` exists in sellers table (private|dealer). If not, add.
+   - Add `admin_override boolean DEFAULT false` in listings to allow bypass limits with ops action.
+   - Index `listings(created_at), listings(seller_id), listings(status)` and `listings.registration_number`.
+
+3) Posting limits enforcement (server-side logic)
+   - Definition: `active_statuses = ('received','verifying','verified','syndicated')`
+   - Rolling 30-day window: count listings where `created_at >= now() - interval '30 days'` and status in `active_statuses`.
+   - Individual rule:
+       • If `seller.type = 'private'` and count >= 1 and listing.admin_override = false -> reject with HTTP 403 and message: "Individual sellers may post 1 listing per 30 days. Contact support to request an exception."
+   - Dealer rule:
+       • If `seller.type = 'dealer'` and count >= 3 and listing.admin_override = false -> reject with HTTP 403 and message: "Dealer posting limit reached (3 per 30 days). Contact support to increase allowance."
+   - Allow ops/admin override via Ops UI which sets `listing.admin_override = true` for that listing (audit_logs record the override).
+
+   Sample SQL (check before creating listing):
+   ```sql
+   WITH seller_info AS (
+     SELECT seller_id, type
+     FROM sellers WHERE seller_id = :seller_id
+   ), cnt AS (
+     SELECT count(*) AS active_count
+     FROM listings
+     WHERE seller_id = :seller_id
+       AND status IN ('received','verifying','verified','syndicated')
+       AND created_at >= now() - interval '30 days'
+   )
+   SELECT s.type, c.active_count FROM seller_info s CROSS JOIN cnt c;

@@ -1753,4 +1753,236 @@ export class DatabaseStorage implements IStorage {
       throw new Error('Failed to log admin action');
     }
   }
+
+  // Email verification methods for seller MVP
+  async setUserVerificationToken(userId: string, token: string, expiresAt: Date): Promise<void> {
+    try {
+      await this.db
+        .update(users)
+        .set({
+          verificationToken: token,
+          verificationTokenExpiresAt: expiresAt
+        })
+        .where(eq(users.id, userId));
+      
+      this.clearCache(`user_${userId}`);
+      logError({ message: 'Verification token set for user', statusCode: 200 }, 'setUserVerificationToken success');
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'setUserVerificationToken operation');
+      throw new Error('Failed to set verification token');
+    }
+  }
+
+  async getUserByVerificationToken(token: string): Promise<User | undefined> {
+    try {
+      const result = await this.db
+        .select()
+        .from(users)
+        .where(eq(users.verificationToken, token))
+        .limit(1);
+      
+      return result[0];
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getUserByVerificationToken operation');
+      return undefined;
+    }
+  }
+
+  async setUserEmailVerified(userId: string, verified: boolean): Promise<void> {
+    try {
+      await this.db
+        .update(users)
+        .set({
+          emailVerified: verified
+        })
+        .where(eq(users.id, userId));
+      
+      this.clearCache(`user_${userId}`);
+      logError({ message: `User email verification set to ${verified}`, statusCode: 200 }, 'setUserEmailVerified success');
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'setUserEmailVerified operation');
+      throw new Error('Failed to set email verified status');
+    }
+  }
+
+  async clearUserVerificationToken(userId: string): Promise<void> {
+    try {
+      await this.db
+        .update(users)
+        .set({
+          verificationToken: null,
+          verificationTokenExpiresAt: null
+        })
+        .where(eq(users.id, userId));
+      
+      this.clearCache(`user_${userId}`);
+      logError({ message: 'Verification token cleared for user', statusCode: 200 }, 'clearUserVerificationToken success');
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'clearUserVerificationToken operation');
+      throw new Error('Failed to clear verification token');
+    }
+  }
+
+  async createSellerUser(userData: {
+    email: string;
+    firstName?: string;
+    lastName?: string;
+    sellerType: 'private' | 'dealer';
+    consentSyndication: boolean;
+    legalAgreementVersion: string;
+  }): Promise<User> {
+    try {
+      const result = await this.db
+        .insert(users)
+        .values({
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          sellerType: userData.sellerType,
+          consentSyndication: userData.consentSyndication,
+          consentTimestamp: userData.consentSyndication ? new Date() : undefined,
+          legalAgreementVersion: userData.legalAgreementVersion,
+          legalAgreementAcceptedAt: new Date(),
+          emailVerified: false
+        })
+        .returning();
+      
+      const newUser = result[0];
+      
+      logError({ message: 'Seller user created successfully', statusCode: 200 }, 'createSellerUser success');
+      return newUser;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'createSellerUser operation');
+      throw new Error('Failed to create seller user');
+    }
+  }
+
+  // Posting limits enforcement methods
+  async checkPostingLimits(sellerId: string): Promise<{
+    canPost: boolean;
+    currentCount: number;
+    limit: number;
+    sellerType: 'private' | 'dealer';
+    message?: string;
+  }> {
+    try {
+      // Get user info and current active listings count
+      const result = await this.db.execute(sql`
+        WITH seller_info AS (
+          SELECT seller_type
+          FROM users WHERE id = ${sellerId}
+        ), cnt AS (
+          SELECT count(*) AS active_count
+          FROM seller_listings
+          WHERE seller_id = ${sellerId}
+            AND listing_status IN ('active', 'draft')
+            AND created_at >= now() - interval '30 days'
+            AND (admin_override = false OR admin_override IS NULL)
+        )
+        SELECT s.seller_type, c.active_count FROM seller_info s CROSS JOIN cnt c;
+      `);
+
+      const row = result.rows[0] as any;
+      if (!row) {
+        return {
+          canPost: false,
+          currentCount: 0,
+          limit: 0,
+          sellerType: 'private',
+          message: 'User not found'
+        };
+      }
+
+      const sellerType = (row.seller_type || 'private') as 'private' | 'dealer';
+      const currentCount = parseInt(row.active_count) || 0;
+      const limit = sellerType === 'dealer' ? 3 : 1;
+      const canPost = currentCount < limit;
+
+      return {
+        canPost,
+        currentCount,
+        limit,
+        sellerType,
+        message: canPost ? undefined : 
+          sellerType === 'private' 
+            ? 'Individual sellers may post 1 listing per 30 days. Contact support to request an exception.'
+            : 'Dealer posting limit reached (3 per 30 days). Contact support to increase allowance.'
+      };
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'checkPostingLimits operation');
+      throw new Error('Failed to check posting limits');
+    }
+  }
+
+  // Seller listings management
+  async createSellerListing(listingData: any): Promise<any> {
+    try {
+      const result = await this.db
+        .insert(sellerListings)
+        .values(listingData)
+        .returning();
+      
+      const newListing = result[0];
+      logError({ message: 'Seller listing created successfully', statusCode: 200 }, 'createSellerListing success');
+      return newListing;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'createSellerListing operation');
+      throw new Error('Failed to create seller listing');
+    }
+  }
+
+  async getSellerListings(sellerId: string, options?: { limit?: number; status?: string }): Promise<any[]> {
+    try {
+      const cacheKey = `seller_listings_${sellerId}_${options?.status || 'all'}`;
+      const cached = this.getCached<any[]>(cacheKey);
+      if (cached) return cached;
+
+      let query = this.db
+        .select()
+        .from(sellerListings)
+        .where(eq(sellerListings.sellerId, sellerId));
+
+      if (options?.status) {
+        query = query.where(eq(sellerListings.listingStatus, options.status));
+      }
+
+      if (options?.limit) {
+        query = query.limit(options.limit);
+      }
+
+      const listings = await query.orderBy(desc(sellerListings.createdAt));
+      
+      // Cache for 5 minutes
+      this.setCache(cacheKey, listings, 300000);
+      return listings;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getSellerListings operation');
+      return [];
+    }
+  }
+
+  async updateSellerListing(listingId: string, updates: any): Promise<any> {
+    try {
+      const result = await this.db
+        .update(sellerListings)
+        .set({
+          ...updates,
+          updatedAt: new Date()
+        })
+        .where(eq(sellerListings.id, listingId))
+        .returning();
+      
+      const updatedListing = result[0];
+      if (updatedListing) {
+        this.clearCache(`seller_listings_${updatedListing.sellerId}_all`);
+        this.clearCache(`seller_listings_${updatedListing.sellerId}_${updatedListing.listingStatus}`);
+      }
+      
+      logError({ message: 'Seller listing updated successfully', statusCode: 200 }, 'updateSellerListing success');
+      return updatedListing;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'updateSellerListing operation');
+      throw new Error('Failed to update seller listing');
+    }
+  }
 }

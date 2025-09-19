@@ -34,6 +34,7 @@ import {
   type SarfaesiJob,
   type InsertSarfaesiJob
 } from "@shared/schema";
+import { emailVerificationService } from "./emailVerificationService";
 import { priceComparisonService } from "./priceComparison";
 import { marketplaceAggregator, initializeMarketplaceAggregator } from "./marketplaceAggregator";
 import { AutomotiveNewsService } from "./automotiveNews";
@@ -4791,6 +4792,458 @@ export async function registerRoutes(app: Express): Promise<Server> {
     };
 
     res.json(complianceStatus);
+  }));
+
+  // =============================================================================
+  // SELLER REGISTRATION & EMAIL VERIFICATION APIS
+  // =============================================================================
+
+  // Seller registration schema for validation
+  const sellerSignupSchema = z.object({
+    email: z.string().email('Please provide a valid email address'),
+    firstName: z.string().min(1, 'First name is required').optional(),
+    lastName: z.string().min(1, 'Last name is required').optional(), 
+    sellerType: z.enum(['private', 'dealer'], {
+      errorMap: () => ({ message: 'Seller type must be either "private" or "dealer"' })
+    }),
+    consentSyndication: z.boolean().refine(val => val === true, {
+      message: 'You must consent to cross-platform syndication to continue'
+    }),
+    legalAgreementAccepted: z.boolean().refine(val => val === true, {
+      message: 'You must accept the legal agreement to continue'
+    })
+  });
+
+  // POST /api/seller/signup - Register new seller with email verification
+  app.post('/api/seller/signup', asyncHandler(async (req: any, res: any) => {
+    try {
+      console.log('🔐 Seller signup request:', { email: req.body.email, sellerType: req.body.sellerType });
+
+      // Validate request data
+      const validatedData = sellerSignupSchema.parse(req.body);
+
+      // Check if user already exists  
+      const existingUser = await storage.getUserByEmail(validatedData.email);
+      if (existingUser) {
+        return res.status(409).json({
+          error: 'Email already registered',
+          message: 'An account with this email address already exists. Please sign in or use a different email.',
+          code: 'EMAIL_ALREADY_EXISTS'
+        });
+      }
+
+      // Create new seller user
+      const newUser = await storage.createSellerUser({
+        email: validatedData.email,
+        firstName: validatedData.firstName,
+        lastName: validatedData.lastName,
+        sellerType: validatedData.sellerType,
+        consentSyndication: validatedData.consentSyndication,
+        legalAgreementVersion: 'v1.0'
+      });
+
+      // Generate verification token and send email
+      const token = await emailVerificationService.createVerificationToken(newUser.id);
+      const emailResult = await emailVerificationService.sendVerificationEmail(
+        newUser.email!, 
+        token, 
+        newUser.firstName || undefined
+      );
+
+      if (!emailResult.success) {
+        console.error('Failed to send verification email:', emailResult.error);
+        // Continue with success response but mention email issue
+      }
+
+      console.log(`✅ Seller created successfully: ${newUser.id} (${validatedData.sellerType})`);
+
+      res.status(201).json({
+        success: true,
+        message: 'Account created successfully! Please check your email to verify your account.',
+        user: {
+          id: newUser.id,
+          email: newUser.email,
+          firstName: newUser.firstName,
+          lastName: newUser.lastName,
+          sellerType: newUser.sellerType,
+          emailVerified: false
+        },
+        nextSteps: {
+          1: 'Check your email for verification link',
+          2: 'Click the verification link to activate your account',
+          3: 'Start posting your car listings across multiple platforms'
+        }
+      });
+
+    } catch (error: any) {
+      console.error('Seller signup error:', error);
+
+      if (error.name === 'ZodError') {
+        return res.status(400).json({
+          error: 'Validation failed',
+          message: 'Please check your input data',
+          details: error.errors
+        });
+      }
+
+      return res.status(500).json({
+        error: 'Registration failed',
+        message: 'Unable to create your account. Please try again later.',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }));
+
+  // GET /api/seller/verify-email - Email verification endpoint
+  app.get('/api/seller/verify-email', asyncHandler(async (req: any, res: any) => {
+    try {
+      const token = req.query.token as string;
+
+      if (!token) {
+        return res.status(400).json({
+          error: 'Missing verification token',
+          message: 'Please use the verification link from your email'
+        });
+      }
+
+      console.log('📧 Email verification attempt with token:', token.substring(0, 8) + '...');
+
+      // Verify the token
+      const verificationResult = await emailVerificationService.verifyToken(token);
+
+      if (!verificationResult.success) {
+        console.log('❌ Email verification failed:', verificationResult.error);
+        
+        return res.status(400).json({
+          error: 'Verification failed',
+          message: verificationResult.error,
+          action: verificationResult.error?.includes('expired') ? 'request_new' : 'contact_support'
+        });
+      }
+
+      const userId = verificationResult.userId!;
+      const user = await storage.getUser(userId);
+
+      console.log(`✅ Email verified successfully for user: ${userId}`);
+
+      // Redirect to a success page or return success response
+      res.status(200).json({
+        success: true,
+        message: 'Email verified successfully! Your account is now active.',
+        user: {
+          id: user?.id,
+          email: user?.email,
+          firstName: user?.firstName,
+          lastName: user?.lastName,
+          sellerType: user?.sellerType,
+          emailVerified: true
+        },
+        redirectUrl: '/seller/dashboard',
+        nextSteps: {
+          1: 'Your account is now verified and active',
+          2: 'You can now post your car listings',
+          3: 'Start with uploading 5 photos and required documents'
+        }
+      });
+
+    } catch (error: any) {
+      console.error('Email verification error:', error);
+
+      return res.status(500).json({
+        error: 'Verification failed',
+        message: 'Unable to verify your email. Please try again or contact support.',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }));
+
+  // POST /api/seller/resend-verification - Resend verification email
+  app.post('/api/seller/resend-verification', asyncHandler(async (req: any, res: any) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({
+          error: 'Email required',
+          message: 'Please provide your email address'
+        });
+      }
+
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(404).json({
+          error: 'User not found',
+          message: 'No account found with this email address'
+        });
+      }
+
+      if (user.emailVerified) {
+        return res.status(409).json({
+          error: 'Already verified',
+          message: 'Your email is already verified. You can now sign in to your account.'
+        });
+      }
+
+      const emailResult = await emailVerificationService.resendVerificationEmail(user.id);
+
+      if (!emailResult.success) {
+        return res.status(500).json({
+          error: 'Failed to send email',
+          message: emailResult.error
+        });
+      }
+
+      console.log(`📧 Verification email resent to: ${email}`);
+
+      res.json({
+        success: true,
+        message: 'Verification email sent! Please check your inbox and spam folder.'
+      });
+
+    } catch (error: any) {
+      console.error('Resend verification error:', error);
+
+      return res.status(500).json({
+        error: 'Failed to resend verification',
+        message: 'Unable to resend verification email. Please try again later.'
+      });
+    }
+  }));
+
+  // =============================================================================
+  // SELLER LISTING MANAGEMENT APIS (WITH POSTING LIMITS)
+  // =============================================================================
+
+  // Listing creation schema for validation
+  const createListingSchema = z.object({
+    // Basic car information
+    title: z.string().min(5, 'Title must be at least 5 characters').max(100, 'Title too long'),
+    brand: z.string().min(2, 'Brand is required'),
+    model: z.string().min(1, 'Model is required'),
+    year: z.number().min(1990, 'Year must be 1990 or later').max(new Date().getFullYear() + 1),
+    price: z.number().min(10000, 'Price must be at least ₹10,000').max(50000000, 'Price too high'),
+    mileage: z.number().min(0, 'Mileage cannot be negative').max(1000000, 'Mileage too high'),
+    fuelType: z.enum(['Petrol', 'Diesel', 'CNG', 'Electric'], { 
+      errorMap: () => ({ message: 'Fuel type must be Petrol, Diesel, CNG, or Electric' })
+    }),
+    transmission: z.enum(['Manual', 'Automatic', 'CVT'], {
+      errorMap: () => ({ message: 'Transmission must be Manual, Automatic, or CVT' })
+    }),
+    owners: z.number().min(1, 'Must have at least 1 owner').max(5, 'Too many owners'),
+    location: z.string().min(3, 'Location is required'),
+    city: z.string().min(2, 'City is required'), 
+    state: z.string().min(2, 'State is required'),
+    description: z.string().max(1000, 'Description too long').optional(),
+    features: z.array(z.string()).max(20, 'Too many features').optional(),
+    
+    // Contact information
+    actualPhone: z.string().regex(/^[6-9]\d{9}$/, 'Please provide a valid 10-digit Indian mobile number'),
+    actualEmail: z.string().email('Please provide a valid email address'),
+    
+    // Required documents and photos will be handled separately via file uploads
+    // For MVP, we'll expect object storage paths to be provided
+    rcBookDocument: z.string().url('RC book document must be a valid URL').optional(),
+    insuranceDocument: z.string().url('Insurance document must be a valid URL').optional(),
+    
+    // Exactly 5 photos required  
+    frontPhoto: z.string().url('Front photo is required'),
+    rearPhoto: z.string().url('Rear photo is required'), 
+    leftSidePhoto: z.string().url('Left side photo is required'),
+    rightSidePhoto: z.string().url('Right side photo is required'),
+    interiorPhoto: z.string().url('Interior photo is required (must show odometer)'),
+    additionalPhotos: z.array(z.string().url()).max(10, 'Too many additional photos').optional()
+  });
+
+  // POST /api/seller/listings - Create new listing (authenticated sellers only)
+  app.post('/api/seller/listings', isAuthenticated, asyncHandler(async (req: any, res: any) => {
+    try {
+      const userId = (req.user as any).claims?.sub;
+      if (!userId) {
+        return res.status(401).json({
+          error: 'Unauthorized',
+          message: 'User session invalid'
+        });
+      }
+
+      console.log('🚗 New listing creation request from user:', userId);
+
+      // Check if user is email verified
+      const user = await storage.getUser(userId);
+      if (!user || !user.emailVerified) {
+        return res.status(403).json({
+          error: 'Email verification required',
+          message: 'Please verify your email address before creating listings',
+          action: 'verify_email'
+        });
+      }
+
+      // Check posting limits BEFORE processing the listing
+      const limitsCheck = await storage.checkPostingLimits(userId);
+      if (!limitsCheck.canPost) {
+        console.log(`🚫 Posting limit exceeded for user ${userId}: ${limitsCheck.currentCount}/${limitsCheck.limit} (${limitsCheck.sellerType})`);
+        
+        return res.status(429).json({
+          error: 'Posting limit reached',
+          message: limitsCheck.message,
+          limits: {
+            current: limitsCheck.currentCount,
+            max: limitsCheck.limit,
+            sellerType: limitsCheck.sellerType,
+            windowDays: 30
+          },
+          suggestion: 'Contact support to request a limit increase or upgrade to dealer account'
+        });
+      }
+
+      // Validate listing data
+      const validatedData = createListingSchema.parse(req.body);
+
+      // Create the listing with initial status 'draft'
+      const newListing = await storage.createSellerListing({
+        sellerId: userId,
+        ...validatedData,
+        listingStatus: 'draft', // Start as draft, will be activated after verification
+        documentVerificationStatus: validatedData.rcBookDocument && validatedData.insuranceDocument ? 'pending' : 'incomplete',
+        photoVerificationStatus: 'pending',
+        adminOverride: false
+      });
+
+      console.log(`✅ Listing created successfully: ${newListing.id} for user ${userId}`);
+
+      res.status(201).json({
+        success: true,
+        message: 'Listing created successfully!',
+        listing: {
+          id: newListing.id,
+          title: newListing.title,
+          brand: newListing.brand,
+          model: newListing.model,
+          price: newListing.price,
+          status: newListing.listingStatus,
+          documentVerificationStatus: newListing.documentVerificationStatus,
+          photoVerificationStatus: newListing.photoVerificationStatus,
+          maskedContactId: newListing.maskedContactId
+        },
+        nextSteps: {
+          1: 'Your listing is under review',
+          2: 'Upload required documents (RC book, insurance) if not done',
+          3: 'Once verified, your listing will be syndicated across multiple platforms',
+          4: 'You will receive inquiries through your masked contact ID'
+        },
+        limits: {
+          used: limitsCheck.currentCount + 1,
+          total: limitsCheck.limit,
+          remaining: limitsCheck.limit - limitsCheck.currentCount - 1,
+          sellerType: limitsCheck.sellerType
+        }
+      });
+
+    } catch (error: any) {
+      console.error('Listing creation error:', error);
+
+      if (error.name === 'ZodError') {
+        return res.status(400).json({
+          error: 'Validation failed',
+          message: 'Please check your listing data',
+          details: error.errors
+        });
+      }
+
+      return res.status(500).json({
+        error: 'Failed to create listing',
+        message: 'Unable to create your listing. Please try again later.',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }));
+
+  // GET /api/seller/listings - Get seller's own listings
+  app.get('/api/seller/listings', isAuthenticated, asyncHandler(async (req: any, res: any) => {
+    try {
+      const userId = (req.user as any).claims?.sub;
+      if (!userId) {
+        return res.status(401).json({
+          error: 'Unauthorized',
+          message: 'User session invalid'
+        });
+      }
+
+      const status = req.query.status as string;
+      const limit = parseInt(req.query.limit as string) || 50;
+
+      const listings = await storage.getSellerListings(userId, { status, limit });
+      const limitsCheck = await storage.checkPostingLimits(userId);
+
+      res.json({
+        success: true,
+        listings: listings.map(listing => ({
+          id: listing.id,
+          title: listing.title,
+          brand: listing.brand,
+          model: listing.model,
+          year: listing.year,
+          price: listing.price,
+          status: listing.listingStatus,
+          documentVerificationStatus: listing.documentVerificationStatus,
+          photoVerificationStatus: listing.photoVerificationStatus,
+          viewCount: listing.viewCount,
+          inquiryCount: listing.inquiryCount,
+          createdAt: listing.createdAt,
+          updatedAt: listing.updatedAt
+        })),
+        limits: {
+          used: limitsCheck.currentCount,
+          total: limitsCheck.limit,
+          remaining: limitsCheck.limit - limitsCheck.currentCount,
+          sellerType: limitsCheck.sellerType,
+          canPost: limitsCheck.canPost
+        }
+      });
+
+    } catch (error: any) {
+      console.error('Get listings error:', error);
+
+      return res.status(500).json({
+        error: 'Failed to retrieve listings',
+        message: 'Unable to get your listings. Please try again later.'
+      });
+    }
+  }));
+
+  // GET /api/seller/limits - Check current posting limits
+  app.get('/api/seller/limits', isAuthenticated, asyncHandler(async (req: any, res: any) => {
+    try {
+      const userId = (req.user as any).claims?.sub;
+      if (!userId) {
+        return res.status(401).json({
+          error: 'Unauthorized',
+          message: 'User session invalid'
+        });
+      }
+
+      const limitsCheck = await storage.checkPostingLimits(userId);
+
+      res.json({
+        success: true,
+        limits: {
+          used: limitsCheck.currentCount,
+          total: limitsCheck.limit,
+          remaining: limitsCheck.limit - limitsCheck.currentCount,
+          sellerType: limitsCheck.sellerType,
+          canPost: limitsCheck.canPost,
+          windowDays: 30,
+          message: limitsCheck.message
+        }
+      });
+
+    } catch (error: any) {
+      console.error('Get limits error:', error);
+
+      return res.status(500).json({
+        error: 'Failed to check limits',
+        message: 'Unable to check your posting limits. Please try again later.'
+      });
+    }
   }));
 
   const httpServer = createServer(app);

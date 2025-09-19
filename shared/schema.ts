@@ -25,6 +25,20 @@ export const users = pgTable("users", {
   phoneVerified: boolean("phone_verified").default(false),
   phoneVerifiedAt: timestamp("phone_verified_at"),
   
+  // Email verification for seller MVP
+  emailVerified: boolean("email_verified").default(false),
+  verificationToken: varchar("verification_token"),
+  verificationTokenExpiresAt: timestamp("verification_token_expires_at"),
+  
+  // Seller type classification for posting limits
+  sellerType: text("seller_type").default('private'), // 'private' | 'dealer'
+  
+  // Legal compliance for syndication
+  consentSyndication: boolean("consent_syndication").default(false),
+  consentTimestamp: timestamp("consent_timestamp"),
+  legalAgreementVersion: varchar("legal_agreement_version"),
+  legalAgreementAcceptedAt: timestamp("legal_agreement_accepted_at"),
+  
   // Subscription management
   subscriptionTier: text("subscription_tier").default('free'), // free, pro_seller, pro_buyer, superhero
   subscriptionStatus: text("subscription_status").default('active'), // active, expired, cancelled
@@ -490,6 +504,9 @@ export const sellerListings = pgTable("seller_listings", {
   // Performance tracking
   viewCount: integer("view_count").default(0),
   inquiryCount: integer("inquiry_count").default(0),
+  
+  // Admin override for posting limits
+  adminOverride: boolean("admin_override").default(false),
   
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

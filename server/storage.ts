@@ -125,6 +125,36 @@ export interface IStorage {
   
   // Admin audit logging
   logAdminAction(entry: InsertAdminAuditLog): Promise<AdminAuditLog>;
+
+  // Email verification methods for seller MVP
+  setUserVerificationToken(userId: string, token: string, expiresAt: Date): Promise<void>;
+  getUserByVerificationToken(token: string): Promise<User | undefined>;
+  setUserEmailVerified(userId: string, verified: boolean): Promise<void>;
+  clearUserVerificationToken(userId: string): Promise<void>;
+  
+  // Seller registration methods
+  createSellerUser(userData: {
+    email: string;
+    firstName?: string;
+    lastName?: string;
+    sellerType: 'private' | 'dealer';
+    consentSyndication: boolean;
+    legalAgreementVersion: string;
+  }): Promise<User>;
+
+  // Posting limits enforcement methods
+  checkPostingLimits(sellerId: string): Promise<{
+    canPost: boolean;
+    currentCount: number;
+    limit: number;
+    sellerType: 'private' | 'dealer';
+    message?: string;
+  }>;
+  
+  // Seller listings management
+  createSellerListing(listingData: any): Promise<any>;
+  getSellerListings(sellerId: string, options?: { limit?: number; status?: string }): Promise<any[]>;
+  updateSellerListing(listingId: string, updates: any): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
@@ -1026,6 +1056,136 @@ export class MemStorage implements IStorage {
     };
     // In-memory storage doesn't persist audit logs
     return auditLog;
+  }
+
+  // Email verification methods for seller MVP - in-memory implementations
+  async setUserVerificationToken(userId: string, token: string, expiresAt: Date): Promise<void> {
+    const user = this.users.get(userId);
+    if (user) {
+      (user as any).verificationToken = token;
+      (user as any).verificationTokenExpiresAt = expiresAt;
+    }
+  }
+
+  async getUserByVerificationToken(token: string): Promise<User | undefined> {
+    for (const user of this.users.values()) {
+      if ((user as any).verificationToken === token) {
+        return user;
+      }
+    }
+    return undefined;
+  }
+
+  async setUserEmailVerified(userId: string, verified: boolean): Promise<void> {
+    const user = this.users.get(userId);
+    if (user) {
+      (user as any).emailVerified = verified;
+    }
+  }
+
+  async clearUserVerificationToken(userId: string): Promise<void> {
+    const user = this.users.get(userId);
+    if (user) {
+      (user as any).verificationToken = null;
+      (user as any).verificationTokenExpiresAt = null;
+    }
+  }
+
+  async createSellerUser(userData: {
+    email: string;
+    firstName?: string;
+    lastName?: string;
+    sellerType: 'private' | 'dealer';
+    consentSyndication: boolean;
+    legalAgreementVersion: string;
+  }): Promise<User> {
+    const id = randomUUID();
+    const newUser = {
+      id,
+      email: userData.email,
+      firstName: userData.firstName || null,
+      lastName: userData.lastName || null,
+      profileImageUrl: null,
+      phone: null,
+      phoneVerified: false,
+      phoneVerifiedAt: null,
+      emailVerified: false,
+      verificationToken: null,
+      verificationTokenExpiresAt: null,
+      sellerType: userData.sellerType,
+      consentSyndication: userData.consentSyndication,
+      consentTimestamp: userData.consentSyndication ? new Date() : null,
+      legalAgreementVersion: userData.legalAgreementVersion,
+      legalAgreementAcceptedAt: new Date(),
+      subscriptionTier: 'free',
+      subscriptionStatus: 'active',
+      subscriptionExpiresAt: null,
+      searchCount: 0,
+      searchCountResetAt: new Date(),
+      role: 'user',
+      isPremium: false,
+      premiumExpiresAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as User;
+
+    this.users.set(id, newUser);
+    return newUser;
+  }
+
+  // Posting limits enforcement methods - in-memory stub implementations
+  async checkPostingLimits(sellerId: string): Promise<{
+    canPost: boolean;
+    currentCount: number;
+    limit: number;
+    sellerType: 'private' | 'dealer';
+    message?: string;
+  }> {
+    const user = this.users.get(sellerId);
+    if (!user) {
+      return {
+        canPost: false,
+        currentCount: 0,
+        limit: 0,
+        sellerType: 'private',
+        message: 'User not found'
+      };
+    }
+
+    const sellerType = ((user as any).sellerType || 'private') as 'private' | 'dealer';
+    const limit = sellerType === 'dealer' ? 3 : 1;
+    
+    // In-memory storage doesn't persist seller listings, so always allow posting
+    return {
+      canPost: true,
+      currentCount: 0,
+      limit,
+      sellerType,
+      message: undefined
+    };
+  }
+
+  // Seller listings management - in-memory stub implementations
+  async createSellerListing(listingData: any): Promise<any> {
+    const id = randomUUID();
+    const newListing = {
+      id,
+      ...listingData,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    // In-memory storage doesn't persist seller listings
+    return newListing;
+  }
+
+  async getSellerListings(sellerId: string, options?: { limit?: number; status?: string }): Promise<any[]> {
+    // In-memory storage doesn't persist seller listings
+    return [];
+  }
+
+  async updateSellerListing(listingId: string, updates: any): Promise<any> {
+    // In-memory storage doesn't persist seller listings
+    return undefined;
   }
 }
 
