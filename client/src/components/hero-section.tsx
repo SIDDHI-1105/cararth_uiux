@@ -46,23 +46,15 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
         {!hasSearched && (
           <div className="transition-all duration-700 ease-in-out">
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 text-foreground leading-tight">
-              Every car, every platform, one search.
+              India's Multi-Platform Car Marketplace
             </h1>
             <p className="text-lg sm:text-xl md:text-2xl mb-6 text-muted-foreground max-w-4xl mx-auto leading-relaxed">
-              Find your perfect car from CarDekho, OLX, Cars24, CarWale & more - all in one place.
+              Buyers: Search all platforms in one place. Sellers: Post once, reach everywhere.
             </p>
             
-            {/* Legal Compliance Badge */}
-            <div className="mb-6">
-              <div className="inline-flex items-center px-4 py-2 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-full text-sm font-medium text-blue-700 dark:text-blue-300">
-                <span className="mr-2">🔒</span>
-                <span>We aggregate millions of listings from dealers and private sellers across India</span>
-              </div>
-            </div>
-            
-            {/* Platform Sources - Legally Compliant Display */}
+            {/* Connected Platforms Display */}
             <div className="mb-8">
-              <p className="text-sm text-muted-foreground mb-4">Data sources (public listings aggregated with compliance):</p>
+              <p className="text-sm text-muted-foreground mb-4">Connected Platforms:</p>
               <div className="flex flex-wrap justify-center items-center gap-3 opacity-80">
                 {[
                   "CarDekho", "OLX Autos", "Cars24", "CarWale", "AutoTrader", "Spinny"
