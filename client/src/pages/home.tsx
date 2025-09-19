@@ -10,7 +10,6 @@ import FeaturedListingModal from "@/components/featured-listing-modal";
 import PremiumUpgrade from "@/components/premium-upgrade";
 import RecentlyViewed from "@/components/recently-viewed";
 import SearchLimitPopup from "@/components/search-limit-popup";
-import PriceSimulator from "@/components/price-simulator";
 import { HapticProvider, useHapticFeedback, HapticButton } from "@/components/haptic-feedback";
 import { SEOHead, createWebsiteSchema, createOrganizationSchema } from "@/components/seo-head";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -183,14 +182,20 @@ function HomeContent() {
     }
     
     // Handle other filters
+    if (filterData.brand && filterData.brand !== 'all') {
+      newFilters.brand = filterData.brand;
+    }
     if (filterData.model) {
       newFilters.model = filterData.model;
     }
-    if (filterData.fuelType) {
+    if (filterData.fuelType && filterData.fuelType !== 'all') {
       newFilters.fuelType = filterData.fuelType;
     }
-    if (filterData.transmission) {
+    if (filterData.transmission && filterData.transmission !== 'all') {
       newFilters.transmission = filterData.transmission;
+    }
+    if (filterData.city && filterData.city !== 'all') {
+      newFilters.city = filterData.city;
     }
     if (filterData.location) {
       newFilters.city = filterData.location;
@@ -199,6 +204,24 @@ function HomeContent() {
     console.log('🔧 Applied filters:', newFilters);
     feedback.selection(); // Haptic feedback on filter change
     setFilters(newFilters);
+    
+    // Auto-trigger marketplace search when filters change for better UX
+    if (Object.keys(newFilters).length > 0) {
+      setTimeout(() => {
+        const searchFilters: any = { sortBy: "price", sortOrder: "asc" };
+        
+        if (newFilters.brand) searchFilters.brand = newFilters.brand;
+        if (newFilters.city) searchFilters.city = newFilters.city;
+        if (newFilters.fuelType) searchFilters.fuelType = [newFilters.fuelType];
+        if (newFilters.transmission) searchFilters.transmission = newFilters.transmission;
+        if (newFilters.priceMin) searchFilters.priceMin = newFilters.priceMin;
+        if (newFilters.priceMax) searchFilters.priceMax = newFilters.priceMax;
+        
+        console.log('🔄 Auto-search triggered with filters:', searchFilters);
+        setHasSearched(true);
+        handleMarketplaceSearch(searchFilters);
+      }, 500); // Small delay to batch rapid filter changes
+    }
   };
 
   const handleFavoriteToggle = (carId: string) => {
@@ -443,7 +466,7 @@ function HomeContent() {
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="local" className="flex items-center gap-2">
                 <Search className="w-4 h-4" />
                 Local Listings ({cars.length})
@@ -462,10 +485,6 @@ function HomeContent() {
                     </Badge>
                   ) : null;
                 })()}
-              </TabsTrigger>
-              <TabsTrigger value="price-simulator" className="flex items-center gap-2">
-                <div className="w-4 h-4">🏷️</div>
-                AI Price Simulator
               </TabsTrigger>
             </TabsList>
 
@@ -579,9 +598,6 @@ function HomeContent() {
               )}
             </TabsContent>
 
-            <TabsContent value="price-simulator">
-              <PriceSimulator />
-            </TabsContent>
           </Tabs>
           
           {/* Enterprise Partnership Section */}
