@@ -107,7 +107,7 @@ export class EmailVerificationService {
 <body>
     <div class="header">
         <h1>${this.config.appName}</h1>
-        <p>India's First Used Car Search Engine</p>
+        <p>India's Own Used Car Search Engine</p>
     </div>
     
     <div class="content">
@@ -141,7 +141,7 @@ export class EmailVerificationService {
     </div>
     
     <div class="footer">
-        <p><strong>Cararth</strong> - India's First Used Car Search Engine</p>
+        <p><strong>Cararth</strong> - India's Own Used Car Search Engine</p>
         <p>📧 connect@cararth.com | 🌐 cararth.com</p>
         <p style="font-size: 12px;">This email was sent to ${email}. If you didn't request this, please ignore this email.</p>
     </div>
