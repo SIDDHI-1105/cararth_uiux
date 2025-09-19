@@ -17,6 +17,7 @@ import { z } from "zod";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import type { UploadResult } from '@uppy/core';
 import Layout from "@/components/layout";
+import AIPriceWidget from "@/components/ai-price-widget";
 
 // Simplified schema with only essential fields
 const simplifiedSellCarSchema = z.object({
@@ -25,7 +26,7 @@ const simplifiedSellCarSchema = z.object({
   brand: z.string().min(2, 'Brand is required'),
   model: z.string().min(1, 'Model is required'), 
   year: z.number().min(1990, 'Year must be 1990 or later'),
-  price: z.number().min(10000, 'Price must be at least ₹10,000'),
+  price: z.number().min(0.5, 'Price must be at least ₹0.5 lakhs (₹50,000)'),
   city: z.string().min(2, 'City is required'),
   
   // Contact information
@@ -150,7 +151,12 @@ export default function SellCar() {
   };
 
   const onSubmit = async (data: z.infer<typeof simplifiedSellCarSchema>) => {
-    createListingMutation.mutate(data);
+    // Convert price from lakhs to rupees for API
+    const apiData = {
+      ...data,
+      price: data.price * 100000 // Convert lakhs to rupees
+    };
+    createListingMutation.mutate(apiData);
   };
 
   const uploadProgress_allDone = 
@@ -298,6 +304,21 @@ export default function SellCar() {
                     )}
                   />
 
+                </div>
+
+                {/* AI Price Assistant Widget */}
+                <div className="mt-6 pt-6 border-t border-border">
+                  <AIPriceWidget 
+                    onPriceEstimate={(estimatedPrice) => {
+                      // Convert from rupees to lakhs for the form
+                      const priceInLakhs = estimatedPrice / 100000;
+                      form.setValue('price', priceInLakhs);
+                    }}
+                    className="mb-4"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="city"
