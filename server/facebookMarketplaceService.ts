@@ -2,10 +2,12 @@ import axios from 'axios';
 import type { SellerListing } from '@shared/schema';
 
 export interface FacebookMarketplaceConfig {
-  accessToken: string;
+  accessToken: string; // Page Access Token (required for marketplace posting)
   appId: string;
   appSecret: string;
-  pageId?: string; // Optional: For posting to a specific Facebook page
+  pageId?: string; // Facebook Business Page ID for marketplace posting
+  businessId?: string; // Optional: Facebook Business Manager ID
+  enabled?: boolean; // Feature flag for marketplace posting
 }
 
 export interface MarketplaceListingData {
@@ -32,6 +34,7 @@ export interface MarketplaceListingData {
 export class FacebookMarketplaceService {
   private config: FacebookMarketplaceConfig;
   private baseUrl = 'https://graph.facebook.com/v18.0';
+  private requiredPermissions = ['marketplace_management', 'pages_manage_posts'];
 
   constructor(config: FacebookMarketplaceConfig) {
     this.config = config;
@@ -118,16 +121,34 @@ export class FacebookMarketplaceService {
       // First, upload images to Facebook
       const imageIds = await this.uploadImages(marketplaceData.images);
       
-      // Create the marketplace listing
-      const endpoint = this.config.pageId 
-        ? `/${this.config.pageId}/marketplace_listings`
-        : '/me/marketplace_listings';
+      // Check if marketplace posting is enabled
+      if (this.config.enabled === false) {
+        console.log('📋 Facebook Marketplace posting is disabled (dry run mode)');
+        return {
+          success: true,
+          listingId: `dry_run_${listing.id}`,
+        };
+      }
 
-      const response = await axios.post(`${this.baseUrl}${endpoint}`, {
-        ...marketplaceData,
-        attached_media: imageIds.map(id => ({ media_fbid: id })),
+      // Validate page ID for marketplace posting
+      if (!this.config.pageId) {
+        throw new Error('Page ID is required for Facebook Marketplace posting. Please set FACEBOOK_PAGE_ID environment variable.');
+      }
+      
+      // First upload photos unpublished, then create a feed post with attached media
+      const photoIds = await this.uploadPhotosUnpublished(marketplaceData.images);
+      
+      // Create feed post with marketplace-style description and attached photos
+      const endpoint = `/${this.config.pageId}/feed`;
+
+      // Create feed post with proper Facebook format
+      const postData = {
+        message: `${marketplaceData.name}\n\n${marketplaceData.description}\n\nPrice: ₹${parseInt(marketplaceData.price).toLocaleString()}\n\nContact via Cararth for verified details.`,
+        attached_media: photoIds.map(id => ({ media_fbid: id })),
         access_token: this.config.accessToken
-      });
+      };
+
+      const response = await axios.post(`${this.baseUrl}${endpoint}`, postData);
 
       console.log('✅ Facebook Marketplace posting successful:', {
         listingId: listing.id,
@@ -156,7 +177,37 @@ export class FacebookMarketplaceService {
   }
 
   /**
-   * Upload images to Facebook and return media IDs
+   * Upload photos unpublished for use in feed posts
+   */
+  private async uploadPhotosUnpublished(imageUrls: string[]): Promise<string[]> {
+    if (!this.config.pageId) {
+      console.warn('⚠️ No page ID configured for photo upload');
+      return [];
+    }
+
+    const uploadPromises = imageUrls.map(async (url) => {
+      try {
+        // Upload photo unpublished to the page
+        const uploadResponse = await axios.post(`${this.baseUrl}/${this.config.pageId}/photos`, {
+          url: url,
+          published: false, // Key: upload unpublished for later use in feed
+          access_token: this.config.accessToken
+        });
+
+        console.log(`✅ Photo uploaded unpublished: ${url}`);
+        return uploadResponse.data.id;
+      } catch (error: any) {
+        console.error('❌ Photo upload to Facebook failed:', { url, error: error.response?.data || error.message });
+        return null;
+      }
+    });
+
+    const results = await Promise.all(uploadPromises);
+    return results.filter((id): id is string => id !== null);
+  }
+
+  /**
+   * Upload images to Facebook and return media IDs (legacy method)
    */
   private async uploadImages(imageUrls: string[]): Promise<string[]> {
     const uploadPromises = imageUrls.map(async (url) => {
@@ -258,54 +309,153 @@ export class FacebookMarketplaceService {
   }
 
   /**
-   * Validate Facebook API credentials
+   * Validate Facebook Access Token using debug_token endpoint
    */
   async validateCredentials(): Promise<{
     valid: boolean;
     error?: string;
-    permissions?: string[];
+    tokenType?: string;
+    scopes?: string[];
+    pageInfo?: any;
+    hasMarketplaceAccess?: boolean;
   }> {
     try {
-      const response = await axios.get(`${this.baseUrl}/me`, {
+      // Use debug_token endpoint to validate token properly
+      const debugTokenResponse = await axios.get(`${this.baseUrl}/debug_token`, {
         params: {
-          fields: 'id,name',
-          access_token: this.config.accessToken
+          input_token: this.config.accessToken,
+          access_token: `${this.config.appId}|${this.config.appSecret}`
         }
       });
 
-      // Check permissions
-      const permissionsResponse = await axios.get(`${this.baseUrl}/me/permissions`, {
-        params: {
-          access_token: this.config.accessToken
-        }
+      const tokenData = debugTokenResponse.data.data;
+      
+      // Check if token is valid and not expired
+      if (!tokenData.is_valid) {
+        return {
+          valid: false,
+          error: 'Access token is invalid or expired'
+        };
+      }
+
+      // Check token type (should be PAGE for marketplace posting)
+      const tokenType = tokenData.type;
+      const scopes = tokenData.scopes || [];
+      
+      console.log('🔍 Facebook token analysis:', {
+        type: tokenType,
+        scopes: scopes,
+        appId: tokenData.app_id,
+        userId: tokenData.user_id,
+        expiresAt: tokenData.expires_at
       });
 
-      const permissions = permissionsResponse.data.data
-        .filter((perm: any) => perm.status === 'granted')
-        .map((perm: any) => perm.permission);
+      // Enforce PAGE token requirement for marketplace posting
+      if (tokenType !== 'PAGE') {
+        return {
+          valid: false,
+          error: `Invalid token type: ${tokenType}. PAGE token required for marketplace posting.`,
+          tokenType,
+          hasMarketplaceAccess: false
+        };
+      }
 
-      console.log('✅ Facebook API credentials validated:', {
-        userId: response.data.id,
-        userName: response.data.name,
-        permissions
+      // Verify required permissions
+      const hasMarketplacePermission = scopes.includes('marketplace_management') || scopes.includes('pages_manage_posts');
+      
+      if (!hasMarketplacePermission) {
+        return {
+          valid: false,
+          error: 'Missing required permissions: marketplace_management or pages_manage_posts',
+          tokenType,
+          scopes,
+          hasMarketplaceAccess: false
+        };
+      }
+
+      let pageInfo = null;
+      if (this.config.pageId) {
+        try {
+          // Verify page access with PAGE token
+          const pageResponse = await axios.get(`${this.baseUrl}/${this.config.pageId}`, {
+            params: {
+              fields: 'id,name,category,is_verified',
+              access_token: this.config.accessToken
+            }
+          });
+          pageInfo = pageResponse.data;
+        } catch (pageError: any) {
+          return {
+            valid: false,
+            error: `Cannot access page ${this.config.pageId}: ${pageError.response?.data?.error?.message}`,
+            tokenType,
+            hasMarketplaceAccess: false
+          };
+        }
+      }
+
+      console.log('✅ Facebook credentials validated:', {
+        tokenType,
+        hasMarketplacePermission,
+        pageInfo: pageInfo?.name || 'No page configured'
       });
 
       return {
         valid: true,
-        permissions
+        tokenType,
+        scopes,
+        pageInfo,
+        hasMarketplaceAccess: hasMarketplacePermission
       };
 
     } catch (error: any) {
       const errorMessage = error.response?.data?.error?.message || error.message;
+      const errorCode = error.response?.data?.error?.code;
       
-      console.error('❌ Facebook API credential validation failed:', {
-        error: errorMessage
+      console.error('❌ Facebook Business Page validation failed:', {
+        error: errorMessage,
+        code: errorCode,
+        pageId: this.config.pageId
       });
 
       return {
         valid: false,
-        error: errorMessage
+        error: `Facebook validation failed: ${errorMessage}`,
+        hasMarketplaceAccess: false
       };
     }
+  }
+
+  /**
+   * Get detailed setup instructions for Facebook Marketplace integration
+   */
+  getSetupInstructions(): {
+    requirements: string[];
+    steps: string[];
+    troubleshooting: string[];
+  } {
+    return {
+      requirements: [
+        'Facebook Business Manager account',
+        'Verified Facebook Business Page',
+        'Page Access Token with marketplace_management permission',
+        'Business verification completed (required for Marketplace API)'
+      ],
+      steps: [
+        '1. Create Facebook Business Manager account at business.facebook.com',
+        '2. Create or claim a Facebook Business Page',
+        '3. Go to developers.facebook.com and add Marketplace API product to your app',
+        '4. Request marketplace_management and pages_manage_posts permissions',
+        '5. Submit for business verification with required documents',
+        '6. Generate Page Access Token (not User Access Token)',
+        '7. Add FACEBOOK_PAGE_ID environment variable with your Business Page ID'
+      ],
+      troubleshooting: [
+        'Error 2500: Use Page Access Token instead of User Access Token',
+        'Error 100: Missing marketplace_management permission',
+        'Error 190: Token expired or invalid - generate new Page Access Token',
+        'Error 200: Business not verified - complete Facebook Business verification'
+      ]
+    };
   }
 }
