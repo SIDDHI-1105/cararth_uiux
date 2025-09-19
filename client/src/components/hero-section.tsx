@@ -57,7 +57,8 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
               <p className="text-sm text-muted-foreground mb-4">Connected Platforms:</p>
               <div className="flex flex-wrap justify-center items-center gap-3 opacity-80">
                 {[
-                  "Maruti TrueValue", "Mahindra First Choice", "Hyundai H Promise", "Facebook Marketplace"
+                  "Maruti TrueValue", "Mahindra First Choice", "Hyundai H Promise", "Facebook Marketplace",
+                  "CarDekho", "OLX Autos", "Cars24", "CarWale"
                 ].map((source) => (
                   <div 
                     key={source} 
