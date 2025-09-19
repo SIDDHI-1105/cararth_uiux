@@ -64,14 +64,14 @@ export default function UnifiedFilters({
 
   return (
     <div className="bg-background border-b border-border sticky top-0 z-40 backdrop-blur-sm">
-      <div className="max-w-7xl mx-auto px-4 py-3">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-3">
         {/* Main Filter Bar */}
-        <div className="flex flex-wrap items-center gap-3 mb-3">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
           {/* Primary Filters - Always Visible */}
-          <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 flex-1 min-w-0">
             {/* Brand */}
             <Select value={filters.brand || 'all'} onValueChange={(value) => handleFilterChange('brand', value)}>
-              <SelectTrigger className="w-[140px] h-10 text-sm">
+              <SelectTrigger className="w-full sm:w-[140px] h-9 sm:h-10 text-sm">
                 <SelectValue placeholder="Brand" />
               </SelectTrigger>
               <SelectContent>
@@ -90,7 +90,7 @@ export default function UnifiedFilters({
 
             {/* City */}
             <Select value={filters.city || 'all'} onValueChange={(value) => handleFilterChange('city', value)}>
-              <SelectTrigger className="w-[120px] h-10 text-sm">
+              <SelectTrigger className="w-full sm:w-[120px] h-9 sm:h-10 text-sm">
                 <SelectValue placeholder="City" />
               </SelectTrigger>
               <SelectContent>
@@ -106,7 +106,7 @@ export default function UnifiedFilters({
 
             {/* Fuel Type */}
             <Select value={filters.fuelType || 'all'} onValueChange={(value) => handleFilterChange('fuelType', value)}>
-              <SelectTrigger className="w-[100px] h-10 text-sm">
+              <SelectTrigger className="w-full sm:w-[100px] h-9 sm:h-10 text-sm">
                 <SelectValue placeholder="Fuel" />
               </SelectTrigger>
               <SelectContent>
@@ -142,7 +142,7 @@ export default function UnifiedFilters({
                 }
               }}
             >
-              <SelectTrigger className="w-[110px] h-10 text-sm">
+              <SelectTrigger className="w-full sm:w-[110px] h-9 sm:h-10 text-sm">
                 <SelectValue placeholder="Budget" />
               </SelectTrigger>
               <SelectContent>
@@ -156,7 +156,7 @@ export default function UnifiedFilters({
           </div>
 
           {/* Controls */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
             {/* Sort */}
             <Select 
               value={`${filters.sortBy || 'relevance'}-${filters.sortOrder || 'desc'}`} 
@@ -166,7 +166,7 @@ export default function UnifiedFilters({
                 handleFilterChange('sortOrder', sortOrder);
               }}
             >
-              <SelectTrigger className="w-[130px] h-10 text-sm">
+              <SelectTrigger className="w-full sm:w-[130px] h-9 sm:h-10 text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -184,7 +184,7 @@ export default function UnifiedFilters({
               onClick={handleSearch}
               disabled={isLoading}
               size="md"
-              className="h-10 px-4 min-w-[100px]"
+              className="h-9 sm:h-10 px-4 w-full sm:min-w-[100px] sm:w-auto"
               hapticType="button"
             >
               <Search className="w-4 h-4 mr-1" />
@@ -194,12 +194,15 @@ export default function UnifiedFilters({
         </div>
 
         {/* Results Summary */}
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <div className="flex items-center justify-between text-xs sm:text-sm text-muted-foreground">
           <div>
             {resultsCount > 0 ? (
               <span>{resultsCount.toLocaleString()} cars found</span>
             ) : (
-              <span>Search for your perfect car</span>
+              <>
+                <span className="hidden sm:inline">Search for your perfect car</span>
+                <span className="sm:hidden">Find your car</span>
+              </>
             )}
           </div>
         </div>

@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { logger } from './logger';
 import type { SellerListing } from './dbStorage';
 
 export interface FacebookMarketplaceConfig {
@@ -130,7 +129,7 @@ export class FacebookMarketplaceService {
         access_token: this.config.accessToken
       });
 
-      logger.info('Facebook Marketplace posting successful', {
+      console.log('✅ Facebook Marketplace posting successful:', {
         listingId: listing.id,
         facebookId: response.data.id
       });
@@ -143,7 +142,7 @@ export class FacebookMarketplaceService {
     } catch (error: any) {
       const errorMessage = error.response?.data?.error?.message || error.message;
       
-      logger.error('Facebook Marketplace posting failed', {
+      console.error('❌ Facebook Marketplace posting failed:', {
         listingId: listing.id,
         error: errorMessage,
         status: error.response?.status
@@ -177,7 +176,7 @@ export class FacebookMarketplaceService {
 
         return uploadResponse.data.id;
       } catch (error) {
-        logger.error('Image upload to Facebook failed', { url, error });
+        console.error('❌ Image upload to Facebook failed:', { url, error });
         return null;
       }
     });
@@ -201,7 +200,7 @@ export class FacebookMarketplaceService {
         access_token: this.config.accessToken
       });
 
-      logger.info('Facebook Marketplace listing updated', {
+      console.log('✅ Facebook Marketplace listing updated:', {
         facebookListingId,
         listingId: listing.id
       });
@@ -211,7 +210,7 @@ export class FacebookMarketplaceService {
     } catch (error: any) {
       const errorMessage = error.response?.data?.error?.message || error.message;
       
-      logger.error('Facebook Marketplace update failed', {
+      console.error('❌ Facebook Marketplace update failed:', {
         facebookListingId,
         listingId: listing.id,
         error: errorMessage
@@ -237,7 +236,7 @@ export class FacebookMarketplaceService {
         access_token: this.config.accessToken
       });
 
-      logger.info('Facebook Marketplace listing marked as sold', {
+      console.log('✅ Facebook Marketplace listing marked as sold:', {
         facebookListingId
       });
 
@@ -246,7 +245,7 @@ export class FacebookMarketplaceService {
     } catch (error: any) {
       const errorMessage = error.response?.data?.error?.message || error.message;
       
-      logger.error('Facebook Marketplace mark-as-sold failed', {
+      console.error('❌ Facebook Marketplace mark-as-sold failed:', {
         facebookListingId,
         error: errorMessage
       });
@@ -285,7 +284,7 @@ export class FacebookMarketplaceService {
         .filter((perm: any) => perm.status === 'granted')
         .map((perm: any) => perm.permission);
 
-      logger.info('Facebook API credentials validated', {
+      console.log('✅ Facebook API credentials validated:', {
         userId: response.data.id,
         userName: response.data.name,
         permissions
@@ -299,7 +298,7 @@ export class FacebookMarketplaceService {
     } catch (error: any) {
       const errorMessage = error.response?.data?.error?.message || error.message;
       
-      logger.error('Facebook API credential validation failed', {
+      console.error('❌ Facebook API credential validation failed:', {
         error: errorMessage
       });
 
