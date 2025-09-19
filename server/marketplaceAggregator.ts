@@ -380,7 +380,16 @@ export class MarketplaceAggregator {
       }
 
       // Convert cached portal listings to EnhancedMarketplaceListing format
-      const enhancedListings = cachedListings.map(listing => this.convertCachedToEnhanced(listing));
+      let enhancedListings = cachedListings.map(listing => this.convertCachedToEnhanced(listing));
+      
+      // Apply image-based sorting for relevance searches
+      if (filters.sortBy === 'relevance') {
+        enhancedListings = enhancedListings.sort((a, b) => {
+          // Sort by overallQualityScore (which now includes image boost) descending
+          return (b.overallQualityScore || 0) - (a.overallQualityScore || 0);
+        });
+        console.log(`🖼️ Applied image-based relevance sorting to ${enhancedListings.length} listings`);
+      }
       
       // 🧠 ACTIVE LEARNING - Learn from marketplace data patterns (async, non-blocking)
       llmLearningSystem.learnFromMarketplaceData(enhancedListings).catch(error => {
@@ -433,7 +442,7 @@ export class MarketplaceAggregator {
   }
 
   private convertCachedToEnhanced(cached: any): EnhancedMarketplaceListing {
-    return {
+    const listing = {
       id: cached.id,
       title: cached.title,
       brand: cached.brand,
@@ -459,6 +468,13 @@ export class MarketplaceAggregator {
       state: cached.state || undefined,
       owners: cached.owners || 1
     };
+
+    // Apply image-based ranking boost to cached results 
+    const baseScore = cached.qualityScore || 70;
+    const imageBoost = this.calculateImageQualityBoost(listing);
+    listing.overallQualityScore = Math.min(100, Math.max(0, baseScore + imageBoost));
+    
+    return listing;
   }
 
   private generateAnalyticsFromReal(listings: EnhancedMarketplaceListing[]): any {
