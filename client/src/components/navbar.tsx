@@ -145,21 +145,9 @@ export default function Navbar() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem asChild>
-                    <a href="/api/auth/google" className="flex items-center">
-                      <LogIn className="w-4 h-4 mr-2" />
-                      Sign in with Google
-                    </a>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
                     <a href="/api/auth/facebook" className="flex items-center">
                       <LogIn className="w-4 h-4 mr-2" />
                       Sign in with Facebook
-                    </a>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <a href="/api/auth/github" className="flex items-center">
-                      <LogIn className="w-4 h-4 mr-2" />
-                      Sign in with GitHub
                     </a>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
