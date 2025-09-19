@@ -18,8 +18,8 @@ interface SEOHeadProps {
 }
 
 export function SEOHead({
-  title = "CarArth - India's First Used Car Search Engine",
-  description = "India's first used car search engine. Compare cars across platforms, discover true value with AI intelligence. Buy & sell with confidence on CarArth.",
+  title = "CarArth - India's Own Used Car Search Engine",
+  description = "India's own used car search engine. Compare cars across platforms, discover true value with AI intelligence. Buy & sell with confidence on CarArth.",
   keywords = "used cars India, car search engine, compare cars, authentic car listings, AI car recommendations, cross-platform car search, car marketplace India, used car price comparison",
   ogImage = cararthLogo,
   ogType = "website",
@@ -141,9 +141,9 @@ export const createWebsiteSchema = () => ({
   "@context": "https://schema.org",
   "@type": "WebSite",
   "name": "CarArth",
-  "alternateName": "CarArth - India's First Used Car Search Engine",
+  "alternateName": "CarArth - India's Own Used Car Search Engine",
   "url": "https://cararth.com",
-  "description": "India's first comprehensive used car search engine that aggregates listings from multiple platforms with AI intelligence.",
+  "description": "India's own comprehensive used car search engine that aggregates listings from multiple platforms with AI intelligence.",
   "keywords": "used cars, car marketplace, automotive search, India",
   "inLanguage": "en-IN",
   "potentialAction": {
@@ -168,7 +168,7 @@ export const createOrganizationSchema = () => ({
   "@context": "https://schema.org",
   "@type": "AutoDealer",
   "name": "CarArth",
-  "description": "India's first used car search engine. Compare cars across platforms with AI intelligence.",
+  "description": "India's own used car search engine. Compare cars across platforms with AI intelligence.",
   "url": "https://cararth.com",
   "logo": "https://cararth.com/logo.png",
   "email": "connect@cararth.com",

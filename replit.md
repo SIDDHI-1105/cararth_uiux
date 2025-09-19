@@ -1,8 +1,8 @@
-# Cararth - India's First Used Car Search Engine
+# Cararth - India's Own Used Car Search Engine
 
 ## Overview
 
-Cararth is India's first comprehensive used car search engine that revolutionizes how Indians discover, compare, and buy cars online. The platform aggregates listings from multiple car portals (CarDekho, OLX, Cars24, CarWale, AutoTrader) to provide intelligent pricing insights, authentic verification, and AI-powered market analytics.
+Cararth is India's own comprehensive used car search engine that revolutionizes how Indians discover, compare, and buy cars online. The platform aggregates listings from multiple car portals (CarDekho, OLX, Cars24, CarWale, AutoTrader) to provide intelligent pricing insights, authentic verification, and AI-powered market analytics.
 
 **Brand Mission:** "Discover cars from across platforms, compare smarter, and buy or sell with confidence. More than a marketplace — your guide, your community, your car's true value (arth)."
 
