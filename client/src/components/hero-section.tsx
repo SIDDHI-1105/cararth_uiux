@@ -57,7 +57,7 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
               <p className="text-sm text-muted-foreground mb-4">Connected Platforms:</p>
               <div className="flex flex-wrap justify-center items-center gap-3 opacity-80">
                 {[
-                  "CarDekho", "OLX Autos", "Cars24", "CarWale", "AutoTrader", "Spinny"
+                  "Maruti TrueValue", "Mahindra First Choice", "Hyundai H Promise", "Facebook Marketplace"
                 ].map((source) => (
                   <div 
                     key={source} 
@@ -67,7 +67,7 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
                   </div>
                 ))}
                 <div className="text-sm font-medium text-primary font-bold px-3 py-1.5 bg-primary/10 rounded-md border border-primary/20">
-                  + Government Auctions & More
+                  + Auction Partners & More
                 </div>
               </div>
             </div>
