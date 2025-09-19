@@ -53,8 +53,8 @@ function HomeContent() {
   // Dynamic SEO based on search filters
   const dynamicSEO = useMemo(() => {
     const hasFilters = Object.keys(filters).length > 0;
-    let title = "CarArth - India's Own Used Car Search Engine";
-    let description = "India's own used car search engine. Compare cars across platforms, discover true value with AI intelligence. Buy & sell with confidence on CarArth.";
+    let title = "CarArth - India's Very Own Used Car Search Engine";
+    let description = "India's very own used car search engine. Compare cars across platforms, discover true value with AI intelligence. Buy & sell with confidence on CarArth.";
     
     if (hasFilters) {
       const filterParts = [];

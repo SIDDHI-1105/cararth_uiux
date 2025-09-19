@@ -31,7 +31,7 @@ export function BrandWordmark({
       <div className="flex items-center">
         <img 
           src={cararthLogo} 
-          alt="CarArth - India's own used car search engine"
+          alt="CarArth - India's very own used car search engine"
           className={cn(
             "object-contain transition-transform duration-300 hover:scale-105",
             logoSizes[variant]
@@ -45,7 +45,7 @@ export function BrandWordmark({
       {/* Tagline (only show if explicitly requested and not already in logo) */}
       {showTagline && variant !== "hero" && (
         <div className={cn("font-bold text-gray-800 dark:text-gray-200 mt-2", taglineSizes[variant])}>
-          India's own used car search engine
+          India's very own used car search engine
           <span className="text-primary font-semibold">*</span>
         </div>
       )}
