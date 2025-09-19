@@ -384,7 +384,7 @@ export class FacebookMarketplaceService {
         try {
           const pageAccessTest = await axios.get(`${this.baseUrl}/${this.config.pageId}`, {
             params: {
-              fields: 'id,name,category',
+              fields: 'id,name',
               access_token: this.config.accessToken
             }
           });
