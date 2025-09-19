@@ -16,7 +16,7 @@ This document outlines the comprehensive trademark protection strategy for The M
 - **Class 39**: Transport services, vehicle rental arrangement services
 
 **Distinctive Elements**:
-- Unique positioning as "India's own aggregator"
+- Unique positioning as "India's very own aggregator"
 - ".in" domain reinforcement of Indian market focus
 - Tagline integration: "Your Journey. Simplified."
 

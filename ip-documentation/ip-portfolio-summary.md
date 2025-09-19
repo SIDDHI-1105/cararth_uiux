@@ -2,7 +2,7 @@
 
 ## Executive Overview
 
-The Mobility Hub represents a unique opportunity for comprehensive intellectual property protection in the rapidly growing Indian automotive technology sector. As India's own AI-powered used car marketplace aggregator, the platform contains multiple patentable innovations, distinctive brand elements, and proprietary software assets requiring immediate protection.
+The Mobility Hub represents a unique opportunity for comprehensive intellectual property protection in the rapidly growing Indian automotive technology sector. As India's very own AI-powered used car marketplace aggregator, the platform contains multiple patentable innovations, distinctive brand elements, and proprietary software assets requiring immediate protection.
 
 ## IP Asset Classification
 

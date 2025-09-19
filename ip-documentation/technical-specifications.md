@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-The Mobility Hub represents India's own comprehensive used car marketplace aggregator with proprietary AI-powered authenticity scoring, historical intelligence analysis, and multi-portal data validation systems. This document outlines the novel technical innovations eligible for intellectual property protection.
+The Mobility Hub represents India's very own comprehensive used car marketplace aggregator with proprietary AI-powered authenticity scoring, historical intelligence analysis, and multi-portal data validation systems. This document outlines the novel technical innovations eligible for intellectual property protection.
 
 ## 1. AI-Powered Authenticity Scoring System
 
@@ -185,7 +185,7 @@ const marketHealth = avgAuthenticityRating >= 8 ? 'excellent' :
 ## Competitive Advantage
 
 **First-Mover Technical Innovation:**
-- India's own AI-powered car marketplace aggregator
+- India's very own AI-powered car marketplace aggregator
 - Only platform with comprehensive authenticity scoring
 - Unique integration of seasonal and geographic market intelligence
 - Zero-tolerance fake data policy with technical enforcement
