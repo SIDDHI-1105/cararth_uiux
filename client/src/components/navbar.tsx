@@ -260,36 +260,12 @@ export default function Navbar() {
                     <Button
                       asChild
                       className="w-full btn-metallic py-3 text-base font-semibold"
-                      data-testid="mobile-button-login-google"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <a href="/api/auth/google" className="flex items-center justify-center">
-                        <LogIn className="w-4 h-4 mr-2" />
-                        Sign in with Google
-                      </a>
-                    </Button>
-                    <Button
-                      asChild
-                      variant="outline"
-                      className="w-full py-3 text-base"
                       data-testid="mobile-button-login-facebook"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       <a href="/api/auth/facebook" className="flex items-center justify-center">
                         <LogIn className="w-4 h-4 mr-2" />
                         Sign in with Facebook
-                      </a>
-                    </Button>
-                    <Button
-                      asChild
-                      variant="outline"
-                      className="w-full py-3 text-base"
-                      data-testid="mobile-button-login-github"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <a href="/api/auth/github" className="flex items-center justify-center">
-                        <LogIn className="w-4 h-4 mr-2" />
-                        Sign in with GitHub
                       </a>
                     </Button>
                   </div>
