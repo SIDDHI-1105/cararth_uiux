@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { SellerListing } from './dbStorage';
+import type { SellerListing } from '@shared/schema';
 
 export interface FacebookMarketplaceConfig {
   accessToken: string;
