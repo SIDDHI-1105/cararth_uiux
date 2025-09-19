@@ -276,12 +276,12 @@ export default function ThrottleTalkPage() {
               <div className="flex justify-center">
                 <Button 
                   variant="outline" 
-                  onClick={() => window.location.href = '/api/auth/google'}
-                  className="text-gray-700 border-gray-300 hover:bg-gray-50 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-800"
-                  data-testid="button-login-google"
+                  onClick={() => window.location.href = '/api/auth/facebook'}
+                  className="text-blue-600 border-blue-300 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-600 dark:hover:bg-blue-900/20"
+                  data-testid="button-login-facebook"
                 >
                   <LogIn className="h-4 w-4 mr-2" />
-                  Sign in with Google
+                  Sign in with Facebook
                 </Button>
               </div>
             )}
