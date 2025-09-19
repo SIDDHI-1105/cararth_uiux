@@ -3,14 +3,26 @@ import { sellerListings, sellerInquiries, platformPostingLogs, type InsertSeller
 import { eq, desc } from "drizzle-orm";
 import { ObjectStorageService } from "./objectStorage";
 import { GoogleGenAI } from "@google/genai";
+import { FacebookMarketplaceService, type FacebookMarketplaceConfig } from "./facebookMarketplaceService";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
 export class SellerService {
   private objectStorage: ObjectStorageService;
+  private facebookService: FacebookMarketplaceService | null = null;
 
   constructor() {
     this.objectStorage = new ObjectStorageService();
+    
+    // Initialize Facebook service if credentials are available
+    if (process.env.FACEBOOK_ACCESS_TOKEN && process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
+      const facebookConfig: FacebookMarketplaceConfig = {
+        accessToken: process.env.FACEBOOK_ACCESS_TOKEN,
+        appId: process.env.FACEBOOK_APP_ID,
+        appSecret: process.env.FACEBOOK_APP_SECRET
+      };
+      this.facebookService = new FacebookMarketplaceService(facebookConfig);
+    }
   }
 
   // Create a new seller listing
@@ -261,17 +273,84 @@ Response format:
     });
   }
 
-  // Simulate posting to Facebook Marketplace - DEVELOPMENT MODE
+  // Real Facebook Marketplace posting using Graph API
   private async postToFacebookMarketplace(listing: SellerListing): Promise<{ success: boolean; listingId?: string; error?: string }> {
-    // SIMULATION: Real API integration pending partnership agreements
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
+    if (!this.facebookService) {
+      return {
+        success: false,
+        error: 'Facebook API credentials not configured. Please add FACEBOOK_ACCESS_TOKEN, FACEBOOK_APP_ID, and FACEBOOK_APP_SECRET to environment variables.'
+      };
+    }
+
+    try {
+      // Validate credentials first
+      const validation = await this.facebookService.validateCredentials();
+      if (!validation.valid) {
+        return {
           success: false,
-          error: 'Multi-platform syndication coming soon - partnerships in development'
-        });
-      }, 1000);
-    });
+          error: `Facebook API validation failed: ${validation.error}`
+        };
+      }
+
+      // Post to Facebook Marketplace
+      const result = await this.facebookService.postToMarketplace(listing);
+      
+      if (result.success) {
+        console.log(`✅ Posted listing ${listing.id} to Facebook Marketplace: ${result.listingId}`);
+      } else {
+        console.error(`❌ Failed to post listing ${listing.id} to Facebook Marketplace: ${result.error}`);
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Facebook Marketplace posting error:', error);
+      return {
+        success: false,
+        error: `Facebook posting failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      };
+    }
+  }
+
+  // Mark listing as sold across all platforms
+  async markListingAsSold(listingId: string): Promise<{ success: boolean; errors: string[] }> {
+    const errors: string[] = [];
+    
+    try {
+      // Update the listing status in database
+      await db
+        .update(sellerListings)
+        .set({ soldDate: new Date() })
+        .where(eq(sellerListings.id, listingId));
+
+      // Get all platform posting logs for this listing
+      const platformPosts = await db
+        .select()
+        .from(platformPostingLogs)
+        .where(eq(platformPostingLogs.listingId, listingId));
+
+      // Mark as sold on Facebook Marketplace
+      const facebookPost = platformPosts.find(p => p.platform === 'facebook_marketplace');
+      if (facebookPost?.platformListingId && this.facebookService) {
+        const result = await this.facebookService.markAsSold(facebookPost.platformListingId);
+        if (!result.success) {
+          errors.push(`Facebook: ${result.error}`);
+        }
+      }
+
+      // For other platforms, we'd need webhook calls or API integrations
+      // This is where future integrations with Cars24, CarDekho would go
+      
+      return {
+        success: errors.length === 0,
+        errors
+      };
+    } catch (error) {
+      console.error('Error marking listing as sold:', error);
+      return {
+        success: false,
+        errors: [`Database update failed: ${error instanceof Error ? error.message : 'Unknown error'}`]
+      };
+    }
   }
 
   // Get seller listings
