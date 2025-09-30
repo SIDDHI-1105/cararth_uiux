@@ -2,7 +2,7 @@ import { type Express } from 'express';
 import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
 import { db } from './db';
-import { users, userReputation } from '@shared/schema';
+import { users } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { createAppError, ErrorCategory, logError } from './errorHandling';
 import bcrypt from 'bcryptjs';
@@ -83,41 +83,32 @@ export function setupLocalAuth(app: Express) {
       // Hash password
       const hashedPassword = await bcrypt.hash(validatedData.password, 10);
 
-      // Create new user
+      // Generate username from email (before @)
+      const username = validatedData.email.split('@')[0];
+      const fullName = `${validatedData.firstName} ${validatedData.lastName || ''}`.trim();
+
+      // Create new user (MANUAL FIELD SPECIFICATION)
       const [newUser] = await db
         .insert(users)
         .values({
+          username: username,
           email: validatedData.email,
+          phone: '', // Empty string for optional field
+          name: fullName,
           password: hashedPassword,
           firstName: validatedData.firstName,
           lastName: validatedData.lastName || '',
+          profileImageUrl: null,
           emailVerified: false
         })
         .returning();
 
-      // Initialize user reputation
-      await db
-        .insert(userReputation)
-        .values({
-          userId: newUser.id,
-          totalReputation: 0,
-          level: 'newcomer'
-        });
-
-      // Log the user in automatically
-      req.login(newUser, (err) => {
-        if (err) {
-          logError(err, 'Auto-login after registration');
-          return res.status(500).json({ error: 'Registration successful but login failed' });
-        }
-
-        // Return user without password
-        const { password: _, ...userWithoutPassword } = newUser;
-        return res.json({
-          success: true,
-          message: 'Registration successful',
-          user: userWithoutPassword
-        });
+      // Return user without password
+      const { password: _, ...userWithoutPassword } = newUser;
+      return res.status(201).json({
+        success: true,
+        message: 'Registration successful. Please login with your credentials.',
+        user: userWithoutPassword
       });
     } catch (error) {
       if (error instanceof z.ZodError) {

@@ -17,12 +17,14 @@ export const sessions = pgTable(
 // User storage table with OAuth and local auth support
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: varchar("email").unique(),
-  password: varchar("password"), // Hashed password for local authentication
+  username: text("username").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone").notNull(),
+  name: text("name").notNull(),
+  password: text("password").notNull(), // Hashed password for local authentication
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
-  phone: text("phone"),
   phoneVerified: boolean("phone_verified").default(false),
   phoneVerifiedAt: timestamp("phone_verified_at"),
   
