@@ -401,26 +401,33 @@ export class MarketplaceAggregator {
       
       console.log(`🧹 Filtered to ${enhancedListings.length} quality listings (removed spam/unknowns)`);
       
-      // DEDUPLICATE LISTINGS - Keep best quality listing for each car
+      // DEDUPLICATE LISTINGS - Use URL+portal as unique identifier
       const deduplicatedMap = new Map<string, typeof enhancedListings[0]>();
       
       enhancedListings.forEach(listing => {
-        // Create unique key: brand + model + year (case insensitive)
-        const key = `${listing.brand?.toLowerCase()}-${listing.model?.toLowerCase()}-${listing.year}`;
+        // Create unique key from URL + portal (most reliable identifier)
+        const uniqueKey = listing.url 
+          ? `${listing.source}-${listing.url}` 
+          : `${listing.source}-${listing.id || Math.random()}`;
         
-        const existing = deduplicatedMap.get(key);
+        const existing = deduplicatedMap.get(uniqueKey);
         if (!existing) {
-          deduplicatedMap.set(key, listing);
+          deduplicatedMap.set(uniqueKey, listing);
         } else {
-          // Keep the listing with higher quality score
-          if ((listing.overallQualityScore || 0) > (existing.overallQualityScore || 0)) {
-            deduplicatedMap.set(key, listing);
+          // Keep the listing with higher quality score OR verified status
+          const listingScore = (listing.overallQualityScore || 0) + 
+            (listing.verificationStatus === 'verified' ? 10 : 0);
+          const existingScore = (existing.overallQualityScore || 0) + 
+            (existing.verificationStatus === 'verified' ? 10 : 0);
+          
+          if (listingScore > existingScore) {
+            deduplicatedMap.set(uniqueKey, listing);
           }
         }
       });
       
       enhancedListings = Array.from(deduplicatedMap.values());
-      console.log(`🎯 Deduplicated to ${enhancedListings.length} unique cars (removed portal duplicates)`);
+      console.log(`🎯 Deduplicated to ${enhancedListings.length} unique listings (removed exact duplicates)`);
       
       // Apply image-based sorting for relevance searches
       if (filters.sortBy === 'relevance') {
