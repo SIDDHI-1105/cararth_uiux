@@ -123,7 +123,7 @@ export class RSSAggregatorService {
       
       const feed = feedValidation.success ? feedValidation.data! : rawFeed;
       
-      const posts: CommunityPost[] = feed.items.slice(0, 10).map(item => {
+      const posts: CommunityPost[] = (feed.items || []).slice(0, 10).map(item => {
         try {
           // Validate individual RSS item
           const itemValidation = validateApiResponse(item, RSSItemSchema, 'RSS item');

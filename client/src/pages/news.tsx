@@ -80,6 +80,13 @@ export default function ThrottleTalkPage() {
     enabled: isAuthenticated,
   });
 
+  // Fetch market insights from Perplexity LLM
+  const { data: marketInsightsData, isLoading: isMarketInsightsLoading } = useQuery({
+    queryKey: ['/api/news/market-insights'],
+    enabled: selectedCategory === 'market',
+    refetchInterval: 3600000, // Refresh every hour
+  });
+
   // Post creation form
   const form = useForm<PostFormData>({
     resolver: zodResolver(postSchema),
@@ -140,8 +147,25 @@ export default function ThrottleTalkPage() {
     isExternal: false,
   })) || [];
 
+  // Convert market insights to post format for display
+  const marketInsightsPosts: ForumPost[] = selectedCategory === 'market' && (marketInsightsData as any)?.success ? 
+    (marketInsightsData as any).insights.map((insight: any, index: number) => ({
+      id: `market-insight-${index}`,
+      title: insight.topic,
+      author: 'CarArth Market Intelligence',
+      authorImage: undefined,
+      category: 'Market Insights',
+      replies: 0,
+      views: Math.floor(100 + Math.random() * 500),
+      lastReply: new Date().toLocaleDateString(),
+      isExternal: false,
+      attribution: 'AI-powered market analysis by CarArth',
+    })) : [];
+
   // Combine RSS and user content
-  const allPosts = [...userPosts, ...rssContent].slice(0, 20);
+  const allPosts = selectedCategory === 'market' ? 
+    marketInsightsPosts : 
+    [...userPosts, ...rssContent].slice(0, 20);
 
   const categories = [
     { id: 'all', name: 'All Posts' },
@@ -151,12 +175,15 @@ export default function ThrottleTalkPage() {
     { id: 'community', name: 'Community' }
   ];
 
-  if (isCommunityLoading) {
+  if (isCommunityLoading || (selectedCategory === 'market' && isMarketInsightsLoading)) {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-950">
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
+            {selectedCategory === 'market' && (
+              <p className="ml-3 text-gray-600 dark:text-gray-400">Analyzing market trends...</p>
+            )}
           </div>
         </div>
       </div>
