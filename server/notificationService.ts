@@ -1,17 +1,18 @@
 /**
  * Notification Service for CarArth
  * 
- * Handles delivery of lead notifications to sellers via email/SMS
+ * Handles delivery of lead notifications to sellers via email/WhatsApp
  * with retry logic and delivery tracking.
  */
 
 import nodemailer from 'nodemailer';
 import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js';
+import twilio from 'twilio';
 import type { Contact } from '@shared/schema.js';
 
 export interface NotificationResult {
   success: boolean;
-  method: 'email' | 'sms' | 'both' | 'none';
+  method: 'email' | 'whatsapp' | 'both' | 'none';
   error?: string;
   deliveredAt?: Date;
 }
@@ -194,26 +195,91 @@ Please contact the buyer as soon as possible!
 }
 
 /**
- * Send SMS notification to seller (placeholder - requires Twilio/SMS provider)
+ * Send WhatsApp notification to seller using Twilio API
  */
-async function sendSMSNotification(
+async function sendWhatsAppNotification(
   sellerPhone: string,
   sellerName: string,
   leadData: {
     buyerName: string;
     buyerPhone: string;
+    buyerEmail: string;
+    message: string;
     carTitle: string;
   }
 ): Promise<{ success: boolean; error?: string }> {
-  // TODO: Integrate with Twilio or SMS provider
-  // For now, just log
-  console.log(`📱 SMS notification (not implemented): ${sellerPhone}`);
-  console.log(`   Lead: ${leadData.buyerName} (${leadData.buyerPhone}) interested in ${leadData.carTitle}`);
+  // Check if Twilio credentials are configured
+  if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN || !process.env.TWILIO_WHATSAPP_NUMBER) {
+    console.log('📱 WhatsApp not configured, skipping WhatsApp notification');
+    return { 
+      success: false, 
+      error: 'WhatsApp not configured - missing Twilio credentials' 
+    };
+  }
   
-  return { 
-    success: false, 
-    error: 'SMS not configured - install Twilio integration' 
-  };
+  try {
+    // Initialize Twilio client
+    const client = twilio(
+      process.env.TWILIO_ACCOUNT_SID,
+      process.env.TWILIO_AUTH_TOKEN
+    );
+    
+    // Normalize seller phone number to E.164 format
+    const normalizedPhone = normalizePhoneNumber(sellerPhone, 'IN');
+    if (!normalizedPhone) {
+      console.error(`❌ Invalid seller phone number: ${sellerPhone}`);
+      return {
+        success: false,
+        error: `Invalid phone number format: ${sellerPhone}`
+      };
+    }
+    
+    // Format message for WhatsApp
+    const whatsappMessage = `🚗 *New Lead from CarArth!*
+
+Hi ${sellerName},
+
+You have a new inquiry about your *${leadData.carTitle}*.
+
+*Buyer Details:*
+👤 Name: ${leadData.buyerName}
+📱 Phone: ${leadData.buyerPhone}
+📧 Email: ${leadData.buyerEmail}
+
+💬 Message: "${leadData.message}"
+
+Please contact the buyer as soon as possible to close the deal!
+
+_This is an automated notification from CarArth._`;
+    
+    // Send WhatsApp message via Twilio
+    const message = await client.messages.create({
+      body: whatsappMessage,
+      from: process.env.TWILIO_WHATSAPP_NUMBER, // Format: whatsapp:+14155238886
+      to: `whatsapp:${normalizedPhone}`,         // Format: whatsapp:+919876543210
+    });
+    
+    console.log(`✅ WhatsApp notification sent to ${sellerPhone}`);
+    console.log(`   Message SID: ${message.sid}`);
+    console.log(`   Status: ${message.status}`);
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error('❌ WhatsApp notification failed:', error);
+    
+    // Handle specific Twilio errors
+    if (error.code === 63016) {
+      return {
+        success: false,
+        error: 'Recipient has not joined WhatsApp sandbox. Ask them to send the join code first.'
+      };
+    }
+    
+    return { 
+      success: false, 
+      error: error.message || 'WhatsApp send failed' 
+    };
+  }
 }
 
 /**
@@ -239,9 +305,18 @@ export async function notifySeller(
   console.log(`📬 Notifying seller ${sellerInfo.name} about new lead from ${leadData.buyerName}`);
   
   let emailResult: { success: boolean; error?: string } | null = null;
-  let smsResult: { success: boolean; error?: string } | null = null;
+  let whatsappResult: { success: boolean; error?: string } | null = null;
   
-  // Try email if verified
+  // Try WhatsApp first if phone is verified (preferred for India)
+  if (sellerInfo.phoneVerified && sellerInfo.phone) {
+    whatsappResult = await sendWhatsAppNotification(
+      sellerInfo.phone,
+      sellerInfo.name,
+      leadData
+    );
+  }
+  
+  // Try email if verified (fallback or simultaneous)
   if (sellerInfo.emailVerified && sellerInfo.email) {
     emailResult = await sendEmailNotification(
       sellerInfo.email,
@@ -250,31 +325,18 @@ export async function notifySeller(
     );
   }
   
-  // Try SMS if verified (future feature)
-  if (sellerInfo.phoneVerified && sellerInfo.phone) {
-    smsResult = await sendSMSNotification(
-      sellerInfo.phone,
-      sellerInfo.name,
-      {
-        buyerName: leadData.buyerName,
-        buyerPhone: leadData.buyerPhone,
-        carTitle: leadData.carTitle,
-      }
-    );
-  }
-  
   // Determine result
+  const whatsappSuccess = whatsappResult?.success || false;
   const emailSuccess = emailResult?.success || false;
-  const smsSuccess = smsResult?.success || false;
   
-  if (emailSuccess && smsSuccess) {
+  if (whatsappSuccess && emailSuccess) {
     return { success: true, method: 'both', deliveredAt: new Date() };
+  } else if (whatsappSuccess) {
+    return { success: true, method: 'whatsapp', deliveredAt: new Date() };
   } else if (emailSuccess) {
     return { success: true, method: 'email', deliveredAt: new Date() };
-  } else if (smsSuccess) {
-    return { success: true, method: 'sms', deliveredAt: new Date() };
   } else {
-    const errors = [emailResult?.error, smsResult?.error].filter(Boolean).join('; ');
+    const errors = [whatsappResult?.error, emailResult?.error].filter(Boolean).join('; ');
     return { 
       success: false, 
       method: 'none', 
