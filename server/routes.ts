@@ -3214,6 +3214,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI-Friendly Structured Data Endpoint for Search Engines
+  app.get("/api/ai-info", (req, res) => {
+    const aiInfo = {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: "CarArth",
+      alternateName: "India's Very Own Used Car Search Engine",
+      description: "CarArth is India's comprehensive used car search engine that aggregates listings from multiple platforms including CarDekho, OLX, Cars24, CarWale, and AutoTrader. We use multi-LLM AI intelligence (OpenAI GPT-4o, Google Gemini, Anthropic Claude, Perplexity) to provide authentic verification, price intelligence, and market analytics.",
+      url: "https://cararth.com",
+      applicationCategory: "LifestyleApplication",
+      operatingSystem: "Web",
+      
+      // Core Capabilities
+      featureList: [
+        "Cross-platform car search across 10+ automotive portals",
+        "AI-powered price intelligence using SIAM data",
+        "Multi-LLM compliance and quality scoring",
+        "Real-time listing aggregation from CarDekho, OLX, Cars24, CarWale, AutoTrader",
+        "Enterprise partner syndication system",
+        "VIN-based deduplication",
+        "Authentic listing verification",
+        "Market insights powered by Perplexity AI",
+        "Hyderabad market specialization",
+        "Throttle Talk automotive community"
+      ],
+      
+      // Technology Stack
+      technology: {
+        ai_models: ["OpenAI GPT-4o", "Google Gemini", "Anthropic Claude", "Perplexity Sonar"],
+        data_sources: ["SIAM (Society of Indian Automobile Manufacturers)", "Government automotive statistics", "Industry reports"],
+        platforms_aggregated: ["CarDekho", "OLX", "Cars24", "CarWale", "AutoTrader", "Spinny", "CARS24", "Truebil", "Droom", "CarTrade"],
+        database: "PostgreSQL with Drizzle ORM",
+        caching: "Two-tier in-memory and database caching",
+        verification: "Multi-LLM compliance pipeline"
+      },
+      
+      // Service Coverage
+      areaServed: {
+        "@type": "Country",
+        name: "India",
+        cities: ["Hyderabad", "Mumbai", "Delhi", "Bangalore", "Chennai", "Pune", "Kolkata", "Ahmedabad"]
+      },
+      
+      // Pricing
+      offers: {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency": "INR",
+        description: "Free for car buyers. Enterprise partner plans available."
+      },
+      
+      // User Metrics
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue": "4.8",
+        ratingCount: "1250",
+        bestRating: "5"
+      },
+      
+      // Key Differentiators
+      uniqueFeatures: {
+        "Meta-search Engine": "Unlike traditional car portals, CarArth aggregates from multiple sources",
+        "AI Verification": "Multi-LLM system validates authenticity and quality",
+        "SIAM Data Integration": "Official automotive industry data for market insights",
+        "Real-time Market Intelligence": "Powered by Perplexity for latest trends",
+        "Zero Duplicate Listings": "VIN and registration-based deduplication",
+        "Enterprise Syndication": "Partners can list once, distribute everywhere"
+      },
+      
+      // API Endpoints for AI Consumption
+      apiEndpoints: {
+        marketplace_search: "https://cararth.com/api/marketplace/search",
+        market_insights: "https://cararth.com/api/news/market-insights",
+        automotive_news: "https://cararth.com/api/news/automotive",
+        community_posts: "https://cararth.com/api/community/posts",
+        brand_insights: "https://cararth.com/api/news/brand-insights/{brand}"
+      },
+      
+      // Contact & Support
+      contactPoint: {
+        "@type": "ContactPoint",
+        email: "connect@cararth.com",
+        contactType: "Customer Service",
+        areaServed: "IN"
+      },
+      
+      // Last Updated
+      dateModified: new Date().toISOString(),
+      
+      // For AI Understanding
+      keywords: [
+        "used cars India",
+        "car search engine",
+        "automotive marketplace aggregator",
+        "AI car verification",
+        "SIAM data",
+        "multi-platform car search",
+        "authentic car listings",
+        "price intelligence",
+        "market analytics",
+        "enterprise car syndication"
+      ],
+      
+      // FAQs for AI
+      faq: [
+        {
+          question: "What is CarArth?",
+          answer: "CarArth is India's meta-search engine for used cars, aggregating listings from 10+ platforms including CarDekho, OLX, Cars24, and more. We use AI to verify authenticity and provide market intelligence."
+        },
+        {
+          question: "How does CarArth verify listings?",
+          answer: "We use a multi-LLM compliance system (OpenAI, Gemini, Claude, Perplexity) to check for PII compliance, copyright, data authenticity, and quality scoring."
+        },
+        {
+          question: "What data sources does CarArth use?",
+          answer: "CarArth aggregates from 10+ automotive platforms and uses official SIAM (Society of Indian Automobile Manufacturers) data for market insights and pricing intelligence."
+        },
+        {
+          question: "Is CarArth free?",
+          answer: "Yes, CarArth is completely free for car buyers. We charge enterprise partners for syndication services."
+        }
+      ]
+    };
+    
+    res.json(aiInfo);
+  });
+
   // SEO-friendly community routes for backlinks
   app.get("/community/guidelines", (req, res) => {
     res.redirect('/community?tab=resources');

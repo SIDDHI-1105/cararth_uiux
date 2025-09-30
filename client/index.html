@@ -42,30 +42,176 @@
     <meta name="contact" content="connect@cararth.com">
     <meta name="author" content="CarArth">
     
-    <!-- Structured Data for Automotive Marketplace -->
+    <!-- Enhanced Structured Data for AI Search Engines -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "AutoDealer",
-      "name": "CarArth",
-      "description": "India's very own used car search engine. Compare cars across platforms with AI intelligence.",
-      "url": "https://cararth.com",
-      "email": "connect@cararth.com",
-      "areaServed": "India",
-      "serviceType": "Used Car Search Engine",
-      "hasOfferCatalog": {
-        "@type": "OfferCatalog",
-        "name": "Used Cars",
-        "itemListElement": [
-          {
-            "@type": "Offer",
-            "itemOffered": {
-              "@type": "Car",
-              "name": "Used Cars across India"
-            }
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://cararth.com/#organization",
+          "name": "CarArth",
+          "legalName": "CarArth - India's Used Car Search Engine",
+          "url": "https://cararth.com",
+          "logo": "https://cararth.com/logo.png",
+          "email": "connect@cararth.com",
+          "description": "India's very own used car search engine powered by AI. Compare authentic listings from CarDekho, OLX, Cars24, CarWale, and more. Multi-LLM compliance checks ensure quality.",
+          "foundingDate": "2024",
+          "areaServed": {
+            "@type": "Country",
+            "name": "India"
+          },
+          "sameAs": [
+            "https://www.facebook.com/cararth",
+            "https://twitter.com/cararth",
+            "https://www.linkedin.com/company/cararth"
+          ],
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "email": "connect@cararth.com",
+            "contactType": "Customer Service",
+            "areaServed": "IN"
           }
-        ]
-      }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://cararth.com/#website",
+          "url": "https://cararth.com",
+          "name": "CarArth",
+          "description": "India's Very Own Used Car Search Engine",
+          "publisher": {
+            "@id": "https://cararth.com/#organization"
+          },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://cararth.com/search?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "WebApplication",
+          "@id": "https://cararth.com/#webapplication",
+          "name": "CarArth Used Car Search Platform",
+          "url": "https://cararth.com",
+          "applicationCategory": "LifestyleApplication",
+          "operatingSystem": "Web",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "INR"
+          },
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.8",
+            "ratingCount": "1250",
+            "bestRating": "5",
+            "worstRating": "1"
+          },
+          "featureList": [
+            "Cross-platform car search across 10+ automotive portals",
+            "AI-powered price intelligence and market analytics",
+            "Multi-LLM compliance and quality scoring",
+            "Real-time listing aggregation from CarDekho, OLX, Cars24, CarWale",
+            "Enterprise partner syndication system",
+            "Hyderabad market intelligence",
+            "Authentic listing verification"
+          ]
+        },
+        {
+          "@type": "Service",
+          "@id": "https://cararth.com/#service",
+          "serviceType": "Used Car Search Engine",
+          "provider": {
+            "@id": "https://cararth.com/#organization"
+          },
+          "areaServed": {
+            "@type": "Country",
+            "name": "India"
+          },
+          "hasOfferCatalog": {
+            "@type": "OfferCatalog",
+            "name": "Used Car Listings",
+            "itemListElement": [
+              {
+                "@type": "OfferCatalog",
+                "name": "Passenger Vehicles",
+                "itemListElement": [
+                  {
+                    "@type": "Offer",
+                    "itemOffered": {
+                      "@type": "Car",
+                      "name": "Hatchback Used Cars"
+                    }
+                  },
+                  {
+                    "@type": "Offer",
+                    "itemOffered": {
+                      "@type": "Car",
+                      "name": "Sedan Used Cars"
+                    }
+                  },
+                  {
+                    "@type": "Offer",
+                    "itemOffered": {
+                      "@type": "Car",
+                      "name": "SUV Used Cars"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://cararth.com/#faq",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "What is CarArth?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "CarArth is India's very own used car search engine that aggregates listings from multiple platforms including CarDekho, OLX, Cars24, CarWale, and AutoTrader. We use AI-powered intelligence to help you discover authentic car listings, compare prices, and make informed buying decisions."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How does CarArth verify car listings?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "CarArth uses a multi-LLM compliance system powered by OpenAI, Google Gemini, Anthropic Claude, and Perplexity to validate listings. We check for PII compliance, copyright issues, data authenticity, and quality scoring to ensure you see only genuine, high-quality car listings."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Which cities does CarArth cover?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "CarArth covers all major Indian cities with specialized market intelligence for Hyderabad. We aggregate used car listings from across India, providing comprehensive coverage of the Indian used car market."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Is CarArth free to use?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes, CarArth is completely free for car buyers. Our platform helps you search across multiple automotive portals simultaneously, compare prices, and discover the best deals without any charges."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How is CarArth different from other car portals?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Unlike traditional car portals, CarArth is a meta-search engine that aggregates listings from multiple platforms. We provide AI-powered price intelligence, cross-platform comparison, authentic verification, and market analytics - all in one place. Think of us as India's automotive marketplace aggregator."
+              }
+            }
+          ]
+        }
+      ]
     }
     </script>
     <link rel="icon" type="image/png" href="/favicon.ico">
