@@ -11,6 +11,9 @@ import SellCar from "./pages/sell-car";
 import MessagesPage from "./pages/messages";
 import Blog from "./pages/blog";
 import AdminBlog from "./pages/admin-blog";
+import AdminPartners from "./pages/admin-partners";
+import AdminPartnerMonitor from "./pages/admin-partner-monitor";
+import AdminReview from "./pages/admin-review";
 import ThrottleTalk from "./pages/news";
 import Community from "./pages/community";
 import PrivacyPolicy from "./pages/privacy-policy";
@@ -32,6 +35,9 @@ function Router() {
       <Route path="/messages" component={MessagesPage} />
       <Route path="/blog" component={Blog} />
       <Route path="/admin/blog" component={AdminBlog} />
+      <Route path="/admin/partners" component={AdminPartners} />
+      <Route path="/admin/partners/:sourceId/monitor" component={AdminPartnerMonitor} />
+      <Route path="/admin/review" component={AdminReview} />
       <Route path="/news" component={ThrottleTalk} />
       <Route path="/community" component={Community} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
