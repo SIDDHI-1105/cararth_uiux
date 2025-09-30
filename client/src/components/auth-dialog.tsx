@@ -17,6 +17,7 @@ export function AuthDialog({ trigger, defaultTab = 'login' }: AuthDialogProps) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const isMobile = window.innerWidth < 640;
 
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [registerData, setRegisterData] = useState({
@@ -80,7 +81,7 @@ export function AuthDialog({ trigger, defaultTab = 'login' }: AuthDialogProps) {
       <DialogTrigger asChild>
         {trigger || (
           <Button 
-            className="btn-metallic px-6 py-2 text-base md:text-lg font-semibold"
+            className="w-full sm:w-auto btn-metallic px-6 py-3 sm:py-2 text-base md:text-lg font-semibold"
             data-testid="button-login"
           >
             <LogIn className="w-4 h-4 mr-2" />

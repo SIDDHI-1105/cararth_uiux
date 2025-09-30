@@ -22,6 +22,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
 import { BrandWordmark } from "@/components/brand-wordmark";
+import { AuthDialog } from "@/components/auth-dialog";
 
 interface ForumPost {
   id: string;
@@ -306,25 +307,8 @@ export default function ThrottleTalkPage() {
                 </DialogContent>
               </Dialog>
             ) : (
-              <div className="flex gap-3 justify-center">
-                <Button 
-                  variant="default" 
-                  onClick={() => window.location.href = '/api/auth/google'}
-                  className="bg-gray-900 hover:bg-gray-800 text-white dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
-                  data-testid="button-login-google"
-                >
-                  <LogIn className="h-4 w-4 mr-2" />
-                  Sign in with Google
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => window.location.href = '/api/auth/facebook'}
-                  className="text-blue-600 border-blue-300 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-600 dark:hover:bg-blue-900/20"
-                  data-testid="button-login-facebook"
-                >
-                  <LogIn className="h-4 w-4 mr-2" />
-                  Sign in with Facebook
-                </Button>
+              <div className="flex justify-center">
+                <AuthDialog />
               </div>
             )}
           </div>
