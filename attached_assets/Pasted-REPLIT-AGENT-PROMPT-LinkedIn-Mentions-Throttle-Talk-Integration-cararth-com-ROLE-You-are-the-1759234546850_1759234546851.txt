@@ -1,0 +1,108 @@
+REPLIT AGENT PROMPT — LinkedIn Mentions → Throttle Talk Integration (cararth.com)
+
+ROLE:
+You are the Replit development agent for cararth.com. Firecrawl, GPT-5, Gemini, Anthropic, and Perplexity are already integrated. Build and deploy a pipeline that automatically detects LinkedIn posts mentioning "cararth.com", processes them with our LLM ensemble, and mirrors safe excerpts with attribution into the Throttle Talk section of cararth.com. Ensure compliance with LinkedIn’s API/ToS, zero duplicates, proper attribution, and cost-effective LLM usage.
+
+=================================================
+FEATURES
+=================================================
+
+1. Ingestion of LinkedIn Posts
+- Implement /api/integrations/linkedin/webhook to receive LinkedIn notifications (if API webhooks available).
+- Implement /jobs/linkedin/poll to query LinkedIn search endpoints (keywords: "cararth.com", "Cararth", "#cararth") every 30–60 minutes within allowed rate limits.
+- For each new mention, extract: text, author name, author profile URL, post URL, timestamp, media links.
+
+2. LLM Processing Pipeline (background job queue with BullMQ + Redis)
+- Step 1: Relevance classifier (Gemini) → classify post relevance. Discard if irrelevant.
+- Step 2: PII detector (Gemini + Anthropic) → detect phone numbers, emails, etc. Mask unless consented.
+- Step 3: Copyright & source check (Perplexity) → check if copied verbatim. Flag if >0.85 similarity.
+- Step 4: Legal inference (GPT-5) → decide if auto-mirroring is allowed per LinkedIn ToS.
+- Step 5: Summarize/excerpt (GPT-5) → generate ≤150-word excerpt with attribution.
+- Step 6: Safety/paraphrase audit (Anthropic) → ensure excerpt isn’t too close to original.
+- Step 7: Deduplication (Gemini/Perplexity) → avoid reposting duplicates.
+
+3. Mirror Record & Storage
+- Prisma model LinkedInMirror:
+  id (UUID), source_url (unique), author_name, author_profile, excerpt, author_byline, published_at, llm_reports (JSON), status (pending|published|flagged|rejected), created_at, updated_at.
+- Store all LLM outputs in llm_reports.
+- Published records appear as mirror cards in Throttle Talk.
+
+4. Throttle Talk Display
+- Add a "LinkedIn Mentions" widget in Throttle Talk:
+  • Card with excerpt, author_byline, published_at, and link to original post.
+  • Ensure no PII unless consent exists.
+
+5. Admin Review Workflow
+- /admin/review-linkedin page:
+  • List pending/flagged posts with full text, excerpt, LLM reports.
+  • Approve → status=published → appears in Throttle Talk.
+  • Reject → status=rejected.
+
+6. Notifications
+- Flagged posts trigger Slack/email alert with quick-action links.
+- Optional: auto-comment on LinkedIn post to request permission if API scope allows.
+
+7. Deduplication Rules
+- Hash excerpts (sha256(excerpt+author_profile+published_at)) to avoid reposting.
+- Similarity check vs existing LinkedInMirror items before saving.
+
+8. Monitoring & Logging
+- Track: mentions_found, mentions_published, mentions_flagged, duplicate_rate, LLM latency.
+- Expose /api/metrics/linkedin for Prometheus/Grafana dashboards.
+- Retain logs + LLM reports for 90 days.
+
+=================================================
+LLM PROMPTS
+=================================================
+
+Relevance (Gemini):
+Classify this LinkedIn post. Return JSON: { "relevance": "mention|review|praise|question|announcement|spam|other", "score": 0.0-1.0 }
+
+PII detection (Gemini/Anthropic):
+Detect PII in this LinkedIn post JSON. Return: { "pii_fields": ["contact_phone","email"], "examples": {...}, "mask_required": true|false }
+
+Copyright check (Perplexity):
+Check if this text is copied verbatim elsewhere. Return: { "near_duplicate": true|false, "top_matches":[{url,similarity}] }
+
+Legal inference (GPT-5):
+Given LinkedIn’s policy and this post, can we auto-mirror a short excerpt with attribution? Return: { "allow_auto_mirror": true|false, "reason":"..." }
+
+Summarize/excerpt (GPT-5):
+Summarize this post into ≤150 words, with attribution. Return: { "excerpt":"...", "author_byline":"LinkedIn post by ..." }
+
+Safety audit (Anthropic):
+Compare original and excerpt. Return: { "safe": true|false, "similarity": 0.0-1.0, "action":"publish|paraphrase|manual_review" }
+
+=================================================
+ENV VARIABLES
+=================================================
+- LINKEDIN_CLIENT_ID
+- LINKEDIN_CLIENT_SECRET
+- LINKEDIN_ACCESS_TOKEN
+- LLM_GPT5_KEY
+- LLM_GEMINI_KEY
+- LLM_ANTHROPIC_KEY
+- LLM_PERPLEXITY_KEY
+- DATABASE_URL
+- REDIS_URL
+- SLACK_WEBHOOK
+
+=================================================
+ACCEPTANCE CRITERIA
+=================================================
+- Mentions of "cararth.com" ingested within 60 minutes.
+- Relevant, safe posts appear in Throttle Talk with attribution + link.
+- PII masked unless consented.
+- Duplicates prevented (duplicate_rate <2%).
+- Flagged posts visible in admin review, with full LLM reports.
+- Admin approve/reject flow works end-to-end.
+- Monitoring + logs available for 90 days.
+- All secrets handled via env vars only.
+
+=================================================
+DEPLOYMENT
+=================================================
+- Add Prisma migration for LinkedInMirror table.
+- Add Redis + BullMQ worker for LLM pipeline.
+- Deploy ingestion + admin UI via Next.js.
+- Include runbook (README) covering token rotation, ingestion logs, moderation steps, test instructions.
