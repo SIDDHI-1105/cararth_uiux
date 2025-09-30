@@ -464,24 +464,34 @@ function HomeContent() {
           isSearching={marketplaceSearch.isPending}
         />
         
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="local" className="flex items-center gap-2">
-                <Search className="w-4 h-4" />
-                Local Listings ({cars.length})
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-8">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6 sm:mb-8">
+            <TabsList className="grid w-full grid-cols-2 h-12 sm:h-14">
+              <TabsTrigger value="local" className="flex items-center gap-2 text-sm sm:text-base font-medium">
+                <Search className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Local Listings ({cars.length})</span>
+                <span className="sm:hidden">Local ({cars.length})</span>
               </TabsTrigger>
-              <TabsTrigger value="marketplace" className="flex items-center gap-2">
-                <Globe className="w-4 h-4" />
-                {marketplaceResult ? 
-                  `Search Results (${marketplaceResult.analytics?.totalListings || 0})` : 
-                  'All Portals'
-                }
+              <TabsTrigger value="marketplace" className="flex items-center gap-2 text-sm sm:text-base font-medium">
+                <Globe className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">
+                  {marketplaceResult ? 
+                    `Search Results (${marketplaceResult.analytics?.totalListings || 0})` : 
+                    'All Portals'
+                  }
+                </span>
+                <span className="sm:hidden">
+                  {marketplaceResult ? 
+                    `Results (${marketplaceResult.analytics?.totalListings || 0})` : 
+                    'Portals'
+                  }
+                </span>
                 {(() => {
                   const usage = usageStatusData as UsageStatus | undefined;
                   return usage && !usage.isAuthenticated ? (
-                    <Badge variant="secondary" className="text-xs">
-                      {usage.searchesLeft}/{usage.totalLimit} in 30d
+                    <Badge variant="secondary" className="text-xs ml-1">
+                      <span className="hidden sm:inline">{usage.searchesLeft}/{usage.totalLimit} in 30d</span>
+                      <span className="sm:hidden">{usage.searchesLeft}/{usage.totalLimit}</span>
                     </Badge>
                   ) : null;
                 })()}
@@ -509,14 +519,14 @@ function HomeContent() {
                 </div>
                 
                 <div className="lg:w-3/4">
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold" data-testid="text-results-title">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
+                    <h2 className="text-xl sm:text-2xl font-bold" data-testid="text-results-title">
                       Verified Cars in India
                     </h2>
-                    <div className="flex items-center space-x-4">
-                      <span className="text-muted-foreground text-sm">Sort by:</span>
+                    <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto">
+                      <span className="text-muted-foreground text-sm">Sort:</span>
                       <Select value={sortBy} onValueChange={setSortBy}>
-                        <SelectTrigger className="w-48" data-testid="select-sort">
+                        <SelectTrigger className="w-full sm:w-48 min-h-[44px]" data-testid="select-sort">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -530,7 +540,7 @@ function HomeContent() {
                   </div>
 
                   {isLoading && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
                       {[...Array(6)].map((_, i) => (
                         <div key={i} className="bg-card border border-border rounded-lg overflow-hidden animate-pulse">
                           <div className="w-full h-48 bg-muted"></div>
@@ -545,7 +555,7 @@ function HomeContent() {
                   
                   {!isLoading && (
                     <div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8" data-testid="grid-car-listings">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8" data-testid="grid-car-listings">
                         {sortedCars.map((car) => (
                           <MinimalCarCard
                             key={car.id}
@@ -601,17 +611,17 @@ function HomeContent() {
           </Tabs>
           
           {/* Enterprise Partnership Section */}
-          <div className="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
+          <div className="mt-6 sm:mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl p-4 sm:p-6 border border-blue-200 dark:border-blue-800">
             <div className="text-center">
-              <h3 className="text-2xl font-bold text-blue-800 dark:text-blue-200 mb-3">Enterprise Partnerships & Subscriptions</h3>
-              <p className="text-blue-700 dark:text-blue-300 mb-4 max-w-2xl mx-auto">
+              <h3 className="text-xl sm:text-2xl font-bold text-blue-800 dark:text-blue-200 mb-2 sm:mb-3">Enterprise Partnerships & Subscriptions</h3>
+              <p className="text-sm sm:text-base text-blue-700 dark:text-blue-300 mb-3 sm:mb-4 max-w-2xl mx-auto">
                 Looking for bulk car data, API access, or custom automotive solutions? Partner with CarArth for enterprise-level services.
               </p>
               <Button 
                 onClick={() => {
                   window.location.href = 'mailto:connect@cararth.com?subject=Enterprise Partnership Inquiry&body=Hi! I\'m interested in enterprise partnerships and subscriptions with CarArth. Please share more details about your enterprise services.';
                 }}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 py-3 rounded-lg font-semibold text-sm sm:text-base min-h-[44px]"
                 data-testid="button-enterprise-contact"
               >
                 📧 email us: connect@cararth.com
