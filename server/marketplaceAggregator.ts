@@ -382,6 +382,46 @@ export class MarketplaceAggregator {
       // Convert cached portal listings to EnhancedMarketplaceListing format
       let enhancedListings = cachedListings.map(listing => this.convertCachedToEnhanced(listing));
       
+      // FILTER OUT POOR QUALITY LISTINGS
+      enhancedListings = enhancedListings.filter(listing => {
+        // Remove listings with "Unknown" model
+        if (listing.model?.toLowerCase().includes('unknown')) return false;
+        
+        // Remove spam/promotional titles
+        if (listing.title?.toLowerCase().includes('finalise the loan') || 
+            listing.title?.toLowerCase().includes('it only takes')) return false;
+        
+        // Remove listings with invalid cities
+        if (listing.city?.toLowerCase().includes('please select') || 
+            listing.city?.toLowerCase().includes('to get the desired')) return false;
+        
+        // Keep valid listings
+        return true;
+      });
+      
+      console.log(`🧹 Filtered to ${enhancedListings.length} quality listings (removed spam/unknowns)`);
+      
+      // DEDUPLICATE LISTINGS - Keep best quality listing for each car
+      const deduplicatedMap = new Map<string, typeof enhancedListings[0]>();
+      
+      enhancedListings.forEach(listing => {
+        // Create unique key: brand + model + year (case insensitive)
+        const key = `${listing.brand?.toLowerCase()}-${listing.model?.toLowerCase()}-${listing.year}`;
+        
+        const existing = deduplicatedMap.get(key);
+        if (!existing) {
+          deduplicatedMap.set(key, listing);
+        } else {
+          // Keep the listing with higher quality score
+          if ((listing.overallQualityScore || 0) > (existing.overallQualityScore || 0)) {
+            deduplicatedMap.set(key, listing);
+          }
+        }
+      });
+      
+      enhancedListings = Array.from(deduplicatedMap.values());
+      console.log(`🎯 Deduplicated to ${enhancedListings.length} unique cars (removed portal duplicates)`);
+      
       // Apply image-based sorting for relevance searches
       if (filters.sortBy === 'relevance') {
         enhancedListings = enhancedListings.sort((a, b) => {
