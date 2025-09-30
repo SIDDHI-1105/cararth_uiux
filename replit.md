@@ -24,8 +24,17 @@ Key capabilities include:
   - Uses libphonenumber-js to normalize phone numbers to E.164 format (e.g., +919876543210)
   - Supports Indian and international phone numbers with automatic country detection
   - Validates phone numbers before normalization
+- ✅ **WhatsApp Notification Service** in `server/notificationService.ts`:
+  - **WhatsApp-first approach** (preferred for India over SMS due to TRAI/DLT regulations)
+  - Sends branded WhatsApp messages to sellers via Twilio Business API when buyers express interest
+  - WhatsApp message includes buyer details (name, phone, email, message) with emoji formatting
+  - Automatic phone number normalization to E.164 format for Twilio compatibility
+  - Sandbox support for immediate testing (buyers must join sandbox first)
+  - Production mode: Uses Twilio WhatsApp Business Account (requires TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_NUMBER)
+  - Specific error handling for Twilio sandbox join requirements (error code 63016)
+  - Comprehensive error messages for troubleshooting
 - ✅ **Email Notification Service** in `server/notificationService.ts`:
-  - Sends branded email notifications to sellers when buyers express interest
+  - Sends branded email notifications to sellers as fallback when WhatsApp fails
   - Development mode: Uses Ethereal test accounts with preview URLs for testing
   - Production mode: Supports SMTP configuration via environment variables (SMTP_HOST, SMTP_USER, SMTP_PASSWORD, SMTP_FROM)
   - Includes buyer contact details (name, phone, email, message) in email
@@ -38,7 +47,9 @@ Key capabilities include:
 - ✅ **Robust Contact Creation Flow** in `server/routes.ts`:
   - Normalizes buyer phone numbers on contact creation
   - Validates car and seller exist before attempting notification
-  - Sends async email notification without blocking API response
+  - Tries WhatsApp first, then falls back to email
+  - Can send both WhatsApp + email simultaneously
+  - Sends async notification without blocking API response
   - Updates contact record with notification delivery status
   - Increments retry count on failure, preserves on success
   - Handles all error cases gracefully with detailed logging
@@ -47,7 +58,6 @@ Key capabilities include:
   - Added updateContact method to IStorage interface
   - Implemented in both MemStorage and DatabaseStorage
   - Supports partial updates to contact records
-- 📋 **Future Enhancement**: SMS notifications planned but not yet implemented (requires Twilio integration)
 
 ### September 30, 2025 - Search Quality Improvements Complete ✅
 - ✅ **Search Result Deduplication** in `server/fastSearch.ts`:
@@ -186,5 +196,6 @@ This system enables enterprise partners to post listings once and distribute the
 - **Firecrawl**: For web scraping partners without APIs.
 
 ### Notification & Communication
+- **Twilio**: WhatsApp Business API for instant seller notifications via WhatsApp.
 - **Nodemailer**: Email delivery service with SMTP/Ethereal test account support.
 - **libphonenumber-js**: International phone number normalization and validation.
