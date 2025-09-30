@@ -1410,54 +1410,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
       (async () => {
         try {
           const car = await storage.getCar(contact.carId);
-          if (car && car.sellerId) {
-            const seller = await storage.getUser(car.sellerId);
-            if (seller) {
-              console.log(`📬 Attempting to notify seller ${seller.name} (${seller.email})`);
-              
-              const result = await notifySeller(
-                {
-                  id: seller.id,
-                  name: seller.name || seller.username,
-                  email: seller.email,
-                  phone: seller.phone,
-                  emailVerified: seller.emailVerified || false,
-                  phoneVerified: seller.phoneVerified || false,
-                },
-                {
-                  buyerName: contact.buyerName,
-                  buyerPhone: contact.buyerPhone,
-                  buyerEmail: contact.buyerEmail,
-                  message: contact.message || '',
-                  carTitle: car.title,
-                }
-              );
-              
-              // Update contact with notification result
-              if ('updateContact' in storage) {
-                await (storage as any).updateContact(contact.id, {
-                  sellerId: seller.id,
-                  sellerNotifiedAt: result.success ? result.deliveredAt : null,
-                  sellerNotificationMethod: result.method,
-                  sellerNotificationStatus: result.success ? 'sent' : 'failed',
-                  sellerNotificationError: result.error || null,
-                  lastNotificationAttempt: new Date(),
-                });
-              }
-              
-              if (result.success) {
-                console.log(`✅ Seller notified successfully via ${result.method}`);
-              } else {
-                console.error(`❌ Failed to notify seller: ${result.error}`);
-              }
-            } else {
-              console.log(`⚠️ Seller not found for car ${car.id}`);
-            }
-          } else {
+          if (!car || !car.sellerId) {
             console.log(`⚠️ Car or sellerId not found for contact ${contact.id}`);
+            // Update contact to mark as failed (no seller to notify)
+            if ('updateContact' in storage) {
+              await (storage as any).updateContact(contact.id, {
+                sellerNotificationStatus: 'failed',
+                sellerNotificationError: 'No seller found for car listing',
+                lastNotificationAttempt: new Date(),
+                notificationRetryCount: 0,
+              });
+            }
+            return;
+          }
+
+          const seller = await storage.getUser(car.sellerId);
+          if (!seller) {
+            console.log(`⚠️ Seller not found for car ${car.id}`);
+            // Update contact to mark as failed (seller account deleted)
+            if ('updateContact' in storage) {
+              await (storage as any).updateContact(contact.id, {
+                sellerId: car.sellerId,
+                sellerNotificationStatus: 'failed',
+                sellerNotificationError: 'Seller account not found',
+                lastNotificationAttempt: new Date(),
+                notificationRetryCount: 0,
+              });
+            }
+            return;
+          }
+
+          console.log(`📬 Attempting to notify seller ${seller.name} (${seller.email})`);
+          
+          const result = await notifySeller(
+            {
+              id: seller.id,
+              name: seller.name || seller.username,
+              email: seller.email,
+              phone: seller.phone,
+              emailVerified: seller.emailVerified || false,
+              phoneVerified: seller.phoneVerified || false,
+            },
+            {
+              buyerName: contact.buyerName,
+              buyerPhone: contact.buyerPhone,
+              buyerEmail: contact.buyerEmail,
+              message: contact.message || '',
+              carTitle: car.title,
+            }
+          );
+          
+          // Update contact with notification result
+          if ('updateContact' in storage) {
+            const currentRetryCount = contact.notificationRetryCount || 0;
+            await (storage as any).updateContact(contact.id, {
+              sellerId: seller.id,
+              sellerNotifiedAt: result.success ? result.deliveredAt : null,
+              sellerNotificationMethod: result.method,
+              sellerNotificationStatus: result.success ? 'sent' : 'failed',
+              sellerNotificationError: result.error || null,
+              lastNotificationAttempt: new Date(),
+              notificationRetryCount: result.success ? currentRetryCount : currentRetryCount + 1,
+            });
+          }
+          
+          if (result.success) {
+            console.log(`✅ Seller notified successfully via ${result.method}`);
+          } else {
+            console.error(`❌ Failed to notify seller: ${result.error}`);
           }
         } catch (notifyError) {
           console.error('❌ Error in seller notification:', notifyError);
+          // Update contact to mark as failed with error details
+          try {
+            if ('updateContact' in storage) {
+              const currentRetryCount = contact.notificationRetryCount || 0;
+              await (storage as any).updateContact(contact.id, {
+                sellerNotificationStatus: 'failed',
+                sellerNotificationError: notifyError instanceof Error ? notifyError.message : 'Unknown error',
+                lastNotificationAttempt: new Date(),
+                notificationRetryCount: currentRetryCount + 1,
+              });
+            }
+          } catch (updateError) {
+            console.error('❌ Failed to update contact after notification error:', updateError);
+          }
         }
       })();
       

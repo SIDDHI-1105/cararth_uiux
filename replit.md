@@ -15,8 +15,42 @@ Key capabilities include:
 
 ## Recent Changes
 
+### September 30, 2025 - Seller Contact & Notification System Complete ✅
+- ✅ **Enhanced Contact Schema** in `shared/schema.ts`:
+  - Added notification tracking fields: sellerNotifiedAt, sellerNotificationStatus, sellerNotificationMethod
+  - Added delivery tracking: notificationRetryCount, lastNotificationAttempt, sellerNotificationError
+  - Added buyerPhoneNormalized field for E.164 formatted phone numbers
+- ✅ **Phone Normalization Service** in `server/notificationService.ts`:
+  - Uses libphonenumber-js to normalize phone numbers to E.164 format (e.g., +919876543210)
+  - Supports Indian and international phone numbers with automatic country detection
+  - Validates phone numbers before normalization
+- ✅ **Email Notification Service** in `server/notificationService.ts`:
+  - Sends branded email notifications to sellers when buyers express interest
+  - Development mode: Uses Ethereal test accounts with preview URLs for testing
+  - Production mode: Supports SMTP configuration via environment variables (SMTP_HOST, SMTP_USER, SMTP_PASSWORD, SMTP_FROM)
+  - Includes buyer contact details (name, phone, email, message) in email
+  - Transporter caching to avoid recreating email connections
+- ✅ **Smart Retry Logic** with exponential backoff:
+  - Initial attempt + 3 automatic retries (4 total attempts)
+  - Backoff delays before retries: 5 minutes, 30 minutes, 2 hours
+  - Tracks retry count and last attempt timestamp in database
+  - Shows remaining wait time in logs for debugging
+- ✅ **Robust Contact Creation Flow** in `server/routes.ts`:
+  - Normalizes buyer phone numbers on contact creation
+  - Validates car and seller exist before attempting notification
+  - Sends async email notification without blocking API response
+  - Updates contact record with notification delivery status
+  - Increments retry count on failure, preserves on success
+  - Handles all error cases gracefully with detailed logging
+  - Stores error messages in database for troubleshooting
+- ✅ **Storage Layer Updates**:
+  - Added updateContact method to IStorage interface
+  - Implemented in both MemStorage and DatabaseStorage
+  - Supports partial updates to contact records
+- 📋 **Future Enhancement**: SMS notifications planned but not yet implemented (requires Twilio integration)
+
 ### September 30, 2025 - Search Quality Improvements Complete ✅
-- ✅ **Search Result Deduplication** in `server/marketplaceAggregator.ts`:
+- ✅ **Search Result Deduplication** in `server/fastSearch.ts`:
   - Implemented portal+URL unique identifier to remove exact duplicate listings
   - Added quality filtering to remove spam listings with "Unknown" models and invalid data
   - Prevents same listing from appearing multiple times due to ingestion duplicates
@@ -150,3 +184,7 @@ This system enables enterprise partners to post listings once and distribute the
 
 ### Web Scraping
 - **Firecrawl**: For web scraping partners without APIs.
+
+### Notification & Communication
+- **Nodemailer**: Email delivery service with SMTP/Ethereal test account support.
+- **libphonenumber-js**: International phone number normalization and validation.

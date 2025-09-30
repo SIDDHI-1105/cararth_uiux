@@ -285,6 +285,13 @@ export async function notifySeller(
 
 /**
  * Retry failed notifications with exponential backoff
+ * 
+ * Retry count logic:
+ * - 0: Initial attempt failed
+ * - 1: After 1st failure, wait 5min then retry (1st retry)
+ * - 2: After 2nd failure, wait 30min then retry (2nd retry)
+ * - 3: After 3rd failure, wait 2hr then retry (3rd retry)
+ * - 4+: Max retries exceeded, stop
  */
 export async function retryNotification(
   contact: Contact,
@@ -293,34 +300,54 @@ export async function retryNotification(
 ): Promise<NotificationResult> {
   const retryCount = contact.notificationRetryCount || 0;
   
-  if (retryCount >= 3) {
-    console.log(`❌ Max retries reached for contact ${contact.id}`);
+  // Allow up to 3 retry attempts (after initial attempt = 4 total attempts)
+  // retryCount: 1, 2, 3 = allow retry; 4+ = stop
+  if (retryCount > 3) {
+    console.log(`❌ Max retries (3) reached for contact ${contact.id}`);
     return { 
       success: false, 
       method: 'none', 
-      error: 'Max retries exceeded' 
+      error: 'Max retries exceeded (3 attempts)' 
     };
   }
   
-  // Exponential backoff: 5min, 30min, 2hr
+  // If this is the first notification (retryCount = 0), don't apply backoff
+  if (retryCount === 0) {
+    console.log(`📬 Initial notification attempt for contact ${contact.id}`);
+    return await notifySeller(sellerInfo, {
+      buyerName: contact.buyerName,
+      buyerPhone: contact.buyerPhone,
+      buyerEmail: contact.buyerEmail,
+      message: contact.message || '',
+      carTitle,
+    });
+  }
+  
+  // Exponential backoff for retries: 5min, 30min, 2hr
+  // retryCount 1 → backoffDelays[0] = 5min
+  // retryCount 2 → backoffDelays[1] = 30min
+  // retryCount 3 → backoffDelays[2] = 2hr
   const backoffDelays = [5 * 60 * 1000, 30 * 60 * 1000, 2 * 60 * 60 * 1000];
   const lastAttempt = contact.lastNotificationAttempt;
   
   if (lastAttempt) {
     const timeSinceLastAttempt = Date.now() - new Date(lastAttempt).getTime();
-    const requiredDelay = backoffDelays[retryCount] || backoffDelays[backoffDelays.length - 1];
+    const delayIndex = retryCount - 1; // Convert retry count to array index
+    const requiredDelay = backoffDelays[delayIndex] || backoffDelays[backoffDelays.length - 1];
     
     if (timeSinceLastAttempt < requiredDelay) {
-      console.log(`⏳ Too soon to retry contact ${contact.id} (retry ${retryCount + 1})`);
+      const remainingMs = requiredDelay - timeSinceLastAttempt;
+      const remainingMin = Math.ceil(remainingMs / 60000);
+      console.log(`⏳ Too soon to retry contact ${contact.id} (retry ${retryCount}/${3}). Wait ${remainingMin} more minutes`);
       return { 
         success: false, 
         method: 'none', 
-        error: 'Waiting for backoff period' 
+        error: `Waiting for backoff period (${remainingMin} minutes remaining)` 
       };
     }
   }
   
-  console.log(`🔄 Retrying notification for contact ${contact.id} (attempt ${retryCount + 1})`);
+  console.log(`🔄 Retrying notification for contact ${contact.id} (retry ${retryCount}/${3})`);
   
   return await notifySeller(sellerInfo, {
     buyerName: contact.buyerName,
