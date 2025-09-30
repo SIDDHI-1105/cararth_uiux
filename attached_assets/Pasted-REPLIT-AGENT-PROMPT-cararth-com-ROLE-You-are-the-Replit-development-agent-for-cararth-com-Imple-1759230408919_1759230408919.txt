@@ -1,0 +1,253 @@
+REPLIT AGENT PROMPT — cararth.com
+
+ROLE:
+You are the Replit development agent for cararth.com. Implement the full feature set below into the codebase. If repo missing, scaffold a working prototype. Use Next.js + TypeScript for frontend/backend, Prisma + PostgreSQL for DB, Redis + BullMQ for queues, Elasticsearch/OpenSearch for search, S3-compatible storage for snapshots/images. Prioritize correctness, security, tests, and documentation.
+
+GOAL:
+Build India’s first used car search engine & seller syndication system with:
+1. Listing update monitor (partner push, scheduled fetch, Firecrawl).
+2. Seller syndication (partner onboarding + ingestion adapters + partner dashboard).
+3. Google/Gmail login (OAuth2) and role-based access.
+4. Firecrawl ingestion pipeline with LLM compliance checks (GPT-5, Gemini, Anthropic, Perplexity).
+5. Admin dashboards for feed health, LLM risk reports, partner management.
+
+PRIORITIZATION:
+1. Ingestion/monitor + DB + canonical schema
+2. Google OAuth + user model
+3. Seller onboarding + ingestion adapters
+4. LLM compliance pipeline + admin UI
+5. Tests, docs, deployment scripts
+
+=================================================
+FEATURES
+=================================================
+
+A. Listing Update Monitor
+- Accept ingestion via:
+  • Partner push (webhook JSON)
+  • Scheduled fetch (HTTP/CSV/SFTP + Firecrawl adapter)
+- Deduplication & canonicalization:
+  • Use canonical schema (see below)
+  • Fingerprint = VIN if present else SHA256(make|model|year|kms|city|image_hash)
+- Endpoint: POST /api/ingest/check-updates {source_id, sample_urls[]}
+  → Returns [{url, status:new|updated|removed, diff:{field:[old,new]}}]
+- DB tables: listings, listing_sources
+- Admin UI: /admin/feeds shows feed health (last updated, ingest rate, rejected count)
+
+B. Seller Syndication
+- Onboarding form (/admin/onboard-partner):
+  • partner_name, contact_email, feed_type (webhook/csv/sftp/firecrawl), endpoint, credentials, consent checkbox, contract upload
+- Ingestion adapters:
+  • Webhook receiver endpoint
+  • CSV parser (SFTP/HTTP)
+  • Firecrawl fetcher
+- Mapping:
+  • Partner uploads JSON mapping → canonical fields
+  • Validate with sample file
+- Partner dashboard:
+  • Stats (ingested, rejected, last run)
+  • Sample rejects + reasons
+  • Mapping config view
+
+C. Google / Gmail Login
+- Implement Google OAuth2 (OIDC)
+- On login → create user with role = buyer
+- Roles: buyer | seller | admin (admin can promote)
+- Secure session cookie or JWT
+- Protect routes: /admin/*, /partner/* require roles
+
+D. LLM Compliance (Firecrawl pipeline)
+- After ingestion, before publish, run:
+  • ToS extraction (GPT-5): fetch robots.txt + ToS, extract allow_scrape (true/false), summary, clauses
+  • PII detector (Gemini/Anthropic): detect phone, email, reg no, etc. Mask unless consent
+  • Copyright risk (Perplexity): check near-verbatim matches, return top matches + similarity
+  • Normalization (Gemini): normalize make/model/units, compute price_score
+- Store outputs in llm_reports + listing_risk_score
+- Flag high-risk listings → /admin/review for manual action
+- Audit: save raw snapshots + ToS + LLM outputs
+
+=================================================
+CANONICAL LISTING SCHEMA
+=================================================
+{
+  "listing_id": "string (UUID)",
+  "source_id": "string",
+  "source_listing_id": "string",
+  "source_url": "string",
+  "fingerprint": "string (vin or hash)",
+  "title": "string",
+  "make": "string",
+  "model": "string",
+  "variant": "string",
+  "year": "integer",
+  "price": { "amount": "number", "currency": "INR" },
+  "kms": "integer",
+  "fuel": "string",
+  "transmission": "string",
+  "owner_count": "integer",
+  "registration_state": "string",
+  "city": "string",
+  "pincode": "string",
+  "images": ["string"],
+  "description": "string",
+  "posted_at": "ISO8601 datetime",
+  "ingested_at": "ISO8601 datetime",
+  "last_seen_at": "ISO8601 datetime",
+  "seller_type": "dealer|individual|aggregator",
+  "verified_docs": { "rc": boolean, "insurance": boolean },
+  "meta": {
+    "raw_payload": "json",
+    "tos_snapshot": "url",
+    "llm_reports": {
+      "pii": [],
+      "copyright_score": 0.0,
+      "normalization": {}
+    }
+  }
+}
+
+=================================================
+PRISMA DB SCHEMA
+=================================================
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  name        String?
+  google_sub  String?  @unique
+  avatar_url  String?
+  role        String   @default("buyer")
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+}
+model ListingSource {
+  id             String   @id @default(uuid())
+  partner_name   String?
+  source_type    String
+  endpoint       String?
+  credentials    Json?
+  country        String?
+  city           String?
+  consented      Boolean  @default(false)
+  contract_url   String?
+  last_ingest_at DateTime?
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+  Listings       Listing[]
+}
+model Listing {
+  id                 String   @id @default(uuid())
+  listing_id         String   @unique
+  source_id          String
+  source_listing_id  String
+  source_url         String?
+  fingerprint        String
+  title              String?
+  make               String?
+  model              String?
+  variant            String?
+  year               Int?
+  price_amount       Float?
+  price_currency     String? @default("INR")
+  kms                Int?
+  fuel               String?
+  transmission       String?
+  owner_count        Int?
+  registration_state String?
+  city               String?
+  pincode            String?
+  images             String[]
+  description        String?
+  posted_at          DateTime?
+  ingested_at        DateTime @default(now())
+  last_seen_at       DateTime?
+  seller_type        String?
+  verified_rc        Boolean @default(false)
+  verified_insurance Boolean @default(false)
+  meta               Json?
+  listing_risk_score Float?
+  status             String   @default("pending")
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+  @@index([fingerprint])
+  @@index([source_id])
+  @@foreignKey([source_id], references: [id])
+}
+model LLMReport {
+  id          String   @id @default(uuid())
+  listing_id  String
+  provider    String
+  report_type String
+  report_json Json
+  created_at  DateTime @default(now())
+  @@index([listing_id])
+}
+
+=================================================
+API ROUTES (minimum)
+=================================================
+- POST /api/webhook/ingest — partner webhook
+- POST /api/ingest/check-updates — check diffs
+- POST /api/ingest/schedule — trigger scheduled fetch
+- POST /api/firecrawl/fetch — Firecrawl adapter
+- POST /api/partners — create partner (admin only)
+- GET /api/partners/:id/stats — partner dashboard
+- POST /api/auth/google — start Google OAuth
+- GET /api/auth/google/callback — handle callback
+- GET /api/admin/feeds — feed health data
+- GET /api/admin/review — flagged listings
+- GET /api/listings/:id — public listing detail
+
+=================================================
+LLM PROMPTS (examples)
+=================================================
+- GPT-5 ToS extraction:
+  "Given this site ToS text and robots.txt, extract whether scraping & redistribution are allowed. Respond JSON: { allow_scrape:true|false, summary:string, clauses:[{heading,text}] }"
+- Gemini/Anthropic PII detection:
+  "Identify personal data in this listing JSON. Return JSON: { pii_fields:[string], pii_examples:{field:value} }"
+- Perplexity copyright check:
+  "Does this text appear near-verbatim on the web? Return JSON: { near_duplicate:true|false, top_matches:[{url,similarity}] }"
+- Gemini normalization:
+  "Normalize make, model, variant, units. Return JSON: { make, model, variant, kms:int, price_amount:float }"
+
+=================================================
+ENV VARIABLES
+=================================================
+- FIRECRAWL_API_KEY
+- GOOGLE_OAUTH_CLIENT_ID
+- GOOGLE_OAUTH_CLIENT_SECRET
+- DATABASE_URL
+- S3_ENDPOINT, S3_ACCESS_KEY, S3_SECRET, S3_BUCKET
+- JWT_SECRET
+- REDIS_URL
+- LLM_GPT5_KEY
+- LLM_GEMINI_KEY
+- LLM_ANTHROPIC_KEY
+- LLM_PERPLEXITY_KEY
+
+=================================================
+DEPLOYMENT NOTES
+=================================================
+- Use docker-compose for Postgres, Redis, Elasticsearch locally.
+- Queue LLM jobs via BullMQ.
+- Store snapshots + images in S3-compatible store (DigitalOcean/AWS).
+- Protect secrets using Replit secrets manager.
+- Provide health checks for /api/* endpoints.
+
+=================================================
+ACCEPTANCE CHECKLIST
+=================================================
+- Sample CSV + webhook ingested → canonical listing saved with fingerprint + timestamps
+- /api/ingest/check-updates returns correct new/updated/removed diffs
+- Google login works end-to-end; user record created in DB
+- Partner onboarding stores config + mapping; partner dashboard shows stats
+- LLM reports stored in DB; high-risk listing appears in /admin/review
+- /admin/feeds shows feed health
+- All env vars documented; no secrets hardcoded
+- Tests (unit + integration) pass locally
