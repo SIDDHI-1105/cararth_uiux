@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Car, Heart, Menu, X, MessageCircle, User, LogOut, LogIn } from "lucide-react";
+import { Car, Heart, Menu, X, MessageCircle, User, LogOut } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "@/components/theme-toggle";
@@ -13,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { AuthDialog } from "@/components/auth-dialog";
 
 export default function Navbar() {
   const [location] = useLocation();
@@ -134,30 +135,9 @@ export default function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    className="hidden sm:inline-flex btn-metallic px-6 py-2 text-base md:text-lg font-semibold"
-                    data-testid="button-login"
-                  >
-                    Login
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem asChild>
-                    <a href="/api/auth/google" className="flex items-center">
-                      <LogIn className="w-4 h-4 mr-2" />
-                      Sign in with Google
-                    </a>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <a href="/api/auth/facebook" className="flex items-center">
-                      <LogIn className="w-4 h-4 mr-2" />
-                      Sign in with Facebook
-                    </a>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div className="hidden sm:block">
+                <AuthDialog />
+              </div>
             )}
             
             <Button 
@@ -262,30 +242,8 @@ export default function Navbar() {
                     </Button>
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <Button
-                      asChild
-                      className="w-full btn-metallic py-3 text-base font-semibold"
-                      data-testid="mobile-button-login-google"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <a href="/api/auth/google" className="flex items-center justify-center">
-                        <LogIn className="w-4 h-4 mr-2" />
-                        Sign in with Google
-                      </a>
-                    </Button>
-                    <Button
-                      asChild
-                      variant="outline"
-                      className="w-full py-3 text-base font-semibold"
-                      data-testid="mobile-button-login-facebook"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <a href="/api/auth/facebook" className="flex items-center justify-center">
-                        <LogIn className="w-4 h-4 mr-2" />
-                        Sign in with Facebook
-                      </a>
-                    </Button>
+                  <div onClick={() => setIsMobileMenuOpen(false)}>
+                    <AuthDialog />
                   </div>
                 )}
               </div>
