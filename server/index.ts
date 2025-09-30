@@ -15,10 +15,13 @@ const app = express();
 setupProcessErrorHandlers();
 
 // Initialize production-grade logging system
-if (typeof setGlobalLogger === 'function') {
-  const { ProductionLogger } = await import('./errorHandling.js');
-  setGlobalLogger(new ProductionLogger());
-}
+const initLogger = async () => {
+  if (typeof setGlobalLogger === 'function') {
+    const { ProductionLogger } = await import('./errorHandling.js');
+    setGlobalLogger(new ProductionLogger());
+  }
+};
+await initLogger();
 
 // Add request ID middleware for better error tracking
 app.use(requestIdMiddleware);

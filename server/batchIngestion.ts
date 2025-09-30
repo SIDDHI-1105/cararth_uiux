@@ -63,7 +63,7 @@ export class BatchIngestionService {
           console.log(`🏭 Scraping Maruti True Value certified listings for ${city}...`);
           const marutiResult = await marutiTrueValueScraper.scrapeListings({ 
             city: city.charAt(0).toUpperCase() + city.slice(1), // Capitalize city name
-            maxPages: 3 // Limit to 3 pages for batch ingestion
+            maxPages: 10 // Increased to get more listings
           });
           
           if (marutiResult.listings && marutiResult.listings.length > 0) {
@@ -80,7 +80,7 @@ export class BatchIngestionService {
           console.log(`🚗 Scraping Hyundai H-Promise certified listings for ${city}...`);
           const hyundaiResult = await hyundaiPromiseScraper.scrapeListings({ 
             city: city.charAt(0).toUpperCase() + city.slice(1), // Capitalize city name
-            maxPages: 15, // Get more Hyundai listings as they have higher search volume
+            maxPages: 25, // Increased from 15 to get more listings
             dealerSite: 'Advaith' // Start with Advaith Hyundai
           });
           
@@ -98,7 +98,7 @@ export class BatchIngestionService {
           console.log(`🚘 Scraping Mahindra First Choice certified listings for ${city}...`);
           const mahindraResult = await mahindraFirstChoiceScraper.scrapeListings({ 
             city: city.charAt(0).toUpperCase() + city.slice(1), // Capitalize city name
-            maxPages: 3 // Limit to 3 pages for batch ingestion
+            maxPages: 10 // Increased to get more listings
           });
           
           if (mahindraResult.listings && mahindraResult.listings.length > 0) {

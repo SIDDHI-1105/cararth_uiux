@@ -41,6 +41,7 @@ import { AutomotiveNewsService } from "./automotiveNews";
 import { z } from "zod";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { setupSocialAuth } from "./socialAuth";
+import { setupLocalAuth } from "./localAuth";
 import { 
   communityPosts, 
   communityComments, 
@@ -368,6 +369,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } else {
       console.log('⚠️ Continuing without social authentication in development');
     }
+  }
+
+  // Setup local username/password authentication
+  try {
+    setupLocalAuth(app);
+  } catch (error) {
+    console.error('❌ Failed to setup local auth:', error);
+    console.log('⚠️ Continuing without local authentication');
   }
 
   // Batch ingestion endpoint for external cron jobs (cron-job.org, GitHub Actions, Railway)
