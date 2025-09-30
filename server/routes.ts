@@ -4927,6 +4927,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const { sourceId } = req.params;
     const rawData = req.body;
     
+    // Partner ingestion requires database storage
+    if (!('db' in storage)) {
+      return res.status(503).json({ error: 'Partner ingestion requires database storage' });
+    }
+    
     const source = await storage.getListingSource(sourceId);
     if (!source) {
       return res.status(404).json({ error: 'Source not found' });
@@ -4939,7 +4944,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       sourceId,
       rawData,
       source,
-      storage.db
+      (storage as any).db
     );
 
     if (result.success) {
@@ -4952,6 +4957,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Manual ingestion trigger (admin only)
   app.post('/api/admin/ingest/manual', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
     const { sourceId, listings } = req.body;
+    
+    // Partner ingestion requires database storage
+    if (!('db' in storage)) {
+      return res.status(503).json({ error: 'Partner ingestion requires database storage' });
+    }
     
     const source = await storage.getListingSource(sourceId);
     if (!source) {
@@ -4966,7 +4976,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       sourceId,
       listings,
       source,
-      storage.db
+      (storage as any).db
     );
 
     await storage.createIngestionLog({

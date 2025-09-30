@@ -18,6 +18,10 @@ import {
   aiModelCache,
   sarfaesiJobs,
   adminAuditLogs,
+  listingSources,
+  canonicalListings,
+  llmReports,
+  ingestionLogs,
   type User, 
   type InsertUser, 
   type UpsertUser,
@@ -79,7 +83,7 @@ export interface OptimizedSearchFilters {
 }
 
 export class DatabaseStorage implements IStorage {
-  private db: ReturnType<typeof drizzle>;
+  public db: ReturnType<typeof drizzle>;
   private cache: Map<string, { data: any; expiry: number }> = new Map();
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
@@ -2074,6 +2078,229 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'updateSellerListing operation');
       throw new Error('Failed to update seller listing');
+    }
+  }
+
+  // Partner source management
+  async getListingSources(): Promise<any[]> {
+    try {
+      const cacheKey = 'listing_sources_all';
+      const cached = this.getCached<any[]>(cacheKey);
+      if (cached) return cached;
+
+      const sources = await this.db
+        .select()
+        .from(listingSources)
+        .orderBy(desc(listingSources.createdAt));
+      
+      this.setCache(cacheKey, sources, 60000); // Cache for 1 minute
+      return sources;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getListingSources operation');
+      return [];
+    }
+  }
+
+  async getListingSource(id: string): Promise<any | undefined> {
+    try {
+      const cacheKey = `listing_source:${id}`;
+      const cached = this.getCached<any>(cacheKey);
+      if (cached) return cached;
+
+      const result = await this.db
+        .select()
+        .from(listingSources)
+        .where(eq(listingSources.id, id))
+        .limit(1);
+      
+      const source = result[0];
+      if (source) {
+        this.setCache(cacheKey, source);
+      }
+      return source;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getListingSource operation');
+      return undefined;
+    }
+  }
+
+  async createListingSource(data: any): Promise<any> {
+    try {
+      const result = await this.db
+        .insert(listingSources)
+        .values(data)
+        .returning();
+      
+      const newSource = result[0];
+      this.clearCache('listing_sources_all');
+      logError({ message: 'Listing source created successfully', statusCode: 200 }, 'createListingSource success');
+      return newSource;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'createListingSource operation');
+      throw new Error('Failed to create listing source');
+    }
+  }
+
+  async updateListingSource(id: string, updates: any): Promise<any | undefined> {
+    try {
+      const result = await this.db
+        .update(listingSources)
+        .set({
+          ...updates,
+          updatedAt: new Date()
+        })
+        .where(eq(listingSources.id, id))
+        .returning();
+      
+      const updatedSource = result[0];
+      if (updatedSource) {
+        this.clearCache(`listing_source:${id}`);
+        this.clearCache('listing_sources_all');
+      }
+      
+      logError({ message: 'Listing source updated successfully', statusCode: 200 }, 'updateListingSource success');
+      return updatedSource;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'updateListingSource operation');
+      return undefined;
+    }
+  }
+
+  async deleteListingSource(id: string): Promise<void> {
+    try {
+      await this.db
+        .delete(listingSources)
+        .where(eq(listingSources.id, id));
+      
+      this.clearCache(`listing_source:${id}`);
+      this.clearCache('listing_sources_all');
+      logError({ message: 'Listing source deleted successfully', statusCode: 200 }, 'deleteListingSource success');
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'deleteListingSource operation');
+      throw new Error('Failed to delete listing source');
+    }
+  }
+
+  // Ingestion management
+  async getIngestionStats(sourceId: string): Promise<any> {
+    try {
+      const logsResult = await this.db
+        .select()
+        .from(ingestionLogs)
+        .where(eq(ingestionLogs.sourceId, sourceId))
+        .orderBy(desc(ingestionLogs.createdAt))
+        .limit(30);
+
+      const totalProcessed = logsResult.reduce((sum, log) => sum + (log.totalProcessed || 0), 0);
+      const totalNew = logsResult.reduce((sum, log) => sum + (log.newListings || 0), 0);
+      const totalUpdated = logsResult.reduce((sum, log) => sum + (log.updatedListings || 0), 0);
+      const totalRejected = logsResult.reduce((sum, log) => sum + (log.rejectedListings || 0), 0);
+      
+      const successfulRuns = logsResult.filter(log => log.status === 'success').length;
+      const failedRuns = logsResult.filter(log => log.status === 'failed').length;
+
+      const listingsCountResult = await this.db
+        .select({ count: count() })
+        .from(canonicalListings)
+        .where(eq(canonicalListings.sourceId, sourceId));
+
+      const totalListings = listingsCountResult[0]?.count || 0;
+
+      return {
+        totalProcessed,
+        totalNew,
+        totalUpdated,
+        totalRejected,
+        totalListings,
+        successfulRuns,
+        failedRuns,
+        recentLogs: logsResult.slice(0, 10),
+      };
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getIngestionStats operation');
+      return {
+        totalProcessed: 0,
+        totalNew: 0,
+        totalUpdated: 0,
+        totalRejected: 0,
+        totalListings: 0,
+        successfulRuns: 0,
+        failedRuns: 0,
+        recentLogs: [],
+      };
+    }
+  }
+
+  async getIngestionLogs(sourceId: string, options?: { limit?: number }): Promise<any[]> {
+    try {
+      const limit = options?.limit || 20;
+      
+      const logs = await this.db
+        .select()
+        .from(ingestionLogs)
+        .where(eq(ingestionLogs.sourceId, sourceId))
+        .orderBy(desc(ingestionLogs.createdAt))
+        .limit(limit);
+      
+      return logs;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getIngestionLogs operation');
+      return [];
+    }
+  }
+
+  async createIngestionLog(log: any): Promise<any> {
+    try {
+      const result = await this.db
+        .insert(ingestionLogs)
+        .values(log)
+        .returning();
+      
+      const newLog = result[0];
+      logError({ message: 'Ingestion log created successfully', statusCode: 200 }, 'createIngestionLog success');
+      return newLog;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'createIngestionLog operation');
+      throw new Error('Failed to create ingestion log');
+    }
+  }
+
+  // Canonical listings management
+  async getFlaggedListings(options?: { limit?: number }): Promise<any[]> {
+    try {
+      const limit = options?.limit || 50;
+      
+      const listings = await this.db
+        .select()
+        .from(canonicalListings)
+        .where(eq(canonicalListings.status, 'flagged'))
+        .orderBy(desc(canonicalListings.createdAt))
+        .limit(limit);
+      
+      return listings;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getFlaggedListings operation');
+      return [];
+    }
+  }
+
+  async updateCanonicalListingStatus(listingId: string, status: string): Promise<any | undefined> {
+    try {
+      const result = await this.db
+        .update(canonicalListings)
+        .set({
+          status,
+          updatedAt: new Date()
+        })
+        .where(eq(canonicalListings.id, listingId))
+        .returning();
+      
+      const updatedListing = result[0];
+      logError({ message: `Canonical listing status updated to ${status}`, statusCode: 200 }, 'updateCanonicalListingStatus success');
+      return updatedListing;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'updateCanonicalListingStatus operation');
+      return undefined;
     }
   }
 }

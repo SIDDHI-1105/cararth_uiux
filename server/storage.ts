@@ -1268,6 +1268,58 @@ export class MemStorage implements IStorage {
       }
     };
   }
+
+  // Partner source management - in-memory stubs
+  async getListingSources(): Promise<any[]> {
+    return [];
+  }
+
+  async getListingSource(id: string): Promise<any | undefined> {
+    return undefined;
+  }
+
+  async createListingSource(data: any): Promise<any> {
+    return { id: randomUUID(), ...data, createdAt: new Date(), updatedAt: new Date() };
+  }
+
+  async updateListingSource(id: string, updates: any): Promise<any | undefined> {
+    return undefined;
+  }
+
+  async deleteListingSource(id: string): Promise<void> {
+    return;
+  }
+
+  // Ingestion management - in-memory stubs
+  async getIngestionStats(sourceId: string): Promise<any> {
+    return {
+      totalProcessed: 0,
+      totalNew: 0,
+      totalUpdated: 0,
+      totalRejected: 0,
+      totalListings: 0,
+      successfulRuns: 0,
+      failedRuns: 0,
+      recentLogs: [],
+    };
+  }
+
+  async getIngestionLogs(sourceId: string, options?: { limit?: number }): Promise<any[]> {
+    return [];
+  }
+
+  async createIngestionLog(log: any): Promise<any> {
+    return { id: randomUUID(), ...log, createdAt: new Date() };
+  }
+
+  // Canonical listings management - in-memory stubs
+  async getFlaggedListings(options?: { limit?: number }): Promise<any[]> {
+    return [];
+  }
+
+  async updateCanonicalListingStatus(listingId: string, status: string): Promise<any | undefined> {
+    return undefined;
+  }
 }
 
 import { DatabaseStorage } from './dbStorage.js';
