@@ -16,6 +16,8 @@ interface MarketInsight {
   dataPoints: string[];
   marketImpact: 'positive' | 'negative' | 'neutral';
   confidence: number;
+  sources: string[];
+  citations: string[];
 }
 
 export class AutomotiveNewsService {
@@ -85,10 +87,10 @@ export class AutomotiveNewsService {
     }
   }
 
-  // Get specific market insights for pricing and trends
+  // Get specific market insights for pricing and trends from SIAM and published sources
   async getMarketInsights(location: string = 'India'): Promise<MarketInsight[]> {
     try {
-      console.log(`🔍 Analyzing market insights for ${location}...`);
+      console.log(`🔍 Analyzing market insights for ${location} from SIAM and published sources...`);
       
       const response = await globalThis.fetch(this.baseUrl, {
         method: 'POST',
@@ -101,41 +103,64 @@ export class AutomotiveNewsService {
           messages: [
             {
               role: 'system',
-              content: `You are a senior automotive market researcher with expertise in the Indian used car market. 
-              Provide data-driven insights with specific numbers, trends, and actionable intelligence for marketplace operators.`
+              content: `You are a senior automotive market researcher specializing in the Indian automotive market. 
+              You have access to real-time data and must cite authoritative sources including:
+              - SIAM (Society of Indian Automobile Manufacturers) data and reports
+              - Government automotive statistics and publications
+              - Industry reports from major automotive research firms
+              - Published market analysis from recognized institutions
+              
+              Always provide specific data points, numbers, and cite your sources clearly.`
             },
             {
               role: 'user',
-              content: `Analyze the current used car market trends in ${location} for 2024. Focus on:
+              content: `Research and analyze the current automotive market trends in ${location} using the latest published data from SIAM and other authoritative sources. Focus on:
               
-              1. Price trend analysis - which segments are seeing price increases/decreases?
-              2. Popular model demand shifts - which cars are gaining/losing popularity?
-              3. Market liquidity - how quickly are cars selling in different price segments?
-              4. Seasonal patterns - current market dynamics vs historical trends
-              5. Technology impact - EV adoption effect on ICE vehicle resale values
+              1. **New Car Sales Data**: Latest SIAM monthly/quarterly sales figures by segment (passenger vehicles, commercial vehicles)
+              2. **Used Car Market Trends**: Published data on used car transaction volumes, pricing trends, and popular segments
+              3. **Popular Models & Brands**: Which manufacturers and models are leading in sales based on SIAM data
+              4. **Price Movements**: Any published reports on pricing trends for new and used vehicles
+              5. **Market Dynamics**: Seasonal patterns, inventory levels, and market liquidity from industry reports
+              6. **Technology Impact**: Published data on EV adoption rates and impact on ICE vehicle resale values
               
-              Provide specific insights with confidence levels and market impact assessment.`
+              For each insight, provide:
+              - Specific data points with numbers
+              - Source citation (e.g., "SIAM September 2024 report", "Government automotive statistics Q3 2024")
+              - Market impact assessment
+              
+              Format each insight as:
+              **TOPIC: [Topic Name]**
+              **INSIGHT:** [Key finding with specific numbers]
+              **DATA POINTS:** [Bullet points with specific data]
+              **SOURCES:** [List all sources and citations]
+              **IMPACT:** [positive/negative/neutral]`
             }
           ],
-          max_tokens: 1500,
+          max_tokens: 2000,
           temperature: 0.1,
           top_p: 0.9,
-          search_recency_filter: 'month',
           return_citations: true,
           stream: false
         })
       });
 
       if (!response.ok) {
-        throw new Error(`Market insights request failed: ${response.status}`);
+        const errorText = await response.text();
+        console.error(`❌ Perplexity API error ${response.status}: ${errorText}`);
+        throw new Error(`Market insights request failed: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
       const content = data.choices[0]?.message?.content || '';
+      const citations = data.citations || [];
       
-      console.log('✅ Retrieved comprehensive market insights');
+      console.log('✅ Retrieved comprehensive market insights from SIAM and published sources');
+      console.log(`📊 Citations found: ${citations.length}`);
+      if (citations.length > 0) {
+        console.log(`📚 Sources: ${citations.slice(0, 3).join(', ')}${citations.length > 3 ? '...' : ''}`);
+      }
       
-      return this.parseMarketInsights(content);
+      return this.parseMarketInsights(content, undefined, citations);
       
     } catch (error) {
       console.error('🚫 Market insights error:', error);
@@ -178,7 +203,6 @@ export class AutomotiveNewsService {
           max_tokens: 800,
           temperature: 0.2,
           top_p: 0.9,
-          search_recency_filter: 'month',
           return_citations: true,
           stream: false
         })
@@ -193,7 +217,8 @@ export class AutomotiveNewsService {
       
       console.log(`✅ Retrieved ${brand} brand insights`);
       
-      return this.parseMarketInsights(content, brand);
+      const citations = data.citations || [];
+      return this.parseMarketInsights(content, brand, citations);
       
     } catch (error) {
       console.error(`🚫 ${brand} insights error:`, error);
@@ -352,22 +377,89 @@ export class AutomotiveNewsService {
     ];
   }
 
-  private parseMarketInsights(content: string, brand?: string): MarketInsight[] {
+  private parseMarketInsights(content: string, brand?: string, citations: string[] = []): MarketInsight[] {
     const insights: MarketInsight[] = [];
-    const sections = content.split(/\d+\.|•|-/).filter(s => s.trim().length > 20);
     
-    for (const section of sections.slice(0, 5)) {
-      const lines = section.split('\n').filter(line => line.trim());
-      const topic = lines[0]?.replace(/\*\*/g, '').trim() || `${brand || 'Market'} Trend`;
-      const insight = lines.slice(1).join(' ').trim() || section.trim();
+    // Try to parse structured format first
+    const sections = content.split(/\*\*TOPIC:/).filter(s => s.trim().length > 20);
+    
+    if (sections.length > 1) {
+      // Structured format parsing
+      for (const section of sections.slice(1, 6)) { // Skip first empty, take max 5
+        try {
+          const lines = section.split('\n').map(line => line.trim()).filter(line => line);
+          
+          let topic = '';
+          let insight = '';
+          const dataPoints: string[] = [];
+          const sources: string[] = [];
+          let marketImpact: 'positive' | 'negative' | 'neutral' = 'neutral';
+          
+          let currentSection = '';
+          
+          for (const line of lines) {
+            if (line.startsWith('**INSIGHT:**')) {
+              currentSection = 'insight';
+              insight = line.replace('**INSIGHT:**', '').trim();
+            } else if (line.startsWith('**DATA POINTS:**')) {
+              currentSection = 'datapoints';
+            } else if (line.startsWith('**SOURCES:**')) {
+              currentSection = 'sources';
+            } else if (line.startsWith('**IMPACT:**')) {
+              currentSection = 'impact';
+              const impactText = line.replace('**IMPACT:**', '').trim().toLowerCase();
+              if (impactText.includes('positive')) marketImpact = 'positive';
+              else if (impactText.includes('negative')) marketImpact = 'negative';
+              else marketImpact = 'neutral';
+            } else if (!topic && !line.startsWith('**')) {
+              topic = line.replace(/\*\*/g, '').trim();
+            } else if (currentSection === 'datapoints' && (line.startsWith('-') || line.startsWith('•'))) {
+              dataPoints.push(line.replace(/^[-•]\s*/, '').trim());
+            } else if (currentSection === 'sources' && (line.startsWith('-') || line.startsWith('•') || line.length > 10)) {
+              const source = line.replace(/^[-•]\s*/, '').trim();
+              if (source && !source.startsWith('**')) sources.push(source);
+            } else if (currentSection === 'insight' && !line.startsWith('**') && line.length > 10) {
+              insight += ' ' + line;
+            }
+          }
+          
+          if (topic && insight) {
+            insights.push({
+              topic,
+              insight: insight.trim(),
+              dataPoints,
+              marketImpact,
+              confidence: 0.85, // High confidence for structured data
+              sources,
+              citations: citations.slice(0, 3) // Include up to 3 citations
+            });
+          }
+        } catch (error) {
+          console.log('Insight parsing error:', error);
+          continue;
+        }
+      }
+    }
+    
+    // Fallback to unstructured parsing
+    if (insights.length === 0) {
+      const fallbackSections = content.split(/\d+\.|•|-/).filter(s => s.trim().length > 20);
       
-      insights.push({
-        topic,
-        insight: insight.substring(0, 200) + (insight.length > 200 ? '...' : ''),
-        dataPoints: this.extractDataPoints(section),
-        marketImpact: this.assessMarketImpact(section),
-        confidence: Math.random() * 0.3 + 0.7 // 0.7-1.0 range
-      });
+      for (const section of fallbackSections.slice(0, 5)) {
+        const lines = section.split('\n').filter(line => line.trim());
+        const topic = lines[0]?.replace(/\*\*/g, '').trim() || `${brand || 'Market'} Trend`;
+        const insight = lines.slice(1).join(' ').trim() || section.trim();
+        
+        insights.push({
+          topic,
+          insight: insight.substring(0, 300) + (insight.length > 300 ? '...' : ''),
+          dataPoints: this.extractDataPoints(section),
+          marketImpact: this.assessMarketImpact(section),
+          confidence: 0.7,
+          sources: citations.length > 0 ? ['Market Intelligence'] : [],
+          citations: citations.slice(0, 2)
+        });
+      }
     }
     
     return insights;
@@ -436,7 +528,9 @@ export class AutomotiveNewsService {
         insight: 'Market intelligence service is establishing connection for real-time insights.',
         dataPoints: ['Service initializing'],
         marketImpact: 'neutral',
-        confidence: 0.8
+        confidence: 0.8,
+        sources: [],
+        citations: []
       }
     ];
   }
@@ -448,7 +542,9 @@ export class AutomotiveNewsService {
         insight: `${brand} brand analysis service is connecting for comprehensive market insights.`,
         dataPoints: [`${brand} analysis pending`],
         marketImpact: 'neutral',
-        confidence: 0.8
+        confidence: 0.8,
+        sources: [],
+        citations: []
       }
     ];
   }

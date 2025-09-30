@@ -41,6 +41,9 @@ interface ForumPost {
   isBookmarked?: boolean;
   readTime?: string;
   trending?: boolean;
+  content?: string;
+  dataPoints?: string[];
+  citations?: string[];
 }
 
 // Post creation form schema
@@ -159,7 +162,10 @@ export default function ThrottleTalkPage() {
       views: Math.floor(100 + Math.random() * 500),
       lastReply: new Date().toLocaleDateString(),
       isExternal: false,
-      attribution: 'AI-powered market analysis by CarArth',
+      attribution: insight.sources?.length > 0 ? `Sources: ${insight.sources.join(', ')}` : 'Sourced from SIAM and published automotive data',
+      content: insight.insight,
+      dataPoints: insight.dataPoints,
+      citations: insight.citations,
     })) : [];
 
   // Combine RSS and user content
@@ -410,7 +416,29 @@ export default function ThrottleTalkPage() {
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-6 text-sm text-gray-500 dark:text-gray-400">
+                        {/* Market insights content */}
+                        {post.content && (
+                          <div className="mt-3 text-sm text-gray-700 dark:text-gray-300">
+                            <p>{post.content}</p>
+                          </div>
+                        )}
+
+                        {/* Data points for market insights */}
+                        {post.dataPoints && post.dataPoints.length > 0 && (
+                          <div className="mt-3">
+                            <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Key Data Points:</p>
+                            <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                              {post.dataPoints.map((point: string, idx: number) => (
+                                <li key={idx} className="flex items-start gap-2">
+                                  <span className="text-gray-400">•</span>
+                                  <span>{point}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-6 text-sm text-gray-500 dark:text-gray-400 mt-3">
                           <span className="flex items-center gap-1">
                             <MessageCircle className="h-4 w-4" />
                             {post.replies} replies
@@ -421,13 +449,26 @@ export default function ThrottleTalkPage() {
                           </span>
                         </div>
 
-                        {/* Attribution for external content */}
-                        {post.isExternal && post.attribution && (
+                        {/* Attribution and citations */}
+                        {post.attribution && (
                           <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
                             <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
                               <Globe className="h-3 w-3" />
                               {post.attribution}
                             </p>
+                            {/* Citations for market insights */}
+                            {post.citations && post.citations.length > 0 && (
+                              <div className="mt-2">
+                                <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Citations:</p>
+                                <ul className="text-xs text-gray-500 dark:text-gray-500 space-y-1">
+                                  {post.citations.slice(0, 3).map((citation: string, idx: number) => (
+                                    <li key={idx} className="truncate">
+                                      {idx + 1}. {citation}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
