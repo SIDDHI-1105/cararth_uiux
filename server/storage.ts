@@ -167,6 +167,22 @@ export interface IStorage {
       sellerType: 'private' | 'dealer';
     }
   }>;
+  
+  // Partner source management
+  getListingSources(): Promise<any[]>;
+  getListingSource(id: string): Promise<any | undefined>;
+  createListingSource(data: any): Promise<any>;
+  updateListingSource(id: string, updates: any): Promise<any | undefined>;
+  deleteListingSource(id: string): Promise<void>;
+  
+  // Ingestion management
+  getIngestionStats(sourceId: string): Promise<any>;
+  getIngestionLogs(sourceId: string, options?: { limit?: number }): Promise<any[]>;
+  createIngestionLog(log: any): Promise<any>;
+  
+  // Canonical listings management
+  getFlaggedListings(options?: { limit?: number }): Promise<any[]>;
+  updateCanonicalListingStatus(listingId: string, status: string): Promise<any | undefined>;
 }
 
 export class MemStorage implements IStorage {

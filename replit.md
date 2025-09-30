@@ -2,21 +2,16 @@
 
 ## Overview
 
-Cararth is India's very own comprehensive used car search engine that revolutionizes how Indians discover, compare, and buy cars online. The platform aggregates listings from multiple car portals (CarDekho, OLX, Cars24, CarWale, AutoTrader) to provide intelligent pricing insights, authentic verification, and AI-powered market analytics.
+Cararth is India's comprehensive used car search engine, aggregating listings from multiple portals (CarDekho, OLX, Cars24, CarWale, AutoTrader) to provide intelligent pricing, authentic verification, and AI-powered market analytics. Its mission is to empower users to discover, compare, and buy/sell cars with confidence, acting as a guide to true car value.
 
-**Brand Mission:** "Discover cars from across platforms, compare smarter, and buy or sell with confidence. More than a marketplace — your guide, your community, your car's true value (arth)."
-
-**Contact:** connect@cararth.com  
-**Domain:** cararth.com
-
-Cararth follows a monorepo structure with shared TypeScript schemas, uses Drizzle ORM with PostgreSQL for database management, and implements a clean REST API architecture. It's designed as a production-ready cross-platform search engine with features like:
-
-- **Multi-LLM AI Intelligence:** GPT-4o, Gemini, and Perplexity for market analysis
-- **Advanced Caching System:** Multi-tier caching with performance optimization  
-- **Smart Timeout Management:** Circuit breakers and retry logic for all external services
-- **Hyderabad Market Intelligence:** Local market data and area-specific pricing
-- **Real-time Aggregation:** Live data from 10+ automotive platforms
-- **Authentic Verification:** AI-powered listing validation and quality scoring
+Key capabilities include:
+- Multi-LLM AI Intelligence for market analysis and compliance checks.
+- Advanced Caching System for performance optimization.
+- Smart Timeout Management for external services.
+- Localized market intelligence (e.g., Hyderabad).
+- Real-time aggregation from 10+ automotive platforms.
+- AI-powered listing validation and quality scoring.
+- Enterprise Partner Syndication for sellers to distribute listings across platforms with multi-LLM compliance.
 
 ## User Preferences
 
@@ -24,123 +19,89 @@ Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
-### Fast Search Architecture (Batch Ingestion System)
+Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, and a clean REST API architecture.
 
-**Performance Achievement**: 100x+ improvement from 76+ second searches to sub-second responses
-
-- **Batch Ingestion**: Scheduled jobs scrape all portals (CarDekho, OLX, Cars24, etc.) and normalize data into PostgreSQL
-- **Fast Database Search**: All user searches served directly from database in 600-800ms, cached responses in 0ms
-- **Smart Fallback**: Falls back to real-time portal search only if database is empty
-- **Cross-Filter Support**: Any filter combination works (price OR model OR city OR fuel, combined with AND logic)
-
-**Production Deployment:**
-- **Scheduling**: Use external cron services (cron-job.org, GitHub Actions, Railway) to hit `/api/run_ingestion` endpoint 2x daily
-- **Database**: PostgreSQL with proper indexes for fast numeric sorting/filtering
-- **Caching**: Two-tier system with in-memory L1 cache and database L2 cache
-- **Monitoring**: `/api/ingestion/status` endpoint shows system health and data freshness
+### Fast Search Architecture
+- **Batch Ingestion**: Scheduled jobs scrape portals, normalize, and store data in PostgreSQL.
+- **Performance**: Sub-second search responses from the database (600-800ms) with cached responses (0ms).
+- **Fallback**: Real-time portal search only if the database is empty.
+- **Cross-Filter Support**: Flexible filtering combinations.
+- **Deployment**: External cron services trigger ingestion via `/api/run_ingestion` endpoint (2x daily).
+- **Caching**: Two-tier system with in-memory L1 and database L2 cache.
 
 ### Frontend Architecture
-- **Framework**: React 18 with TypeScript using Vite as the build tool
-- **Routing**: Wouter for lightweight client-side routing
-- **UI Components**: Radix UI primitives with shadcn/ui component library
-- **Styling**: Tailwind CSS with custom design system and CSS variables
-- **State Management**: TanStack Query (React Query) for server state management
-- **Forms**: React Hook Form with Zod validation resolvers
+- **Framework**: React 18 with TypeScript and Vite.
+- **Routing**: Wouter.
+- **UI Components**: Radix UI primitives with shadcn/ui.
+- **Styling**: Tailwind CSS with custom design system.
+- **State Management**: TanStack Query (React Query).
+- **Forms**: React Hook Form with Zod validation.
+- **UI/UX**: Responsive design, dark/light mode, component composition, form validation, toast notifications, loading states.
 
 ### Backend Architecture
-- **Runtime**: Node.js with Express.js framework
-- **Language**: TypeScript with ES modules
-- **API Design**: RESTful API with structured error handling
-- **Request Logging**: Custom middleware for API request/response logging
-- **Development**: Hot reload with Vite integration for seamless development experience
+- **Runtime**: Node.js with Express.js.
+- **Language**: TypeScript with ES modules.
+- **API Design**: RESTful API with structured error handling.
+- **Logging**: Custom middleware for API request/response logging.
+- **Development**: Hot reload with Vite integration.
 
 ### Data Layer
-- **ORM**: Drizzle ORM with PostgreSQL dialect
-- **Database**: PostgreSQL with Neon serverless driver
-- **Schema Management**: Shared TypeScript schema definitions between client and server
-- **Validation**: Zod schemas for runtime type checking and validation
-- **Storage Interface**: Abstract storage layer with in-memory implementation for development
-
-### Database Schema Design
-The application uses three main entities:
-- **Users**: Stores seller information with authentication fields
-- **Cars**: Comprehensive car listings with filtering attributes (brand, price, location, specifications)
-- **Contacts**: Buyer inquiry system linking potential buyers to car listings
+- **ORM**: Drizzle ORM with PostgreSQL dialect.
+- **Database**: PostgreSQL with Neon serverless driver.
+- **Schema Management**: Shared TypeScript schema definitions (client/server).
+- **Validation**: Zod schemas for runtime type checking.
+- **Entities**: Users, Cars, and Contacts.
 
 ### Authentication & Sessions
-- Session management using connect-pg-simple for PostgreSQL session storage
-- User authentication system with password handling
-- Seller-based car listing ownership model
+- Session management using `connect-pg-simple` for PostgreSQL.
+- User authentication with password handling.
+- Seller-based car listing ownership.
 
-### Development & Build System
-- **Build Tool**: Vite for fast development and optimized production builds
-- **Code Quality**: TypeScript strict mode with comprehensive type checking
-- **Path Resolution**: Absolute imports using @ aliases for clean import statements
-- **Asset Management**: Vite handles static assets and provides HMR in development
-
-### Error Handling & Logging
-- Centralized error handling middleware in Express
-- Structured API response format with consistent error messages
-- Development-friendly error overlay integration
-- Request/response logging with performance metrics
-
-### UI/UX Architecture
-- Responsive design with mobile-first approach
-- Dark/light mode support through CSS custom properties
-- Component composition using Radix UI primitives
-- Form validation with real-time feedback
-- Toast notifications for user feedback
-- Loading states and skeleton components for better UX
-
-## Cost Optimization Implementation
-
-### AI Model Response Caching
-- **Database-backed persistent cache**: Added `aiModelCache` table to store AI responses
-- **Multi-provider support**: Caches OpenAI, Gemini, Perplexity, and Claude responses
-- **TTL management**: Configurable cache expiration (default 24 hours)
-- **Cost tracking**: Monitors estimated API costs saved through caching
-- **Smart deduplication**: Uses SHA256 hashes for prompt deduplication
-
-### Environment Variables for Cost Control
-Set these in your Replit environment:
-- `PUBLISH_SHADOW_MODE=true` - Reduces publishing costs
-- `BATCH_CONCURRENCY=1` - Limits concurrent batch operations
-- `IMAGE_DOWNLOAD_CONCURRENCY=1` - Reduces image processing overhead
-
-### Reserved VM Management
-To stop billing for Reserved VM Deployments:
-1. Go to Publishing tool in your Repl
-2. Select "Manage" tab
-3. Choose "Shut Down" to delete published app and stop billing cycle
-
-### Implementation Files
-- `server/aiDatabaseCache.ts` - Database-backed AI response cache service
-- `shared/schema.ts` - AI cache table schema with indexes
-- Cost monitoring and statistics tracking built-in
+### Enterprise Partner Syndication System
+This system enables enterprise partners to post listings once and distribute them across platforms with multi-LLM compliance checks.
+- **Core Components**:
+    - **Partner Source Management**: Manages partner configurations, feed types (webhook, CSV, SFTP, Firecrawl), field mapping, legal compliance, and health metrics.
+    - **Canonical Listings**: Stores normalized listings with provenance tracking, deduplication (VIN, Registration, SHA256), risk scoring, and status management.
+    - **Multi-LLM Compliance Pipeline**: Utilizes various LLMs for compliance:
+        - **OpenAI (GPT-4o/GPT-4o-mini)**: ToS extraction, data normalization.
+        - **Google Gemini (Flash 1.5)**: High-throughput PII detection.
+        - **Anthropic Claude (Sonnet 3.5/Haiku)**: Copyright analysis.
+        - **Perplexity**: Reserved for future market intelligence.
+    - **Ingestion Service**: Handles smart deduplication, auto-normalization, field mapping, batch processing, and webhook support.
+    - **LLM Compliance Service**: Orchestrates compliance checks for ToS, PII, and copyright, providing risk flagging.
+- **Ingestion Workflows**: Supports webhook, manual batch, and Firecrawl scraping for listing ingestion, followed by LLM compliance checks.
+- **Cost Optimization**: Strategic selection of LLM providers based on task and cost-efficiency, combined with caching and batch processing.
 
 ## External Dependencies
 
 ### Database & Storage
-- **Neon Database**: Serverless PostgreSQL database hosting
-- **connect-pg-simple**: PostgreSQL session store for Express sessions
+- **Neon Database**: Serverless PostgreSQL hosting.
+- **connect-pg-simple**: PostgreSQL session store.
 
 ### UI & Styling
-- **Radix UI**: Comprehensive set of accessible UI primitives for React
-- **Tailwind CSS**: Utility-first CSS framework with custom design system
-- **Lucide React**: Icon library for consistent iconography
-- **Google Fonts**: Inter font family for typography
+- **Radix UI**: Accessible UI primitives for React.
+- **Tailwind CSS**: Utility-first CSS framework.
+- **Lucide React**: Icon library.
+- **Google Fonts**: Inter font family.
 
 ### Development & Build Tools
-- **Vite**: Build tool with HMR and development server
-- **TypeScript**: Type safety and development experience
-- **PostCSS**: CSS processing with Autoprefixer
+- **Vite**: Build tool, HMR, development server.
+- **TypeScript**: Type safety.
+- **PostCSS**: CSS processing.
 
 ### API & State Management
-- **TanStack Query**: Server state management and caching
-- **React Hook Form**: Form handling with performance optimization
-- **Zod**: Schema validation and type inference
+- **TanStack Query**: Server state management.
+- **React Hook Form**: Form handling.
+- **Zod**: Schema validation.
 
 ### Routing & Navigation
-- **Wouter**: Lightweight React router for client-side navigation
+- **Wouter**: Lightweight React router.
 
-The application is designed to be easily deployable on platforms like Replit, with environment-based configuration and development-friendly tooling.
+### LLM Providers
+- **OpenAI**: For ToS extraction and normalization.
+- **Google Gemini**: For PII detection.
+- **Anthropic Claude**: For copyright analysis.
+- **Perplexity**: For future market intelligence.
+
+### Web Scraping
+- **Firecrawl**: For web scraping partners without APIs.

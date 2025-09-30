@@ -4864,6 +4864,173 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // =============================================================================
+  // PARTNER MANAGEMENT & INGESTION APIS
+  // =============================================================================
+
+  // Get all partner sources (admin only)
+  app.get('/api/admin/partners', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    const sources = await storage.getListingSources();
+    res.json({ sources });
+  }));
+
+  // Create new partner source (admin only)
+  app.post('/api/admin/partners', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    const sourceData = req.body;
+    const newSource = await storage.createListingSource(sourceData);
+    res.status(201).json({ source: newSource });
+  }));
+
+  // Get partner source details (admin only)
+  app.get('/api/admin/partners/:sourceId', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    const { sourceId } = req.params;
+    const source = await storage.getListingSource(sourceId);
+    
+    if (!source) {
+      return res.status(404).json({ error: 'Partner source not found' });
+    }
+
+    const stats = await storage.getIngestionStats(sourceId);
+    res.json({ source, stats });
+  }));
+
+  // Update partner source (admin only)
+  app.patch('/api/admin/partners/:sourceId', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    const { sourceId } = req.params;
+    const updates = req.body;
+    const updatedSource = await storage.updateListingSource(sourceId, updates);
+    
+    if (!updatedSource) {
+      return res.status(404).json({ error: 'Partner source not found' });
+    }
+
+    res.json({ source: updatedSource });
+  }));
+
+  // Delete partner source (admin only)
+  app.delete('/api/admin/partners/:sourceId', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    const { sourceId } = req.params;
+    await storage.deleteListingSource(sourceId);
+    res.json({ success: true });
+  }));
+
+  // Get partner ingestion stats (admin only)
+  app.get('/api/admin/partners/:sourceId/stats', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    const { sourceId } = req.params;
+    const stats = await storage.getIngestionStats(sourceId);
+    const recentLogs = await storage.getIngestionLogs(sourceId, { limit: 20 });
+    
+    res.json({ stats, recentLogs });
+  }));
+
+  // Webhook endpoint for partner ingestion
+  app.post('/api/webhook/ingest/:sourceId', asyncHandler(async (req: any, res: any) => {
+    const { sourceId } = req.params;
+    const rawData = req.body;
+    
+    const source = await storage.getListingSource(sourceId);
+    if (!source) {
+      return res.status(404).json({ error: 'Source not found' });
+    }
+
+    const { IngestionService } = await import('./ingestionService');
+    const ingestionService = new IngestionService();
+    
+    const result = await ingestionService.ingestFromWebhook(
+      sourceId,
+      rawData,
+      source,
+      storage.db
+    );
+
+    if (result.success) {
+      res.status(201).json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  }));
+
+  // Manual ingestion trigger (admin only)
+  app.post('/api/admin/ingest/manual', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    const { sourceId, listings } = req.body;
+    
+    const source = await storage.getListingSource(sourceId);
+    if (!source) {
+      return res.status(404).json({ error: 'Source not found' });
+    }
+
+    const { IngestionService } = await import('./ingestionService');
+    const ingestionService = new IngestionService();
+    
+    const startTime = new Date();
+    const batchResult = await ingestionService.ingestBatch(
+      sourceId,
+      listings,
+      source,
+      storage.db
+    );
+
+    await storage.createIngestionLog({
+      sourceId,
+      totalProcessed: batchResult.totalProcessed,
+      newListings: batchResult.newListings,
+      updatedListings: batchResult.updatedListings,
+      rejectedListings: batchResult.rejectedListings,
+      status: batchResult.rejectedListings > 0 ? 'partial' : 'success',
+      errorMessage: batchResult.errors.length > 0 ? batchResult.errors.join(', ') : null,
+      startedAt: startTime,
+      finishedAt: new Date(),
+    });
+
+    res.json(batchResult);
+  }));
+
+  // Get flagged listings for review (admin only)
+  app.get('/api/admin/review/flagged', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    const flaggedListings = await storage.getFlaggedListings({ limit: 50 });
+    res.json({ listings: flaggedListings });
+  }));
+
+  // Review and approve/reject listing (admin only)
+  app.post('/api/admin/review/:listingId', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    const { listingId } = req.params;
+    const { action, notes } = req.body;
+
+    if (!['approve', 'reject'].includes(action)) {
+      return res.status(400).json({ error: 'Invalid action. Must be approve or reject' });
+    }
+
+    const status = action === 'approve' ? 'approved' : 'rejected';
+    const updatedListing = await storage.updateCanonicalListingStatus(listingId, status);
+
+    if (!updatedListing) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+
+    res.json({ listing: updatedListing, action, notes });
+  }));
+
+  // Get feed health dashboard data (admin only)
+  app.get('/api/admin/dashboard/feeds', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    const sources = await storage.getListingSources();
+    const feedHealth = await Promise.all(
+      sources.map(async (source) => {
+        const stats = await storage.getIngestionStats(source.id);
+        return {
+          sourceId: source.id,
+          partnerName: source.partnerName,
+          status: source.status,
+          lastIngestAt: source.lastIngestAt,
+          ingestRate: source.ingestRate,
+          rejectedCount: source.rejectedCount,
+          stats,
+        };
+      })
+    );
+
+    res.json({ feedHealth });
+  }));
+
+  // =============================================================================
   // SELLER REGISTRATION & EMAIL VERIFICATION APIS
   // =============================================================================
 
