@@ -165,12 +165,12 @@ export default function MinimalCarCard({
           {/* Favorite Button */}
           <button
             onClick={handleFavoriteClick}
-            className="absolute top-2 right-2 w-8 h-8 rounded-full bg-background/80 backdrop-blur-sm border border-border hover:bg-background transition-colors flex items-center justify-center"
+            className="absolute top-2 right-2 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-background/80 backdrop-blur-sm border border-border hover:bg-background transition-colors flex items-center justify-center touch-manipulation"
             data-testid={`button-favorite-${car.id}`}
           >
             <Heart 
               className={cn(
-                "w-4 h-4 transition-colors",
+                "w-5 h-5 transition-colors",
                 isFavorite ? "fill-red-500 text-red-500" : "text-muted-foreground"
               )} 
             />
@@ -191,13 +191,13 @@ export default function MinimalCarCard({
       </div>
 
       {/* Content */}
-      <div className="p-4">
+      <div className="p-4 sm:p-5">
         {/* Price - Primary Focus */}
-        <div className="mb-2">
-          <div className="text-2xl font-bold text-foreground" data-testid={`text-price-${car.id}`}>
+        <div className="mb-3">
+          <div className="text-2xl sm:text-3xl font-bold text-foreground" data-testid={`text-price-${car.id}`}>
             {formatIndianCurrency(parseFloat(car.price))}
           </div>
-          <div className="text-sm text-muted-foreground">
+          <div className="text-sm sm:text-base text-muted-foreground">
             {(() => {
               const { monthlyEMI } = calculateLoanDetails(parseFloat(car.price), 9, 7);
               return `EMI from ${formatIndianCurrency(Number(monthlyEMI))}/month`;
@@ -206,32 +206,32 @@ export default function MinimalCarCard({
         </div>
 
         {/* Title */}
-        <h3 className="font-semibold text-foreground mb-3 line-clamp-2 leading-snug" data-testid={`text-title-${car.id}`}>
+        <h3 className="text-base sm:text-lg font-semibold text-foreground mb-3 line-clamp-2 leading-snug" data-testid={`text-title-${car.id}`}>
           {car.title}
         </h3>
 
         {/* Meta Information - Single Row */}
-        <div className="flex items-center text-xs text-muted-foreground mb-4 gap-3">
+        <div className="flex items-center flex-wrap text-xs sm:text-sm text-muted-foreground mb-4 gap-3">
           <div className="flex items-center gap-1">
-            <Calendar className="w-3 h-3" />
+            <Calendar className="w-4 h-4" />
             <span>{car.year}</span>
           </div>
           <div className="flex items-center gap-1">
-            <Gauge className="w-3 h-3" />
+            <Gauge className="w-4 h-4" />
             <span>{formatMileage(car.mileage)}</span>
           </div>
           <div className="flex items-center gap-1">
-            <Fuel className="w-3 h-3" />
+            <Fuel className="w-4 h-4" />
             <span>{car.fuelType}</span>
           </div>
           <div className="flex items-center gap-1">
-            <Settings className="w-3 h-3" />
+            <Settings className="w-4 h-4" />
             <span>{car.transmission}</span>
           </div>
         </div>
 
         {/* Location */}
-        <div className="flex items-center text-sm text-muted-foreground mb-4">
+        <div className="flex items-center text-sm sm:text-base text-muted-foreground mb-4">
           <MapPin className="w-4 h-4 mr-1" />
           <span>{car.city}</span>
           {car.owners && (
@@ -243,7 +243,7 @@ export default function MinimalCarCard({
         </div>
 
         {/* Actions */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 sm:gap-3">
           <Link 
             href={`/car/${car.id}`} 
             className="flex-1"
@@ -252,7 +252,7 @@ export default function MinimalCarCard({
             <Button 
               variant="outline" 
               size="sm" 
-              className="w-full text-sm h-9"
+              className="w-full text-sm sm:text-base min-h-[44px] font-medium"
               data-testid={`button-view-details-${car.id}`}
             >
               View Details
@@ -263,11 +263,11 @@ export default function MinimalCarCard({
             onClick={handleContactClick}
             variant="primary"
             size="sm"
-            className="flex-1 text-sm h-9"
+            className="flex-1 text-sm sm:text-base min-h-[44px] font-medium"
             hapticType="button"
             data-testid={`button-contact-${car.id}`}
           >
-            <Phone className="w-3 h-3 mr-1" />
+            <Phone className="w-4 h-4 mr-1" />
             Contact
           </HapticButton>
         </div>

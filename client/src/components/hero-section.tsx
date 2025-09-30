@@ -76,12 +76,12 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
         )}
         
         <TooltipWrapper trigger="hero-search-form">
-          <div className="bg-background/95 dark:bg-card/95 backdrop-blur-sm rounded-xl p-6 md:p-8 border shadow-lg max-w-4xl mx-auto" data-testid="hero-search-form">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-background/95 dark:bg-card/95 backdrop-blur-sm rounded-xl p-4 sm:p-6 md:p-8 border shadow-lg max-w-4xl mx-auto" data-testid="hero-search-form">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
             <div>
-              <label className="block text-foreground text-sm font-medium mb-2">Brand</label>
+              <label className="block text-foreground text-sm sm:text-base font-medium mb-2">Brand</label>
               <Select value={brand} onValueChange={setBrand}>
-                <SelectTrigger className="w-full text-foreground bg-background border-border" data-testid="select-brand">
+                <SelectTrigger className="w-full min-h-[48px] text-base text-foreground bg-background border-border" data-testid="select-brand">
                   <SelectValue placeholder="All Brands" />
                 </SelectTrigger>
                 <SelectContent>
@@ -97,9 +97,9 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
             </div>
             
             <div>
-              <label className="block text-foreground text-sm font-medium mb-2">Budget</label>
+              <label className="block text-foreground text-sm sm:text-base font-medium mb-2">Budget</label>
               <Select value={budget} onValueChange={setBudget}>
-                <SelectTrigger className="w-full text-foreground bg-background border-border" data-testid="select-budget">
+                <SelectTrigger className="w-full min-h-[48px] text-base text-foreground bg-background border-border" data-testid="select-budget">
                   <SelectValue placeholder="Any Budget" />
                 </SelectTrigger>
                 <SelectContent>
@@ -119,9 +119,9 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
             </div>
             
             <div>
-              <label className="block text-foreground text-sm font-medium mb-2">City</label>
+              <label className="block text-foreground text-sm sm:text-base font-medium mb-2">City</label>
               <Select value={city} onValueChange={setCity}>
-                <SelectTrigger className="w-full text-foreground bg-background border-border" data-testid="select-city">
+                <SelectTrigger className="w-full min-h-[48px] text-base text-foreground bg-background border-border" data-testid="select-city">
                   <SelectValue placeholder="Select City" />
                 </SelectTrigger>
                 <SelectContent>
@@ -137,9 +137,9 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
             </div>
             
             <div>
-              <label className="block text-foreground text-sm font-medium mb-2">Fuel Type</label>
+              <label className="block text-foreground text-sm sm:text-base font-medium mb-2">Fuel Type</label>
               <Select value={fuelType} onValueChange={setFuelType}>
-                <SelectTrigger className="w-full text-foreground bg-background border-border" data-testid="select-fuel-type">
+                <SelectTrigger className="w-full min-h-[48px] text-base text-foreground bg-background border-border" data-testid="select-fuel-type">
                   <SelectValue placeholder="Any Fuel" />
                 </SelectTrigger>
                 <SelectContent>
@@ -157,14 +157,14 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
             onClick={handleSearch}
             disabled={isSearching}
             hapticType="button"
-            className={`w-full py-4 px-6 rounded-lg font-bold text-base md:text-lg tracking-wide min-h-[44px] touch-manipulation transition-all duration-300 transform ${
+            className={`w-full py-4 sm:py-5 px-6 rounded-lg font-bold text-lg sm:text-xl tracking-wide min-h-[56px] sm:min-h-[60px] touch-manipulation transition-all duration-300 transform ${
               isSearching 
                 ? 'bg-primary/70 cursor-not-allowed scale-98 shadow-inner' 
                 : 'bg-primary hover:bg-primary/90 hover:scale-102 active:scale-98 shadow-lg hover:shadow-xl active:shadow-inner'
             } text-primary-foreground`}
             data-testid="button-search-cars"
           >
-            <Search className={`mr-2 h-5 w-5 transition-transform duration-300 ${isSearching ? 'animate-pulse' : ''}`} />
+            <Search className={`mr-2 h-6 w-6 transition-transform duration-300 ${isSearching ? 'animate-pulse' : ''}`} />
             {isSearching ? 'Searching...' : 'Search Cars'}
           </HapticButton>
           </div>
