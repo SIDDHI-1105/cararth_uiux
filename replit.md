@@ -15,6 +15,14 @@ Key capabilities include:
 
 ## Recent Changes
 
+### September 30, 2025 - Search Quality Improvements Complete ✅
+- ✅ **Search Result Deduplication** in `server/marketplaceAggregator.ts`:
+  - Implemented portal+URL unique identifier to remove exact duplicate listings
+  - Added quality filtering to remove spam listings with "Unknown" models and invalid data
+  - Prevents same listing from appearing multiple times due to ingestion duplicates
+  - Retains highest quality/verified version when duplicates are found
+  - Preserves all legitimate unique listings across different portals
+
 ### September 30, 2025 - AI Search Engine Optimization Complete ✅
 - ✅ **Enhanced Schema.org Structured Data** in `client/index.html`:
   - Organization, WebSite, WebApplication, Service, and FAQPage schemas

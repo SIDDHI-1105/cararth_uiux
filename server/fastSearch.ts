@@ -73,7 +73,54 @@ export class FastSearchService {
       console.log('⚡ Fast database search with filters:', filters);
       
       // Get search results from database
-      const listings = await this.queryListings(filters);
+      let listings = await this.queryListings(filters);
+      
+      // FILTER OUT POOR QUALITY LISTINGS
+      listings = listings.filter(listing => {
+        // Remove listings with "Unknown" model
+        if (listing.model?.toLowerCase().includes('unknown')) return false;
+        
+        // Remove spam/promotional titles
+        if (listing.title?.toLowerCase().includes('finalise the loan') || 
+            listing.title?.toLowerCase().includes('it only takes')) return false;
+        
+        // Remove listings with invalid cities
+        if (listing.city?.toLowerCase().includes('please select') || 
+            listing.city?.toLowerCase().includes('to get the desired')) return false;
+        
+        // Keep valid listings
+        return true;
+      });
+      
+      console.log(`🧹 Filtered to ${listings.length} quality listings (removed spam/unknowns)`);
+      
+      // DEDUPLICATE LISTINGS - Use URL+portal as unique identifier
+      const deduplicatedMap = new Map<string, typeof listings[0]>();
+      
+      listings.forEach(listing => {
+        // Create unique key from URL + portal (most reliable identifier)
+        const uniqueKey = listing.url 
+          ? `${listing.portal}-${listing.url}` 
+          : `${listing.portal}-${listing.id || Math.random()}`;
+        
+        const existing = deduplicatedMap.get(uniqueKey);
+        if (!existing) {
+          deduplicatedMap.set(uniqueKey, listing);
+        } else {
+          // Keep the listing with higher quality score OR verified status
+          const listingScore = (listing.qualityScore || 0) + 
+            (listing.verificationStatus === 'verified' ? 10 : 0);
+          const existingScore = (existing.qualityScore || 0) + 
+            (existing.verificationStatus === 'verified' ? 10 : 0);
+          
+          if (listingScore > existingScore) {
+            deduplicatedMap.set(uniqueKey, listing);
+          }
+        }
+      });
+      
+      listings = Array.from(deduplicatedMap.values());
+      console.log(`🎯 Deduplicated to ${listings.length} unique listings (removed exact duplicates)`);
       
       // Get total count for pagination
       const total = await this.getSearchCount(filters);
