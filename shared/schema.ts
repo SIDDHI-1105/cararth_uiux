@@ -1278,3 +1278,199 @@ export type AdminAuditLog = typeof adminAuditLogs.$inferSelect;
 // Use cached portal listings as normalized car listings for fast search
 export type CarListing = CachedPortalListing;
 export type InsertCarListing = InsertCachedPortalListing;
+
+// ============================================================================
+// LISTING UPDATE MONITOR & SELLER SYNDICATION SYSTEM
+// Partner ingestion, deduplication, and LLM compliance pipeline
+// ============================================================================
+
+// Partner/Source Management
+export const listingSources = pgTable("listing_sources", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Partner information
+  partnerName: text("partner_name"),
+  contactEmail: text("contact_email"),
+  
+  // Feed configuration
+  sourceType: text("source_type").notNull(), // webhook, csv, sftp, firecrawl
+  endpoint: text("endpoint"), // API endpoint, SFTP host, or URL
+  credentials: jsonb("credentials"), // Encrypted credentials
+  
+  // Mapping configuration
+  fieldMapping: jsonb("field_mapping"), // Maps partner fields to canonical schema
+  
+  // Geographic scope
+  country: text("country").default('India'),
+  city: text("city"),
+  
+  // Legal compliance
+  consented: boolean("consented").default(false),
+  contractUrl: text("contract_url"), // Stored contract/agreement
+  tosSnapshot: text("tos_snapshot"), // Latest ToS snapshot URL
+  
+  // Health metrics
+  lastIngestAt: timestamp("last_ingest_at"),
+  ingestRate: integer("ingest_rate").default(0), // Listings per day
+  rejectedCount: integer("rejected_count").default(0),
+  status: text("status").default('active'), // active, paused, suspended
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_listing_sources_type").on(table.sourceType),
+  index("idx_listing_sources_status").on(table.status),
+]);
+
+// Canonical Listings with full provenance
+export const canonicalListings = pgTable("canonical_listings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Source tracking
+  sourceId: varchar("source_id").notNull(),
+  sourceListingId: text("source_listing_id").notNull(),
+  sourceUrl: text("source_url"),
+  
+  // Deduplication
+  fingerprint: text("fingerprint").notNull().unique(), // VIN or SHA256 hash
+  vin: text("vin"), // Vehicle Identification Number if available
+  
+  // Basic info
+  title: text("title").notNull(),
+  make: text("make").notNull(),
+  model: text("model").notNull(),
+  variant: text("variant"),
+  year: integer("year").notNull(),
+  
+  // Pricing
+  priceAmount: decimal("price_amount", { precision: 10, scale: 2 }).notNull(),
+  priceCurrency: text("price_currency").default('INR'),
+  
+  // Vehicle details
+  kms: integer("kms"),
+  fuel: text("fuel"),
+  transmission: text("transmission"),
+  ownerCount: integer("owner_count"),
+  
+  // Location
+  registrationState: text("registration_state"),
+  city: text("city").notNull(),
+  pincode: text("pincode"),
+  
+  // Content
+  images: text("images").array().default([]),
+  description: text("description"),
+  
+  // Seller info
+  sellerType: text("seller_type"), // dealer, individual, aggregator
+  verifiedDocs: jsonb("verified_docs").default({rc: false, insurance: false}),
+  
+  // Timestamps
+  postedAt: timestamp("posted_at"),
+  ingestedAt: timestamp("ingested_at").defaultNow(),
+  lastSeenAt: timestamp("last_seen_at").defaultNow(),
+  
+  // Risk and compliance
+  listingRiskScore: decimal("listing_risk_score", { precision: 3, scale: 2 }),
+  status: text("status").default('pending'), // pending, approved, rejected, flagged
+  
+  // Metadata
+  meta: jsonb("meta").default({}), // Raw payload, snapshots, etc.
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_canonical_fingerprint").on(table.fingerprint),
+  index("idx_canonical_source").on(table.sourceId),
+  index("idx_canonical_status").on(table.status),
+  index("idx_canonical_city_make").on(table.city, table.make),
+]);
+
+// LLM Compliance Reports
+export const llmReports = pgTable("llm_reports", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Linked listing
+  listingId: varchar("listing_id").notNull(),
+  
+  // LLM provider and type
+  provider: text("provider").notNull(), // openai, gemini, anthropic, perplexity
+  reportType: text("report_type").notNull(), // tos_extraction, pii_detection, copyright_check, normalization
+  
+  // Report data
+  reportJson: jsonb("report_json").notNull(),
+  
+  // Risk assessment
+  riskLevel: text("risk_level"), // low, medium, high, critical
+  flagged: boolean("flagged").default(false),
+  
+  // Processing metadata
+  processingTimeMs: integer("processing_time_ms"),
+  tokenUsage: jsonb("token_usage"),
+  estimatedCost: decimal("estimated_cost", { precision: 8, scale: 4 }),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_llm_reports_listing").on(table.listingId),
+  index("idx_llm_reports_type").on(table.reportType),
+  index("idx_llm_reports_flagged").on(table.flagged),
+]);
+
+// Partner Ingestion Logs
+export const ingestionLogs = pgTable("ingestion_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  sourceId: varchar("source_id").notNull(),
+  
+  // Ingestion results
+  totalProcessed: integer("total_processed").default(0),
+  newListings: integer("new_listings").default(0),
+  updatedListings: integer("updated_listings").default(0),
+  rejectedListings: integer("rejected_listings").default(0),
+  
+  // Status
+  status: text("status").notNull(), // success, partial, failed
+  errorMessage: text("error_message"),
+  
+  // Timing
+  startedAt: timestamp("started_at").notNull(),
+  finishedAt: timestamp("finished_at"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_ingestion_logs_source").on(table.sourceId),
+  index("idx_ingestion_logs_status").on(table.status),
+]);
+
+// Insert schemas
+export const insertListingSourceSchema = createInsertSchema(listingSources).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCanonicalListingSchema = createInsertSchema(canonicalListings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertLlmReportSchema = createInsertSchema(llmReports).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertIngestionLogSchema = createInsertSchema(ingestionLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Type exports
+export type InsertListingSource = z.infer<typeof insertListingSourceSchema>;
+export type ListingSource = typeof listingSources.$inferSelect;
+export type InsertCanonicalListing = z.infer<typeof insertCanonicalListingSchema>;
+export type CanonicalListing = typeof canonicalListings.$inferSelect;
+export type InsertLlmReport = z.infer<typeof insertLlmReportSchema>;
+export type LlmReport = typeof llmReports.$inferSelect;
+export type InsertIngestionLog = z.infer<typeof insertIngestionLogSchema>;
+export type IngestionLog = typeof ingestionLogs.$inferSelect;
