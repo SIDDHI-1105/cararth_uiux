@@ -15,6 +15,28 @@ Key capabilities include:
 
 ## Recent Changes
 
+### September 30, 2025 - AI Search Engine Optimization Complete ✅
+- ✅ **Enhanced Schema.org Structured Data** in `client/index.html`:
+  - Organization, WebSite, WebApplication, Service, and FAQPage schemas
+  - Comprehensive feature list, technology stack, and service coverage
+  - Search action integration for better AI understanding
+- ✅ **AI-Friendly robots.txt** (`public/robots.txt`):
+  - Explicitly allows all major AI crawlers: GPTBot, ChatGPT-User, ClaudeBot, PerplexityBot, Google-Extended, Bingbot
+  - Zero crawl delay for maximum discoverability
+  - References sitemap and AI info endpoint
+- ✅ **Comprehensive sitemap.xml** (`public/sitemap.xml`):
+  - All main pages with current timestamps (2025-09-30)
+  - High-priority AI-friendly endpoints (`/api/ai-info`, `/api/news/market-insights`)
+  - Proper change frequencies and priorities for AI crawlers
+- ✅ **Machine-Readable Data Endpoint** (`/api/ai-info`):
+  - Structured JSON with complete platform information
+  - Feature list, technology stack, data sources, API endpoints
+  - FAQs, keywords, and unique differentiators
+  - Designed for AI search engines to understand CarArth's capabilities
+- ✅ **Static File Serving** in `server/index.ts`:
+  - Explicit routes for robots.txt and sitemap.xml before Vite catch-all
+  - Ensures AI crawlers can access critical discovery files
+
 ### September 30, 2025 - Enterprise Partner Syndication System Complete ✅
 - ✅ Database schema with 4 new tables: `listing_sources`, `canonical_listings`, `llm_reports`, `ingestion_logs`
 - ✅ Multi-LLM compliance service with 4 LLM providers (OpenAI, Gemini, Claude, Perplexity)
