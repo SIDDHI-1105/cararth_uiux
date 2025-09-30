@@ -43,15 +43,21 @@ export function normalizePhoneNumber(phone: string, defaultCountry: string = 'IN
   }
 }
 
+let cachedTransporter: nodemailer.Transporter | null = null;
+let transporterInitialized = false;
+
 /**
  * Create email transporter (use environment variables for production)
  */
-function createEmailTransporter() {
-  // In production, use real SMTP credentials
-  // For now, use ethereal for testing (or skip if not configured)
+async function createEmailTransporter(): Promise<nodemailer.Transporter | null> {
+  // Return cached transporter if already initialized
+  if (transporterInitialized) {
+    return cachedTransporter;
+  }
   
+  // Production: use real SMTP credentials
   if (process.env.SMTP_HOST && process.env.SMTP_USER) {
-    return nodemailer.createTransport({
+    cachedTransporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT || '587'),
       secure: process.env.SMTP_SECURE === 'true',
@@ -60,9 +66,41 @@ function createEmailTransporter() {
         pass: process.env.SMTP_PASSWORD,
       },
     });
+    transporterInitialized = true;
+    console.log('📧 Using production SMTP configuration');
+    return cachedTransporter;
   }
   
-  // No email configured - return null
+  // Development: create test account with ethereal.email
+  if (process.env.NODE_ENV === 'development') {
+    try {
+      const testAccount = await nodemailer.createTestAccount();
+      cachedTransporter = nodemailer.createTransport({
+        host: 'smtp.ethereal.email',
+        port: 587,
+        secure: false,
+        auth: {
+          user: testAccount.user,
+          pass: testAccount.pass,
+        },
+      });
+      transporterInitialized = true;
+      console.log('📧 Using Ethereal test email account for development');
+      console.log(`   View emails at: https://ethereal.email/login`);
+      console.log(`   User: ${testAccount.user}`);
+      console.log(`   Pass: ${testAccount.pass}`);
+      return cachedTransporter;
+    } catch (error) {
+      console.error('❌ Failed to create test email account:', error);
+      transporterInitialized = true;
+      cachedTransporter = null;
+      return null;
+    }
+  }
+  
+  // No email configured
+  transporterInitialized = true;
+  console.log('⚠️ Email not configured - notifications will not be sent');
   return null;
 }
 
@@ -80,7 +118,7 @@ async function sendEmailNotification(
     carTitle: string;
   }
 ): Promise<{ success: boolean; error?: string }> {
-  const transporter = createEmailTransporter();
+  const transporter = await createEmailTransporter();
   
   if (!transporter) {
     console.log('📧 Email not configured, skipping email notification');
@@ -134,8 +172,17 @@ Please contact the buyer as soon as possible!
       `.trim(),
     };
     
-    await transporter.sendMail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
     console.log(`✅ Email notification sent to ${sellerEmail}`);
+    
+    // Log preview URL for test accounts (Ethereal)
+    if (process.env.NODE_ENV === 'development') {
+      const previewUrl = nodemailer.getTestMessageUrl(info);
+      if (previewUrl) {
+        console.log(`   📬 View email: ${previewUrl}`);
+      }
+    }
+    
     return { success: true };
   } catch (error) {
     console.error('❌ Email notification failed:', error);
