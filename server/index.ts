@@ -75,8 +75,17 @@ app.use((req, res, next) => {
     // Add health check endpoint  
     app.get('/health', createHealthCheckHandler());
     
-    // Add centralized error handling middleware (must be last)
-    app.use(errorHandler);
+    // Explicit routes for static files (must be before Vite catch-all)
+    app.get('/robots.txt', (req, res) => {
+      res.sendFile('robots.txt', { root: 'public' });
+    });
+    app.get('/sitemap.xml', (req, res) => {
+      res.type('application/xml');
+      res.sendFile('sitemap.xml', { root: 'public' });
+    });
+    
+    // Serve other static files from public directory
+    app.use(express.static('public'));
 
     // Setup development/production serving with error handling
     try {
@@ -93,6 +102,9 @@ app.use((req, res, next) => {
       console.error('❌ Failed to setup file serving:', error);
       console.error('Continuing with basic Express server...');
     }
+    
+    // Add centralized error handling middleware (must be absolute last)
+    app.use(errorHandler);
 
     // Start server with error handling
     const port = parseInt(process.env.PORT || '5000', 10);

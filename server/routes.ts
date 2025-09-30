@@ -3261,14 +3261,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       offers: {
         "@type": "Offer",
         price: "0",
-        priceCurrency": "INR",
+        priceCurrency: "INR",
         description: "Free for car buyers. Enterprise partner plans available."
       },
       
       // User Metrics
       aggregateRating: {
         "@type": "AggregateRating",
-        ratingValue": "4.8",
+        ratingValue: "4.8",
         ratingCount: "1250",
         bestRating: "5"
       },
@@ -3372,23 +3372,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Sitemap for SEO
-  app.get("/sitemap.xml", (req, res) => {
-    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-      <url><loc>${req.protocol}://${req.get('host')}/</loc><priority>1.0</priority></url>
-      <url><loc>${req.protocol}://${req.get('host')}/community</loc><priority>0.9</priority></url>
-      <url><loc>${req.protocol}://${req.get('host')}/news</loc><priority>0.9</priority></url>
-      <url><loc>${req.protocol}://${req.get('host')}/sell</loc><priority>0.8</priority></url>
-      <url><loc>${req.protocol}://${req.get('host')}/finance</loc><priority>0.7</priority></url>
-      <url><loc>${req.protocol}://${req.get('host')}/community/maruti</loc><priority>0.6</priority></url>
-      <url><loc>${req.protocol}://${req.get('host')}/community/hyundai</loc><priority>0.6</priority></url>
-      <url><loc>${req.protocol}://${req.get('host')}/community/tata</loc><priority>0.6</priority></url>
-    </urlset>`;
-    
-    res.set('Content-Type', 'text/xml');
-    res.send(sitemap);
-  });
+  // Sitemap now served from /public/sitemap.xml (static file)
+  // Legacy route removed to allow comprehensive sitemap to be served
 
   // Community & RSS Integration Routes
   app.get('/api/community/posts', async (req, res) => {
