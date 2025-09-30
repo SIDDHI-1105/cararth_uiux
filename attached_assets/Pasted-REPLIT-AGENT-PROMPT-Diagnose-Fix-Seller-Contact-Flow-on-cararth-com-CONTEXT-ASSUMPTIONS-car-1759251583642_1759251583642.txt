@@ -1,0 +1,80 @@
+REPLIT AGENT PROMPT — Diagnose & Fix Seller Contact Flow on cararth.com
+
+CONTEXT / ASSUMPTIONS
+- cararth.com uses Firecrawl to ingest listings and GPT-5/Gemini/Anthropic/Perplexity for compliance/enrichment.
+- Current problem: when users click “Contact seller” or request details on listing pages, they do not consistently receive usable contact information or lead requests fail to reach sellers.
+- Use Next.js + TypeScript for backend/frontend, Prisma + Postgres for DB, Redis + BullMQ for background jobs, S3 for snapshots.
+- You may run local crawls or reprocess existing S3 raw snapshots to reproduce issues.
+
+GOAL
+1. Diagnose root causes for failed/incorrect contact delivery.
+2. Implement robust, auditable fixes so that:
+   - Users see accurate, consistent, and legal contact details.
+   - Leads (user interest messages) reliably reach the seller via preferred channels (email/SMS/phone) or are queued for partner follow-up.
+   - All actions are auditable, privacy-safe, and tested.
+
+PHASE 1 — INVESTIGATION (do this first, produce a findings report)
+1. Reproduce failures
+   - Run an automated crawl of production listing pages (or reprocess latest Firecrawl S3 snapshots) to collect a representative sample of 500 recently published listings across sources/cities.
+   - For each listing capture: canonical listing record, meta.raw_payload, images, contact fields (contact_phone, contact_email), verified_docs flags, listing.status, listing_risk_score, source_id, source_listing_id.
+
+2. Instrumentation & logging review
+   - Check current ingestion logs for contact extraction errors: parsing failures, field name mismatches, null/empty contacts, masked fields flagged as PII, or contact fields removed by LLM.
+   - Check web UI/server logs for contact-click events, lead-submit events, webhook delivery attempts (to sellers or dealer CRM), and response codes/errors.
+   - Check background job logs for failures/exception traces (e.g., BullMQ job retries, timeouts, LLM timeouts).
+
+3. Analyze causes (automated checks)
+   - For the 500-sample, compute:
+     • percent_missing_phone = % listings with contact_phone null/empty
+     • percent_missing_email = % listings with contact_email null/empty
+     • percent_masked_by_pii = % listings where contact fields were removed/masked by LLM or policy (check llm_reports)
+     • percent_invalid_format = % contact_phone values failing E.164 normalization
+     • percent_blocked_by_tos = % listings where allow_scrape==false and contact removed
+     • percent_webhook_failure = % lead webhook deliveries to seller endpoints that failed (4xx/5xx)
+   - Flag listings where contact exists only in raw_payload but not in canonical meta (indicates mapping/parsing problem).
+
+4. Deliverable: "Investigation Findings" doc with stats, top 5 root cause categories (e.g., parsing/mapper bugs, LLM masking overreach, missing partner consent, webhook endpoint misconfig, invalid phone format, rate limits on SMS delivery), and 5 representative listing examples (URL + snapshots).
+
+PHASE 2 — FIX DESIGN (implement after you deliver findings)
+Implement the following changes in code and infra. Each item must include unit tests + integration tests and a README.
+
+A. Ingestion & Canonical Schema hardening
+1. Ensure canonical schema includes these contact fields explicitly:
+{
+ "contact": {
+   "phones": [{"raw":"string","e164":"string|null","normalized": "string","verified": boolean,"masked": boolean}],
+   "emails": [{"raw":"string","normalized":"string","verified": boolean,"masked": boolean}],
+   "preferred_contact_method": "phone|email|none",
+   "consent_to_share": boolean
+ }
+}
+2. Update Prisma Listing model to include `contacts` JSON or explicit columns:
+- contacts Json (store phones[], emails[], preferred_contact_method, consent_to_share)
+- contact_status enum: none | present_unverified | verified | masked | blocked_by_tos
+- last_contact_attempt DateTime, last_contact_result String
+3. Re-run ingestion mapping on historical listings to populate contacts:
+- If contact info exists in raw_payload but missing in canonical, add mapping rules and run a one-time re-ingest job for last 90 days.
+
+B. Contact extraction & normalization
+1. Phone parsing: use libphonenumber to extract all phone-like strings from raw_payload and description, preferring seller-provided phone fields. Normalize to E.164. Save both raw and normalized forms.
+2. Email parsing: regex + validation + normalization (lowercase).
+3. LLM assistance: call Gemini/Anthropic PII detector on raw payload to find contact candidates and validate that auto-extraction is reliable. Use LLM only to suggest missing contact candidates (human review flag if uncertainties).
+4. Confidence scoring: produce `contact_confidence` for each phone/email (0.0-1.0), based on extraction source (explicit field > description > OCR from images) and format validity.
+5. Masking policy: only mask if legal flag or explicit partner rule: if ListingSource.consented==false AND DPDP/PII policy requires masking → mask in public view but keep normalized value in secure DB for lead sending. Masking does not delete raw data; store audit trail.
+
+C. Verification & enrichment
+1. Implement phone verification workflow (async):
+   - Option 1 (preferred for sellers who are partners): perform seller-side verification during partner onboarding (dealer provides verified phone/email). Mark `verified=true`.
+   - Option 2 (for public listings): send silent verification via low-cost mechanism before showing unmasked phone (or before delivering lead) — e.g., one-time code via SMS to seller phone with "Confirm you sell this car" link. Use Twilio or local SMS provider. If seller confirms, mark as verified.
+   - Option 3 (if immediate reveal desired): let user request to reveal phone; on-click: send a lead to seller and show masked phone + contact form; require seller to confirm later.
+2. Enrich phone data: use carrier lookup / number type detection (mobile/landline) to decide call-to-action (click-to-call or SMS).
+
+D. Lead delivery mechanics (reliable)
+1. Two delivery paths (fallback model):
+   - Primary: deliver leads via partner-specific webhook endpoint (if ListingSource provides endpoint). Use HMAC signed POST and require 200 response.
+   - Secondary: if no partner webhook or webhook fails, deliver lead via:
+      • Email to contact_email (templated)
+      • SMS to contact_phone (templated) with lead summary and unique reference id
+      • Add to partner dashboard queue for manual follow-up
+2. Retry & backoff:
+   - On webhook failure, retry with exponential backoff (3 attempts). After third failure, mark
