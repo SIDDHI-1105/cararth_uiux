@@ -41,19 +41,19 @@ export class RSSAggregatorService {
       name: 'TeamBHP',
       url: 'https://www.team-bhp.com/forum/external.php?type=RSS2',
       category: 'Community Discussions',
-      attribution: 'Content sourced from Team-BHP - The Definitive Indian Car Community'
+      attribution: 'Automotive community discussion'
     },
     {
       name: 'AutocarIndia',
       url: 'https://www.autocarindia.com/rss/all-news.xml',
       category: 'Industry News',
-      attribution: 'Content sourced from Autocar India'
+      attribution: 'Industry news article'
     },
     {
       name: 'CarAndBike',
       url: 'https://www.carandbike.com/rss/news.xml',
       category: 'Automotive News',
-      attribution: 'Content sourced from CarAndBike'
+      attribution: 'Automotive news article'
     }
   ];
 

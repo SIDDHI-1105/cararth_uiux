@@ -273,7 +273,16 @@ export default function ThrottleTalkPage() {
                 </DialogContent>
               </Dialog>
             ) : (
-              <div className="flex justify-center">
+              <div className="flex gap-3 justify-center">
+                <Button 
+                  variant="default" 
+                  onClick={() => window.location.href = '/api/auth/google'}
+                  className="bg-gray-900 hover:bg-gray-800 text-white dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
+                  data-testid="button-login-google"
+                >
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Sign in with Google
+                </Button>
                 <Button 
                   variant="outline" 
                   onClick={() => window.location.href = '/api/auth/facebook'}
