@@ -106,10 +106,21 @@ export const anonymousSearchActivity = pgTable(
 export const contacts = pgTable("contacts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   carId: varchar("car_id").notNull(),
+  sellerId: varchar("seller_id"), // Link to seller user for notification
   buyerName: text("buyer_name").notNull(),
   buyerPhone: text("buyer_phone").notNull(),
+  buyerPhoneNormalized: text("buyer_phone_normalized"), // E.164 format
   buyerEmail: text("buyer_email").notNull(),
   message: text("message"),
+  
+  // Seller notification tracking
+  sellerNotifiedAt: timestamp("seller_notified_at"),
+  sellerNotificationMethod: text("seller_notification_method"), // 'email' | 'sms' | 'both' | 'none'
+  sellerNotificationStatus: text("seller_notification_status").default('pending'), // 'pending' | 'sent' | 'failed' | 'delivered'
+  sellerNotificationError: text("seller_notification_error"), // Store error details if failed
+  notificationRetryCount: integer("notification_retry_count").default(0),
+  lastNotificationAttempt: timestamp("last_notification_attempt"),
+  
   createdAt: timestamp("created_at").defaultNow(),
 });
 

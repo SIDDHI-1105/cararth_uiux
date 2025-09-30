@@ -1392,8 +1392,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/contacts", async (req, res) => {
     try {
       const contactData = insertContactSchema.parse(req.body);
-      const contact = await storage.createContact(contactData);
+      
+      // Normalize buyer phone number
+      const { normalizePhoneNumber, notifySeller } = await import('./notificationService.js');
+      const normalizedPhone = normalizePhoneNumber(contactData.buyerPhone, 'IN');
+      
+      // Create contact with normalized phone
+      const contact = await storage.createContact({
+        ...contactData,
+        buyerPhoneNormalized: normalizedPhone,
+        sellerNotificationStatus: 'pending',
+      });
+      
       console.log(`📧 New contact inquiry created: ${contact.buyerName} interested in car ${contact.carId}`);
+      
+      // Try to find and notify seller (async, don't block response)
+      (async () => {
+        try {
+          const car = await storage.getCar(contact.carId);
+          if (car && car.sellerId) {
+            const seller = await storage.getUser(car.sellerId);
+            if (seller) {
+              console.log(`📬 Attempting to notify seller ${seller.name} (${seller.email})`);
+              
+              const result = await notifySeller(
+                {
+                  id: seller.id,
+                  name: seller.name || seller.username,
+                  email: seller.email,
+                  phone: seller.phone,
+                  emailVerified: seller.emailVerified || false,
+                  phoneVerified: seller.phoneVerified || false,
+                },
+                {
+                  buyerName: contact.buyerName,
+                  buyerPhone: contact.buyerPhone,
+                  buyerEmail: contact.buyerEmail,
+                  message: contact.message || '',
+                  carTitle: car.title,
+                }
+              );
+              
+              // Update contact with notification result
+              if ('updateContact' in storage) {
+                await (storage as any).updateContact(contact.id, {
+                  sellerId: seller.id,
+                  sellerNotifiedAt: result.success ? result.deliveredAt : null,
+                  sellerNotificationMethod: result.method,
+                  sellerNotificationStatus: result.success ? 'sent' : 'failed',
+                  sellerNotificationError: result.error || null,
+                  lastNotificationAttempt: new Date(),
+                });
+              }
+              
+              if (result.success) {
+                console.log(`✅ Seller notified successfully via ${result.method}`);
+              } else {
+                console.error(`❌ Failed to notify seller: ${result.error}`);
+              }
+            } else {
+              console.log(`⚠️ Seller not found for car ${car.id}`);
+            }
+          } else {
+            console.log(`⚠️ Car or sellerId not found for contact ${contact.id}`);
+          }
+        } catch (notifyError) {
+          console.error('❌ Error in seller notification:', notifyError);
+        }
+      })();
+      
       res.status(201).json(contact);
     } catch (error) {
       if (error instanceof z.ZodError) {

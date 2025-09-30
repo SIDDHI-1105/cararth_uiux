@@ -59,6 +59,7 @@ export interface IStorage {
   
   // Contact operations
   createContact(contact: InsertContact): Promise<Contact>;
+  updateContact(contactId: string, updates: Partial<Contact>): Promise<Contact | null>;
   getContactsForCar(carId: string): Promise<Contact[]>;
   getContactsForSeller(sellerId: string): Promise<Contact[]>;
   
@@ -601,9 +602,26 @@ export class MemStorage implements IStorage {
       id,
       message: insertContact.message || null,
       createdAt: new Date(),
+      sellerId: null,
+      buyerPhoneNormalized: null,
+      sellerNotifiedAt: null,
+      sellerNotificationMethod: null,
+      sellerNotificationStatus: 'pending',
+      sellerNotificationError: null,
+      notificationRetryCount: 0,
+      lastNotificationAttempt: null,
     };
     this.contacts.set(id, contact);
     return contact;
+  }
+
+  async updateContact(contactId: string, updates: Partial<Contact>): Promise<Contact | null> {
+    const contact = this.contacts.get(contactId);
+    if (!contact) return null;
+    
+    const updated = { ...contact, ...updates };
+    this.contacts.set(contactId, updated);
+    return updated;
   }
 
   async getContactsForCar(carId: string): Promise<Contact[]> {

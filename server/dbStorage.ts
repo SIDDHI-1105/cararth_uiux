@@ -547,6 +547,20 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async updateContact(contactId: string, updates: Partial<Contact>): Promise<Contact | null> {
+    try {
+      const result = await this.db
+        .update(contacts)
+        .set(updates)
+        .where(eq(contacts.id, contactId))
+        .returning();
+      return result[0] || null;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'updateContact operation');
+      return null;
+    }
+  }
+
   async getContactsForCar(carId: string): Promise<Contact[]> {
     try {
       const result = await this.db
