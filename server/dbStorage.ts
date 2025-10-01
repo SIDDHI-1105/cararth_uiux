@@ -1057,6 +1057,7 @@ export class DatabaseStorage implements IStorage {
     yearMax?: number;
     ownerCount?: number;
     mileageMax?: number;
+    listedWithinDays?: number;
     query?: string;
     sortBy?: 'price' | 'year' | 'mileage' | 'date';
     sortOrder?: 'asc' | 'desc';
@@ -1115,6 +1116,13 @@ export class DatabaseStorage implements IStorage {
         sql`${cachedPortalListings.mileage} IS NOT NULL`,
         lte(cachedPortalListings.mileage, filters.mileageMax)
       ));
+    }
+
+    // Age filter: only show listings within X days
+    if (filters.listedWithinDays !== undefined && filters.listedWithinDays > 0) {
+      conditions.push(
+        gte(cachedPortalListings.createdAt, sql`NOW() - INTERVAL '${sql.raw(filters.listedWithinDays.toString())} days'`)
+      );
     }
 
     // Text search across title and description
@@ -1212,6 +1220,7 @@ export class DatabaseStorage implements IStorage {
     yearMax?: number;
     ownerCount?: number;
     mileageMax?: number;
+    listedWithinDays?: number;
     query?: string;
   }): Promise<number> {
     const cacheKey = `portal_count:${JSON.stringify(filters)}`;
@@ -1266,6 +1275,13 @@ export class DatabaseStorage implements IStorage {
         sql`${cachedPortalListings.mileage} IS NOT NULL`,
         lte(cachedPortalListings.mileage, filters.mileageMax)
       ));
+    }
+
+    // Age filter: only count listings within X days
+    if (filters.listedWithinDays !== undefined && filters.listedWithinDays > 0) {
+      conditions.push(
+        gte(cachedPortalListings.createdAt, sql`NOW() - INTERVAL '${sql.raw(filters.listedWithinDays.toString())} days'`)
+      );
     }
 
     if (filters.query) {

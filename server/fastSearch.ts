@@ -36,6 +36,9 @@ export interface SearchFilters {
   ownerCount?: number;
   mileageMax?: number;
   
+  // Age filter (listings within X days)
+  listedWithinDays?: number;
+  
   // Search query
   query?: string;
   

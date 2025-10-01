@@ -2122,7 +2122,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         limit: z.number().optional()
       });
 
-      const filters = searchSchema.parse(req.body);
+      let filters = searchSchema.parse(req.body);
+      
+      // Apply default age filtering: 30 days unless specified
+      if (filters.listedWithinDays === undefined) {
+        filters = { ...filters, listedWithinDays: 30 };
+      }
+      
       logError({ message: 'Marketplace search initiated', statusCode: 200 }, 'Marketplace search request');
       
       // Apply Hyderabad-specific optimizations
@@ -2145,6 +2151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         yearMax: enhancedFilters.yearMax,
         ownerCount: enhancedFilters.owners?.[0], // Take first owner count if array
         mileageMax: enhancedFilters.mileageMax,
+        listedWithinDays: enhancedFilters.listedWithinDays, // Age filter
         sortBy: enhancedFilters.sortBy || 'date',
         sortOrder: enhancedFilters.sortOrder || 'desc',
         limit: enhancedFilters.limit || 50,
@@ -5217,6 +5224,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
 
     res.json(batchResult);
+  }));
+
+  // Analytics: Source distribution (admin only)
+  app.get('/api/admin/analytics/source-distribution', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    if (!('db' in storage)) {
+      return res.status(503).json({ error: 'Analytics requires database storage' });
+    }
+
+    const { cachedPortalListings } = await import('@shared/schema');
+    const { desc, sql } = await import('drizzle-orm');
+    const db = (storage as any).db;
+
+    // Get source distribution with age analysis
+    const distribution = await db
+      .select({
+        portal: cachedPortalListings.portal,
+        total: sql<number>`count(*)::int`,
+        last7Days: sql<number>`count(*) FILTER (WHERE ${cachedPortalListings.createdAt} >= NOW() - INTERVAL '7 days')::int`,
+        last30Days: sql<number>`count(*) FILTER (WHERE ${cachedPortalListings.createdAt} >= NOW() - INTERVAL '30 days')::int`,
+        oldest: sql<Date>`MIN(${cachedPortalListings.createdAt})`,
+        newest: sql<Date>`MAX(${cachedPortalListings.createdAt})`,
+      })
+      .from(cachedPortalListings)
+      .groupBy(cachedPortalListings.portal)
+      .orderBy(desc(sql`count(*)`));
+
+    // Get total count
+    const totalResult = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(cachedPortalListings);
+    
+    const total = totalResult[0]?.count || 0;
+
+    res.json({
+      total,
+      bySource: distribution,
+      summary: {
+        totalSources: distribution.length,
+        freshListings: distribution.reduce((sum: number, d: any) => sum + d.last7Days, 0),
+        recentListings: distribution.reduce((sum: number, d: any) => sum + d.last30Days, 0),
+      }
+    });
+  }));
+
+  // Manual scraper trigger (admin only) - Run forum scrapers on-demand
+  app.post('/api/admin/scrapers/run', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    const { scrapers } = req.body; // ['team-bhp', 'automotive-india', 'quikr', 'reddit'] or 'all'
+    
+    if (!('db' in storage)) {
+      return res.status(503).json({ error: 'Scraper execution requires database storage' });
+    }
+
+    const db = (storage as any).db;
+    const results: any = {};
+
+    const scrapersToRun = scrapers === 'all' 
+      ? ['team-bhp', 'automotive-india', 'quikr', 'reddit']
+      : Array.isArray(scrapers) ? scrapers : [scrapers];
+
+    // Run scrapers in parallel
+    const scraperPromises = scrapersToRun.map(async (scraperName: string) => {
+      try {
+        let scraper: any;
+        let displayName: string;
+
+        switch (scraperName) {
+          case 'team-bhp':
+            const { teamBhpScraper } = await import('./teamBhpScraper.js');
+            scraper = teamBhpScraper;
+            displayName = 'Team-BHP';
+            break;
+          case 'automotive-india':
+            const { automotiveIndiaScraper } = await import('./automotiveIndiaScraper.js');
+            scraper = automotiveIndiaScraper;
+            displayName = 'TheAutomotiveIndia';
+            break;
+          case 'quikr':
+            const { quikrScraper } = await import('./quikrScraper.js');
+            scraper = quikrScraper;
+            displayName = 'Quikr';
+            break;
+          case 'reddit':
+            const { redditScraper } = await import('./redditScraper.js');
+            scraper = redditScraper;
+            displayName = 'Reddit';
+            break;
+          default:
+            throw new Error(`Unknown scraper: ${scraperName}`);
+        }
+
+        const result = await scraper.scrapeLatestListings(db);
+        return {
+          scraper: scraperName,
+          displayName,
+          ...result,
+          success: result.errors.length === 0,
+        };
+      } catch (error) {
+        return {
+          scraper: scraperName,
+          displayName: scraperName,
+          success: false,
+          scrapedCount: 0,
+          newListings: 0,
+          errors: [error instanceof Error ? error.message : 'Unknown error'],
+        };
+      }
+    });
+
+    const scraperResults = await Promise.all(scraperPromises);
+    
+    // Aggregate results
+    scraperResults.forEach(result => {
+      results[result.scraper] = result;
+    });
+
+    const summary = {
+      totalScrapers: scraperResults.length,
+      successful: scraperResults.filter(r => r.success).length,
+      totalNewListings: scraperResults.reduce((sum, r) => sum + r.newListings, 0),
+      totalScraped: scraperResults.reduce((sum, r) => sum + r.scrapedCount, 0),
+    };
+
+    res.json({ results, summary });
   }));
 
   // Crawl4AI ingestion trigger (admin only)
