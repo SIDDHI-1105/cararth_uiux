@@ -52,7 +52,7 @@ export const users = pgTable("users", {
   searchCountResetAt: timestamp("search_count_reset_at").defaultNow(),
   
   // Admin role system
-  role: text("role").default('user'), // 'user' | 'admin'
+  role: text("role").default('user'), // 'user' | 'admin' | 'partner'
   
   // Legacy fields for compatibility
   isPremium: boolean("is_premium").default(false),
@@ -914,6 +914,12 @@ export const cachedPortalListings = pgTable(
     sourceMeta: jsonb("source_meta").default({}),
     hash: text("hash").notNull().unique(), // For deduplication
     
+    // Partner listing support
+    origin: text("origin").notNull().default('scraped'), // 'scraped' | 'partner'
+    sourceId: varchar("source_id"), // FK to listing_sources for partner listings
+    partnerUserId: varchar("partner_user_id"), // User who created (for partner origin)
+    partnerVerificationStatus: text("partner_verification_status").default('pending'), // 'pending' | 'verified' | 'rejected'
+    
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
@@ -1336,6 +1342,41 @@ export const listingSources = pgTable("listing_sources", {
   index("idx_listing_sources_status").on(table.status),
 ]);
 
+// Partner Invite System - Shareable links for onboarding partners
+export const partnerInvites = pgTable("partner_invites", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  token: varchar("token").notNull().unique(), // UUID token for URL
+  listingSourceId: varchar("listing_source_id").notNull(), // FK to listing_sources
+  
+  // Optional pre-fill
+  email: text("email"), // Pre-assign to specific email
+  
+  // Status
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  usedByUserId: varchar("used_by_user_id"),
+  
+  // Audit
+  createdBy: varchar("created_by").notNull(), // Admin user who generated
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_partner_invites_token").on(table.token),
+  index("idx_partner_invites_source").on(table.listingSourceId),
+]);
+
+// Partner Accounts - Maps users to their listing sources
+export const partnerAccounts = pgTable("partner_accounts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  listingSourceId: varchar("listing_source_id").notNull(), // FK to listing_sources
+  userId: varchar("user_id").notNull(), // FK to users
+  role: text("role").notNull().default('owner'), // 'owner' | 'staff'
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_partner_accounts_user").on(table.userId),
+  index("idx_partner_accounts_source").on(table.listingSourceId),
+]);
+
 // Canonical Listings with full provenance
 export const canonicalListings = pgTable("canonical_listings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -1463,6 +1504,16 @@ export const insertListingSourceSchema = createInsertSchema(listingSources).omit
   updatedAt: true,
 });
 
+export const insertPartnerInviteSchema = createInsertSchema(partnerInvites).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPartnerAccountSchema = createInsertSchema(partnerAccounts).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertCanonicalListingSchema = createInsertSchema(canonicalListings).omit({
   id: true,
   createdAt: true,
@@ -1482,6 +1533,10 @@ export const insertIngestionLogSchema = createInsertSchema(ingestionLogs).omit({
 // Type exports
 export type InsertListingSource = z.infer<typeof insertListingSourceSchema>;
 export type ListingSource = typeof listingSources.$inferSelect;
+export type InsertPartnerInvite = z.infer<typeof insertPartnerInviteSchema>;
+export type PartnerInvite = typeof partnerInvites.$inferSelect;
+export type InsertPartnerAccount = z.infer<typeof insertPartnerAccountSchema>;
+export type PartnerAccount = typeof partnerAccounts.$inferSelect;
 export type InsertCanonicalListing = z.infer<typeof insertCanonicalListingSchema>;
 export type CanonicalListing = typeof canonicalListings.$inferSelect;
 export type InsertLlmReport = z.infer<typeof insertLlmReportSchema>;
