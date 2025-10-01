@@ -6,7 +6,6 @@ import ThemeToggle from "@/components/theme-toggle";
 import SocialMediaLinks from "@/components/social-media-links";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import { useAuth } from "@/hooks/useAuth";
-import { TooltipWrapper } from "@/components/tooltip-wrapper";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,19 +49,17 @@ export default function Navbar() {
               >
                 Buy
               </Link>
-              <TooltipWrapper trigger="sell-car-link">
-                <Link 
-                  href="/sell-car" 
-                  className={`px-4 py-2 rounded-lg text-base md:text-lg font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 hover:shadow-lg ${
-                    location === "/sell-car" || location === "/sell"
-                      ? "text-white bg-gradient-to-r from-green-500 to-emerald-600 shadow-md" 
-                      : "text-foreground hover:text-white hover:bg-gradient-to-r hover:from-green-500 hover:to-emerald-600 hover:shadow-md border-2 border-green-500/20 hover:border-green-500"
-                  }`}
-                  data-testid="link-sell-car"
-                >
-                  💰 Sell
-                </Link>
-              </TooltipWrapper>
+              <Link 
+                href="/sell-car" 
+                className={`px-4 py-2 rounded-lg text-base md:text-lg font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 hover:shadow-lg ${
+                  location === "/sell-car" || location === "/sell"
+                    ? "text-white bg-gradient-to-r from-green-500 to-emerald-600 shadow-md" 
+                    : "text-foreground hover:text-white hover:bg-gradient-to-r hover:from-green-500 hover:to-emerald-600 hover:shadow-md border-2 border-green-500/20 hover:border-green-500"
+                }`}
+                data-testid="link-sell-car"
+              >
+                💰 Sell
+              </Link>
               <Link 
                 href="/news" 
                 className={`px-4 py-2 rounded-lg text-base md:text-lg font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 hover:shadow-lg ${
