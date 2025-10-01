@@ -1,14 +1,15 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { 
   Car, FileText, Camera, Eye, Globe, TrendingUp, 
-  CheckCircle2, Upload, MapPin 
+  CheckCircle2, Upload, MapPin, Package, AlertCircle, CheckCircle, Loader2
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,6 +19,7 @@ import { ObjectUploader } from "@/components/ObjectUploader";
 import type { UploadResult } from '@uppy/core';
 import Layout from "@/components/layout";
 import AIPriceWidget from "@/components/ai-price-widget";
+import { useAuth } from "@/hooks/useAuth";
 
 // Simplified schema with only essential fields
 const simplifiedSellCarSchema = z.object({
@@ -207,11 +209,24 @@ export default function SellCar() {
           </div>
         </div>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            
-            {/* Essential Car Details - Simplified */}
-            <Card>
+        <Tabs defaultValue="single" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="single" className="flex items-center gap-2">
+              <Car className="h-4 w-4" />
+              Single Car
+            </TabsTrigger>
+            <TabsTrigger value="bulk" className="flex items-center gap-2">
+              <Package className="h-4 w-4" />
+              Bulk Upload
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="single">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                
+                {/* Essential Car Details - Simplified */}
+                <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Basic Details</CardTitle>
                 <p className="text-sm text-muted-foreground">Just the essentials to get started</p>
@@ -566,9 +581,328 @@ export default function SellCar() {
               )}
             </div>
 
-          </form>
-        </Form>
+              </form>
+            </Form>
+          </TabsContent>
+
+          <TabsContent value="bulk">
+            <BulkUploadSection />
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
+  );
+}
+
+// Type for bulk upload job status
+interface BulkUploadJobStatus {
+  status: 'queued' | 'processing' | 'completed' | 'failed' | 'partial';
+  totalRows: number;
+  processedRows: number;
+  successfulListings: number;
+  failedListings: number;
+  errorMessage?: string;
+}
+
+// Bulk Upload Section Component
+function BulkUploadSection() {
+  const { toast } = useToast();
+  const { user, isAuthenticated } = useAuth();
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  // Poll for job status
+  const { data: jobStatus } = useQuery<BulkUploadJobStatus>({
+    queryKey: ['/api/seller/bulk-upload', jobId],
+    enabled: !!jobId,
+    refetchInterval: (data) => {
+      const status = data.state.data?.status;
+      if (status === 'completed' || status === 'failed' || status === 'partial') {
+        return false;
+      }
+      return 2000;
+    },
+  });
+
+  const uploadMutation = useMutation({
+    mutationFn: async ({ csv, media }: { csv: File; media: File[] }) => {
+      const formData = new FormData();
+      formData.append('csv', csv);
+      media.forEach((file) => {
+        formData.append('media', file);
+      });
+
+      const response = await fetch('/api/seller/bulk-upload', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Upload failed');
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setJobId(data.jobId);
+      toast({
+        title: "Upload Started!",
+        description: `Processing ${data.totalListings} listings...`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Upload Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      setIsUploading(false);
+    },
+  });
+
+  const handleSubmit = async () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to upload listings",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!csvFile) {
+      toast({
+        title: "CSV Required",
+        description: "Please select a CSV file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    uploadMutation.mutate({ csv: csvFile, media: mediaFiles });
+  };
+
+  const downloadTemplate = () => {
+    const headers = [
+      'title', 'brand', 'model', 'year', 'price', 'mileage',
+      'fuelType', 'transmission', 'owners', 'city', 'location',
+      'description', 'images'
+    ];
+    const exampleRow = [
+      '2019 Honda City VX',
+      'Honda',
+      'City',
+      '2019',
+      '750000',
+      '35000',
+      'Petrol',
+      'Automatic',
+      '1',
+      'Hyderabad',
+      'Gachibowli, Hyderabad',
+      'Well maintained Honda City with full service history',
+      'https://example.com/image1.jpg,https://example.com/image2.jpg'
+    ];
+
+    const csvContent = [headers.join(','), exampleRow.join(',')].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'cararth-bulk-upload-template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Package className="h-5 w-5" />
+            Bulk Upload - Add Multiple Cars
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Upload a CSV file with your car listings. You can also attach images/videos.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Download Template */}
+          <div className="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-1">
+                  First time using bulk upload?
+                </h4>
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  Download our template to see the required format
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={downloadTemplate}
+                className="shrink-0"
+                data-testid="button-download-template"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Download Template
+              </Button>
+            </div>
+          </div>
+
+          {/* CSV Upload */}
+          <div>
+            <label className="block text-sm font-medium mb-2">CSV File *</label>
+            <Input
+              type="file"
+              accept=".csv"
+              onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
+              disabled={isUploading || !!jobId}
+              data-testid="input-csv-file"
+            />
+            {csvFile && (
+              <p className="text-sm text-muted-foreground mt-1">
+                Selected: {csvFile.name} ({(csvFile.size / 1024).toFixed(1)} KB)
+              </p>
+            )}
+          </div>
+
+          {/* Media Files Upload */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Images/Videos (Optional)
+            </label>
+            <Input
+              type="file"
+              accept="image/*,video/*"
+              multiple
+              onChange={(e) => setMediaFiles(Array.from(e.target.files || []))}
+              disabled={isUploading || !!jobId}
+              data-testid="input-media-files"
+            />
+            {mediaFiles.length > 0 && (
+              <p className="text-sm text-muted-foreground mt-1">
+                {mediaFiles.length} file(s) selected
+              </p>
+            )}
+          </div>
+
+          {/* Upload Button */}
+          {!jobId && (
+            <Button
+              onClick={handleSubmit}
+              disabled={!csvFile || isUploading}
+              className="w-full"
+              size="lg"
+              data-testid="button-start-upload"
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Start Upload
+                </>
+              )}
+            </Button>
+          )}
+
+          {/* Job Status */}
+          {jobId && jobStatus && (
+            <div className="space-y-4 pt-4 border-t">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium">Upload Progress</h4>
+                <span className="text-sm text-muted-foreground">
+                  Job ID: {jobId.slice(0, 8)}...
+                </span>
+              </div>
+
+              {/* Status Badge */}
+              <div className="flex items-center gap-2">
+                {jobStatus.status === 'completed' && (
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                )}
+                {jobStatus.status === 'processing' && (
+                  <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />
+                )}
+                {jobStatus.status === 'failed' && (
+                  <AlertCircle className="h-5 w-5 text-red-600" />
+                )}
+                <span className="font-medium capitalize">{jobStatus.status}</span>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>
+                    {jobStatus.processedRows || 0} / {jobStatus.totalRows || 0} rows processed
+                  </span>
+                  <span>
+                    {jobStatus.successfulListings || 0} successful
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  <div
+                    className="bg-green-600 h-2 rounded-full transition-all"
+                    style={{
+                      width: `${((jobStatus.processedRows || 0) / (jobStatus.totalRows || 1)) * 100}%`,
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Success/Error Messages */}
+              {jobStatus.status === 'completed' && (
+                <div className="bg-green-50 dark:bg-green-950/30 p-4 rounded-lg border border-green-200 dark:border-green-800">
+                  <p className="text-green-700 dark:text-green-300 font-medium">
+                    ✅ Upload Complete! {jobStatus.successfulListings} listings added to your inventory.
+                  </p>
+                  <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                    Your cars are now visible on CarArth!
+                  </p>
+                </div>
+              )}
+
+              {jobStatus.status === 'failed' && (
+                <div className="bg-red-50 dark:bg-red-950/30 p-4 rounded-lg border border-red-200 dark:border-red-800">
+                  <p className="text-red-700 dark:text-red-300 font-medium">
+                    ❌ Upload Failed
+                  </p>
+                  <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                    {jobStatus.errorMessage || 'An error occurred during processing'}
+                  </p>
+                </div>
+              )}
+
+              {/* Reset Button */}
+              {(jobStatus.status === 'completed' || jobStatus.status === 'failed') && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setJobId(null);
+                    setCsvFile(null);
+                    setMediaFiles([]);
+                    setIsUploading(false);
+                  }}
+                  className="w-full"
+                  data-testid="button-upload-another"
+                >
+                  Upload Another Batch
+                </Button>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

@@ -3329,6 +3329,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Seller: Bulk upload listings (CSV + optional media files) - Available to all logged-in users
+  app.post('/api/seller/bulk-upload', isAuthenticated, upload.fields([
+    { name: 'csv', maxCount: 1 },
+    { name: 'media', maxCount: 100 }
+  ]), asyncHandler(async (req: any, res: any) => {
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Get or create a personal listing source for the user
+    let listingSource = await storage.getListingSourceByName(`${userId}-personal`);
+    
+    if (!listingSource) {
+      // Create a personal listing source for the user
+      listingSource = await storage.createListingSource({
+        name: `${userId}-personal`,
+        displayName: user.email || 'Personal Listings',
+        type: 'individual_seller',
+        apiEndpoint: null,
+        apiKey: null,
+        isActive: true
+      });
+    }
+
+    const csvFile = (req.files as any).csv?.[0];
+    const mediaFiles = (req.files as any).media || [];
+
+    if (!csvFile) {
+      return res.status(400).json({ error: 'CSV file is required' });
+    }
+
+    // Create bulk upload job
+    const jobId = crypto.randomUUID();
+    await storage.createBulkUploadJob({
+      id: jobId,
+      partnerUserId: userId,
+      listingSourceId: listingSource.id,
+      csvFileName: csvFile.originalname,
+      csvFilePath: csvFile.path,
+      totalRows: 0,
+      status: 'queued'
+    });
+
+    // Process CSV in background
+    processBulkUpload(jobId, csvFile.path, mediaFiles, userId, listingSource.id, storage).catch(err => {
+      console.error('Background bulk upload processing failed:', err);
+    });
+
+    // Parse CSV to get total count for response
+    const csvContent = fs.readFileSync(csvFile.path, 'utf-8');
+    const records = parse(csvContent, { columns: true, skip_empty_lines: true });
+
+    res.json({
+      message: `Upload started! Processing ${records.length} listings...`,
+      jobId,
+      totalListings: records.length
+    });
+  }));
+
+  // Seller: Get bulk upload job status
+  app.get('/api/seller/bulk-upload/:jobId', isAuthenticated, asyncHandler(async (req: any, res: any) => {
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    const { jobId } = req.params;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const job = await storage.getBulkUploadJob(jobId, userId);
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    res.json({
+      status: job.status,
+      totalRows: job.totalRows,
+      processedRows: job.processedRows,
+      successfulListings: job.successfulListings,
+      failedListings: job.failedListings,
+      errorMessage: job.errorMessage
+    });
+  }));
+
   // Handle masked contact inquiries
   app.post("/api/seller/inquiries/:maskedContactId", async (req, res) => {
     try {
