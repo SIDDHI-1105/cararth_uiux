@@ -1497,6 +1497,40 @@ export const ingestionLogs = pgTable("ingestion_logs", {
   index("idx_ingestion_logs_status").on(table.status),
 ]);
 
+// Bulk Upload Jobs for Partner Portal
+export const bulkUploadJobs = pgTable("bulk_upload_jobs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Partner information
+  partnerUserId: varchar("partner_user_id").notNull(),
+  listingSourceId: varchar("listing_source_id").notNull(),
+  
+  // File information
+  csvFileName: text("csv_file_name"),
+  csvFilePath: text("csv_file_path"),
+  totalRows: integer("total_rows").default(0),
+  
+  // Processing results
+  processedRows: integer("processed_rows").default(0),
+  successfulListings: integer("successful_listings").default(0),
+  failedListings: integer("failed_listings").default(0),
+  
+  // Status tracking
+  status: text("status").notNull().default('pending'), // pending, processing, completed, failed
+  errorMessage: text("error_message"),
+  errorDetails: jsonb("error_details").default([]),
+  
+  // Timing
+  startedAt: timestamp("started_at"),
+  finishedAt: timestamp("finished_at"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_bulk_upload_partner").on(table.partnerUserId),
+  index("idx_bulk_upload_status").on(table.status),
+]);
+
 // Insert schemas
 export const insertListingSourceSchema = createInsertSchema(listingSources).omit({
   id: true,
@@ -1530,6 +1564,12 @@ export const insertIngestionLogSchema = createInsertSchema(ingestionLogs).omit({
   createdAt: true,
 });
 
+export const insertBulkUploadJobSchema = createInsertSchema(bulkUploadJobs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Type exports
 export type InsertListingSource = z.infer<typeof insertListingSourceSchema>;
 export type ListingSource = typeof listingSources.$inferSelect;
@@ -1543,3 +1583,5 @@ export type InsertLlmReport = z.infer<typeof insertLlmReportSchema>;
 export type LlmReport = typeof llmReports.$inferSelect;
 export type InsertIngestionLog = z.infer<typeof insertIngestionLogSchema>;
 export type IngestionLog = typeof ingestionLogs.$inferSelect;
+export type InsertBulkUploadJob = z.infer<typeof insertBulkUploadJobSchema>;
+export type BulkUploadJob = typeof bulkUploadJobs.$inferSelect;
