@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import {
   CheckCircle, Info, DollarSign
 } from "lucide-react";
 import { Link } from "wouter";
+import { hasValidImages } from "@/lib/car-utils";
 
 interface MarketplaceListing {
   id: string;
@@ -72,6 +73,23 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
   const [selectedCar, setSelectedCar] = useState<MarketplaceListing | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showDataProcessing, setShowDataProcessing] = useState(true);
+
+  // Sort listings to prioritize those with valid images
+  const sortedListings = useMemo(() => {
+    if (!searchResult?.listings) return [];
+    
+    return [...searchResult.listings].sort((a, b) => {
+      const aHasImages = hasValidImages(a as any);
+      const bHasImages = hasValidImages(b as any);
+      
+      // Listings with images come first
+      if (aHasImages && !bHasImages) return -1;
+      if (!aHasImages && bHasImages) return 1;
+      
+      // For listings with same image status, maintain original order
+      return 0;
+    });
+  }, [searchResult?.listings]);
 
   if (isLoading) {
     return (
@@ -541,14 +559,14 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
       {/* Listings */}
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="all" data-testid="tab-all">All ({searchResult.listings.length})</TabsTrigger>
+          <TabsTrigger value="all" data-testid="tab-all">All ({sortedListings.length})</TabsTrigger>
           <TabsTrigger value="bestDeals" data-testid="tab-best-deals">Best Deals ({searchResult.recommendations.bestDeals.length})</TabsTrigger>
           <TabsTrigger value="newListings" data-testid="tab-new">New ({searchResult.recommendations.newListings.length})</TabsTrigger>
           <TabsTrigger value="certified" data-testid="tab-certified">Certified ({searchResult.recommendations.certified.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="space-y-4">
-          {searchResult.listings.map(listing => renderListingCard(listing))}
+          {sortedListings.map(listing => renderListingCard(listing))}
         </TabsContent>
 
         <TabsContent value="bestDeals" className="space-y-4">
