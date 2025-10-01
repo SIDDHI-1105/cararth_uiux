@@ -192,52 +192,52 @@ export default function MinimalCarCard({
 
       {/* Content */}
       <div className="p-4 sm:p-5">
-        {/* Price - Primary Focus */}
+        {/* Price - Primary Focus - Mobile Optimized */}
         <div className="mb-3">
-          <div className="text-2xl sm:text-3xl font-bold text-foreground" data-testid={`text-price-${car.id}`}>
+          <div className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground whitespace-nowrap overflow-hidden text-ellipsis" data-testid={`text-price-${car.id}`}>
             {formatIndianCurrency(parseFloat(car.price))}
           </div>
-          <div className="text-sm sm:text-base text-muted-foreground">
+          <div className="text-xs sm:text-sm text-muted-foreground mt-1 whitespace-nowrap overflow-hidden text-ellipsis">
             {(() => {
               const { monthlyEMI } = calculateLoanDetails(parseFloat(car.price), 9, 7);
-              return `EMI from ${formatIndianCurrency(Number(monthlyEMI))}/month`;
+              return `EMI from ${formatIndianCurrency(Number(monthlyEMI))}/mo`;
             })()}
           </div>
         </div>
 
         {/* Title */}
-        <h3 className="text-base sm:text-lg font-semibold text-foreground mb-3 line-clamp-2 leading-snug" data-testid={`text-title-${car.id}`}>
+        <h3 className="text-sm sm:text-base md:text-lg font-semibold text-foreground mb-2 sm:mb-3 line-clamp-2 leading-snug" data-testid={`text-title-${car.id}`}>
           {car.title}
         </h3>
 
-        {/* Meta Information - Single Row */}
-        <div className="flex items-center flex-wrap text-xs sm:text-sm text-muted-foreground mb-4 gap-3">
+        {/* Meta Information - Responsive Grid */}
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:flex-wrap text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
           <div className="flex items-center gap-1">
-            <Calendar className="w-4 h-4" />
-            <span>{car.year}</span>
+            <Calendar className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+            <span className="truncate">{car.year}</span>
           </div>
           <div className="flex items-center gap-1">
-            <Gauge className="w-4 h-4" />
-            <span>{formatMileage(car.mileage)}</span>
+            <Gauge className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+            <span className="truncate">{formatMileage(car.mileage)}</span>
           </div>
           <div className="flex items-center gap-1">
-            <Fuel className="w-4 h-4" />
-            <span>{car.fuelType}</span>
+            <Fuel className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+            <span className="truncate">{car.fuelType}</span>
           </div>
           <div className="flex items-center gap-1">
-            <Settings className="w-4 h-4" />
-            <span>{car.transmission}</span>
+            <Settings className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+            <span className="truncate">{car.transmission}</span>
           </div>
         </div>
 
         {/* Location */}
-        <div className="flex items-center text-sm sm:text-base text-muted-foreground mb-4">
-          <MapPin className="w-4 h-4 mr-1" />
-          <span>{car.city}</span>
+        <div className="flex items-center text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 min-w-0">
+          <MapPin className="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0" />
+          <span className="truncate flex-1 min-w-0">{car.city}</span>
           {car.owners && (
             <>
-              <span className="mx-2">•</span>
-              <span>{car.owners === 1 ? '1st Owner' : `${car.owners} Owners`}</span>
+              <span className="mx-1 sm:mx-2 flex-shrink-0">•</span>
+              <span className="whitespace-nowrap flex-shrink-0">{car.owners === 1 ? '1st Owner' : `${car.owners} Owners`}</span>
             </>
           )}
         </div>

@@ -226,16 +226,13 @@ export default function CommunityPage() {
 
           {/* Featured Community Banner */}
           <div 
-            className="relative rounded-xl overflow-hidden mb-8 h-64 bg-cover bg-center"
+            className="relative rounded-xl overflow-hidden mb-8 h-48 sm:h-64 bg-cover bg-center"
             style={{ backgroundImage: `url(${sportsCarImage})` }}
           >
             <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-              <div className="text-center text-white">
-                <h2 className="text-2xl font-bold mb-2">Join the Ride</h2>
-                <p className="text-lg mb-4">Share your automotive passion with like-minded enthusiasts</p>
-                <Button size="lg" className="bg-blue-600 hover:bg-blue-700" data-testid="button-join-community">
-                  Join Our Community
-                </Button>
+              <div className="text-center text-white px-4">
+                <h2 className="text-xl sm:text-2xl font-bold mb-2">Throttle Talk</h2>
+                <p className="text-sm sm:text-lg">Where passion meets the pavement</p>
               </div>
             </div>
           </div>
@@ -251,11 +248,8 @@ export default function CommunityPage() {
 
           {/* Community Feed */}
           <TabsContent value="feed" className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="mb-4">
               <h2 className="text-xl font-semibold" data-testid="text-feed-heading">Latest from the Community</h2>
-              <Button variant="outline" size="sm" data-testid="button-create-post">
-                Share Your Story
-              </Button>
             </div>
 
             <div className="grid gap-6" data-testid="community-posts-list">
@@ -327,33 +321,19 @@ export default function CommunityPage() {
                       ))}
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => handleLike(post.id)}
-                          className="text-gray-600 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400"
-                          data-testid={`button-like-${index}`}
-                        >
-                          <Heart className="h-4 w-4 mr-1" />
-                          {post.likes}
-                        </Button>
-                        <Button variant="ghost" size="sm" className="text-gray-600 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400" data-testid={`button-comment-${index}`}>
-                          <MessageCircle className="h-4 w-4 mr-1" />
-                          {post.comments}
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => handleShare(post.id)}
-                          className="text-gray-600 dark:text-gray-400 hover:text-green-500 dark:hover:text-green-400"
-                          data-testid={`button-share-${index}`}
-                        >
-                          <Share2 className="h-4 w-4 mr-1" />
-                          {post.shares}
-                        </Button>
-                      </div>
+                    <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                      <span className="flex items-center gap-1" aria-label={`${post.likes} likes`} data-testid={`text-likes-${index}`}>
+                        <Heart className="h-4 w-4" aria-hidden="true" />
+                        {post.likes}
+                      </span>
+                      <span className="flex items-center gap-1" aria-label={`${post.comments} comments`} data-testid={`text-comments-${index}`}>
+                        <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                        {post.comments}
+                      </span>
+                      <span className="flex items-center gap-1" aria-label={`${post.shares} shares`} data-testid={`text-shares-${index}`}>
+                        <Share2 className="h-4 w-4" aria-hidden="true" />
+                        {post.shares}
+                      </span>
                     </div>
                   </CardContent>
                 </Card>
@@ -430,135 +410,26 @@ export default function CommunityPage() {
 
           {/* Events */}
           <TabsContent value="events" className="space-y-6">
-            <div>
-              <h2 className="text-xl font-semibold mb-4" data-testid="text-events-heading">Upcoming Events</h2>
-              <p className="text-gray-600 dark:text-gray-300 text-sm">
-                Join fellow enthusiasts at meetups, drives, and automotive events across India
+            <div className="text-center py-12">
+              <Calendar className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+              <h2 className="text-xl font-semibold mb-2" data-testid="text-events-heading">Events Coming Soon</h2>
+              <p className="text-gray-600 dark:text-gray-300 text-sm max-w-md mx-auto">
+                Stay tuned for upcoming car meets, drives, and automotive events across India
               </p>
-            </div>
-
-            <div className="grid gap-4">
-              <Card className="border-l-4 border-l-blue-500">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">Hyderabad Monthly Meet</CardTitle>
-                    <Badge variant="outline" className="text-xs">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      Oct 15, 2024
-                    </Badge>
-                  </div>
-                  <CardDescription>
-                    Monthly gathering of car enthusiasts in Hyderabad. All brands, all stories welcome!
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-300">
-                    <span className="flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
-                      Gachibowli, Hyderabad
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Users className="h-3 w-3" />
-                      150+ Expected
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           </TabsContent>
 
           {/* Resources */}
           <TabsContent value="resources" className="space-y-6">
-            <div>
-              <h2 className="text-xl font-semibold mb-4" data-testid="text-resources-heading">Community Resources</h2>
-              <p className="text-gray-600 dark:text-gray-300 text-sm mb-6">
-                Curated resources for car enthusiasts - from maintenance tips to buying guides
+            <div className="text-center py-12">
+              <TrendingUp className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+              <h2 className="text-xl font-semibold mb-2" data-testid="text-resources-heading">Resources Coming Soon</h2>
+              <p className="text-gray-600 dark:text-gray-300 text-sm max-w-md mx-auto">
+                We're curating helpful guides, market insights, and expert reviews for the community
               </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4" />
-                    Market Insights
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription>
-                    Latest trends, pricing analysis, and market intelligence for informed decisions
-                  </CardDescription>
-                </CardContent>
-              </Card>
-
-              <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Star className="h-4 w-4" />
-                    Expert Reviews
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription>
-                    In-depth reviews and comparisons from automotive experts and community members
-                  </CardDescription>
-                </CardContent>
-              </Card>
-
-              <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Community Guides
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription>
-                    Member-created guides on maintenance, modifications, and automotive best practices
-                  </CardDescription>
-                </CardContent>
-              </Card>
             </div>
           </TabsContent>
         </Tabs>
-
-        {/* SEO-friendly Footer Links */}
-        <div className="mt-12 pt-8 border-t">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm">
-            <div>
-              <h3 className="font-semibold mb-2">Community</h3>
-              <ul className="space-y-1 text-gray-600 dark:text-gray-300">
-                <li><a href="/community/guidelines" className="hover:text-blue-600">Community Guidelines</a></li>
-                <li><a href="/community/events" className="hover:text-blue-600">Upcoming Events</a></li>
-                <li><a href="/community/members" className="hover:text-blue-600">Member Directory</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-2">Resources</h3>
-              <ul className="space-y-1 text-gray-600 dark:text-gray-300">
-                <li><a href="/guides/buying" className="hover:text-blue-600">Car Buying Guide</a></li>
-                <li><a href="/guides/maintenance" className="hover:text-blue-600">Maintenance Tips</a></li>
-                <li><a href="/guides/finance" className="hover:text-blue-600">Financing Options</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-2">Popular Brands</h3>
-              <ul className="space-y-1 text-gray-600 dark:text-gray-300">
-                <li><a href="/community/maruti" className="hover:text-blue-600">Maruti Suzuki Enthusiasts</a></li>
-                <li><a href="/community/hyundai" className="hover:text-blue-600">Hyundai Community</a></li>
-                <li><a href="/community/tata" className="hover:text-blue-600">Tata Motors Club</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-2">Connect</h3>
-              <ul className="space-y-1 text-gray-600 dark:text-gray-300">
-                <li><a href="/community/join" className="hover:text-blue-600">Join Our Community</a></li>
-                <li><a href="/contact" className="hover:text-blue-600">Contact Us</a></li>
-                <li><a href="/news" className="hover:text-blue-600">Latest News</a></li>
-              </ul>
-            </div>
-          </div>
-        </div>
       </div>
     </>
   );
