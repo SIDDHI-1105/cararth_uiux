@@ -1307,7 +1307,7 @@ export const listingSources = pgTable("listing_sources", {
   contactEmail: text("contact_email"),
   
   // Feed configuration
-  sourceType: text("source_type").notNull(), // webhook, csv, sftp, firecrawl
+  sourceType: text("source_type").notNull(), // webhook, csv, sftp, firecrawl, crawl4ai
   endpoint: text("endpoint"), // API endpoint, SFTP host, or URL
   credentials: jsonb("credentials"), // Encrypted credentials
   
