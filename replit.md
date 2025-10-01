@@ -15,6 +15,35 @@ Key capabilities include:
 
 ## Recent Changes
 
+### October 1, 2025 - Crawl4AI Integration Complete ✅
+- ✅ **Free Self-Hosted Web Scraping** - Added Crawl4AI as a cost-effective alternative to Firecrawl
+- ✅ **Python Service** (`server/crawl4aiService.py`):
+  - LLM-powered extraction using Crawl4AI with AsyncWebCrawler
+  - Supports OpenAI, Gemini, and Anthropic for extraction
+  - Structured schema extraction for car listing data (make, model, year, price, etc.)
+  - Clean JSON output without stdout corruption (verbose=False)
+  - CLI interface for single and batch scraping operations
+- ✅ **TypeScript Wrapper** (`server/crawl4aiService.ts`):
+  - Node.js bridge to Python service via child_process
+  - Handles Python execution, JSON parsing, and error handling
+  - Supports configurable LLM provider and model selection
+- ✅ **Ingestion Service Integration** (`server/ingestionService.ts`):
+  - New `ingestFromCrawl4AI` method for scraping and ingestion
+  - URL-based deduplication for stable fingerprinting
+  - Passes markdown as htmlContent for LLM compliance analysis
+  - Optional chaining for safe data extraction
+  - Integrates with existing webhook ingestion pipeline
+- ✅ **API Endpoint** (`/api/admin/partners/:id/crawl4ai`):
+  - Admin-only endpoint for triggering Crawl4AI scraping
+  - Zod validation for URL (http/https only), llmProvider enum, optional llmModel
+  - Source type verification (must be 'crawl4ai')
+  - Creates ingestion logs with accurate metrics
+- ✅ **Frontend UI** (`client/src/pages/admin-partners.tsx`):
+  - Added "Crawl4AI (Free LLM Scraping)" option to partner feed type dropdown
+  - Partners can now choose between Webhook, CSV, SFTP, Firecrawl, or Crawl4AI
+- ✅ **Schema Update** (`shared/schema.ts`):
+  - Updated sourceType comment to include 'crawl4ai' as valid feed type
+
 ### September 30, 2025 - Seller Contact & Notification System Complete ✅
 - ✅ **Enhanced Contact Schema** in `shared/schema.ts`:
   - Added notification tracking fields: sellerNotifiedAt, sellerNotificationStatus, sellerNotificationMethod
@@ -149,7 +178,7 @@ Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, an
 ### Enterprise Partner Syndication System
 This system enables enterprise partners to post listings once and distribute them across platforms with multi-LLM compliance checks.
 - **Core Components**:
-    - **Partner Source Management**: Manages partner configurations, feed types (webhook, CSV, SFTP, Firecrawl), field mapping, legal compliance, and health metrics.
+    - **Partner Source Management**: Manages partner configurations, feed types (webhook, CSV, SFTP, Firecrawl, Crawl4AI), field mapping, legal compliance, and health metrics.
     - **Canonical Listings**: Stores normalized listings with provenance tracking, deduplication (VIN, Registration, SHA256), risk scoring, and status management.
     - **Multi-LLM Compliance Pipeline**: Utilizes various LLMs for compliance:
         - **OpenAI (GPT-4o/GPT-4o-mini)**: ToS extraction, data normalization.
@@ -193,7 +222,8 @@ This system enables enterprise partners to post listings once and distribute the
 - **Perplexity**: For future market intelligence.
 
 ### Web Scraping
-- **Firecrawl**: For web scraping partners without APIs.
+- **Firecrawl**: Premium web scraping service with LLM-powered extraction.
+- **Crawl4AI**: Free, self-hosted web scraping with LLM extraction using OpenAI, Gemini, or Anthropic.
 
 ### Notification & Communication
 - **Twilio**: WhatsApp Business API for instant seller notifications via WhatsApp.
