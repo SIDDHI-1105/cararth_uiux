@@ -48,9 +48,22 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 text-foreground leading-tight">
               India's Multi-Platform Car Marketplace
             </h1>
-            <p className="text-lg sm:text-xl md:text-2xl mb-6 text-muted-foreground max-w-4xl mx-auto leading-relaxed">
+            <p className="text-lg sm:text-xl md:text-2xl mb-4 text-muted-foreground max-w-4xl mx-auto leading-relaxed">
               Buyers: Search all platforms in one place. Sellers: Post once, reach everywhere.
             </p>
+            
+            {/* Live Stats */}
+            <div className="flex justify-center items-center gap-6 mb-6 text-sm sm:text-base">
+              <div className="flex items-center gap-2">
+                <span className="text-3xl sm:text-4xl font-bold text-primary">300+</span>
+                <span className="text-muted-foreground">Verified Listings</span>
+              </div>
+              <div className="h-8 w-px bg-border"></div>
+              <div className="flex items-center gap-2">
+                <span className="text-3xl sm:text-4xl font-bold text-primary">10+</span>
+                <span className="text-muted-foreground">Platforms</span>
+              </div>
+            </div>
             
             {/* Connected Platforms Display */}
             <div className="mb-8">
