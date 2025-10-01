@@ -32,7 +32,7 @@ export function AuthDialog({ trigger, defaultTab = 'login' }: AuthDialogProps) {
     setIsLoading(true);
     
     try {
-      await apiRequest('/api/auth/login', 'POST', loginData);
+      await apiRequest('POST', '/api/auth/login', loginData);
       toast({
         title: 'Success',
         description: 'Logged in successfully!'
@@ -54,13 +54,13 @@ export function AuthDialog({ trigger, defaultTab = 'login' }: AuthDialogProps) {
     setIsLoading(true);
     
     try {
-      await apiRequest('/api/auth/register', 'POST', registerData);
+      await apiRequest('POST', '/api/auth/register', registerData);
       toast({
         title: 'Success',
         description: 'Account created! Logging you in...'
       });
       // Auto-login after registration
-      await apiRequest('/api/auth/login', 'POST', {
+      await apiRequest('POST', '/api/auth/login', {
         email: registerData.email,
         password: registerData.password
       });
