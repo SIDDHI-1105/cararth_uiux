@@ -20,6 +20,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ChevronLeft, ChevronRight, Search, Globe, Star, Crown, MessageSquare, Users, Phone } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { type CarListing } from "@shared/schema";
+import { hasValidImages } from "@/lib/car-utils";
 
 // Type definition for usage status data
 interface UsageStatus {
@@ -433,6 +434,14 @@ function HomeContent() {
 
   const sortedCars = useMemo(() => {
     return [...cars].sort((a, b) => {
+      // First priority: Listings with images come first
+      const aHasImages = hasValidImages(a);
+      const bHasImages = hasValidImages(b);
+      
+      if (aHasImages && !bHasImages) return -1;
+      if (!aHasImages && bHasImages) return 1;
+      
+      // Second priority: Apply user's selected sort criteria
       switch (sortBy) {
         case "price-low":
           return parseFloat(a.price) - parseFloat(b.price);

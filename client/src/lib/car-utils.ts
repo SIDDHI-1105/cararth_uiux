@@ -1,5 +1,7 @@
 import { type CarListing } from "@shared/schema";
 
+const FALLBACK_CAR_IMAGE_URL = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiM5Y2EzYWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZSBBdmFpbGFibGU8L3RleHQ+PC9zdmc+';
+
 /**
  * Unified helper to get source from car data consistently across components
  * Handles the inconsistency between different data shapes where source 
@@ -7,6 +9,30 @@ import { type CarListing } from "@shared/schema";
  */
 export const getCarSource = (car: CarListing): string | undefined => {
   return (car as any).source || (car as any).portal || car.portal;
+};
+
+/**
+ * Check if a car listing has valid, verified images (not placeholders/fallback)
+ * Used for sorting to prioritize listings with professional images
+ */
+export const hasValidImages = (car: CarListing): boolean => {
+  const images = car.images;
+  
+  // No images array or empty
+  if (!images || !Array.isArray(images) || images.length === 0) {
+    return false;
+  }
+  
+  const firstImage = images[0];
+  
+  // Check for placeholder patterns
+  const placeholderPatterns = ['spacer3x2.png', 'CD-Shimmer.svg', 'placeholder.png', 'data:image/svg+xml'];
+  const isPlaceholder = placeholderPatterns.some(pattern => 
+    firstImage?.toLowerCase().includes(pattern.toLowerCase())
+  );
+  
+  // Has valid image if not a placeholder and not empty
+  return !isPlaceholder && firstImage && firstImage.trim().length > 0;
 };
 
 /**
