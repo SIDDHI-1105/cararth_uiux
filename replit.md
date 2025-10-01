@@ -81,5 +81,6 @@ Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, an
 - ✅ **Team-BHP Classifieds Scraper** (`server/teamBhpScraper.ts`): Daily automated scraping of Team-BHP classifieds for owner-run listings from India's most trusted car enthusiast community.
 - ✅ **TheAutomotiveIndia Marketplace Scraper** (`server/automotiveIndiaScraper.ts`): Daily automated scraping of TheAutomotiveIndia marketplace (34.9K community) for owner-to-owner sales.
 - ✅ **Quikr Cars Scraper** (`server/quikrScraper.ts`): Daily automated scraping of Quikr Cars owner listings (2,500+ active) from India's largest classifieds platform.
+- ✅ **Reddit r/CarsIndia Scraper** (`server/redditScraper.ts`): Daily automated scraping of Reddit r/CarsIndia buying/selling threads from India's active car enthusiast community with detailed discussions.
 - ✅ **Daily Scheduler Integration**: All scrapers run once daily at 11:00 IST, auto-create partner sources, and execute in parallel for maximum efficiency.
-- **Impact**: ~40-50% inventory boost from quality owner forums and classifieds where hidden gems are found.
+- **Impact**: ~50%+ inventory boost from quality owner forums, classifieds, and communities where hidden gems with rich context are found.

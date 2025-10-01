@@ -187,6 +187,15 @@ export class InternalScheduler {
           } catch (error) {
             console.error('❌ Quikr scraping failed:', error);
           }
+          
+          // Reddit r/CarsIndia buying/selling threads
+          try {
+            const { redditScraper } = await import('./redditScraper.js');
+            const result = await redditScraper.scrapeLatestListings(storage.db);
+            console.log(`✅ Reddit scraping: ${result.newListings} new listings from r/CarsIndia`);
+          } catch (error) {
+            console.error('❌ Reddit scraping failed:', error);
+          }
         }
         
         // Mark this hour as executed for today
