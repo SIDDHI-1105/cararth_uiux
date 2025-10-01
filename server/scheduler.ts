@@ -155,6 +155,20 @@ export class InternalScheduler {
             console.log('⏳ Batch ingestion already in progress, skipping scheduled run');
           }
         }
+        
+        // Run Team-BHP scraping once daily (first scheduled time only)
+        if (scheduleHour === this.getScheduleHours()[0]) {
+          try {
+            const { teamBhpScraper } = await import('./teamBhpScraper.js');
+            const { DatabaseStorage } = await import('./dbStorage.js');
+            const storage = new DatabaseStorage();
+            const result = await teamBhpScraper.scrapeLatestListings(storage.db);
+            console.log(`✅ Team-BHP scraping: ${result.newListings} new listings from owner forums`);
+          } catch (error) {
+            console.error('❌ Team-BHP scraping failed:', error);
+          }
+        }
+        
         // Mark this hour as executed for today
         this.lastRunTimes.set(scheduleHour, todayKey);
         

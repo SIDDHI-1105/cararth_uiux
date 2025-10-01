@@ -43,6 +43,12 @@ Key capabilities include:
   - Partners can now choose between Webhook, CSV, SFTP, Firecrawl, or Crawl4AI
 - ✅ **Schema Update** (`shared/schema.ts`):
   - Updated sourceType comment to include 'crawl4ai' as valid feed type
+- ✅ **Team-BHP Classifieds Scraper** (`server/teamBhpScraper.ts`):
+  - Automated daily scraping of Team-BHP classifieds for owner-run listings
+  - Finds low-mileage cars without dealer markup from enthusiast forums
+  - Integrated into scheduler - runs once daily at 11:00 IST
+  - Auto-creates Team-BHP partner source on first run
+  - Expected to add ~20% more quality inventory from trusted community
 
 ### September 30, 2025 - Seller Contact & Notification System Complete ✅
 - ✅ **Enhanced Contact Schema** in `shared/schema.ts`:
