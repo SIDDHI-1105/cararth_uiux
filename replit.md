@@ -34,6 +34,11 @@ Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, an
     - **Core Components**: Partner source management (webhook, CSV, SFTP, Firecrawl, Crawl4AI), canonical listings (normalized, deduplicated, risk-scored), multi-LLM compliance pipeline (OpenAI, Gemini, Anthropic, Perplexity), and ingestion service (smart deduplication, auto-normalization).
     - **Ingestion Workflows**: Supports webhook, manual batch, and Firecrawl/Crawl4AI scraping.
     - **Cost Optimization**: Strategic LLM provider selection, caching, and batch processing.
+- **Partner Self-Service Portal**: Simple, intuitive dashboard for dealers to manage inventory with real-time marketplace updates.
+    - **Core Components**: Shareable invite links (7-day expiry, crypto-secure tokens), partner accounts with role-based access, instant cache invalidation for real-time updates, non-technical Add Listing form.
+    - **Database Schema**: `partner_invites` (token, listing source, expiry), `partner_accounts` (user-source relationship), `cached_portal_listings` with `origin='partner'` and verification fields.
+    - **Security**: Secure token generation with crypto.randomUUID(), session-based authentication, role-based authorization (admin/partner), ownership verification on CRUD operations.
+    - **Real-Time Updates**: Listings appear on CarArth.com instantly via integrated cache invalidation (cacheManager) clearing all search, marketplace, and listing caches.
 
 ## External Dependencies
 
@@ -77,10 +82,20 @@ Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, an
 
 ## Recent Updates
 
-### October 1, 2025 - Automated Forum & Marketplace Scraping
-- ✅ **Team-BHP Classifieds Scraper** (`server/teamBhpScraper.ts`): Daily automated scraping of Team-BHP classifieds for owner-run listings from India's most trusted car enthusiast community.
-- ✅ **TheAutomotiveIndia Marketplace Scraper** (`server/automotiveIndiaScraper.ts`): Daily automated scraping of TheAutomotiveIndia marketplace (34.9K community) for owner-to-owner sales.
-- ✅ **Quikr Cars Scraper** (`server/quikrScraper.ts`): Daily automated scraping of Quikr Cars owner listings (2,500+ active) from India's largest classifieds platform.
-- ✅ **Reddit r/CarsIndia Scraper** (`server/redditScraper.ts`): Daily automated scraping of Reddit r/CarsIndia buying/selling threads from India's active car enthusiast community with detailed discussions.
-- ✅ **Daily Scheduler Integration**: All scrapers run once daily at 11:00 IST, auto-create partner sources, and execute in parallel for maximum efficiency.
-- **Impact**: ~50%+ inventory boost from quality owner forums, classifieds, and communities where hidden gems with rich context are found.
+### October 1, 2025 - Partner Self-Service Portal & Automated Scraping
+- ✅ **Partner Self-Service Portal**: Simple, intuitive dashboard for dealers to manage inventory with real-time CarArth.com updates.
+  - **Admin Features** (`client/src/pages/admin-partners.tsx`): Generate shareable invite links from partner sources with 7-day expiry.
+  - **Partner Invite** (`client/src/pages/partner-invite.tsx`): Beautiful acceptance page showing partner benefits and one-click setup.
+  - **Partner Dashboard** (`client/src/pages/partner-dashboard.tsx`): Non-technical Add Listing form, My Inventory management, instant CRUD operations.
+  - **Backend API** (`server/routes.ts`): Secure invite generation/acceptance, authenticated partner listing CRUD with ownership verification.
+  - **Database Schema** (`shared/schema.ts`): `partner_invites`, `partner_accounts` tables with secure crypto token generation.
+  - **Real-Time Cache** (`server/dbStorage.ts`): Instant cache invalidation via cacheManager for immediate marketplace updates.
+  - **Security**: crypto.randomUUID() tokens, role-based access (admin/partner), session authentication, ownership checks.
+  - **Impact**: Empowers dealers to self-manage inventory with zero technical knowledge, instant visibility on CarArth.com.
+- ✅ **Automated Forum & Marketplace Scraping**: Daily scraping from quality owner communities.
+  - **Team-BHP Classifieds** (`server/teamBhpScraper.ts`): India's trusted car enthusiast community owner listings.
+  - **TheAutomotiveIndia Marketplace** (`server/automotiveIndiaScraper.ts`): 34.9K community owner-to-owner sales.
+  - **Quikr Cars** (`server/quikrScraper.ts`): 2,500+ active owner listings from India's largest classifieds.
+  - **Reddit r/CarsIndia** (`server/redditScraper.ts`): Active community buying/selling threads with rich discussions.
+  - **Daily Scheduler**: All scrapers run at 11:00 & 23:00 IST with auto-source creation and parallel execution.
+  - **Impact**: ~50%+ inventory boost from hidden gems with authentic owner context.

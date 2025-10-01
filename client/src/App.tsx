@@ -14,6 +14,8 @@ import AdminBlog from "./pages/admin-blog";
 import AdminPartners from "./pages/admin-partners";
 import AdminPartnerMonitor from "./pages/admin-partner-monitor";
 import AdminReview from "./pages/admin-review";
+import PartnerInvite from "./pages/partner-invite";
+import PartnerDashboard from "./pages/partner-dashboard";
 import ThrottleTalk from "./pages/news";
 import Community from "./pages/community";
 import PrivacyPolicy from "./pages/privacy-policy";
@@ -38,6 +40,8 @@ function Router() {
       <Route path="/admin/partners" component={AdminPartners} />
       <Route path="/admin/partners/:sourceId/monitor" component={AdminPartnerMonitor} />
       <Route path="/admin/review" component={AdminReview} />
+      <Route path="/partner/invite/:token" component={PartnerInvite} />
+      <Route path="/partner/dashboard" component={PartnerDashboard} />
       <Route path="/news" component={ThrottleTalk} />
       <Route path="/community" component={Community} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />

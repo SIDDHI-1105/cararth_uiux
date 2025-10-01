@@ -22,6 +22,8 @@ import {
   canonicalListings,
   llmReports,
   ingestionLogs,
+  partnerInvites,
+  partnerAccounts,
   type User, 
   type InsertUser, 
   type UpsertUser,
@@ -2208,6 +2210,286 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'deleteListingSource operation');
       throw new Error('Failed to delete listing source');
+    }
+  }
+
+  // Partner invite system
+  async createPartnerInvite(data: { listingSourceId: string; email?: string; createdBy: string }): Promise<any> {
+    try {
+      // Use crypto.randomUUID for secure token generation
+      const token = `${crypto.randomUUID()}-${crypto.randomUUID()}`;
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+      const result = await this.db
+        .insert(partnerInvites)
+        .values({
+          token,
+          listingSourceId: data.listingSourceId,
+          email: data.email || null,
+          expiresAt,
+          createdBy: data.createdBy
+        })
+        .returning();
+
+      this.clearCache('listing_sources_all');
+      return result[0];
+    } catch (error) {
+      logError(createAppError('Failed to create partner invite', 500, ErrorCategory.DATABASE), 'createPartnerInvite');
+      throw error;
+    }
+  }
+
+  async getPartnerInviteByToken(token: string): Promise<any | undefined> {
+    try {
+      const result = await this.db
+        .select()
+        .from(partnerInvites)
+        .where(eq(partnerInvites.token, token))
+        .limit(1);
+      return result[0];
+    } catch (error) {
+      logError(createAppError('Failed to get partner invite', 500, ErrorCategory.DATABASE), 'getPartnerInviteByToken');
+      return undefined;
+    }
+  }
+
+  async acceptPartnerInvite(token: string, userId: string): Promise<{ success: boolean; error?: string; listingSourceId?: string }> {
+    try {
+      const invite = await this.getPartnerInviteByToken(token);
+      
+      if (!invite) {
+        return { success: false, error: 'Invalid invite link' };
+      }
+      
+      if (invite.usedAt) {
+        return { success: false, error: 'This invite has already been used' };
+      }
+      
+      if (new Date() > new Date(invite.expiresAt)) {
+        return { success: false, error: 'This invite has expired' };
+      }
+
+      // Mark invite as used
+      await this.db
+        .update(partnerInvites)
+        .set({ usedAt: new Date(), usedByUserId: userId })
+        .where(eq(partnerInvites.token, token));
+
+      // Create partner account
+      await this.createPartnerAccount({
+        listingSourceId: invite.listingSourceId,
+        userId,
+        role: 'owner'
+      });
+
+      // Update user role to partner
+      await this.db
+        .update(users)
+        .set({ role: 'partner' })
+        .where(eq(users.id, userId));
+
+      this.clearCache(`user:${userId}`);
+      
+      return { success: true, listingSourceId: invite.listingSourceId };
+    } catch (error) {
+      logError(createAppError('Failed to accept invite', 500, ErrorCategory.DATABASE), 'acceptPartnerInvite');
+      return { success: false, error: 'Failed to process invite' };
+    }
+  }
+
+  async getPartnerInvitesBySource(listingSourceId: string): Promise<any[]> {
+    try {
+      return await this.db
+        .select()
+        .from(partnerInvites)
+        .where(eq(partnerInvites.listingSourceId, listingSourceId))
+        .orderBy(desc(partnerInvites.createdAt));
+    } catch (error) {
+      logError(createAppError('Failed to get invites', 500, ErrorCategory.DATABASE), 'getPartnerInvitesBySource');
+      return [];
+    }
+  }
+
+  // Partner account management
+  async createPartnerAccount(data: { listingSourceId: string; userId: string; role: string }): Promise<any> {
+    try {
+      const result = await this.db
+        .insert(partnerAccounts)
+        .values(data)
+        .returning();
+      return result[0];
+    } catch (error) {
+      logError(createAppError('Failed to create partner account', 500, ErrorCategory.DATABASE), 'createPartnerAccount');
+      throw error;
+    }
+  }
+
+  async getPartnerAccountByUser(userId: string): Promise<any | undefined> {
+    try {
+      const result = await this.db
+        .select()
+        .from(partnerAccounts)
+        .where(eq(partnerAccounts.userId, userId))
+        .limit(1);
+      return result[0];
+    } catch (error) {
+      logError(createAppError('Failed to get partner account', 500, ErrorCategory.DATABASE), 'getPartnerAccountByUser');
+      return undefined;
+    }
+  }
+
+  async getPartnerAccountsBySource(listingSourceId: string): Promise<any[]> {
+    try {
+      return await this.db
+        .select()
+        .from(partnerAccounts)
+        .where(eq(partnerAccounts.listingSourceId, listingSourceId));
+    } catch (error) {
+      logError(createAppError('Failed to get partner accounts', 500, ErrorCategory.DATABASE), 'getPartnerAccountsBySource');
+      return [];
+    }
+  }
+
+  // Partner listing management - REAL-TIME marketplace updates
+  async createPartnerListing(listingData: any, partnerUserId: string, sourceId: string): Promise<any> {
+    try {
+      // Create unique hash for deduplication
+      const hashString = `${listingData.brand}-${listingData.model}-${listingData.year}-${listingData.city}-${listingData.price}`;
+      const hash = Buffer.from(hashString).toString('base64');
+
+      const result = await this.db
+        .insert(cachedPortalListings)
+        .values({
+          portal: 'Partner Portal',
+          externalId: `partner-${Date.now()}`,
+          url: '#',
+          title: listingData.title,
+          brand: listingData.brand,
+          model: listingData.model,
+          year: listingData.year,
+          price: listingData.price,
+          mileage: listingData.mileage || 0,
+          fuelType: listingData.fuelType,
+          transmission: listingData.transmission,
+          owners: listingData.owners || 1,
+          location: listingData.location,
+          city: listingData.city,
+          state: listingData.state || null,
+          description: listingData.description || null,
+          features: listingData.features || {},
+          images: listingData.images || {},
+          listingDate: new Date(),
+          hash,
+          origin: 'partner',
+          sourceId,
+          partnerUserId,
+          partnerVerificationStatus: 'verified'
+        })
+        .returning();
+
+      // INSTANT cache invalidation for real-time marketplace updates
+      this.clearAllSearchCaches();
+      this.clearAllMarketplaceCaches();
+      
+      return result[0];
+    } catch (error) {
+      logError(createAppError('Failed to create partner listing', 500, ErrorCategory.DATABASE), 'createPartnerListing');
+      throw error;
+    }
+  }
+
+  async getPartnerListings(userId: string): Promise<any[]> {
+    try {
+      return await this.db
+        .select()
+        .from(cachedPortalListings)
+        .where(
+          and(
+            eq(cachedPortalListings.origin, 'partner'),
+            eq(cachedPortalListings.partnerUserId, userId)
+          )
+        )
+        .orderBy(desc(cachedPortalListings.createdAt));
+    } catch (error) {
+      logError(createAppError('Failed to get partner listings', 500, ErrorCategory.DATABASE), 'getPartnerListings');
+      return [];
+    }
+  }
+
+  async updatePartnerListing(listingId: string, userId: string, updates: any): Promise<any | undefined> {
+    try {
+      const result = await this.db
+        .update(cachedPortalListings)
+        .set({
+          ...updates,
+          updatedAt: new Date()
+        })
+        .where(
+          and(
+            eq(cachedPortalListings.id, listingId),
+            eq(cachedPortalListings.partnerUserId, userId)
+          )
+        )
+        .returning();
+
+      // INSTANT cache invalidation for real-time marketplace updates
+      this.clearAllSearchCaches();
+      this.clearAllMarketplaceCaches();
+      
+      return result[0];
+    } catch (error) {
+      logError(createAppError('Failed to update listing', 500, ErrorCategory.DATABASE), 'updatePartnerListing');
+      return undefined;
+    }
+  }
+
+  async deletePartnerListing(listingId: string, userId: string): Promise<boolean> {
+    try {
+      const result = await this.db
+        .delete(cachedPortalListings)
+        .where(
+          and(
+            eq(cachedPortalListings.id, listingId),
+            eq(cachedPortalListings.partnerUserId, userId)
+          )
+        )
+        .returning();
+
+      // INSTANT cache invalidation for real-time marketplace updates
+      this.clearAllSearchCaches();
+      this.clearAllMarketplaceCaches();
+      
+      return result.length > 0;
+    } catch (error) {
+      logError(createAppError('Failed to delete listing', 500, ErrorCategory.DATABASE), 'deletePartnerListing');
+      return false;
+    }
+  }
+
+  // Helper to clear all search and marketplace caches for real-time updates
+  private clearAllSearchCaches(): void {
+    // Clear local cache entries
+    for (const [key] of this.cache) {
+      if (key.startsWith('search:') || key.startsWith('cached_portal_listings')) {
+        this.cache.delete(key);
+      }
+    }
+  }
+
+  private clearAllMarketplaceCaches(): void {
+    // Import and use cacheManager for global cache clearing
+    // This ensures real-time updates across all marketplace searches
+    try {
+      const { cacheManager } = require('./advancedCaching.js');
+      if (cacheManager) {
+        // Clear all search-related cache prefixes for instant marketplace updates
+        cacheManager.invalidateByPrefix('search:');
+        cacheManager.invalidateByPrefix('marketplace:');
+        cacheManager.invalidateByPrefix('fastSearch:');
+        cacheManager.invalidateByPrefix('cachedPortalListings:');
+      }
+    } catch (error) {
+      logError(createAppError('Cache manager not available', 500, ErrorCategory.INTERNAL), 'clearAllMarketplaceCaches');
     }
   }
 

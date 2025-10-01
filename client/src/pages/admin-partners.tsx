@@ -15,7 +15,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, RefreshCw, Activity, AlertCircle, CheckCircle, XCircle, BarChart3, Play } from 'lucide-react';
+import { Plus, Edit, Trash2, RefreshCw, Activity, AlertCircle, CheckCircle, XCircle, BarChart3, Play, Link as LinkIcon, Copy } from 'lucide-react';
 import { Link } from 'wouter';
 
 const partnerSchema = z.object({
@@ -238,12 +238,44 @@ export default function AdminPartnersPage() {
   const [selectedPartner, setSelectedPartner] = useState<any>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [currentInviteUrl, setCurrentInviteUrl] = useState('');
 
   const { data: partnersData, isLoading } = useQuery({
     queryKey: ['/api/admin/partners'],
   });
 
   const partners = (partnersData as any) || [];
+
+  const generateInviteMutation = useMutation({
+    mutationFn: async (listingSourceId: string) => {
+      const response = await apiRequest('/api/admin/partners/invite', {
+        method: 'POST',
+        body: JSON.stringify({ listingSourceId })
+      });
+      if (!response.ok) throw new Error('Failed to generate invite');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setCurrentInviteUrl(data.invite.url);
+      setInviteDialogOpen(true);
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to generate invite link',
+        variant: 'destructive',
+      });
+    }
+  });
+
+  const copyInviteLink = () => {
+    navigator.clipboard.writeText(currentInviteUrl);
+    toast({
+      title: 'Copied!',
+      description: 'Invite link copied to clipboard',
+    });
+  };
 
   const createMutation = useMutation({
     mutationFn: async (data: PartnerFormData) => {
@@ -484,41 +516,54 @@ export default function AdminPartnersPage() {
                         )}
                       </div>
 
-                      <div className="flex gap-2 mt-4">
-                        <Link href={`/admin/partners/${partner.id}/monitor`} className="flex-1">
+                      <div className="space-y-2 mt-4">
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => generateInviteMutation.mutate(partner.id)}
+                          disabled={generateInviteMutation.isPending}
+                          data-testid={`button-invite-${partner.id}`}
+                        >
+                          <LinkIcon className="w-4 h-4 mr-2" />
+                          Generate Invite Link
+                        </Button>
+                        <div className="flex gap-2">
+                          <Link href={`/admin/partners/${partner.id}/monitor`} className="flex-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full"
+                              data-testid={`button-monitor-${partner.id}`}
+                            >
+                              <RefreshCw className="w-4 h-4 mr-2" />
+                              Monitor
+                            </Button>
+                          </Link>
                           <Button
                             variant="outline"
                             size="sm"
-                            className="w-full"
-                            data-testid={`button-monitor-${partner.id}`}
+                            onClick={() => {
+                              setSelectedPartner(partner);
+                              setIsEditDialogOpen(true);
+                            }}
+                            data-testid={`button-edit-${partner.id}`}
                           >
-                            <RefreshCw className="w-4 h-4 mr-2" />
-                            Monitor
+                            <Edit className="w-4 h-4" />
                           </Button>
-                        </Link>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedPartner(partner);
-                            setIsEditDialogOpen(true);
-                          }}
-                          data-testid={`button-edit-${partner.id}`}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            if (confirm(`Delete partner "${partner.partnerName}"? This action cannot be undone.`)) {
-                              deleteMutation.mutate(partner.id);
-                            }
-                          }}
-                          data-testid={`button-delete-${partner.id}`}
-                        >
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              if (confirm(`Delete partner "${partner.partnerName}"? This action cannot be undone.`)) {
+                                deleteMutation.mutate(partner.id);
+                              }
+                            }}
+                            data-testid={`button-delete-${partner.id}`}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -562,6 +607,45 @@ export default function AdminPartnersPage() {
             }}
           />
         )}
+
+        {/* Invite Link Dialog */}
+        <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+          <DialogContent className="max-w-lg bg-card dark:bg-gray-900">
+            <DialogHeader>
+              <DialogTitle className="text-foreground dark:text-white">Partner Invite Link Generated</DialogTitle>
+              <DialogDescription className="text-muted-foreground dark:text-gray-400">
+                Share this link with your partner to give them access to their dashboard
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="p-4 bg-muted dark:bg-gray-800 rounded-lg">
+                <p className="text-sm font-mono break-all text-foreground dark:text-white">
+                  {currentInviteUrl}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={copyInviteLink}
+                  className="flex-1"
+                  data-testid="button-copy-invite"
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copy Link
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setInviteDialogOpen(false)}
+                  data-testid="button-close-invite"
+                >
+                  Close
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground dark:text-gray-400">
+                This link expires in 7 days and can be used once.
+              </p>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

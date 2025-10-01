@@ -5937,6 +5937,202 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }));
 
+  // ===== PARTNER PORTAL SYSTEM =====
+  // Simple, intuitive interface for dealers to manage inventory
+
+  // Admin: Generate invite link for dealer
+  app.post('/api/admin/partners/invite', isAuthenticated, asyncHandler(async (req: any, res: any) => {
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    
+    const dbUser = await storage.getUser(userId);
+    if (dbUser?.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { listingSourceId, email } = req.body;
+    if (!listingSourceId) {
+      return res.status(400).json({ error: 'Listing source ID required' });
+    }
+
+    const invite = await storage.createPartnerInvite({
+      listingSourceId,
+      email: email || undefined,
+      createdBy: userId
+    });
+
+    const inviteUrl = `${req.protocol}://${req.get('host')}/partner/invite/${invite.token}`;
+
+    res.json({
+      success: true,
+      invite: {
+        token: invite.token,
+        url: inviteUrl,
+        expiresAt: invite.expiresAt
+      }
+    });
+  }));
+
+  // Partner: Accept invite and create account
+  app.post('/api/partner/accept-invite', isAuthenticated, asyncHandler(async (req: any, res: any) => {
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ error: 'Invite token required' });
+    }
+
+    const result = await storage.acceptPartnerInvite(token, userId);
+
+    if (!result.success) {
+      return res.status(400).json({ error: result.error });
+    }
+
+    res.json({
+      success: true,
+      message: 'Welcome to CarArth Partner Portal!',
+      listingSourceId: result.listingSourceId
+    });
+  }));
+
+  // Partner: Get account details
+  app.get('/api/partner/account', isAuthenticated, asyncHandler(async (req: any, res: any) => {
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+
+    const account = await storage.getPartnerAccountByUser(userId);
+    if (!account) {
+      return res.status(404).json({ error: 'No partner account found' });
+    }
+
+    const source = await storage.getListingSource(account.listingSourceId);
+
+    res.json({
+      success: true,
+      account,
+      source
+    });
+  }));
+
+  // Partner: Create new listing - INSTANT marketplace update
+  app.post('/api/partner/listings', isAuthenticated, asyncHandler(async (req: any, res: any) => {
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+
+    const dbUser = await storage.getUser(userId);
+    if (dbUser?.role !== 'partner') {
+      return res.status(403).json({ error: 'Partner access required' });
+    }
+
+    const account = await storage.getPartnerAccountByUser(userId);
+    if (!account) {
+      return res.status(403).json({ error: 'No partner account found' });
+    }
+
+    const listing = await storage.createPartnerListing(req.body, userId, account.listingSourceId);
+
+    res.json({
+      success: true,
+      message: 'Listing added! Live on CarArth.com instantly!',
+      listing
+    });
+  }));
+
+  // Partner: Get my listings
+  app.get('/api/partner/listings', isAuthenticated, asyncHandler(async (req: any, res: any) => {
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+
+    const dbUser = await storage.getUser(userId);
+    if (dbUser?.role !== 'partner') {
+      return res.status(403).json({ error: 'Partner access required' });
+    }
+
+    const listings = await storage.getPartnerListings(userId);
+
+    res.json({
+      success: true,
+      listings
+    });
+  }));
+
+  // Partner: Update listing - INSTANT marketplace update
+  app.patch('/api/partner/listings/:id', isAuthenticated, asyncHandler(async (req: any, res: any) => {
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+
+    const dbUser = await storage.getUser(userId);
+    if (dbUser?.role !== 'partner') {
+      return res.status(403).json({ error: 'Partner access required' });
+    }
+
+    const { id } = req.params;
+    const updated = await storage.updatePartnerListing(id, userId, req.body);
+
+    if (!updated) {
+      return res.status(404).json({ error: 'Listing not found or unauthorized' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Updated! Changes live on CarArth.com instantly!',
+      listing: updated
+    });
+  }));
+
+  // Partner: Delete listing - INSTANT marketplace update
+  app.delete('/api/partner/listings/:id', isAuthenticated, asyncHandler(async (req: any, res: any) => {
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+
+    const dbUser = await storage.getUser(userId);
+    if (dbUser?.role !== 'partner') {
+      return res.status(403).json({ error: 'Partner access required' });
+    }
+
+    const { id } = req.params;
+    const deleted = await storage.deletePartnerListing(id, userId);
+
+    if (!deleted) {
+      return res.status(404).json({ error: 'Listing not found or unauthorized' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Listing removed from CarArth.com instantly!'
+    });
+  }));
+
+  // Public: Get invite info (for display on accept page)
+  app.get('/api/partner/invite/:token', asyncHandler(async (req: any, res: any) => {
+    const { token } = req.params;
+
+    const invite = await storage.getPartnerInviteByToken(token);
+    if (!invite) {
+      return res.status(404).json({ error: 'Invalid or expired invite' });
+    }
+
+    if (invite.usedAt) {
+      return res.status(400).json({ error: 'This invite has already been used' });
+    }
+
+    if (new Date() > new Date(invite.expiresAt)) {
+      return res.status(400).json({ error: 'This invite has expired' });
+    }
+
+    const source = await storage.getListingSource(invite.listingSourceId);
+
+    res.json({
+      success: true,
+      invite: {
+        listingSourceId: invite.listingSourceId,
+        sourceName: source?.name || 'Partner Portal',
+        expiresAt: invite.expiresAt
+      }
+    });
+  }));
+
   const httpServer = createServer(app);
   return httpServer;
 }

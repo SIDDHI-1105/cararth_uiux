@@ -176,6 +176,23 @@ export interface IStorage {
   updateListingSource(id: string, updates: any): Promise<any | undefined>;
   deleteListingSource(id: string): Promise<void>;
   
+  // Partner invite system
+  createPartnerInvite(data: { listingSourceId: string; email?: string; createdBy: string }): Promise<any>;
+  getPartnerInviteByToken(token: string): Promise<any | undefined>;
+  acceptPartnerInvite(token: string, userId: string): Promise<{ success: boolean; error?: string; listingSourceId?: string }>;
+  getPartnerInvitesBySource(listingSourceId: string): Promise<any[]>;
+  
+  // Partner account management
+  createPartnerAccount(data: { listingSourceId: string; userId: string; role: string }): Promise<any>;
+  getPartnerAccountByUser(userId: string): Promise<any | undefined>;
+  getPartnerAccountsBySource(listingSourceId: string): Promise<any[]>;
+  
+  // Partner listing management
+  createPartnerListing(listingData: any, partnerUserId: string, sourceId: string): Promise<any>;
+  getPartnerListings(userId: string): Promise<any[]>;
+  updatePartnerListing(listingId: string, userId: string, updates: any): Promise<any | undefined>;
+  deletePartnerListing(listingId: string, userId: string): Promise<boolean>;
+  
   // Ingestion management
   getIngestionStats(sourceId: string): Promise<any>;
   getIngestionLogs(sourceId: string, options?: { limit?: number }): Promise<any[]>;
@@ -1337,6 +1354,53 @@ export class MemStorage implements IStorage {
 
   async updateCanonicalListingStatus(listingId: string, status: string): Promise<any | undefined> {
     return undefined;
+  }
+
+  // Partner invite system - in-memory stubs
+  async createPartnerInvite(data: { listingSourceId: string; email?: string; createdBy: string }): Promise<any> {
+    return { id: randomUUID(), token: randomUUID(), ...data, createdAt: new Date() };
+  }
+
+  async getPartnerInviteByToken(token: string): Promise<any | undefined> {
+    return undefined;
+  }
+
+  async acceptPartnerInvite(token: string, userId: string): Promise<{ success: boolean; error?: string; listingSourceId?: string }> {
+    return { success: false, error: 'Not implemented in memory storage' };
+  }
+
+  async getPartnerInvitesBySource(listingSourceId: string): Promise<any[]> {
+    return [];
+  }
+
+  // Partner account management - in-memory stubs
+  async createPartnerAccount(data: { listingSourceId: string; userId: string; role: string }): Promise<any> {
+    return { id: randomUUID(), ...data, createdAt: new Date() };
+  }
+
+  async getPartnerAccountByUser(userId: string): Promise<any | undefined> {
+    return undefined;
+  }
+
+  async getPartnerAccountsBySource(listingSourceId: string): Promise<any[]> {
+    return [];
+  }
+
+  // Partner listing management - in-memory stubs
+  async createPartnerListing(listingData: any, partnerUserId: string, sourceId: string): Promise<any> {
+    return { id: randomUUID(), ...listingData, partnerUserId, sourceId, createdAt: new Date() };
+  }
+
+  async getPartnerListings(userId: string): Promise<any[]> {
+    return [];
+  }
+
+  async updatePartnerListing(listingId: string, userId: string, updates: any): Promise<any | undefined> {
+    return undefined;
+  }
+
+  async deletePartnerListing(listingId: string, userId: string): Promise<boolean> {
+    return false;
   }
 }
 
