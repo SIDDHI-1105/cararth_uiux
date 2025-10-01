@@ -82,16 +82,24 @@ Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, an
 
 ## Recent Updates
 
-### October 1, 2025 - Partner Self-Service Portal & Automated Scraping
+### October 1, 2025 - Partner Self-Service Portal, Bulk Upload & Automated Scraping
 - ✅ **Partner Self-Service Portal**: Simple, intuitive dashboard for dealers to manage inventory with real-time CarArth.com updates.
   - **Admin Features** (`client/src/pages/admin-partners.tsx`): Generate shareable invite links from partner sources with 7-day expiry.
   - **Partner Invite** (`client/src/pages/partner-invite.tsx`): Beautiful acceptance page showing partner benefits and one-click setup.
-  - **Partner Dashboard** (`client/src/pages/partner-dashboard.tsx`): Non-technical Add Listing form, My Inventory management, instant CRUD operations.
+  - **Partner Dashboard** (`client/src/pages/partner-dashboard.tsx`): Non-technical Add Listing form, My Inventory management, instant CRUD operations, Bulk Upload tab.
   - **Backend API** (`server/routes.ts`): Secure invite generation/acceptance, authenticated partner listing CRUD with ownership verification.
-  - **Database Schema** (`shared/schema.ts`): `partner_invites`, `partner_accounts` tables with secure crypto token generation.
+  - **Database Schema** (`shared/schema.ts`): `partner_invites`, `partner_accounts`, `bulk_upload_jobs` tables with secure crypto token generation.
   - **Real-Time Cache** (`server/dbStorage.ts`): Instant cache invalidation via cacheManager for immediate marketplace updates.
   - **Security**: crypto.randomUUID() tokens, role-based access (admin/partner), session authentication, ownership checks.
   - **Impact**: Empowers dealers to self-manage inventory with zero technical knowledge, instant visibility on CarArth.com.
+- ✅ **Bulk Upload Feature**: Enable dealers to upload 100+ listings at once via CSV + media files with real-time progress tracking.
+  - **UI** (`client/src/pages/partner-dashboard.tsx`): Tabbed interface with drag-and-drop CSV upload, optional media file upload, real-time job status polling with progress indicators.
+  - **Backend Processing** (`server/routes.ts`): Multipart form-data handling with multer, CSV parsing with csv-parse/sync, async job processing, per-record validation and error tracking.
+  - **Storage Layer** (`server/dbStorage.ts`): Job tracking methods (createBulkUploadJob, updateBulkUploadJob, getBulkUploadJob) with progress updates and error logging.
+  - **Security Features**: Filename sanitization (prevent path traversal), URL validation, CSV size limit (5MB), row count limit (500 listings), file type validation (images/videos only), ownership verification on job status checks.
+  - **LLM Integration**: Each listing processed through existing createPartnerListing which triggers multi-LLM compliance checks (OpenAI ToS, Gemini PII, Anthropic copyright).
+  - **Sample CSV Template**: Downloadable template with required columns (title, brand, model, year, price, mileage, fuelType, transmission, owners, city) and optional columns (location, description, images).
+  - **Impact**: Dramatically reduces onboarding time for dealers with large inventories, enables 500-listing uploads in minutes vs hours of manual entry.
 - ✅ **Automated Forum & Marketplace Scraping**: Daily scraping from quality owner communities.
   - **Team-BHP Classifieds** (`server/teamBhpScraper.ts`): India's trusted car enthusiast community owner listings.
   - **TheAutomotiveIndia Marketplace** (`server/automotiveIndiaScraper.ts`): 34.9K community owner-to-owner sales.
