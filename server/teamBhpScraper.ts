@@ -3,16 +3,13 @@
  * Scrapes owner-run forum listings for quality used cars
  */
 
-import { Crawl4AIService } from './crawl4aiService';
+import * as cheerio from 'cheerio';
+import fetch from 'node-fetch';
 import type { DatabaseStorage } from './dbStorage';
+import { cachedPortalListings } from '../shared/schema.js';
 
 export class TeamBhpScraper {
-  private crawl4ai: Crawl4AIService;
   private baseUrl = 'https://classifieds.team-bhp.com';
-
-  constructor() {
-    this.crawl4ai = new Crawl4AIService();
-  }
 
   async scrapeLatestListings(db: DatabaseStorage['db']): Promise<{
     scrapedCount: number;
@@ -28,91 +25,107 @@ export class TeamBhpScraper {
     };
 
     try {
-      // Scrape Team-BHP classifieds homepage to find latest listings
-      const scrapeResult = await this.crawl4ai.scrapeUrl(this.baseUrl, {
-        llmProvider: 'openai',
-        llmModel: 'gpt-4o-mini'
+      // Fetch the classifieds page
+      const response = await fetch(this.baseUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+      });
+      
+      if (!response.ok) {
+        result.errors.push(`Failed to fetch Team-BHP: ${response.status}`);
+        return result;
+      }
+
+      const html = await response.text();
+      const $ = cheerio.load(html);
+      
+      // Extract listings from the page
+      // Note: This is a simplified scraper - Team-BHP structure may vary
+      const listings: any[] = [];
+      
+      // Look for car listings (adjust selectors based on actual page structure)
+      $('.listing, .classified-item, article').each((i, elem) => {
+        try {
+          const $elem = $(elem);
+          const title = $elem.find('h2, h3, .title, .listing-title').first().text().trim();
+          const link = $elem.find('a').first().attr('href');
+          const priceText = $elem.find('.price, .amount').first().text().trim();
+          
+          if (title && link) {
+            listings.push({
+              title,
+              url: link.startsWith('http') ? link : `${this.baseUrl}${link}`,
+              price: this.extractPrice(priceText),
+              portal: 'Team-BHP Classifieds'
+            });
+          }
+        } catch (err) {
+          // Skip malformed listings
+        }
       });
 
-      if (!scrapeResult.success || !scrapeResult.data) {
-        result.errors.push('Failed to scrape Team-BHP classifieds');
-        return result;
+      result.scrapedCount = listings.length;
+      console.log(`📊 Found ${listings.length} potential listings on Team-BHP`);
+
+      // Insert unique listings into database
+      for (const listing of listings) {
+        try {
+          // Check if listing already exists
+          const existing = await db
+            .select()
+            .from(cachedPortalListings)
+            .where((eb: any) => eb.eq('url', listing.url))
+            .limit(1);
+
+          if (existing.length === 0) {
+            // Insert new listing
+            await db.insert(cachedPortalListings).values({
+              url: listing.url,
+              title: listing.title,
+              price: listing.price || null,
+              portal: listing.portal,
+              origin: 'scraped',
+              quality: 'authentic',
+              images: [],
+              location: 'India'
+            });
+            result.newListings++;
+          }
+        } catch (err) {
+          // Skip duplicate or invalid listings
+        }
       }
 
-      console.log(`✅ Found Team-BHP listing data, processing...`);
-      result.scrapedCount = 1;
-
-      // Create or get Team-BHP partner source
-      const { IngestionService } = await import('./ingestionService');
-      const ingestionService = new IngestionService();
-
-      // Get or create Team-BHP source
-      let teamBhpSource = await this.getOrCreateTeamBhpSource(db);
-      if (!teamBhpSource) {
-        result.errors.push('Failed to create Team-BHP source');
-        return result;
-      }
-
-      // Ingest the listing
-      const ingestionResult = await ingestionService.ingestFromWebhook(
-        teamBhpSource.id,
-        {
-          ...scrapeResult.data,
-          source: 'Team-BHP Classifieds',
-          url: this.baseUrl,
-        },
-        teamBhpSource,
-        db
-      );
-
-      if (ingestionResult.success && !ingestionResult.isDuplicate) {
-        result.newListings++;
-      }
-
-      console.log(`✅ Team-BHP scraping complete: ${result.newListings} new listings`);
+      console.log(`✅ Team-BHP: ${result.newListings} new listings added`);
 
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      console.error('❌ Team-BHP scraping failed:', errorMsg);
       result.errors.push(errorMsg);
+      console.error('❌ Team-BHP scraping error:', errorMsg);
     }
 
     return result;
   }
 
-  private async getOrCreateTeamBhpSource(db: DatabaseStorage['db']) {
-    const { db: drizzleDb } = await import('./db');
-    const { listingSources } = await import('@shared/schema');
-    const { eq } = await import('drizzle-orm');
-
-    // Try to find existing Team-BHP source
-    const existing = await drizzleDb
-      .select()
-      .from(listingSources)
-      .where(eq(listingSources.partnerName, 'Team-BHP Classifieds'))
-      .limit(1);
-
-    if (existing.length > 0) {
-      return existing[0];
+  private extractPrice(priceText: string): number | null {
+    // Extract numeric price from text like "₹5,50,000" or "5.5L"
+    const cleaned = priceText.replace(/[₹,\s]/g, '');
+    const match = cleaned.match(/(\d+\.?\d*)\s*([LlKk])?/);
+    
+    if (match) {
+      let price = parseFloat(match[1]);
+      const unit = match[2]?.toLowerCase();
+      
+      if (unit === 'l') price *= 100000; // Lakhs
+      if (unit === 'k') price *= 1000;   // Thousands
+      
+      return price;
     }
-
-    // Create new Team-BHP source
-    const [newSource] = await drizzleDb
-      .insert(listingSources)
-      .values({
-        partnerName: 'Team-BHP Classifieds',
-        contactEmail: 'classifieds@team-bhp.com',
-        sourceType: 'crawl4ai',
-        endpoint: this.baseUrl,
-        country: 'India',
-        consented: true,
-        status: 'active',
-      })
-      .returning();
-
-    console.log('✅ Created Team-BHP partner source');
-    return newSource;
+    
+    return null;
   }
 }
 
+// Export singleton
 export const teamBhpScraper = new TeamBhpScraper();

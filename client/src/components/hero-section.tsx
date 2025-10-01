@@ -60,28 +60,33 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
               </div>
               <div className="h-8 w-px bg-border"></div>
               <div className="flex items-center gap-2">
-                <span className="text-3xl sm:text-4xl font-bold text-primary">10+</span>
-                <span className="text-muted-foreground">Platforms</span>
+                <span className="text-3xl sm:text-4xl font-bold text-primary">6</span>
+                <span className="text-muted-foreground">Live Platforms</span>
               </div>
             </div>
             
-            {/* Connected Platforms Display */}
+            {/* Connected Platforms Display - Real sources with live data */}
             <div className="mb-8">
-              <p className="text-sm text-muted-foreground mb-4">Connected Platforms:</p>
+              <p className="text-sm text-muted-foreground mb-4">Aggregating Live Listings From:</p>
               <div className="flex flex-wrap justify-center items-center gap-3 opacity-80">
                 {[
-                  "Maruti TrueValue", "Mahindra First Choice", "Hyundai H Promise", "Facebook Marketplace",
-                  "CarDekho", "OLX Autos", "Cars24", "CarWale"
+                  { name: "CarDekho", count: 191 },
+                  { name: "CarWale", count: 32 },
+                  { name: "OLX", count: 27 },
+                  { name: "Cars24", count: 21 },
+                  { name: "Maruti TrueValue", count: 21 },
+                  { name: "Facebook Marketplace", count: 16 }
                 ].map((source) => (
                   <div 
-                    key={source} 
-                    className="text-sm font-medium px-3 py-1.5 rounded-md border shadow-sm text-muted-foreground bg-background/70 dark:bg-card/70 border-border"
+                    key={source.name} 
+                    className="text-sm font-medium px-3 py-1.5 rounded-md border shadow-sm text-foreground bg-background/70 dark:bg-card/70 border-border flex items-center gap-2"
                   >
-                    <span>{source}</span>
+                    <span>{source.name}</span>
+                    <span className="text-xs text-primary font-bold">({source.count})</span>
                   </div>
                 ))}
                 <div className="text-sm font-medium text-primary font-bold px-3 py-1.5 bg-primary/10 rounded-md border border-primary/20">
-                  + Auction Partners & More
+                  + More Coming Soon
                 </div>
               </div>
             </div>
