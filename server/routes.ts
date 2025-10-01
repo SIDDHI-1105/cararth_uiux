@@ -71,6 +71,9 @@ import { sarfaesiScraper } from "./sarfaesiScraper.js";
 import { ObjectStorageService } from "./objectStorage.js";
 import crypto from "crypto";
 import { logError, ErrorCategory, createAppError, asyncHandler } from "./errorHandling.js";
+import multer from "multer";
+import { parse } from "csv-parse/sync";
+import { bulkUploadJobs } from "@shared/schema";
 
 // Security utility functions to prevent PII leakage in logs
 const maskPhoneNumber = (phone: string): string => {
@@ -121,6 +124,139 @@ const isDeveloperMode = (req: any) => {
   
   return false;
 };
+
+// Bulk upload processor function
+async function processBulkUpload(
+  jobId: string,
+  records: any[],
+  mediaFiles: Express.Multer.File[],
+  userId: string,
+  sourceId: string,
+  storage: any
+) {
+  const objectStorageService = new ObjectStorageService();
+  const errors: any[] = [];
+  let successCount = 0;
+  let failCount = 0;
+
+  // Create a map of media files by filename for easy lookup
+  const mediaMap = new Map<string, Express.Multer.File>();
+  mediaFiles.forEach(file => {
+    mediaMap.set(file.originalname, file);
+  });
+
+  for (let i = 0; i < records.length; i++) {
+    const record = records[i];
+    
+    try {
+      // Validate required fields
+      const requiredFields = ['title', 'brand', 'model', 'year', 'price', 'city'];
+      const missingFields = requiredFields.filter(field => !record[field]);
+      
+      if (missingFields.length > 0) {
+        throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+      }
+
+      // Parse and validate data
+      const year = parseInt(record.year);
+      const price = parseFloat(record.price);
+      const mileage = record.mileage ? parseInt(record.mileage) : 0;
+      const owners = record.owners ? parseInt(record.owners) : 1;
+
+      if (isNaN(year) || year < 1900 || year > new Date().getFullYear() + 1) {
+        throw new Error(`Invalid year: ${record.year}`);
+      }
+      if (isNaN(price) || price <= 0) {
+        throw new Error(`Invalid price: ${record.price}`);
+      }
+
+      // Handle image uploads
+      const imageUrls: string[] = [];
+      if (record.images) {
+        // Images can be comma-separated filenames or URLs
+        const imageRefs = record.images.split(',').map((s: string) => s.trim());
+        
+        for (const imageRef of imageRefs) {
+          // If it's a URL, use it directly
+          if (imageRef.startsWith('http://') || imageRef.startsWith('https://')) {
+            imageUrls.push(imageRef);
+          }
+          // If it's a filename, upload from media files
+          else if (mediaMap.has(imageRef)) {
+            const file = mediaMap.get(imageRef)!;
+            const uploadUrl = await objectStorageService.getSellerUploadURL('listings');
+            
+            // Upload file to object storage
+            const response = await fetch(uploadUrl, {
+              method: 'PUT',
+              body: file.buffer,
+              headers: {
+                'Content-Type': file.mimetype
+              }
+            });
+
+            if (response.ok) {
+              // Extract the public URL
+              const publicUrl = uploadUrl.split('?')[0];
+              imageUrls.push(publicUrl);
+            } else {
+              console.warn(`Failed to upload image ${imageRef}`);
+            }
+          }
+        }
+      }
+
+      // Create listing data
+      const listingData = {
+        title: record.title,
+        brand: record.brand,
+        model: record.model,
+        year,
+        price,
+        mileage,
+        fuelType: record.fuelType || record.fuel_type || 'Petrol',
+        transmission: record.transmission || 'Manual',
+        owners,
+        location: record.location || record.city,
+        city: record.city,
+        state: record.state || null,
+        description: record.description || null,
+        images: { urls: imageUrls },
+        features: record.features ? record.features.split(',').map((f: string) => f.trim()) : []
+      };
+
+      // Create listing through storage interface (triggers LLM compliance checks)
+      await storage.createPartnerListing(listingData, userId, sourceId);
+      successCount++;
+
+    } catch (error: any) {
+      console.error(`Error processing row ${i + 1}:`, error);
+      failCount++;
+      errors.push({
+        row: i + 1,
+        data: record,
+        error: error.message
+      });
+    }
+
+    // Update job progress
+    await storage.updateBulkUploadJob(jobId, {
+      processedRows: i + 1,
+      successfulListings: successCount,
+      failedListings: failCount,
+      errorDetails: errors.slice(0, 100) // Keep max 100 errors
+    });
+  }
+
+  // Mark job as complete
+  await storage.updateBulkUploadJob(jobId, {
+    status: successCount > 0 ? 'completed' : 'failed',
+    finishedAt: new Date(),
+    errorMessage: failCount > 0 ? `${failCount} listings failed to process` : null
+  });
+
+  console.log(`✅ Bulk upload job ${jobId} completed: ${successCount} success, ${failCount} failed`);
+}
 
 // Subscription middleware to check search limits
 const checkSearchLimit = async (req: any, res: any, next: any) => {
@@ -6101,6 +6237,131 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({
       success: true,
       message: 'Listing removed from CarArth.com instantly!'
+    });
+  }));
+
+  // Configure multer for bulk upload (CSV + media files)
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 50 * 1024 * 1024, // 50MB per file
+      files: 100 // Max 100 files (1 CSV + 99 images/videos)
+    },
+    fileFilter: (req, file, cb) => {
+      // Accept CSV for listings data
+      if (file.fieldname === 'csv') {
+        if (file.mimetype === 'text/csv' || file.originalname.endsWith('.csv')) {
+          cb(null, true);
+        } else {
+          cb(new Error('Only CSV files allowed for listings data'));
+        }
+      }
+      // Accept images and videos for media
+      else if (file.fieldname === 'media') {
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'video/mp4', 'video/quicktime'];
+        if (allowedTypes.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(new Error('Only images (JPEG, PNG, WebP) and videos (MP4, MOV) allowed'));
+        }
+      } else {
+        cb(new Error('Unexpected field'));
+      }
+    }
+  });
+
+  // Partner: Bulk upload listings (CSV + optional media files)
+  app.post('/api/partner/bulk-upload', isAuthenticated, upload.fields([
+    { name: 'csv', maxCount: 1 },
+    { name: 'media', maxCount: 99 }
+  ]), asyncHandler(async (req: any, res: any) => {
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+
+    // Verify partner role
+    const dbUser = await storage.getUser(userId);
+    if (dbUser?.role !== 'partner') {
+      return res.status(403).json({ error: 'Partner access required' });
+    }
+
+    // Get partner account
+    const partnerAccount = await storage.getPartnerAccountByUser(userId);
+    if (!partnerAccount) {
+      return res.status(403).json({ error: 'No partner account found' });
+    }
+
+    // Validate files
+    const files = req.files as { csv?: Express.Multer.File[], media?: Express.Multer.File[] };
+    if (!files?.csv || files.csv.length === 0) {
+      return res.status(400).json({ error: 'CSV file is required' });
+    }
+
+    const csvFile = files.csv[0];
+    const mediaFiles = files.media || [];
+
+    try {
+      // Parse CSV
+      const csvContent = csvFile.buffer.toString('utf-8');
+      const records = parse(csvContent, {
+        columns: true,
+        skip_empty_lines: true,
+        trim: true
+      });
+
+      if (records.length === 0) {
+        return res.status(400).json({ error: 'CSV file is empty' });
+      }
+
+      // Create bulk upload job
+      const job = await storage.createBulkUploadJob({
+        partnerUserId: userId,
+        listingSourceId: partnerAccount.listingSourceId,
+        csvFileName: csvFile.originalname,
+        totalRows: records.length,
+        status: 'processing',
+        startedAt: new Date()
+      });
+
+      // Process listings asynchronously (don't block the response)
+      processBulkUpload(job.id, records, mediaFiles, userId, partnerAccount.listingSourceId, storage).catch(err => {
+        console.error('Bulk upload processing error:', err);
+      });
+
+      res.json({
+        success: true,
+        message: `Upload started! Processing ${records.length} listings...`,
+        jobId: job.id,
+        totalListings: records.length
+      });
+
+    } catch (error: any) {
+      console.error('Bulk upload error:', error);
+      return res.status(400).json({ 
+        error: 'Failed to process CSV file',
+        details: error.message 
+      });
+    }
+  }));
+
+  // Partner: Get bulk upload job status
+  app.get('/api/partner/bulk-upload/:jobId', isAuthenticated, asyncHandler(async (req: any, res: any) => {
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    const { jobId } = req.params;
+
+    const dbUser = await storage.getUser(userId);
+    if (dbUser?.role !== 'partner') {
+      return res.status(403).json({ error: 'Partner access required' });
+    }
+
+    const job = await storage.getBulkUploadJob(jobId, userId);
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    res.json({
+      success: true,
+      job
     });
   }));
 

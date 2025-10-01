@@ -193,6 +193,11 @@ export interface IStorage {
   updatePartnerListing(listingId: string, userId: string, updates: any): Promise<any | undefined>;
   deletePartnerListing(listingId: string, userId: string): Promise<boolean>;
   
+  // Bulk upload management
+  createBulkUploadJob(data: any): Promise<any>;
+  updateBulkUploadJob(jobId: string, updates: any): Promise<any | undefined>;
+  getBulkUploadJob(jobId: string, userId: string): Promise<any | undefined>;
+  
   // Ingestion management
   getIngestionStats(sourceId: string): Promise<any>;
   getIngestionLogs(sourceId: string, options?: { limit?: number }): Promise<any[]>;
@@ -1401,6 +1406,19 @@ export class MemStorage implements IStorage {
 
   async deletePartnerListing(listingId: string, userId: string): Promise<boolean> {
     return false;
+  }
+
+  // Bulk upload management - in-memory stubs
+  async createBulkUploadJob(data: any): Promise<any> {
+    return { id: randomUUID(), ...data, createdAt: new Date() };
+  }
+
+  async updateBulkUploadJob(jobId: string, updates: any): Promise<any | undefined> {
+    return undefined;
+  }
+
+  async getBulkUploadJob(jobId: string, userId: string): Promise<any | undefined> {
+    return undefined;
   }
 }
 

@@ -2493,6 +2493,58 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // Bulk upload management
+  async createBulkUploadJob(data: any): Promise<any> {
+    try {
+      const result = await this.db
+        .insert(bulkUploadJobs)
+        .values(data)
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      logError(createAppError('Failed to create bulk upload job', 500, ErrorCategory.DATABASE), 'createBulkUploadJob');
+      throw error;
+    }
+  }
+
+  async updateBulkUploadJob(jobId: string, updates: any): Promise<any | undefined> {
+    try {
+      const result = await this.db
+        .update(bulkUploadJobs)
+        .set({
+          ...updates,
+          updatedAt: new Date()
+        })
+        .where(eq(bulkUploadJobs.id, jobId))
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      logError(createAppError('Failed to update bulk upload job', 500, ErrorCategory.DATABASE), 'updateBulkUploadJob');
+      return undefined;
+    }
+  }
+
+  async getBulkUploadJob(jobId: string, userId: string): Promise<any | undefined> {
+    try {
+      const result = await this.db
+        .select()
+        .from(bulkUploadJobs)
+        .where(
+          and(
+            eq(bulkUploadJobs.id, jobId),
+            eq(bulkUploadJobs.partnerUserId, userId)
+          )
+        );
+      
+      return result[0];
+    } catch (error) {
+      logError(createAppError('Failed to get bulk upload job', 500, ErrorCategory.DATABASE), 'getBulkUploadJob');
+      return undefined;
+    }
+  }
+
   // Ingestion management
   async getIngestionStats(sourceId: string): Promise<any> {
     try {
