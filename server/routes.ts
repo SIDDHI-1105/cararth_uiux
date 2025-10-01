@@ -125,6 +125,15 @@ const isDeveloperMode = (req: any) => {
   return false;
 };
 
+// Sanitize filename to prevent path traversal and injection attacks
+function sanitizeFilename(filename: string): string {
+  return filename
+    .replace(/[^a-zA-Z0-9._-]/g, '_') // Replace unsafe chars with underscore
+    .replace(/\.{2,}/g, '_') // Replace multiple dots
+    .replace(/^\.+/, '') // Remove leading dots
+    .substring(0, 255); // Limit length
+}
+
 // Bulk upload processor function
 async function processBulkUpload(
   jobId: string,
@@ -139,10 +148,12 @@ async function processBulkUpload(
   let successCount = 0;
   let failCount = 0;
 
-  // Create a map of media files by filename for easy lookup
+  // Create a map of media files by sanitized filename for easy lookup
   const mediaMap = new Map<string, Express.Multer.File>();
   mediaFiles.forEach(file => {
-    mediaMap.set(file.originalname, file);
+    const sanitizedName = sanitizeFilename(file.originalname);
+    mediaMap.set(sanitizedName, file);
+    mediaMap.set(file.originalname, file); // Also keep original for backwards compat
   });
 
   for (let i = 0; i < records.length; i++) {
@@ -170,20 +181,29 @@ async function processBulkUpload(
         throw new Error(`Invalid price: ${record.price}`);
       }
 
-      // Handle image uploads
+      // Handle image uploads with filename sanitization
       const imageUrls: string[] = [];
       if (record.images) {
         // Images can be comma-separated filenames or URLs
         const imageRefs = record.images.split(',').map((s: string) => s.trim());
         
         for (const imageRef of imageRefs) {
-          // If it's a URL, use it directly
+          // If it's a URL, validate and use it directly
           if (imageRef.startsWith('http://') || imageRef.startsWith('https://')) {
-            imageUrls.push(imageRef);
+            try {
+              new URL(imageRef); // Validate URL format
+              imageUrls.push(imageRef);
+            } catch (error) {
+              console.warn(`Invalid URL ${imageRef}`);
+            }
           }
-          // If it's a filename, upload from media files
+          // If it's a filename, sanitize and upload from media files
           else if (mediaMap.has(imageRef)) {
             const file = mediaMap.get(imageRef)!;
+            const sanitizedName = sanitizeFilename(file.originalname);
+            
+            // Generate unique filename with userId/sourceId prefix for isolation
+            const uniqueFilename = `${userId}/${sourceId}/${Date.now()}_${sanitizedName}`;
             const uploadUrl = await objectStorageService.getSellerUploadURL('listings');
             
             // Upload file to object storage
@@ -6300,6 +6320,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const mediaFiles = files.media || [];
 
     try {
+      // Security: Limit CSV size to prevent DoS (5MB max)
+      const MAX_CSV_SIZE = 5 * 1024 * 1024; // 5MB
+      if (csvFile.size > MAX_CSV_SIZE) {
+        return res.status(400).json({ 
+          error: `CSV file too large. Maximum size is ${MAX_CSV_SIZE / (1024 * 1024)}MB` 
+        });
+      }
+
       // Parse CSV
       const csvContent = csvFile.buffer.toString('utf-8');
       const records = parse(csvContent, {
@@ -6310,6 +6338,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (records.length === 0) {
         return res.status(400).json({ error: 'CSV file is empty' });
+      }
+
+      // Security: Limit row count to prevent resource exhaustion
+      const MAX_ROWS = 500;
+      if (records.length > MAX_ROWS) {
+        return res.status(400).json({ 
+          error: `Too many rows in CSV. Maximum is ${MAX_ROWS} listings per upload` 
+        });
       }
 
       // Create bulk upload job

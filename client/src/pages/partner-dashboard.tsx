@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,14 +6,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import { Loader2, Plus, Edit, Trash2, Car } from 'lucide-react';
+import { Loader2, Plus, Edit, Trash2, Car, Upload, FileText, Image as ImageIcon, Download, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function PartnerDashboard() {
   const { toast } = useToast();
   const [showAddForm, setShowAddForm] = useState(false);
+  const [activeTab, setActiveTab] = useState('inventory');
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
+  const [uploadJobId, setUploadJobId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     brand: '',
@@ -39,10 +45,7 @@ export default function PartnerDashboard() {
 
   const createListingMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest('/api/partner/listings', {
-        method: 'POST',
-        body: JSON.stringify(data)
-      });
+      const response = await apiRequest('POST', '/api/partner/listings', data);
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'Failed to create listing');
@@ -69,9 +72,7 @@ export default function PartnerDashboard() {
 
   const deleteListingMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await apiRequest(`/api/partner/listings/${id}`, {
-        method: 'DELETE'
-      });
+      const response = await apiRequest('DELETE', `/api/partner/listings/${id}`);
       if (!response.ok) throw new Error('Failed to delete listing');
       return response.json();
     },
@@ -81,6 +82,56 @@ export default function PartnerDashboard() {
         title: 'Deleted',
         description: 'Listing removed from CarArth.com',
       });
+    }
+  });
+
+  const bulkUploadMutation = useMutation({
+    mutationFn: async ({ csv, media }: { csv: File; media: File[] }) => {
+      const formData = new FormData();
+      formData.append('csv', csv);
+      media.forEach(file => {
+        formData.append('media', file);
+      });
+
+      const response = await fetch('/api/partner/bulk-upload', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Upload failed');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setUploadJobId(data.jobId);
+      toast({
+        title: 'Upload Started!',
+        description: `Processing ${data.totalListings} listings...`,
+      });
+      setCsvFile(null);
+      setMediaFiles([]);
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Upload Failed',
+        description: error.message,
+        variant: 'destructive'
+      });
+    }
+  });
+
+  const { data: jobStatus, isLoading: jobLoading } = useQuery({
+    queryKey: ['/api/partner/bulk-upload', uploadJobId],
+    enabled: !!uploadJobId,
+    refetchInterval: (query) => {
+      const status = (query?.state?.data as any)?.job?.status;
+      // Keep polling until we reach a terminal state
+      const terminalStates = ['completed', 'failed'];
+      if (!status) return 2000; // Poll if no status yet
+      return terminalStates.includes(status) ? false : 2000;
     }
   });
 
@@ -112,7 +163,54 @@ export default function PartnerDashboard() {
     });
   };
 
-  const listings = listingsData?.listings || [];
+  const handleBulkUpload = () => {
+    if (!csvFile) {
+      toast({
+        title: 'CSV Required',
+        description: 'Please upload a CSV file with your listings',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    bulkUploadMutation.mutate({ csv: csvFile, media: mediaFiles });
+  };
+
+  const handleCsvDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file && file.type === 'text/csv') {
+      setCsvFile(file);
+    }
+  }, []);
+
+  const handleMediaDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    const files = Array.from(e.dataTransfer.files).filter(file => 
+      file.type.startsWith('image/') || file.type.startsWith('video/')
+    );
+    setMediaFiles(prev => [...prev, ...files]);
+  }, []);
+
+  const removeMediaFile = (index: number) => {
+    setMediaFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const downloadSampleCsv = () => {
+    const sample = `title,brand,model,year,price,mileage,fuelType,transmission,owners,city,location,description,images
+2020 Honda City VX,Honda,City,2020,850000,35000,Petrol,Manual,1,Hyderabad,Banjara Hills,Well maintained Honda City,car1.jpg
+2018 Maruti Swift VDI,Maruti Suzuki,Swift,2018,550000,45000,Diesel,Manual,1,Mumbai,Andheri West,Single owner Swift in excellent condition,car2.jpg`;
+    
+    const blob = new Blob([sample], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'sample_listings.csv';
+    a.click();
+  };
+
+  const listings = (listingsData as any)?.listings || [];
+  const job = (jobStatus as any)?.job;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -124,7 +222,7 @@ export default function PartnerDashboard() {
                 Partner Dashboard
               </h1>
               <p className="text-gray-600 dark:text-gray-300 mt-1">
-                {accountData?.source?.name || 'CarArth Partner'}
+                {(accountData as any)?.source?.name || 'CarArth Partner'}
               </p>
             </div>
             <Button
@@ -138,10 +236,23 @@ export default function PartnerDashboard() {
           </div>
         </div>
 
-        <Card className="p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
-            My Inventory ({listings.length})
-          </h2>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="inventory" data-testid="tab-inventory">
+              <Car className="mr-2 h-4 w-4" />
+              My Inventory ({listings.length})
+            </TabsTrigger>
+            <TabsTrigger value="bulk-upload" data-testid="tab-bulk-upload">
+              <Upload className="mr-2 h-4 w-4" />
+              Bulk Upload
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="inventory">
+            <Card className="p-6">
+              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
+                My Inventory ({listings.length})
+              </h2>
 
           {listingsLoading ? (
             <div className="flex justify-center py-12">
@@ -197,8 +308,260 @@ export default function PartnerDashboard() {
                 </Card>
               ))}
             </div>
-          )}
-        </Card>
+              )}
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="bulk-upload">
+            <div className="space-y-6">
+              {/* Instructions */}
+              <Card className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                      Bulk Upload Listings
+                    </h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      Upload multiple cars at once using CSV + media files
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={downloadSampleCsv}
+                    data-testid="button-download-sample"
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Sample CSV
+                  </Button>
+                </div>
+
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>Required CSV columns:</strong> title, brand, model, year, price, mileage, fuelType, transmission, owners, city
+                    <br />
+                    <strong>Optional:</strong> location, description, images (comma-separated filenames)
+                  </AlertDescription>
+                </Alert>
+              </Card>
+
+              {/* CSV Upload */}
+              <Card className="p-6">
+                <h3 className="font-semibold mb-4 text-gray-900 dark:text-white">
+                  1. Upload CSV File
+                </h3>
+                <div
+                  className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                    csvFile
+                      ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                      : 'border-gray-300 dark:border-gray-700 hover:border-blue-500'
+                  }`}
+                  onDrop={handleCsvDrop}
+                  onDragOver={(e) => e.preventDefault()}
+                  data-testid="dropzone-csv"
+                >
+                  {csvFile ? (
+                    <div className="flex items-center justify-center gap-4">
+                      <CheckCircle2 className="h-8 w-8 text-green-600" />
+                      <div className="text-left">
+                        <p className="font-semibold text-gray-900 dark:text-white">
+                          {csvFile.name}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {(csvFile.size / 1024).toFixed(2)} KB
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setCsvFile(null)}
+                        data-testid="button-remove-csv"
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ) : (
+                    <div>
+                      <FileText className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                      <p className="text-gray-600 dark:text-gray-400 mb-2">
+                        Drag & drop CSV file here, or click to browse
+                      </p>
+                      <Input
+                        type="file"
+                        accept=".csv"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) setCsvFile(file);
+                        }}
+                        className="hidden"
+                        id="csv-upload"
+                        data-testid="input-csv"
+                      />
+                      <Label htmlFor="csv-upload">
+                        <Button variant="outline" asChild>
+                          <span>Browse Files</span>
+                        </Button>
+                      </Label>
+                    </div>
+                  )}
+                </div>
+              </Card>
+
+              {/* Media Upload */}
+              <Card className="p-6">
+                <h3 className="font-semibold mb-4 text-gray-900 dark:text-white">
+                  2. Upload Media Files (Optional)
+                </h3>
+                <div
+                  className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-8 text-center hover:border-blue-500 transition-colors"
+                  onDrop={handleMediaDrop}
+                  onDragOver={(e) => e.preventDefault()}
+                  data-testid="dropzone-media"
+                >
+                  <ImageIcon className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                  <p className="text-gray-600 dark:text-gray-400 mb-2">
+                    Drag & drop images/videos here, or click to browse
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-500 mb-4">
+                    Match filenames in CSV "images" column (e.g., car1.jpg, car2.jpg)
+                  </p>
+                  <Input
+                    type="file"
+                    accept="image/*,video/*"
+                    multiple
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      setMediaFiles(prev => [...prev, ...files]);
+                    }}
+                    className="hidden"
+                    id="media-upload"
+                    data-testid="input-media"
+                  />
+                  <Label htmlFor="media-upload">
+                    <Button variant="outline" asChild>
+                      <span>Browse Files</span>
+                    </Button>
+                  </Label>
+                </div>
+
+                {mediaFiles.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-sm font-semibold mb-2 text-gray-900 dark:text-white">
+                      {mediaFiles.length} file(s) selected
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+                      {mediaFiles.map((file, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between bg-gray-100 dark:bg-gray-800 p-2 rounded"
+                          data-testid={`media-file-${index}`}
+                        >
+                          <span className="text-sm truncate text-gray-900 dark:text-white">
+                            {file.name}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeMediaFile(index)}
+                            data-testid={`button-remove-media-${index}`}
+                          >
+                            <XCircle className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </Card>
+
+              {/* Upload Button */}
+              <Card className="p-6">
+                <h3 className="font-semibold mb-4 text-gray-900 dark:text-white">
+                  3. Start Upload
+                </h3>
+                <Button
+                  onClick={handleBulkUpload}
+                  disabled={!csvFile || bulkUploadMutation.isPending}
+                  size="lg"
+                  className="w-full"
+                  data-testid="button-start-upload"
+                >
+                  {bulkUploadMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="mr-2 h-5 w-5" />
+                      Upload & Process Listings
+                    </>
+                  )}
+                </Button>
+              </Card>
+
+              {/* Upload Status */}
+              {job && (
+                <Card className="p-6">
+                  <h3 className="font-semibold mb-4 text-gray-900 dark:text-white">
+                    Upload Status
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Status:</span>
+                      <span className={`font-semibold ${
+                        job.status === 'completed' ? 'text-green-600' :
+                        job.status === 'failed' ? 'text-red-600' :
+                        'text-blue-600'
+                      }`}>
+                        {job.status === 'processing' && <Loader2 className="inline h-4 w-4 animate-spin mr-2" />}
+                        {job.status}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Progress:</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">
+                        {job.processedRows || 0} / {job.totalRows}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Successful:</span>
+                      <span className="font-semibold text-green-600">
+                        {job.successfulListings || 0}
+                      </span>
+                    </div>
+                    {job.failedListings > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Failed:</span>
+                        <span className="font-semibold text-red-600">
+                          {job.failedListings}
+                        </span>
+                      </div>
+                    )}
+                    {job.errorMessage && (
+                      <Alert variant="destructive">
+                        <AlertDescription>{job.errorMessage}</AlertDescription>
+                      </Alert>
+                    )}
+                    {job.status === 'completed' && (
+                      <Button
+                        onClick={() => {
+                          setUploadJobId(null);
+                          queryClient.invalidateQueries({ queryKey: ['/api/partner/listings'] });
+                          setActiveTab('inventory');
+                        }}
+                        className="w-full mt-4"
+                        data-testid="button-view-inventory"
+                      >
+                        View Inventory
+                      </Button>
+                    )}
+                  </div>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
 
         <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
