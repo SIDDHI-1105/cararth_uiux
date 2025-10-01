@@ -439,6 +439,7 @@ function PartnerDialog({
                       <SelectItem value="csv">CSV Upload</SelectItem>
                       <SelectItem value="sftp">SFTP</SelectItem>
                       <SelectItem value="firecrawl">Firecrawl Scraping</SelectItem>
+                      <SelectItem value="crawl4ai">Crawl4AI (Free LLM Scraping)</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
