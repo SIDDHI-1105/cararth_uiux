@@ -14,6 +14,7 @@ import {
 } from '@shared/schema';
 import { LLMComplianceService } from './llmComplianceService';
 import { FirecrawlMcpService } from './firecrawlMcpService';
+import { Crawl4AIService } from './crawl4aiService';
 import type { DatabaseStorage } from './dbStorage';
 
 export interface IngestionResult {
@@ -32,12 +33,14 @@ export interface FieldMapping {
 export class IngestionService {
   private llmCompliance: LLMComplianceService;
   private firecrawl: FirecrawlMcpService;
+  private crawl4ai: Crawl4AIService;
 
   constructor() {
     this.llmCompliance = new LLMComplianceService();
     this.firecrawl = new FirecrawlMcpService({
       apiKey: process.env.FIRECRAWL_API_KEY || '',
     });
+    this.crawl4ai = new Crawl4AIService();
   }
 
   generateFingerprint(listing: {
@@ -361,6 +364,81 @@ export class IngestionService {
         success: false,
         isDuplicate: false,
         errors: [error instanceof Error ? error.message : 'Unknown error'],
+      };
+    }
+  }
+
+  async ingestFromCrawl4AI(
+    sourceId: string,
+    url: string,
+    source: ListingSource,
+    db: DatabaseStorage['db'],
+    options: { llmProvider?: 'openai' | 'gemini' | 'anthropic'; llmModel?: string } = {}
+  ): Promise<IngestionResult> {
+    try {
+      console.log(`🤖 Crawl4AI ingesting from: ${url}`);
+      
+      const scrapeResult = await this.crawl4ai.scrapeUrl(url, {
+        llmProvider: options.llmProvider || 'openai',
+        llmModel: options.llmModel || 'gpt-4o-mini',
+      });
+
+      if (!scrapeResult.success) {
+        return {
+          success: false,
+          isDuplicate: false,
+          errors: [scrapeResult.error || 'Crawl4AI scraping failed'],
+        };
+      }
+
+      if (!scrapeResult.data) {
+        return {
+          success: false,
+          isDuplicate: false,
+          errors: ['No structured data extracted from listing'],
+        };
+      }
+
+      // Map Crawl4AI extracted data to webhook format
+      // Use URL as stable sourceListingId for proper deduplication
+      const webhookData = {
+        id: url, // Stable identifier for deduplication
+        title: scrapeResult.data?.title || 'Unknown',
+        make: scrapeResult.data?.make || 'Unknown',
+        model: scrapeResult.data?.model || 'Unknown',
+        variant: scrapeResult.data?.variant,
+        year: scrapeResult.data?.year || 0,
+        price: scrapeResult.data?.price_amount || 0,
+        kms: scrapeResult.data?.kms,
+        fuel: scrapeResult.data?.fuel,
+        transmission: scrapeResult.data?.transmission,
+        ownerCount: scrapeResult.data?.owner_count,
+        city: scrapeResult.data?.city || 'Unknown',
+        registrationState: scrapeResult.data?.registration_state,
+        pincode: scrapeResult.data?.pincode,
+        description: scrapeResult.data?.description,
+        images: scrapeResult.data?.images || [],
+        sellerName: scrapeResult.data?.seller_name,
+        sellerPhone: scrapeResult.data?.seller_phone,
+        url,
+        htmlContent: scrapeResult.markdown, // Pass markdown for compliance context
+        metadata: scrapeResult.metadata,
+      };
+
+      console.log(`✅ Crawl4AI extracted data for ${webhookData.make} ${webhookData.model}`);
+
+      return await this.ingestFromWebhook(
+        sourceId,
+        webhookData,
+        source,
+        db
+      );
+    } catch (error) {
+      console.error('Crawl4AI ingestion error:', error);
+      return {
+        success: false,
+        isDuplicate: false,
+        errors: [error instanceof Error ? error.message : 'Unknown Crawl4AI error'],
       };
     }
   }

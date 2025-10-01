@@ -5219,6 +5219,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(batchResult);
   }));
 
+  // Crawl4AI ingestion trigger (admin only)
+  app.post('/api/admin/partners/:id/crawl4ai', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    const { id: sourceId } = req.params;
+    const { url, llmProvider = 'openai', llmModel = 'gpt-4o-mini' } = req.body;
+    
+    // Validate request body
+    const crawl4aiSchema = z.object({
+      url: z.string().url('Valid URL is required').refine(
+        (url) => url.startsWith('http://') || url.startsWith('https://'),
+        'URL must use http:// or https:// protocol'
+      ),
+      llmProvider: z.enum(['openai', 'gemini', 'anthropic']).optional(),
+      llmModel: z.string().optional(),
+    });
+    
+    const validation = crawl4aiSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({ 
+        error: 'Validation failed', 
+        details: validation.error.errors 
+      });
+    }
+    
+    // Partner ingestion requires database storage
+    if (!('db' in storage)) {
+      return res.status(503).json({ error: 'Partner ingestion requires database storage' });
+    }
+    
+    const source = await storage.getListingSource(sourceId);
+    if (!source) {
+      return res.status(404).json({ error: 'Source not found' });
+    }
+    
+    // Optionally validate source type
+    if (source.sourceType !== 'crawl4ai') {
+      return res.status(400).json({ 
+        error: `Source type mismatch: expected 'crawl4ai', got '${source.sourceType}'` 
+      });
+    }
+
+    const { IngestionService } = await import('./ingestionService');
+    const ingestionService = new IngestionService();
+    
+    const startTime = new Date();
+    const result = await ingestionService.ingestFromCrawl4AI(
+      sourceId,
+      url,
+      source,
+      (storage as any).db,
+      { llmProvider, llmModel }
+    );
+
+    await storage.createIngestionLog({
+      sourceId,
+      totalProcessed: 1,
+      newListings: result.success && !result.isDuplicate ? 1 : 0,
+      updatedListings: result.success && result.isDuplicate ? 1 : 0,
+      rejectedListings: result.success ? 0 : 1,
+      status: result.success ? 'success' : 'failed',
+      errorMessage: result.errors?.join(', ') || null,
+      startedAt: startTime,
+      finishedAt: new Date(),
+    });
+
+    if (result.success) {
+      res.status(201).json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  }));
+
   // Get flagged listings for review (admin only)
   app.get('/api/admin/review/flagged', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
     const flaggedListings = await storage.getFlaggedListings({ limit: 50 });
