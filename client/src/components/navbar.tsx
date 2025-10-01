@@ -126,6 +126,14 @@ export default function Navbar() {
                       Profile
                     </Link>
                   </DropdownMenuItem>
+                  {user.role === 'partner' && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/partner/dashboard" className="flex items-center">
+                        <Car className="w-4 h-4 mr-2" />
+                        Partner Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem asChild>
                     <a href="/api/logout" className="flex items-center">
                       <LogOut className="w-4 h-4 mr-2" />
@@ -231,6 +239,20 @@ export default function Navbar() {
                     >
                       <Link href="/profile">View Profile</Link>
                     </Button>
+                    {user.role === 'partner' && (
+                      <Button
+                        asChild
+                        variant="default"
+                        className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        data-testid="mobile-button-partner-dashboard"
+                      >
+                        <Link href="/partner/dashboard" className="flex items-center justify-center">
+                          <Car className="w-4 h-4 mr-2" />
+                          Partner Dashboard
+                        </Link>
+                      </Button>
+                    )}
                     <Button
                       asChild
                       variant="destructive"
