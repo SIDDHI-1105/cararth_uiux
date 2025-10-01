@@ -178,6 +178,15 @@ export class InternalScheduler {
           } catch (error) {
             console.error('❌ TheAutomotiveIndia scraping failed:', error);
           }
+          
+          // Quikr Cars owner listings
+          try {
+            const { quikrScraper } = await import('./quikrScraper.js');
+            const result = await quikrScraper.scrapeLatestListings(storage.db);
+            console.log(`✅ Quikr scraping: ${result.newListings} new listings from owner classifieds`);
+          } catch (error) {
+            console.error('❌ Quikr scraping failed:', error);
+          }
         }
         
         // Mark this hour as executed for today

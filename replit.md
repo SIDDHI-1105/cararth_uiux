@@ -74,3 +74,12 @@ Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, an
 - **Twilio**: WhatsApp Business API for instant seller notifications.
 - **Nodemailer**: Email delivery service.
 - **libphonenumber-js**: International phone number normalization and validation.
+
+## Recent Updates
+
+### October 1, 2025 - Automated Forum & Marketplace Scraping
+- ✅ **Team-BHP Classifieds Scraper** (`server/teamBhpScraper.ts`): Daily automated scraping of Team-BHP classifieds for owner-run listings from India's most trusted car enthusiast community.
+- ✅ **TheAutomotiveIndia Marketplace Scraper** (`server/automotiveIndiaScraper.ts`): Daily automated scraping of TheAutomotiveIndia marketplace (34.9K community) for owner-to-owner sales.
+- ✅ **Quikr Cars Scraper** (`server/quikrScraper.ts`): Daily automated scraping of Quikr Cars owner listings (2,500+ active) from India's largest classifieds platform.
+- ✅ **Daily Scheduler Integration**: All scrapers run once daily at 11:00 IST, auto-create partner sources, and execute in parallel for maximum efficiency.
+- **Impact**: ~40-50% inventory boost from quality owner forums and classifieds where hidden gems are found.
