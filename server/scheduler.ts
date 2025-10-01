@@ -156,16 +156,27 @@ export class InternalScheduler {
           }
         }
         
-        // Run Team-BHP scraping once daily (first scheduled time only)
+        // Run forum/marketplace scraping once daily (first scheduled time only)
         if (scheduleHour === this.getScheduleHours()[0]) {
+          const { DatabaseStorage } = await import('./dbStorage.js');
+          const storage = new DatabaseStorage();
+          
+          // Team-BHP classifieds
           try {
             const { teamBhpScraper } = await import('./teamBhpScraper.js');
-            const { DatabaseStorage } = await import('./dbStorage.js');
-            const storage = new DatabaseStorage();
             const result = await teamBhpScraper.scrapeLatestListings(storage.db);
             console.log(`✅ Team-BHP scraping: ${result.newListings} new listings from owner forums`);
           } catch (error) {
             console.error('❌ Team-BHP scraping failed:', error);
+          }
+          
+          // TheAutomotiveIndia marketplace
+          try {
+            const { automotiveIndiaScraper } = await import('./automotiveIndiaScraper.js');
+            const result = await automotiveIndiaScraper.scrapeLatestListings(storage.db);
+            console.log(`✅ TheAutomotiveIndia scraping: ${result.newListings} new listings from marketplace`);
+          } catch (error) {
+            console.error('❌ TheAutomotiveIndia scraping failed:', error);
           }
         }
         
