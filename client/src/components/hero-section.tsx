@@ -128,12 +128,12 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
         )}
         
         <TooltipWrapper trigger="hero-search-form">
-          <div className="bg-background/95 dark:bg-card/95 backdrop-blur-sm rounded-xl p-4 sm:p-6 md:p-8 border shadow-lg max-w-4xl mx-auto" data-testid="hero-search-form">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
+          <div className="bg-background/95 dark:bg-card/95 backdrop-blur-sm rounded-xl p-4 sm:p-6 md:p-8 border shadow-lg max-w-5xl mx-auto" data-testid="hero-search-form">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
             <div>
               <label className="block text-foreground text-sm sm:text-base font-medium mb-2">Brand</label>
               <Select value={brand} onValueChange={setBrand}>
-                <SelectTrigger className="w-full min-h-[48px] text-base text-foreground bg-background border-border" data-testid="select-brand">
+                <SelectTrigger className="w-full min-h-[48px] text-sm sm:text-base text-foreground bg-background border-border" data-testid="select-brand">
                   <SelectValue placeholder="All Brands" />
                 </SelectTrigger>
                 <SelectContent>
@@ -149,41 +149,20 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
             </div>
             
             <div>
-              <label className="block text-foreground text-sm sm:text-base font-medium mb-2">Budget</label>
-              <Select value={budget} onValueChange={setBudget}>
-                <SelectTrigger className="w-full min-h-[48px] text-base text-foreground bg-background border-border" data-testid="select-budget">
-                  <SelectValue placeholder="Any Budget" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Any Budget</SelectItem>
-                  <SelectItem value="0-200000">Under ₹2,00,000</SelectItem>
-                  <SelectItem value="200000-500000">₹2,00,000-5,00,000</SelectItem>
-                  <SelectItem value="500000-1000000">₹5,00,000-10,00,000</SelectItem>
-                  <SelectItem value="1000000-1500000">₹10,00,000-15,00,000</SelectItem>
-                  <SelectItem value="1500000-2000000">₹15,00,000-20,00,000</SelectItem>
-                  <SelectItem value="2000000-3000000">₹20,00,000-30,00,000</SelectItem>
-                  <SelectItem value="3000000-5000000">₹30,00,000-50,00,000</SelectItem>
-                  <SelectItem value="5000000-7500000">₹50,00,000-75,00,000</SelectItem>
-                  <SelectItem value="7500000-10000000">₹75,00,000-1,00,00,000</SelectItem>
-                  <SelectItem value="10000000-99999999">Above ₹1,00,00,000</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
               <label className="block text-foreground text-sm sm:text-base font-medium mb-2">City</label>
               <Select value={city} onValueChange={setCity}>
-                <SelectTrigger className="w-full min-h-[48px] text-base text-foreground bg-background border-border" data-testid="select-city">
-                  <SelectValue placeholder="Select City" />
+                <SelectTrigger className="w-full min-h-[48px] text-sm sm:text-base text-foreground bg-background border-border" data-testid="select-city">
+                  <SelectValue placeholder="All Cities" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Hyderabad">🚀 Hyderabad - Live Now!</SelectItem>
-                  <SelectItem value="Delhi NCR">🔄 Delhi NCR - Coming Soon</SelectItem>
-                  <SelectItem value="Mumbai">🔄 Mumbai - Coming Soon</SelectItem>
-                  <SelectItem value="Bangalore">🔄 Bangalore - Coming Soon</SelectItem>
-                  <SelectItem value="Chennai">🔄 Chennai - Coming Soon</SelectItem>
-                  <SelectItem value="Pune">🔄 Pune - Coming Soon</SelectItem>
-                  <SelectItem value="Kolkata">🔄 Kolkata - Coming Soon</SelectItem>
+                  <SelectItem value="all">All Cities</SelectItem>
+                  <SelectItem value="Hyderabad">🚀 Hyderabad</SelectItem>
+                  <SelectItem value="Delhi NCR">Delhi NCR</SelectItem>
+                  <SelectItem value="Mumbai">Mumbai</SelectItem>
+                  <SelectItem value="Bangalore">Bangalore</SelectItem>
+                  <SelectItem value="Chennai">Chennai</SelectItem>
+                  <SelectItem value="Pune">Pune</SelectItem>
+                  <SelectItem value="Kolkata">Kolkata</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -191,15 +170,37 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
             <div>
               <label className="block text-foreground text-sm sm:text-base font-medium mb-2">Fuel Type</label>
               <Select value={fuelType} onValueChange={setFuelType}>
-                <SelectTrigger className="w-full min-h-[48px] text-base text-foreground bg-background border-border" data-testid="select-fuel-type">
-                  <SelectValue placeholder="Any Fuel" />
+                <SelectTrigger className="w-full min-h-[48px] text-sm sm:text-base text-foreground bg-background border-border" data-testid="select-fuel-type">
+                  <SelectValue placeholder="All Fuels" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Any Fuel</SelectItem>
+                  <SelectItem value="all">All Fuels</SelectItem>
                   <SelectItem value="Petrol">Petrol</SelectItem>
                   <SelectItem value="Diesel">Diesel</SelectItem>
                   <SelectItem value="CNG">CNG</SelectItem>
                   <SelectItem value="Electric">Electric</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <label className="block text-foreground text-sm sm:text-base font-medium mb-2">Budget</label>
+              <Select value={budget} onValueChange={setBudget}>
+                <SelectTrigger className="w-full min-h-[48px] text-sm sm:text-base text-foreground bg-background border-border" data-testid="select-budget">
+                  <SelectValue placeholder="Any Budget" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Any Budget</SelectItem>
+                  <SelectItem value="0-200000">Under ₹2L</SelectItem>
+                  <SelectItem value="200000-500000">₹2L - ₹5L</SelectItem>
+                  <SelectItem value="500000-1000000">₹5L - ₹10L</SelectItem>
+                  <SelectItem value="1000000-1500000">₹10L - ₹15L</SelectItem>
+                  <SelectItem value="1500000-2000000">₹15L - ₹20L</SelectItem>
+                  <SelectItem value="2000000-3000000">₹20L - ₹30L</SelectItem>
+                  <SelectItem value="3000000-5000000">₹30L - ₹50L</SelectItem>
+                  <SelectItem value="5000000-7500000">₹50L - ₹75L</SelectItem>
+                  <SelectItem value="7500000-10000000">₹75L - ₹1Cr</SelectItem>
+                  <SelectItem value="10000000-99999999">Above ₹1Cr</SelectItem>
                 </SelectContent>
               </Select>
             </div>
