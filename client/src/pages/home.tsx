@@ -103,13 +103,19 @@ function HomeContent() {
       try {
         const response = await apiRequest('POST', '/api/marketplace/search', searchFilters);
         const result = await response.json();
-        console.log('🔍 DEBUG API response images:', result.listings?.slice(0, 2)?.map((c: CarListing) => ({ title: c.title, images: c.images })));
+        console.log('🔍 DEBUG API response:', { 
+          listingsCount: result.listings?.length || 0,
+          images: result.listings?.slice(0, 2)?.map((c: CarListing) => ({ title: c.title, images: c.images }))
+        });
         
         // Manually refresh usage status after successful local search
         queryClient.invalidateQueries({ queryKey: ["/api/usage/status"] });
         
-        return result.listings || [];
+        const listings = result.listings || [];
+        console.log('✅ Returning listings to query:', listings.length);
+        return listings;
       } catch (error: any) {
+        console.error('❌ Local search error:', error);
         if (error.isSearchLimitExceeded) {
           // Handle search limit exceeded - show popup
           setSearchLimitData(error.data);
@@ -120,6 +126,8 @@ function HomeContent() {
       }
     },
   });
+
+  console.log('🚗 Current cars state:', { count: cars.length, isLoading, filters });
 
   // FIXED: Removed sortedCars reference that was causing component crash
 
