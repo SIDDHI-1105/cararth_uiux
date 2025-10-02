@@ -118,3 +118,35 @@ Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, an
   - **Reddit r/CarsIndia** (`server/redditScraper.ts`): Active community buying/selling threads with rich discussions.
   - **Daily Scheduler**: All scrapers run at 11:00 & 23:00 IST with auto-source creation and parallel execution.
   - **Impact**: ~50%+ inventory boost from hidden gems with authentic owner context.
+
+### October 2, 2025 - Dynamic Hero Section & Production-Ready Self-Healing Scraper Monitoring
+- ✅ **Dynamic Hero Section**: Real-time stats replace hardcoded values for accurate marketplace representation.
+  - **API Endpoint** (`/api/hero-stats`): Fetches total listings and platform counts from database via storage abstraction.
+  - **Storage Integration**: Extended IStorage interface with `getHeroStats()` method, implemented in both DatabaseStorage and MemStorage.
+  - **Frontend Update** (`client/src/components/hero-section.tsx`): TanStack Query with 60-second auto-refresh, loading states, dynamic platform badges with real counts.
+  - **Impact**: Homepage always shows accurate, up-to-date marketplace statistics without manual updates.
+  
+- ✅ **Production-Ready Self-Healing Scraper Monitoring**: Zero-maintenance reliability system with persistent retry state that survives server restarts.
+  - **Database Schema** (`shared/schema.ts`): 
+    - `scraper_health_logs` table with comprehensive tracking: metrics (found/saved/errors/duration), retry attempts, error stacks
+    - Persistent retry state: `isRetryPending` (boolean) and `nextRetryAt` (timestamp) columns ensure retries survive restarts
+    - Indexed for fast queries on scraper name, status, and retry state
+  - **Health Monitor Service** (`server/scraperHealthMonitor.ts`):
+    - `initialize()`: Loads ALL pending retries from database on startup (including overdue ones), groups by scraper for latest state
+    - `startRun()` / `completeRun()`: Tracks every scraper execution with full metrics
+    - Exponential backoff retry logic: 3 attempts with 5min→10min→20min delays
+    - Persistent retry state: saves retry schedule to database, clears ALL pending rows for scraper on success/max-retries
+    - Console alerts after max retries for manual intervention
+  - **Scheduler Integration** (`server/scheduler.ts`):
+    - All 7 scrapers wrapped with monitoring (Team-BHP, TheAutomotiveIndia, Quikr, Reddit, Hyundai H-Promise, Mahindra First Choice, EauctionsIndia)
+    - Retry timer polls every minute for due retries
+    - `processScraperRetries()` executes overdue scrapers automatically
+    - `executeScraper()` re-invokes failed scrapers by name with full tracking
+  - **API Endpoint** (`/api/scraper-health`): Real-time health status with per-scraper metrics (24h success rate, last run/success times, avg duration), overall system status (healthy/degraded/critical)
+  - **Status Dashboard** (`client/src/pages/scraper-status.tsx` at `/admin/scraper-status`): Visual monitoring with health indicators, success rate charts, last run times, duration metrics, auto-refresh every 30 seconds
+  - **Production Features**:
+    - **Restart Resilience**: Retry state persisted to database, survives server restarts with full recovery
+    - **Automatic Retry Execution**: Failed scrapers retry automatically with exponential backoff
+    - **State Cleanup**: Clears all pending retry rows for a scraper on success to prevent stale retries
+    - **Overdue Recovery**: Startup loader executes immediately for retries that were overdue during restart
+  - **Impact**: TRUE zero-maintenance reliability - system automatically tracks, retries (survives restarts), and alerts on failures. No daily manual checks needed. Admin dashboard provides instant visibility into all scraper health.

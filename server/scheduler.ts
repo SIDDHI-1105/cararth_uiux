@@ -4,8 +4,11 @@
  * Configurable via CACHE_TIMES_IST environment variable
  */
 
+import { scraperHealthMonitor } from './scraperHealthMonitor.js';
+
 export class InternalScheduler {
   private intervalId: NodeJS.Timeout | null = null;
+  private retryIntervalId: NodeJS.Timeout | null = null;
   private isRunning = false;
   private isExecuting = false;
   private lastRunTimes = new Map<number, string>(); // hour -> ISO date
@@ -15,11 +18,14 @@ export class InternalScheduler {
    * Runs at 11 AM and 11 PM IST (configurable via CACHE_TIMES_IST)
    * Default: 11:00,23:00 for cost-optimized lean workflow
    */
-  start() {
+  async start() {
     if (this.isRunning) {
       console.log('⏰ Scheduler already running');
       return;
     }
+
+    // Initialize health monitor to load pending retries from database
+    await scraperHealthMonitor.initialize();
 
     this.isRunning = true;
     const cacheTimesIST = this.getCacheSchedule();
@@ -32,6 +38,11 @@ export class InternalScheduler {
 
     // Also run immediately if it's been more than 12 hours since last run
     this.checkAndRunIngestion();
+    
+    // Start retry processing timer (checks every minute)
+    this.retryIntervalId = setInterval(() => {
+      this.processScraperRetries();
+    }, 60 * 1000); // Check every minute for due retries
   }
 
   stop() {
@@ -40,6 +51,11 @@ export class InternalScheduler {
       this.intervalId = null;
       this.isRunning = false;
       console.log('⏰ Internal scheduler stopped');
+    }
+    if (this.retryIntervalId) {
+      clearInterval(this.retryIntervalId);
+      this.retryIntervalId = null;
+      console.log('⏰ Retry processor stopped');
     }
   }
 
@@ -162,42 +178,95 @@ export class InternalScheduler {
           const storage = new DatabaseStorage();
           
           // Team-BHP classifieds
+          const teamBhpRunId = await scraperHealthMonitor.startRun('Team-BHP', 'forum');
           try {
             const { teamBhpScraper } = await import('./teamBhpScraper.js');
             const result = await teamBhpScraper.scrapeLatestListings(storage.db);
+            await scraperHealthMonitor.completeRun(teamBhpRunId, {
+              success: true,
+              totalFound: result.newListings || 0,
+              newListingsSaved: result.newListings || 0
+            });
             console.log(`✅ Team-BHP scraping: ${result.newListings} new listings from owner forums`);
           } catch (error) {
+            await scraperHealthMonitor.completeRun(teamBhpRunId, {
+              success: false,
+              totalFound: 0,
+              newListingsSaved: 0,
+              error: error instanceof Error ? error.message : String(error),
+              errorStack: error instanceof Error ? error.stack : undefined
+            });
             console.error('❌ Team-BHP scraping failed:', error);
           }
           
           // TheAutomotiveIndia marketplace
+          const automotiveRunId = await scraperHealthMonitor.startRun('TheAutomotiveIndia', 'marketplace');
           try {
             const { automotiveIndiaScraper } = await import('./automotiveIndiaScraper.js');
             const result = await automotiveIndiaScraper.scrapeLatestListings(storage.db);
+            await scraperHealthMonitor.completeRun(automotiveRunId, {
+              success: true,
+              totalFound: result.newListings || 0,
+              newListingsSaved: result.newListings || 0
+            });
             console.log(`✅ TheAutomotiveIndia scraping: ${result.newListings} new listings from marketplace`);
           } catch (error) {
+            await scraperHealthMonitor.completeRun(automotiveRunId, {
+              success: false,
+              totalFound: 0,
+              newListingsSaved: 0,
+              error: error instanceof Error ? error.message : String(error),
+              errorStack: error instanceof Error ? error.stack : undefined
+            });
             console.error('❌ TheAutomotiveIndia scraping failed:', error);
           }
           
           // Quikr Cars owner listings
+          const quikrRunId = await scraperHealthMonitor.startRun('Quikr', 'marketplace');
           try {
             const { quikrScraper } = await import('./quikrScraper.js');
             const result = await quikrScraper.scrapeLatestListings(storage.db);
+            await scraperHealthMonitor.completeRun(quikrRunId, {
+              success: true,
+              totalFound: result.newListings || 0,
+              newListingsSaved: result.newListings || 0
+            });
             console.log(`✅ Quikr scraping: ${result.newListings} new listings from owner classifieds`);
           } catch (error) {
+            await scraperHealthMonitor.completeRun(quikrRunId, {
+              success: false,
+              totalFound: 0,
+              newListingsSaved: 0,
+              error: error instanceof Error ? error.message : String(error),
+              errorStack: error instanceof Error ? error.stack : undefined
+            });
             console.error('❌ Quikr scraping failed:', error);
           }
           
           // Reddit r/CarsIndia buying/selling threads
+          const redditRunId = await scraperHealthMonitor.startRun('Reddit r/CarsIndia', 'forum');
           try {
             const { redditScraper } = await import('./redditScraper.js');
             const result = await redditScraper.scrapeLatestListings(storage.db);
+            await scraperHealthMonitor.completeRun(redditRunId, {
+              success: true,
+              totalFound: result.newListings || 0,
+              newListingsSaved: result.newListings || 0
+            });
             console.log(`✅ Reddit scraping: ${result.newListings} new listings from r/CarsIndia`);
           } catch (error) {
+            await scraperHealthMonitor.completeRun(redditRunId, {
+              success: false,
+              totalFound: 0,
+              newListingsSaved: 0,
+              error: error instanceof Error ? error.message : String(error),
+              errorStack: error instanceof Error ? error.stack : undefined
+            });
             console.error('❌ Reddit scraping failed:', error);
           }
           
           // Hyundai H-Promise certified pre-owned
+          const hyundaiRunId = await scraperHealthMonitor.startRun('Hyundai H-Promise', 'certified');
           try {
             const { HyundaiPromiseScraper } = await import('./hyundaiPromiseScraper.js');
             const { cachedPortalListings } = await import('../shared/schema.js');
@@ -254,17 +323,41 @@ export class InternalScheduler {
                   console.error(`❌ Failed to save Hyundai listing: ${err}`);
                 }
               }
+              await scraperHealthMonitor.completeRun(hyundaiRunId, {
+                success: true,
+                totalFound: result.totalFound || 0,
+                newListingsSaved: saved
+              });
               console.log(`✅ Hyundai H-Promise scraping: ${saved} new listings saved (${result.authenticatedListings} authenticated from ${result.totalFound} found)`);
             } else if (!result.success) {
+              await scraperHealthMonitor.completeRun(hyundaiRunId, {
+                success: false,
+                totalFound: 0,
+                newListingsSaved: 0,
+                error: result.errors?.join(', ')
+              });
               console.error(`❌ Hyundai H-Promise scraping failed: ${result.errors?.join(', ')}`);
             } else {
+              await scraperHealthMonitor.completeRun(hyundaiRunId, {
+                success: true,
+                totalFound: 0,
+                newListingsSaved: 0
+              });
               console.log(`✅ Hyundai H-Promise scraping: No new listings found`);
             }
           } catch (error) {
+            await scraperHealthMonitor.completeRun(hyundaiRunId, {
+              success: false,
+              totalFound: 0,
+              newListingsSaved: 0,
+              error: error instanceof Error ? error.message : String(error),
+              errorStack: error instanceof Error ? error.stack : undefined
+            });
             console.error('❌ Hyundai H-Promise scraping failed:', error);
           }
           
           // Mahindra First Choice certified pre-owned
+          const mahindraRunId = await scraperHealthMonitor.startRun('Mahindra First Choice', 'certified');
           try {
             const { MahindraFirstChoiceScraper } = await import('./mahindraFirstChoiceScraper.js');
             const { cachedPortalListings } = await import('../shared/schema.js');
@@ -319,17 +412,41 @@ export class InternalScheduler {
                   console.error(`❌ Failed to save Mahindra listing: ${err}`);
                 }
               }
+              await scraperHealthMonitor.completeRun(mahindraRunId, {
+                success: true,
+                totalFound: result.totalFound || 0,
+                newListingsSaved: saved
+              });
               console.log(`✅ Mahindra First Choice scraping: ${saved} new listings saved (${result.authenticatedListings} authenticated from ${result.totalFound} found)`);
             } else if (!result.success) {
+              await scraperHealthMonitor.completeRun(mahindraRunId, {
+                success: false,
+                totalFound: 0,
+                newListingsSaved: 0,
+                error: result.errors?.join(', ')
+              });
               console.error(`❌ Mahindra First Choice scraping failed: ${result.errors?.join(', ')}`);
             } else {
+              await scraperHealthMonitor.completeRun(mahindraRunId, {
+                success: true,
+                totalFound: 0,
+                newListingsSaved: 0
+              });
               console.log(`✅ Mahindra First Choice scraping: No new listings found`);
             }
           } catch (error) {
+            await scraperHealthMonitor.completeRun(mahindraRunId, {
+              success: false,
+              totalFound: 0,
+              newListingsSaved: 0,
+              error: error instanceof Error ? error.message : String(error),
+              errorStack: error instanceof Error ? error.stack : undefined
+            });
             console.error('❌ Mahindra First Choice scraping failed:', error);
           }
           
           // EauctionsIndia bank auctions
+          const bankRunId = await scraperHealthMonitor.startRun('EauctionsIndia', 'auction');
           try {
             const { EauctionsIndiaScraper } = await import('./eauctionsIndiaScraper.js');
             const { cachedPortalListings } = await import('../shared/schema.js');
@@ -384,13 +501,36 @@ export class InternalScheduler {
                   console.error(`❌ Failed to save bank auction listing: ${err}`);
                 }
               }
+              await scraperHealthMonitor.completeRun(bankRunId, {
+                success: true,
+                totalFound: result.totalFound || 0,
+                newListingsSaved: saved
+              });
               console.log(`✅ EauctionsIndia bank auctions: ${saved} new listings saved (${result.authenticatedListings} authenticated from ${result.totalFound} found)`);
             } else if (!result.success) {
+              await scraperHealthMonitor.completeRun(bankRunId, {
+                success: false,
+                totalFound: 0,
+                newListingsSaved: 0,
+                error: result.errors?.join(', ')
+              });
               console.error(`❌ EauctionsIndia scraping failed: ${result.errors?.join(', ')}`);
             } else {
+              await scraperHealthMonitor.completeRun(bankRunId, {
+                success: true,
+                totalFound: 0,
+                newListingsSaved: 0
+              });
               console.log(`✅ EauctionsIndia bank auctions: No new listings found`);
             }
           } catch (error) {
+            await scraperHealthMonitor.completeRun(bankRunId, {
+              success: false,
+              totalFound: 0,
+              newListingsSaved: 0,
+              error: error instanceof Error ? error.message : String(error),
+              errorStack: error instanceof Error ? error.stack : undefined
+            });
             console.error('❌ EauctionsIndia scraping failed:', error);
           }
         }
@@ -403,6 +543,317 @@ export class InternalScheduler {
       } finally {
         this.isExecuting = false;
       }
+    }
+  }
+
+  private async processScraperRetries(): Promise<void> {
+    try {
+      const dueRetries = await scraperHealthMonitor.processRetries();
+      
+      if (dueRetries.length === 0) {
+        return; // No retries due
+      }
+
+      const { DatabaseStorage } = await import('./dbStorage.js');
+      const storage = new DatabaseStorage();
+
+      for (const retry of dueRetries) {
+        console.log(`🔄 Executing retry for ${retry.scraperName} (attempt ${retry.retryAttempt})`);
+        
+        // Execute the appropriate scraper
+        await this.executeScraper(retry.scraperName, storage);
+      }
+    } catch (error) {
+      console.error('❌ Retry processing failed:', error);
+    }
+  }
+
+  private async executeScraper(scraperName: string, storage: any): Promise<void> {
+    const { cachedPortalListings } = await import('../shared/schema.js');
+    
+    switch (scraperName) {
+      case 'Team-BHP': {
+        const runId = await scraperHealthMonitor.startRun(scraperName, 'forum');
+        try {
+          const { teamBhpScraper } = await import('./teamBhpScraper.js');
+          const result = await teamBhpScraper.scrapeLatestListings(storage.db);
+          await scraperHealthMonitor.completeRun(runId, {
+            success: true,
+            totalFound: result.newListings || 0,
+            newListingsSaved: result.newListings || 0
+          });
+        } catch (error) {
+          await scraperHealthMonitor.completeRun(runId, {
+            success: false,
+            totalFound: 0,
+            newListingsSaved: 0,
+            error: error instanceof Error ? error.message : String(error),
+            errorStack: error instanceof Error ? error.stack : undefined
+          });
+        }
+        break;
+      }
+      
+      case 'TheAutomotiveIndia': {
+        const runId = await scraperHealthMonitor.startRun(scraperName, 'marketplace');
+        try {
+          const { automotiveIndiaScraper } = await import('./automotiveIndiaScraper.js');
+          const result = await automotiveIndiaScraper.scrapeLatestListings(storage.db);
+          await scraperHealthMonitor.completeRun(runId, {
+            success: true,
+            totalFound: result.newListings || 0,
+            newListingsSaved: result.newListings || 0
+          });
+        } catch (error) {
+          await scraperHealthMonitor.completeRun(runId, {
+            success: false,
+            totalFound: 0,
+            newListingsSaved: 0,
+            error: error instanceof Error ? error.message : String(error),
+            errorStack: error instanceof Error ? error.stack : undefined
+          });
+        }
+        break;
+      }
+      
+      case 'Quikr': {
+        const runId = await scraperHealthMonitor.startRun(scraperName, 'marketplace');
+        try {
+          const { quikrScraper } = await import('./quikrScraper.js');
+          const result = await quikrScraper.scrapeLatestListings(storage.db);
+          await scraperHealthMonitor.completeRun(runId, {
+            success: true,
+            totalFound: result.newListings || 0,
+            newListingsSaved: result.newListings || 0
+          });
+        } catch (error) {
+          await scraperHealthMonitor.completeRun(runId, {
+            success: false,
+            totalFound: 0,
+            newListingsSaved: 0,
+            error: error instanceof Error ? error.message : String(error),
+            errorStack: error instanceof Error ? error.stack : undefined
+          });
+        }
+        break;
+      }
+      
+      case 'Reddit r/CarsIndia': {
+        const runId = await scraperHealthMonitor.startRun(scraperName, 'forum');
+        try {
+          const { redditScraper } = await import('./redditScraper.js');
+          const result = await redditScraper.scrapeLatestListings(storage.db);
+          await scraperHealthMonitor.completeRun(runId, {
+            success: true,
+            totalFound: result.newListings || 0,
+            newListingsSaved: result.newListings || 0
+          });
+        } catch (error) {
+          await scraperHealthMonitor.completeRun(runId, {
+            success: false,
+            totalFound: 0,
+            newListingsSaved: 0,
+            error: error instanceof Error ? error.message : String(error),
+            errorStack: error instanceof Error ? error.stack : undefined
+          });
+        }
+        break;
+      }
+      
+      case 'Hyundai H-Promise': {
+        const runId = await scraperHealthMonitor.startRun(scraperName, 'certified');
+        try {
+          const { HyundaiPromiseScraper } = await import('./hyundaiPromiseScraper.js');
+          const hyundaiScraper = new HyundaiPromiseScraper();
+          const result = await hyundaiScraper.scrapeListings({ maxPages: 3 });
+          
+          let saved = 0;
+          if (result.success && result.listings.length > 0) {
+            for (const listing of result.listings) {
+              if (!listing.price || listing.price <= 0) continue;
+              
+              const existing = await storage.db
+                .select()
+                .from(cachedPortalListings)
+                .where((eb: any) => eb.eq(cachedPortalListings.url, listing.url))
+                .limit(1);
+              
+              if (existing.length === 0) {
+                await storage.db.insert(cachedPortalListings).values({
+                  portal: 'Hyundai H-Promise',
+                  externalId: listing.id,
+                  url: listing.url,
+                  title: listing.title,
+                  brand: listing.brand,
+                  model: listing.model,
+                  year: listing.year,
+                  price: listing.price.toString(),
+                  mileage: listing.mileage || null,
+                  fuelType: listing.fuelType || null,
+                  transmission: listing.transmission || null,
+                  location: listing.location,
+                  city: listing.city,
+                  description: listing.description || null,
+                  images: listing.images || [],
+                  sellerType: listing.sellerType || 'dealer',
+                  verificationStatus: listing.verificationStatus || 'unverified',
+                  listingDate: listing.listingDate,
+                  hash: `hyundai-${listing.url}`,
+                  origin: 'scraped'
+                });
+                saved++;
+              }
+            }
+          }
+          
+          await scraperHealthMonitor.completeRun(runId, {
+            success: result.success,
+            totalFound: result.totalFound || 0,
+            newListingsSaved: saved,
+            error: !result.success ? result.errors?.join(', ') : undefined
+          });
+        } catch (error) {
+          await scraperHealthMonitor.completeRun(runId, {
+            success: false,
+            totalFound: 0,
+            newListingsSaved: 0,
+            error: error instanceof Error ? error.message : String(error),
+            errorStack: error instanceof Error ? error.stack : undefined
+          });
+        }
+        break;
+      }
+      
+      case 'Mahindra First Choice': {
+        const runId = await scraperHealthMonitor.startRun(scraperName, 'certified');
+        try {
+          const { MahindraFirstChoiceScraper } = await import('./mahindraFirstChoiceScraper.js');
+          const mahindraScraper = new MahindraFirstChoiceScraper();
+          const result = await mahindraScraper.scrapeListings({ maxPages: 3 });
+          
+          let saved = 0;
+          if (result.success && result.listings.length > 0) {
+            for (const listing of result.listings) {
+              if (!listing.price || listing.price <= 0) continue;
+              
+              const existing = await storage.db
+                .select()
+                .from(cachedPortalListings)
+                .where((eb: any) => eb.eq(cachedPortalListings.url, listing.url))
+                .limit(1);
+              
+              if (existing.length === 0) {
+                await storage.db.insert(cachedPortalListings).values({
+                  portal: 'Mahindra First Choice',
+                  externalId: listing.id,
+                  url: listing.url,
+                  title: listing.title,
+                  brand: listing.brand,
+                  model: listing.model,
+                  year: listing.year,
+                  price: listing.price.toString(),
+                  mileage: listing.mileage || null,
+                  fuelType: listing.fuelType || null,
+                  transmission: listing.transmission || null,
+                  location: listing.location,
+                  city: listing.city,
+                  description: listing.description || null,
+                  images: listing.images || [],
+                  sellerType: listing.sellerType || 'dealer',
+                  verificationStatus: listing.verificationStatus || 'unverified',
+                  listingDate: listing.listingDate,
+                  hash: `mahindra-${listing.url}`,
+                  origin: 'scraped'
+                });
+                saved++;
+              }
+            }
+          }
+          
+          await scraperHealthMonitor.completeRun(runId, {
+            success: result.success,
+            totalFound: result.totalFound || 0,
+            newListingsSaved: saved,
+            error: !result.success ? result.errors?.join(', ') : undefined
+          });
+        } catch (error) {
+          await scraperHealthMonitor.completeRun(runId, {
+            success: false,
+            totalFound: 0,
+            newListingsSaved: 0,
+            error: error instanceof Error ? error.message : String(error),
+            errorStack: error instanceof Error ? error.stack : undefined
+          });
+        }
+        break;
+      }
+      
+      case 'EauctionsIndia': {
+        const runId = await scraperHealthMonitor.startRun(scraperName, 'auction');
+        try {
+          const { EauctionsIndiaScraper } = await import('./eauctionsIndiaScraper.js');
+          const bankAuctionScraper = new EauctionsIndiaScraper();
+          const result = await bankAuctionScraper.scrapeListings({ bank: 'all', maxPages: 2 });
+          
+          let saved = 0;
+          if (result.success && result.listings.length > 0) {
+            for (const listing of result.listings) {
+              if (!listing.price || listing.price <= 0) continue;
+              
+              const existing = await storage.db
+                .select()
+                .from(cachedPortalListings)
+                .where((eb: any) => eb.eq(cachedPortalListings.url, listing.url))
+                .limit(1);
+              
+              if (existing.length === 0) {
+                await storage.db.insert(cachedPortalListings).values({
+                  portal: 'EauctionsIndia',
+                  externalId: listing.id,
+                  url: listing.url,
+                  title: listing.title,
+                  brand: listing.brand,
+                  model: listing.model,
+                  year: listing.year,
+                  price: listing.price.toString(),
+                  mileage: listing.mileage || null,
+                  fuelType: listing.fuelType || null,
+                  transmission: listing.transmission || null,
+                  location: listing.location,
+                  city: listing.city,
+                  description: listing.description || null,
+                  images: listing.images || [],
+                  sellerType: 'bank',
+                  verificationStatus: listing.verificationStatus || 'unverified',
+                  listingDate: listing.listingDate,
+                  hash: `bankauction-${listing.url}`,
+                  origin: 'scraped'
+                });
+                saved++;
+              }
+            }
+          }
+          
+          await scraperHealthMonitor.completeRun(runId, {
+            success: result.success,
+            totalFound: result.totalFound || 0,
+            newListingsSaved: saved,
+            error: !result.success ? result.errors?.join(', ') : undefined
+          });
+        } catch (error) {
+          await scraperHealthMonitor.completeRun(runId, {
+            success: false,
+            totalFound: 0,
+            newListingsSaved: 0,
+            error: error instanceof Error ? error.message : String(error),
+            errorStack: error instanceof Error ? error.stack : undefined
+          });
+        }
+        break;
+      }
+      
+      default:
+        console.warn(`⚠️ Unknown scraper for retry: ${scraperName}`);
     }
   }
 

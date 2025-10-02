@@ -616,6 +616,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Scraper health monitoring endpoint
+  app.get('/api/scraper-health', async (req, res) => {
+    try {
+      const { scraperHealthMonitor } = await import('./scraperHealthMonitor.js');
+      const healthStatus = await scraperHealthMonitor.getHealthStatus();
+      
+      res.json({
+        success: true,
+        ...healthStatus,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Scraper health endpoint error:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to fetch scraper health status',
+        overall: 'critical',
+        scrapers: [],
+        summary: { total: 0, healthy: 0, failing: 0, lastCheck: new Date() }
+      });
+    }
+  });
+
   // Image authenticity monitoring endpoints
   app.get('/api/monitoring/image-authenticity', async (req, res) => {
     try {

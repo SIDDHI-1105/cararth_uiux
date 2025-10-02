@@ -1184,6 +1184,49 @@ export const marketTrends = pgTable("market_trends", {
   index("idx_trends_significance").on(table.significance),
 ]);
 
+// Scraper Health Monitoring - Track all scraper runs for reliability
+export const scraperHealthLogs = pgTable("scraper_health_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Scraper Identification
+  scraperName: text("scraper_name").notNull(), // 'Team-BHP', 'Hyundai H-Promise', etc.
+  scraperType: text("scraper_type").notNull(), // 'forum', 'certified', 'auction', 'marketplace'
+  
+  // Run Status
+  status: text("status").notNull(), // 'running', 'success', 'partial_success', 'failed'
+  
+  // Performance Metrics
+  totalFound: integer("total_found").default(0),
+  newListingsSaved: integer("new_listings_saved").default(0),
+  duplicatesSkipped: integer("duplicates_skipped").default(0),
+  errorsCount: integer("errors_count").default(0),
+  
+  // Runtime
+  startedAt: timestamp("started_at").notNull(),
+  completedAt: timestamp("completed_at"),
+  durationMs: integer("duration_ms"),
+  
+  // Error Tracking
+  errorMessage: text("error_message"),
+  errorStack: text("error_stack"),
+  retryAttempt: integer("retry_attempt").default(0),
+  
+  // Retry State Persistence (survives restarts)
+  isRetryPending: boolean("is_retry_pending").default(false),
+  nextRetryAt: timestamp("next_retry_at"),
+  
+  // System Context
+  scheduledRun: boolean("scheduled_run").default(true), // vs manual run
+  triggeredBy: text("triggered_by").default('scheduler'), // 'scheduler', 'admin', 'auto-retry'
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_scraper_health_name").on(table.scraperName),
+  index("idx_scraper_health_status").on(table.status),
+  index("idx_scraper_health_started").on(table.startedAt),
+  index("idx_scraper_retry_pending").on(table.isRetryPending, table.nextRetryAt),
+]);
+
 // SARFAESI Government Auction Jobs - Admin-controlled scraping operations
 export const sarfaesiJobs = pgTable("sarfaesi_jobs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
