@@ -9,7 +9,7 @@ import json
 import sys
 import os
 from typing import Dict, Any, Optional
-from crawl4ai import AsyncWebCrawler
+from crawl4ai import AsyncWebCrawler, LLMConfig
 from crawl4ai.extraction_strategy import LLMExtractionStrategy
 from pydantic import BaseModel, Field
 
@@ -48,12 +48,17 @@ async def scrape_car_listing(url: str, llm_provider: str = "openai", llm_model: 
         Dict with success status and extracted data or error
     """
     try:
-        # Configure LLM extraction strategy with direct parameters
-        extraction_strategy = LLMExtractionStrategy(
+        # Configure LLM extraction strategy with new LLMConfig API
+        llm_config = LLMConfig(
             provider=llm_provider,
-            api_token=os.getenv(f"{llm_provider.upper()}_API_KEY"),
+            api_token=os.getenv(f"{llm_provider.upper()}_API_KEY")
+        )
+        
+        extraction_strategy = LLMExtractionStrategy(
+            llm_config=llm_config,
             schema=CarListing.model_json_schema(),
             extraction_type="schema",
+            model=llm_model,
             instruction=(
                 "Extract car listing information from this webpage. "
                 "Focus on finding the car's make, model, year, price, mileage, "

@@ -3,15 +3,17 @@
  * Scrapes owner-run marketplace listings for quality used cars
  */
 
-import { Crawl4AIService } from './crawl4aiService';
+import { OfficialFirecrawlMcpService } from './officialFirecrawlMcp';
 import type { DatabaseStorage } from './dbStorage';
 
 export class AutomotiveIndiaScraper {
-  private crawl4ai: Crawl4AIService;
+  private firecrawl: OfficialFirecrawlMcpService;
   private baseUrl = 'https://www.theautomotiveindia.com/marketplace';
 
   constructor() {
-    this.crawl4ai = new Crawl4AIService();
+    this.firecrawl = new OfficialFirecrawlMcpService({
+      apiKey: process.env.FIRECRAWL_API_KEY || ''
+    });
   }
 
   async scrapeLatestListings(db: DatabaseStorage['db']): Promise<{
@@ -28,19 +30,19 @@ export class AutomotiveIndiaScraper {
     };
 
     try {
-      // Scrape TheAutomotiveIndia marketplace to find latest listings
-      const scrapeResult = await this.crawl4ai.scrapeUrl(this.baseUrl, {
-        llmProvider: 'openai',
-        llmModel: 'gpt-4o-mini'
-      });
+      // Scrape TheAutomotiveIndia marketplace using Firecrawl
+      const scrapeResult = await this.firecrawl.extractCarListings(
+        this.baseUrl,
+        'Extract all car listings from this marketplace page including title, brand, model, year, price, and other details'
+      );
 
-      if (!scrapeResult.success || !scrapeResult.data) {
-        result.errors.push('Failed to scrape TheAutomotiveIndia marketplace');
+      if (!scrapeResult.success || !scrapeResult.listings || scrapeResult.listings.length === 0) {
+        result.errors.push('Failed to scrape TheAutomotiveIndia marketplace or no listings found');
         return result;
       }
 
-      console.log(`✅ Found TheAutomotiveIndia listing data, processing...`);
-      result.scrapedCount = 1;
+      console.log(`✅ Found ${scrapeResult.listings.length} TheAutomotiveIndia listings, processing...`);
+      result.scrapedCount = scrapeResult.listings.length;
 
       // Create or get TheAutomotiveIndia partner source
       const { IngestionService } = await import('./ingestionService');
@@ -53,20 +55,22 @@ export class AutomotiveIndiaScraper {
         return result;
       }
 
-      // Ingest the listing
-      const ingestionResult = await ingestionService.ingestFromWebhook(
-        automotiveIndiaSource.id,
-        {
-          ...scrapeResult.data,
-          source: 'TheAutomotiveIndia Marketplace',
-          url: this.baseUrl,
-        },
-        automotiveIndiaSource,
-        db
-      );
+      // Ingest each listing
+      for (const listing of scrapeResult.listings) {
+        const ingestionResult = await ingestionService.ingestFromWebhook(
+          automotiveIndiaSource.id,
+          {
+            ...listing,
+            source: 'TheAutomotiveIndia Marketplace',
+            url: listing.url || this.baseUrl,
+          },
+          automotiveIndiaSource,
+          db
+        );
 
-      if (ingestionResult.success && !ingestionResult.isDuplicate) {
-        result.newListings++;
+        if (ingestionResult.success && !ingestionResult.isDuplicate) {
+          result.newListings++;
+        }
       }
 
       console.log(`✅ TheAutomotiveIndia scraping complete: ${result.newListings} new listings`);
@@ -102,7 +106,7 @@ export class AutomotiveIndiaScraper {
       .values({
         partnerName: 'TheAutomotiveIndia Marketplace',
         contactEmail: 'marketplace@theautomotiveindia.com',
-        sourceType: 'crawl4ai',
+        sourceType: 'firecrawl',
         endpoint: this.baseUrl,
         country: 'India',
         consented: true,

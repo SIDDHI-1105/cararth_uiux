@@ -3,15 +3,17 @@
  * Scrapes 2,500+ owner-run car listings from India's classifieds platform
  */
 
-import { Crawl4AIService } from './crawl4aiService';
+import { OfficialFirecrawlMcpService } from './officialFirecrawlMcp';
 import type { DatabaseStorage } from './dbStorage';
 
 export class QuikrScraper {
-  private crawl4ai: Crawl4AIService;
+  private firecrawl: OfficialFirecrawlMcpService;
   private baseUrl = 'https://www.quikr.com/cars/used-cars-for-sale-by-owner/all-india';
 
   constructor() {
-    this.crawl4ai = new Crawl4AIService();
+    this.firecrawl = new OfficialFirecrawlMcpService({
+      apiKey: process.env.FIRECRAWL_API_KEY || ''
+    });
   }
 
   async scrapeLatestListings(db: DatabaseStorage['db']): Promise<{
@@ -28,19 +30,19 @@ export class QuikrScraper {
     };
 
     try {
-      // Scrape Quikr Cars to find latest owner listings
-      const scrapeResult = await this.crawl4ai.scrapeUrl(this.baseUrl, {
-        llmProvider: 'openai',
-        llmModel: 'gpt-4o-mini'
-      });
+      // Scrape Quikr Cars using Firecrawl
+      const scrapeResult = await this.firecrawl.extractCarListings(
+        this.baseUrl,
+        'Extract all owner-listed cars for sale including title, brand, model, year, price, mileage, and location'
+      );
 
-      if (!scrapeResult.success || !scrapeResult.data) {
-        result.errors.push('Failed to scrape Quikr Cars');
+      if (!scrapeResult.success || !scrapeResult.listings || scrapeResult.listings.length === 0) {
+        result.errors.push('Failed to scrape Quikr Cars or no listings found');
         return result;
       }
 
-      console.log(`✅ Found Quikr listing data, processing...`);
-      result.scrapedCount = 1;
+      console.log(`✅ Found ${scrapeResult.listings.length} Quikr listings, processing...`);
+      result.scrapedCount = scrapeResult.listings.length;
 
       // Create or get Quikr partner source
       const { IngestionService } = await import('./ingestionService');
@@ -53,20 +55,22 @@ export class QuikrScraper {
         return result;
       }
 
-      // Ingest the listing
-      const ingestionResult = await ingestionService.ingestFromWebhook(
-        quikrSource.id,
-        {
-          ...scrapeResult.data,
-          source: 'Quikr Cars',
-          url: this.baseUrl,
-        },
-        quikrSource,
-        db
-      );
+      // Ingest each listing
+      for (const listing of scrapeResult.listings) {
+        const ingestionResult = await ingestionService.ingestFromWebhook(
+          quikrSource.id,
+          {
+            ...listing,
+            source: 'Quikr Cars',
+            url: listing.url || this.baseUrl,
+          },
+          quikrSource,
+          db
+        );
 
-      if (ingestionResult.success && !ingestionResult.isDuplicate) {
-        result.newListings++;
+        if (ingestionResult.success && !ingestionResult.isDuplicate) {
+          result.newListings++;
+        }
       }
 
       console.log(`✅ Quikr scraping complete: ${result.newListings} new listings`);
@@ -102,7 +106,7 @@ export class QuikrScraper {
       .values({
         partnerName: 'Quikr Cars',
         contactEmail: 'support@quikr.com',
-        sourceType: 'crawl4ai',
+        sourceType: 'firecrawl',
         endpoint: this.baseUrl,
         country: 'India',
         consented: true,

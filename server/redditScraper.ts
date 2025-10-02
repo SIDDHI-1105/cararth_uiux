@@ -3,15 +3,17 @@
  * Scrapes buying/selling threads and car discussions from India's active car community
  */
 
-import { Crawl4AIService } from './crawl4aiService';
+import { OfficialFirecrawlMcpService } from './officialFirecrawlMcp';
 import type { DatabaseStorage } from './dbStorage';
 
 export class RedditScraper {
-  private crawl4ai: Crawl4AIService;
+  private firecrawl: OfficialFirecrawlMcpService;
   private baseUrl = 'https://www.reddit.com/r/CarsIndia/search/?q=flair%3A%22Buying%2FSelling%22&restrict_sr=1&sort=new';
 
   constructor() {
-    this.crawl4ai = new Crawl4AIService();
+    this.firecrawl = new OfficialFirecrawlMcpService({
+      apiKey: process.env.FIRECRAWL_API_KEY || ''
+    });
   }
 
   async scrapeLatestListings(db: DatabaseStorage['db']): Promise<{
@@ -28,19 +30,19 @@ export class RedditScraper {
     };
 
     try {
-      // Scrape Reddit r/CarsIndia to find latest buying/selling posts
-      const scrapeResult = await this.crawl4ai.scrapeUrl(this.baseUrl, {
-        llmProvider: 'openai',
-        llmModel: 'gpt-4o-mini'
-      });
+      // Scrape Reddit r/CarsIndia using Firecrawl
+      const scrapeResult = await this.firecrawl.extractCarListings(
+        this.baseUrl,
+        'Extract car listings from buying/selling posts including title, brand, model, year, price, and seller contact info'
+      );
 
-      if (!scrapeResult.success || !scrapeResult.data) {
-        result.errors.push('Failed to scrape Reddit r/CarsIndia');
+      if (!scrapeResult.success || !scrapeResult.listings || scrapeResult.listings.length === 0) {
+        result.errors.push('Failed to scrape Reddit r/CarsIndia or no listings found');
         return result;
       }
 
-      console.log(`✅ Found Reddit listing data, processing...`);
-      result.scrapedCount = 1;
+      console.log(`✅ Found ${scrapeResult.listings.length} Reddit listings, processing...`);
+      result.scrapedCount = scrapeResult.listings.length;
 
       // Create or get Reddit partner source
       const { IngestionService } = await import('./ingestionService');
@@ -53,20 +55,22 @@ export class RedditScraper {
         return result;
       }
 
-      // Ingest the listing
-      const ingestionResult = await ingestionService.ingestFromWebhook(
-        redditSource.id,
-        {
-          ...scrapeResult.data,
-          source: 'Reddit r/CarsIndia',
-          url: this.baseUrl,
-        },
-        redditSource,
-        db
-      );
+      // Ingest each listing
+      for (const listing of scrapeResult.listings) {
+        const ingestionResult = await ingestionService.ingestFromWebhook(
+          redditSource.id,
+          {
+            ...listing,
+            source: 'Reddit r/CarsIndia',
+            url: listing.url || this.baseUrl,
+          },
+          redditSource,
+          db
+        );
 
-      if (ingestionResult.success && !ingestionResult.isDuplicate) {
-        result.newListings++;
+        if (ingestionResult.success && !ingestionResult.isDuplicate) {
+          result.newListings++;
+        }
       }
 
       console.log(`✅ Reddit scraping complete: ${result.newListings} new listings`);
@@ -102,7 +106,7 @@ export class RedditScraper {
       .values({
         partnerName: 'Reddit r/CarsIndia',
         contactEmail: 'community@reddit.com',
-        sourceType: 'crawl4ai',
+        sourceType: 'firecrawl',
         endpoint: this.baseUrl,
         country: 'India',
         consented: true,
