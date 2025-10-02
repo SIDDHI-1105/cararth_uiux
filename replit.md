@@ -26,19 +26,15 @@ Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, an
 - **Authentication**: Session management using `connect-pg-simple`, user authentication with password handling, seller-based car listing ownership.
 - **Fast Search**: Batch ingestion, sub-second search responses with caching, cross-filter support, external cron services for ingestion.
 - **Search Result Deduplication**: Implemented portal+URL unique identifier to remove exact duplicate listings and quality filtering to remove spam listings.
-- **Seller Contact & Notification System**: Uses `libphonenumber-js` for phone normalization, Twilio Business API for WhatsApp notifications (WhatsApp-first approach), Nodemailer for email fallback, and smart retry logic with exponential backoff.
+- **Seller Contact & Notification System**: Uses `libphonenumber-js` for phone normalization, Twilio Business API for WhatsApp notifications, Nodemailer for email fallback, and smart retry logic.
 - **AI Search Engine Optimization**: Enhanced Schema.org structured data, AI-friendly robots.txt, comprehensive sitemap.xml, machine-readable data endpoint (`/api/ai-info`), static file serving.
+- **Scraper Monitoring**: Production-ready, self-healing system with persistent retry state, exponential backoff, and database-backed health logs for all scrapers. Includes an admin dashboard for real-time status.
 
 ### Feature Specifications
-- **Enterprise Partner Syndication**: Enables partners to post listings once for multi-platform distribution.
-    - **Core Components**: Partner source management (webhook, CSV, SFTP, Firecrawl, Crawl4AI), canonical listings (normalized, deduplicated, risk-scored), multi-LLM compliance pipeline (OpenAI, Gemini, Anthropic, Perplexity), and ingestion service (smart deduplication, auto-normalization).
-    - **Ingestion Workflows**: Supports webhook, manual batch, and Firecrawl/Crawl4AI scraping.
-    - **Cost Optimization**: Strategic LLM provider selection, caching, and batch processing.
-- **Partner Self-Service Portal**: Simple, intuitive dashboard for dealers to manage inventory with real-time marketplace updates.
-    - **Core Components**: Shareable invite links (7-day expiry, crypto-secure tokens), partner accounts with role-based access, instant cache invalidation for real-time updates, non-technical Add Listing form.
-    - **Database Schema**: `partner_invites` (token, listing source, expiry), `partner_accounts` (user-source relationship), `cached_portal_listings` with `origin='partner'` and verification fields.
-    - **Security**: Secure token generation with crypto.randomUUID(), session-based authentication, role-based authorization (admin/partner), ownership verification on CRUD operations.
-    - **Real-Time Updates**: Listings appear on CarArth.com instantly via integrated cache invalidation (cacheManager) clearing all search, marketplace, and listing caches.
+- **Enterprise Partner Syndication**: Enables partners to post listings once for multi-platform distribution. Core components include partner source management, canonical listings, multi-LLM compliance pipeline (OpenAI, Gemini, Anthropic, Perplexity), and ingestion service. Supports webhook, manual batch, and Firecrawl/Crawl4AI scraping.
+- **Partner Self-Service Portal**: Intuitive dashboard for dealers to manage inventory with real-time marketplace updates. Features include shareable invite links, partner accounts with role-based access, instant cache invalidation, and a non-technical Add Listing form. Includes a Bulk Upload feature for CSV and media files with real-time progress tracking.
+- **Automated Forum & Marketplace Scraping**: Daily scraping from quality owner communities like Team-BHP Classifieds, TheAutomotiveIndia Marketplace, Quikr Cars, and Reddit r/CarsIndia.
+- **Dynamic Hero Section**: Real-time statistics displayed on the homepage, showing total listings and platform counts, with data fetched from the database and updated frequently.
 
 ## External Dependencies
 
@@ -73,80 +69,9 @@ Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, an
 
 ### Web Scraping
 - **Firecrawl**: Premium web scraping service with LLM-powered extraction.
-- **Crawl4AI**: Free, self-hosted web scraping with LLM extraction.
+- **Crawl4AI**: Free, self-hosted web scraping with LLM extraction (used as backup/legacy).
 
 ### Notification & Communication
 - **Twilio**: WhatsApp Business API for instant seller notifications.
 - **Nodemailer**: Email delivery service.
 - **libphonenumber-js**: International phone number normalization and validation.
-
-## Recent Updates
-
-### October 2, 2025 - Comprehensive Diagnostic Investigation & System Gap Analysis
-- 🔍 **Agent 3 Diagnostic Investigation**: Comprehensive 5-point investigation to identify listing ingestion gaps, missing sources, and data intelligence blockers (see `DIAGNOSTIC_FINDINGS.md`).
-  - **Finding 1 - Missing Sources**: Hyundai H-Promise, Mahindra First Choice, and EauctionsIndia bank auction scrapers exist but NOT integrated into scheduler (root cause of zero listings from these sources).
-  - **Finding 2 - Team-BHP Status**: All 4 classified scrapers (Team-BHP, TheAutomotiveIndia, Quikr, Reddit) working normally, running daily at 11:00 IST only.
-  - **Finding 3 - Scale Bottlenecks**: System at 20% capacity with only 308 listings (stale, last refresh Sept 14), 44% scraper utilization (4/9 scrapers active), empty partner sources table.
-  - **Finding 4 - Google Trends**: Service fully implemented with pytrends integration BUT database tables missing (migration not run), currently returns null data.
-  - **Finding 5 - SIAM Integration**: Service implemented with LLM pipeline BUT database tables missing (migration not run), currently uses mock data placeholders.
-  - **Root Causes**: (1) Incomplete scheduler integration, (2) Database migrations not run for new tables, (3) Partner ecosystem unconfigured.
-  - **Remediation Plan**: Week 1 emergency fixes (add scrapers, run migrations) → +500 listings; Week 2-4 core functionality (trends, SIAM, partners) → +700 listings; Week 5-12 scale (new sources, intelligence) → +1300 listings.
-  - **Target**: 2000+ active listings with real-time market intelligence in 12 weeks.
-
-### October 1, 2025 - Partner Self-Service Portal, Bulk Upload & Automated Scraping
-- ✅ **Partner Self-Service Portal**: Simple, intuitive dashboard for dealers to manage inventory with real-time CarArth.com updates.
-  - **Admin Features** (`client/src/pages/admin-partners.tsx`): Generate shareable invite links from partner sources with 7-day expiry.
-  - **Partner Invite** (`client/src/pages/partner-invite.tsx`): Beautiful acceptance page showing partner benefits and one-click setup.
-  - **Partner Dashboard** (`client/src/pages/partner-dashboard.tsx`): Non-technical Add Listing form, My Inventory management, instant CRUD operations, Bulk Upload tab.
-  - **Backend API** (`server/routes.ts`): Secure invite generation/acceptance, authenticated partner listing CRUD with ownership verification.
-  - **Database Schema** (`shared/schema.ts`): `partner_invites`, `partner_accounts`, `bulk_upload_jobs` tables with secure crypto token generation.
-  - **Real-Time Cache** (`server/dbStorage.ts`): Instant cache invalidation via cacheManager for immediate marketplace updates.
-  - **Security**: crypto.randomUUID() tokens, role-based access (admin/partner), session authentication, ownership checks.
-  - **Impact**: Empowers dealers to self-manage inventory with zero technical knowledge, instant visibility on CarArth.com.
-- ✅ **Bulk Upload Feature**: Enable dealers to upload 100+ listings at once via CSV + media files with real-time progress tracking.
-  - **UI** (`client/src/pages/partner-dashboard.tsx`): Tabbed interface with drag-and-drop CSV upload, optional media file upload, real-time job status polling with progress indicators.
-  - **Backend Processing** (`server/routes.ts`): Multipart form-data handling with multer, CSV parsing with csv-parse/sync, async job processing, per-record validation and error tracking.
-  - **Storage Layer** (`server/dbStorage.ts`): Job tracking methods (createBulkUploadJob, updateBulkUploadJob, getBulkUploadJob) with progress updates and error logging.
-  - **Security Features**: Filename sanitization (prevent path traversal), URL validation, CSV size limit (5MB), row count limit (500 listings), file type validation (images/videos only), ownership verification on job status checks.
-  - **LLM Integration**: Each listing processed through existing createPartnerListing which triggers multi-LLM compliance checks (OpenAI ToS, Gemini PII, Anthropic copyright).
-  - **Sample CSV Template**: Downloadable template with required columns (title, brand, model, year, price, mileage, fuelType, transmission, owners, city) and optional columns (location, description, images).
-  - **Impact**: Dramatically reduces onboarding time for dealers with large inventories, enables 500-listing uploads in minutes vs hours of manual entry.
-- ✅ **Automated Forum & Marketplace Scraping**: Daily scraping from quality owner communities.
-  - **Team-BHP Classifieds** (`server/teamBhpScraper.ts`): India's trusted car enthusiast community owner listings.
-  - **TheAutomotiveIndia Marketplace** (`server/automotiveIndiaScraper.ts`): 34.9K community owner-to-owner sales.
-  - **Quikr Cars** (`server/quikrScraper.ts`): 2,500+ active owner listings from India's largest classifieds.
-  - **Reddit r/CarsIndia** (`server/redditScraper.ts`): Active community buying/selling threads with rich discussions.
-  - **Daily Scheduler**: All scrapers run at 11:00 & 23:00 IST with auto-source creation and parallel execution.
-  - **Impact**: ~50%+ inventory boost from hidden gems with authentic owner context.
-
-### October 2, 2025 - Dynamic Hero Section & Production-Ready Self-Healing Scraper Monitoring
-- ✅ **Dynamic Hero Section**: Real-time stats replace hardcoded values for accurate marketplace representation.
-  - **API Endpoint** (`/api/hero-stats`): Fetches total listings and platform counts from database via storage abstraction.
-  - **Storage Integration**: Extended IStorage interface with `getHeroStats()` method, implemented in both DatabaseStorage and MemStorage.
-  - **Frontend Update** (`client/src/components/hero-section.tsx`): TanStack Query with 60-second auto-refresh, loading states, dynamic platform badges with real counts.
-  - **Impact**: Homepage always shows accurate, up-to-date marketplace statistics without manual updates.
-  
-- ✅ **Production-Ready Self-Healing Scraper Monitoring**: Zero-maintenance reliability system with persistent retry state that survives server restarts.
-  - **Database Schema** (`shared/schema.ts`): 
-    - `scraper_health_logs` table with comprehensive tracking: metrics (found/saved/errors/duration), retry attempts, error stacks
-    - Persistent retry state: `isRetryPending` (boolean) and `nextRetryAt` (timestamp) columns ensure retries survive restarts
-    - Indexed for fast queries on scraper name, status, and retry state
-  - **Health Monitor Service** (`server/scraperHealthMonitor.ts`):
-    - `initialize()`: Loads ALL pending retries from database on startup (including overdue ones), groups by scraper for latest state
-    - `startRun()` / `completeRun()`: Tracks every scraper execution with full metrics
-    - Exponential backoff retry logic: 3 attempts with 5min→10min→20min delays
-    - Persistent retry state: saves retry schedule to database, clears ALL pending rows for scraper on success/max-retries
-    - Console alerts after max retries for manual intervention
-  - **Scheduler Integration** (`server/scheduler.ts`):
-    - All 7 scrapers wrapped with monitoring (Team-BHP, TheAutomotiveIndia, Quikr, Reddit, Hyundai H-Promise, Mahindra First Choice, EauctionsIndia)
-    - Retry timer polls every minute for due retries
-    - `processScraperRetries()` executes overdue scrapers automatically
-    - `executeScraper()` re-invokes failed scrapers by name with full tracking
-  - **API Endpoint** (`/api/scraper-health`): Real-time health status with per-scraper metrics (24h success rate, last run/success times, avg duration), overall system status (healthy/degraded/critical)
-  - **Status Dashboard** (`client/src/pages/scraper-status.tsx` at `/admin/scraper-status`): Visual monitoring with health indicators, success rate charts, last run times, duration metrics, auto-refresh every 30 seconds
-  - **Production Features**:
-    - **Restart Resilience**: Retry state persisted to database, survives server restarts with full recovery
-    - **Automatic Retry Execution**: Failed scrapers retry automatically with exponential backoff
-    - **State Cleanup**: Clears all pending retry rows for a scraper on success to prevent stale retries
-    - **Overdue Recovery**: Startup loader executes immediately for retries that were overdue during restart
-  - **Impact**: TRUE zero-maintenance reliability - system automatically tracks, retries (survives restarts), and alerts on failures. No daily manual checks needed. Admin dashboard provides instant visibility into all scraper health.
