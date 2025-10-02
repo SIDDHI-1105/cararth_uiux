@@ -1,0 +1,139 @@
+REPLIT AGENT 3 PROMPT — Diagnose & Remediate: Missing Sources, Ingestion Gaps, Scale-up, Google Trends, SIAM Insights (cararth.com)
+
+ROLE / CONTEXT
+You are Replit Agent 3 for cararth.com. The site uses Next.js + TypeScript, Prisma/Postgres, Redis + BullMQ, Elasticsearch/OpenSearch, S3 snapshots, Firecrawl for scraping, and LLMs GPT-5, Gemini, Anthropic, Perplexity. Your mission: investigate five critical concerns, deliver a findings report, and implement prioritized fixes to get listings flowing, improve ingestion from classifieds, dramatically ramp listings safely and legally, align Google Trends insights to product signals, and verify/improve SIAM data ingestion & LLM analysis.
+
+PRINCIPLES
+- Proceed without asking clarifying questions; use sensible defaults and document assumptions.
+- Produce measurable findings, code changes in small PRs, tests, and runbook entries.
+- Prioritize legal/compliance checks (ToS, robots.txt, PII) before publishing any scraped content.
+
+SCOPE & DELIVERABLES
+Phase 0: Kickoff (start immediately)
+- Create branch `agent3/diagnose-ramps` and open a top-level README describing goals, timeline, and immediate commands to run diagnostics.
+- Run automated diagnostics & produce "Findings & Action Plan" doc within 72 hours.
+
+Phase 1: Investigation & diagnosis (automated + manual checks)
+Perform targeted diagnostics for each numbered concern below, produce metrics, root-cause hypotheses, and sample evidence (URLs, raw snapshots).
+
+1) WHY ARE WE NOT GETTING LISTINGS FROM SPECIFIC SOURCES?
+Targets: Hyundai Promise, Mahindra First Choice, [Bank Auction site — previously configured].
+Actions:
+- Confirm ingest configuration: check ListingSource entries for these sources (source_type, endpoint, credentials, last_ingest_at, consented).
+- Confirm Firecrawl delivery: search recent Firecrawl runs & S3 snapshots for these domains; report last successful crawl timestamp and any crawl errors (403, 401, 429, parse_error).
+- Check ToS/robots: fetch current robots.txt and ToS snapshot for each domain and run GPT-5 ToS inference (allow_scrape boolean).
+- Validate mapping: inspect partner mapping JSON or parser for fields mapping to canonical schema (source_listing_id, contact, posted_at). Run sample raw snapshot through mapping logic to see if listings are being dropped due to parsing errors or validation failures.
+- Check error logs: background job failures, LLM pipeline rejections, schema validation rejects, and any webhook delivery failures to partner endpoints.
+Deliverables:
+- Table: for each source show last crawl, last successful ingest, error types & counts, allow_scrape result, mapping status, and recommended immediate fix (e.g., rotate creds, fix selector, update mapping, request partner API access).
+
+2) WHAT HAPPENED TO TEAM-BHP & OTHER CLASSIFIED BUYER INGESTION?
+Targets: Team-BHP classifieds and other classified sources previously ingesting buyer posts.
+Actions:
+- Confirm whether Team-BHP was being scraped via Firecrawl or a custom Actor: check ingestion config, cron jobs, and mapping templates.
+- Check for recent changes: site structure changes, anti-bot measures, blocked IPs, or new login requirements. Use last raw snapshot diff to determine structure drift.
+- Audit LLM rejections: did Perplexity/GPT-5 flag content as copyrighted or high-risk leading to suppression? Check llm_reports for Team-BHP items.
+- Verify dedupe policy: are Team-BHP listings being incorrectly deduped (merged) and thus not visible? Check duplicate_group_id merges for sample entries.
+Deliverables:
+- Timeline: when ingestion worked last, when failures started, primary failure mode.
+- Action items: quick fixes (selector update, proxy rotation), medium fixes (partner request for API or whitelist), and long-term (Apify/Actor custom scraper with session handling).
+
+3) HOW TO RAMP UP LISTINGS DRAMATICALLY (legal & practical roadmap)
+Goal: increase net active listings while staying compliant.
+Actions (implementable tasks & metrics):
+A. Partner-first push
+  - Prioritize onboarding 50 dealer partners in target cities with a templated CSV/webhook feed; create a self-serve onboarding page + SLA for ingestion.
+B. Re-activate high-yield sources
+  - From Phase 1, fix top 10 high-yield sources (mapping, auth, proxy) — measurable KPI: +X listings/day.
+C. Expand public-source crawling (low risk)
+  - Use Firecrawl only when allow_scrape==true. Add daily incremental crawl + dedupe. Summarize descriptions via GPT-5 to avoid verbatim copy.
+D. Classified aggregator integrations
+  - Rebuild or tune adapters for Team-BHP and similar; use Apify actors or Firecrawl advanced configs where necessary.
+E. Buyer-to-seller conversion path
+  - For masked or blocked contacts, implement lead-capture funnel (lead -> email/SMS/webhook), as per previous agent prompt.
+F. Marketplace syndication
+  - Build a dealer dashboard offering paid promotion (sponsored slots) to incentivize feed uploads.
+Metrics & targets:
+  - Weekly active listings X -> target +200% in 12 weeks.
+  - Deduped unique listings metric; publishable listing rate > 80% of ingested.
+Deliverables:
+- Concrete 12-week sprint plan with named tasks (onboarding, adapters, scaling), resource estimates, and measurable KPIs.
+
+4) GOOGLE TRENDS INSIGHTS — ALIGNMENT & ACTION
+Goal: translate Google Trends signals into product & supply actions.
+Actions:
+- Fetch Google Trends data for keywords: "used cars", "buy used car", plus brand-specific terms (Hyundai, Mahindra, Maruti, model names) for India and top metros.
+- Build an ETL: pull weekly trends, store in Postgres table `google_trends_signals` with geo, keyword, value, and timestamp.
+- LLM analysis: run GPT-5 weekly job to summarize trends into product recommendations (areas to boost supply by make/model/city, seasonal trends).
+- Align with supply ops: create daily dashboard mapping trending keywords -> supply gaps (e.g., high search for "Hyundai Creta used Hyderabad" vs current inventory for Creta in Hyderabad).
+- Alerting: when trend demand for a model+city > threshold and available inventory < target ratio, create partner outreach tasks (sales ops).
+Deliverables:
+- Dashboard mockups and a working ETL + weekly summarizer job; example alerts for top 10 demand gaps.
+
+5) SIAM DATA INTEGRATION & LLM PERFORMANCE
+Goal: ingest SIAM (Society of Indian Automobile Manufacturers) public data to produce conclusive insights and verify LLM interpretation quality.
+Actions:
+- Ingest SIAM datasets (monthly/quarterly sales, OEM production, vehicle registrations) into a structured table `siam_data` with source metadata and timestamp; fetch via available public reports or APIs (download & screenshot snapshots stored in S3).
+- Normalize SIAM metrics to align with cararth taxonomy (OEM, model family, segment, registration_state).
+- Run LLM pipeline (GPT-5 + Gemini) to produce:
+  • automated summaries (quarterly) with confidence scores,
+  • anomaly detection (sudden dips/spikes),
+  • mapping to demand/supply signals for cararth (which OEMs/models to source).
+- Validate LLM outputs:
+  • create 20 gold-standard human-verified SIAM->insight pairs for training/validation,
+  • compute precision/recall on LLM summaries; target F1 > 0.8 for key insights classification.
+Deliverables:
+- SIAM ingestion job + weekly LLM-summarizer with validation metrics and a short report on LLM accuracy and calibration steps.
+
+PHASE 2 — REMEDIATION & IMPLEMENTATION (after findings)
+For each root cause from Phase 1, implement small incremental PRs (one per fix). Examples:
+- Update parser/mapping for Hyundai Promise feed; add automated test with sample payload.
+- Rotate credentials or move to OAuth/API for Mahindra First Choice if needed.
+- Replace brittle CSS selectors for Team-BHP with robust XPath or headless-browser actor + tests.
+- Implement Google Trends ETL + weekly summarizer job + dashboard endpoints.
+- Add SIAM ingestion + LLM summarizer + validation dataset in repo.
+
+TESTING, QA & ACCEPTANCE
+- Unit & integration tests for each adapter + mapping.
+- Regression tests: given sample raw snapshots, mapping must produce canonical listing JSON.
+- E2E: simulate Firecrawl run for each repaired source and assert publishable listings increased.
+- Acceptance metrics (post remediation; measure weekly):
+  • Source health: last_ingest success rate > 95%
+  • Listings delta: +X% net active listings week-over-week (target specified in sprint plan)
+  • Team-BHP ingestion: restored & visible within 48 hours of fix
+  • Google Trends -> supply alert accuracy: precision > 80% on sample alerts
+  • SIAM LLM accuracy: F1 > 0.8 against validation set
+
+MONITORING, ALERTS & RUNBOOK
+- Add or update dashboards: source health, ingest rate, publish rate, dedupe rate, google_trends_gaps, siam_summary_jobs.
+- Alerts:
+  • Source down > 12 hours → Slack + email paging to eng/ops
+  • publishable_rate < 60% → alert
+  • LLM job failures or API quota exhaustion → alert
+- Runbook: how to re-run ingestion for a domain, how to reprocess SIAM data, how to re-run Google Trends ETL, and how to validate LLM outputs.
+
+PR & Documentation
+- Each fix must include README with:
+  • description, how to run locally (docker-compose), env vars required, test steps, and rollback instructions.
+- Top-level "Findings & Action Plan" doc (Phase 1) is required within 72 hours and must include a prioritized list of fixes to be implemented in the next 2 weeks.
+
+ENVIRONMENT VARIABLES & ACCESS
+Ensure Agent can read these from Replit secrets (do not store in repo):
+- FIRECRAWL_API_KEY, FIRECRAWL_HMAC_SECRET
+- OAUTH/API keys for Hyundai/Mahindra feeds (if available)
+- LINKEDIN keys (if needed for cross-check)
+- GOOGLE_TRENDS_API_KEY or use pytrends with service account credentials
+- SIAM data download credentials (if any)
+- LLM keys: LLM_GPT5_KEY, LLM_GEMINI_KEY, LLM_ANTHROPIC_KEY, LLM_PERPLEXITY_KEY
+- DATABASE_URL, S3 credentials, REDIS_URL, ELASTICSEARCH_URL, SLACK_WEBHOOK
+
+TIMELINE (suggested)
+- Phase 1 diagnostics & findings doc — 72 hours
+- Phase 2 quick fixes (top 5 high-impact) — next 7 calendar days
+- Phase 2 medium fixes & Google Trends/SIAM ETLs — next 21 calendar days
+- Ongoing: monitoring, dashboards, and ramp plan execution over 12 weeks
+
+FINAL NOTE
+If any source is legally blocked (ToS/robots disallow), mark it clearly in the findings and recommend partner engagement (ask for API or permission). Prioritize partner/contract feeds first for scale and legality.
+
+END OF PROMPT
