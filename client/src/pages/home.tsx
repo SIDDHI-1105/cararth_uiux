@@ -310,6 +310,7 @@ function HomeContent() {
   const marketplaceSearch = useMutation({
     mutationFn: async (searchFilters: any) => {
       console.log('🌐 Marketplace search with filters:', searchFilters);
+      console.log('📦 Request body:', JSON.stringify(searchFilters, null, 2));
       
       // Create a timeout controller for the request
       const controller = new AbortController();
@@ -437,6 +438,7 @@ function HomeContent() {
       }
     });
     
+    console.log('🚨 CLEAN FILTERS BEING SENT:', JSON.stringify(cleanFilters, null, 2));
     marketplaceSearch.mutate(cleanFilters);
   };
 
