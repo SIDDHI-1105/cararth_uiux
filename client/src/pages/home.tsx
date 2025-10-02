@@ -36,15 +36,12 @@ function HomeContent() {
   const [sortBy, setSortBy] = useState("price-low");
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState("local");
-  const [marketplaceResult, setMarketplaceResult] = useState<any>(null);
-  const [marketplaceError, setMarketplaceError] = useState<string | null>(null);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showFeaturedModal, setShowFeaturedModal] = useState(false);
   const [selectedCarForFeatured, setSelectedCarForFeatured] = useState<{id: string, title: string} | null>(null);
   const [showSearchLimitPopup, setShowSearchLimitPopup] = useState(false);
   const [searchLimitData, setSearchLimitData] = useState<any>(null);
   const [usageStatus, setUsageStatus] = useState<any>(null);
-  const [currentSearchQuery, setCurrentSearchQuery] = useState<string>('');
   const [showContactDialog, setShowContactDialog] = useState(false);
   const [selectedCarForContact, setSelectedCarForContact] = useState<{id: string, title: string} | null>(null);
   const [hasSearched, setHasSearched] = useState<boolean>(false);
@@ -84,8 +81,11 @@ function HomeContent() {
     };
   }, []);
 
+  // Memoize filters to create stable query key
+  const queryKeyFilters = useMemo(() => JSON.stringify(filters), [JSON.stringify(filters)]);
+  
   const { data: cars = [], isLoading } = useQuery<CarListing[]>({
-    queryKey: ["/api/marketplace/search", filters],
+    queryKey: ["/api/marketplace/search", queryKeyFilters],
     queryFn: async () => {
       const searchFilters = {
         brand: filters.brand,
@@ -97,22 +97,17 @@ function HomeContent() {
         city: filters.city,
         sortBy: "price",
         sortOrder: "asc",
-        limit: 10
+        limit: 50
       };
 
       try {
         const response = await apiRequest('POST', '/api/marketplace/search', searchFilters);
         const result = await response.json();
-        console.log('🔍 DEBUG API response:', { 
-          listingsCount: result.listings?.length || 0,
-          images: result.listings?.slice(0, 2)?.map((c: CarListing) => ({ title: c.title, images: c.images }))
-        });
         
         // Manually refresh usage status after successful local search
         queryClient.invalidateQueries({ queryKey: ["/api/usage/status"] });
         
         const listings = result.listings || [];
-        console.log('✅ Returning listings to query:', listings.length);
         return listings;
       } catch (error: any) {
         console.error('❌ Local search error:', error);
@@ -127,56 +122,32 @@ function HomeContent() {
     },
   });
 
-  console.log('🚗 Current cars state:', { count: cars.length, isLoading, filters });
-
   // FIXED: Removed sortedCars reference that was causing component crash
 
   const handleHeroSearch = (searchFilters: any) => {
-    console.log('🔍 Hero search called with:', searchFilters);
     setHasSearched(true);
-    setActiveTab("marketplace");
+    setActiveTab("local");
     
-    // Create search query string for AI display
-    const queryParts = [];
-    if (searchFilters.brand && searchFilters.brand !== "all") queryParts.push(searchFilters.brand);
-    if (searchFilters.city && searchFilters.city !== "all") queryParts.push(searchFilters.city);
-    if (searchFilters.fuelType && searchFilters.fuelType !== "all") queryParts.push(searchFilters.fuelType);
-    if (searchFilters.budget && searchFilters.budget !== "all") {
-      const [min, max] = searchFilters.budget.split("-").map(Number);
-      if (min && max && max !== 99999999) {
-        queryParts.push(`₹${min/100000}L-${max/100000}L`);
-      }
-    }
-    setCurrentSearchQuery(queryParts.join(' ') || 'All Cars');
-    
-    // Convert hero search to marketplace search format
-    const marketplaceFilters: any = {
-      limit: 50,
-      sortBy: "price",
-      sortOrder: "asc"
-    };
+    // Convert hero search to filter format
+    const newFilters: Record<string, any> = {};
     
     if (searchFilters.brand && searchFilters.brand !== "all") {
-      marketplaceFilters.brand = searchFilters.brand;
-      console.log('✅ Brand filter set to:', searchFilters.brand);
+      newFilters.brand = searchFilters.brand;
     }
     if (searchFilters.city && searchFilters.city !== "all") {
-      marketplaceFilters.city = searchFilters.city;
+      newFilters.city = searchFilters.city;
     }
     if (searchFilters.fuelType && searchFilters.fuelType !== "all") {
-      marketplaceFilters.fuelType = [searchFilters.fuelType];
+      newFilters.fuelType = searchFilters.fuelType;
     }
-    
     if (searchFilters.budget && searchFilters.budget !== "all") {
       const [min, max] = searchFilters.budget.split("-").map(Number);
-      if (min) marketplaceFilters.priceMin = min;
-      if (max && max !== 99999999) marketplaceFilters.priceMax = max;
+      if (min) newFilters.priceMin = min;
+      if (max && max !== 99999999) newFilters.priceMax = max;
     }
     
-    console.log('🔄 Converted to marketplace filters:', marketplaceFilters);
-    
-    // Call marketplace search
-    handleMarketplaceSearch(marketplaceFilters);
+    // Update filters state - this will trigger the local query to refetch
+    setFilters(newFilters);
   };
 
   const handleFilterChange = (filterData: any) => {
@@ -210,26 +181,12 @@ function HomeContent() {
       newFilters.city = filterData.location;
     }
     
-    console.log('🔧 Applied filters:', newFilters);
     feedback.selection(); // Haptic feedback on filter change
     setFilters(newFilters);
     
-    // Auto-trigger marketplace search when filters change for better UX
+    // Query will auto-refetch when filters change
     if (Object.keys(newFilters).length > 0) {
-      setTimeout(() => {
-        const searchFilters: any = { sortBy: "price", sortOrder: "asc" };
-        
-        if (newFilters.brand) searchFilters.brand = newFilters.brand;
-        if (newFilters.city) searchFilters.city = newFilters.city;
-        if (newFilters.fuelType) searchFilters.fuelType = [newFilters.fuelType];
-        if (newFilters.transmission) searchFilters.transmission = newFilters.transmission;
-        if (newFilters.priceMin) searchFilters.priceMin = newFilters.priceMin;
-        if (newFilters.priceMax) searchFilters.priceMax = newFilters.priceMax;
-        
-        console.log('🔄 Auto-search triggered with filters:', searchFilters);
-        setHasSearched(true);
-        handleMarketplaceSearch(searchFilters);
-      }, 500); // Small delay to batch rapid filter changes
+      setHasSearched(true);
     }
   };
 
@@ -258,40 +215,9 @@ function HomeContent() {
   const handleAdvancedSearch = () => {
     feedback.button(); // Haptic feedback for search action
     setHasSearched(true);
-    
-    // Convert filters to marketplace search format
-    const searchFilters: any = {
-      sortBy: "price",
-      sortOrder: "asc"
-    };
-    
-    if (filters.brand && filters.brand !== "all") {
-      searchFilters.brand = filters.brand;
-    }
-    if (filters.city && filters.city !== "all") {
-      searchFilters.city = filters.city;
-    }
-    if (filters.fuelType && filters.fuelType !== "all") {
-      searchFilters.fuelType = [filters.fuelType];
-    }
-    if (filters.transmission && filters.transmission !== "all") {
-      searchFilters.transmission = filters.transmission;
-    }
-    if (filters.priceMin) {
-      searchFilters.priceMin = filters.priceMin;
-    }
-    if (filters.priceMax) {
-      searchFilters.priceMax = filters.priceMax;
-    }
-    if (filters.yearMin) {
-      searchFilters.yearMin = filters.yearMin;
-    }
-    if (filters.yearMax) {
-      searchFilters.yearMax = filters.yearMax;
-    }
-    
-    console.log('🔄 Advanced search with filters:', searchFilters);
-    handleMarketplaceSearch(searchFilters);
+    setActiveTab("local");
+    // Filters are already updated by handleFilterChange
+    // The query will auto-refetch with the new filters
   };
 
   const handleMakeFeatured = (car: CarListing) => {
@@ -306,141 +232,6 @@ function HomeContent() {
     staleTime: 5 * 60 * 1000, // Data is fresh for 5 minutes
     // Removed excessive refetchInterval to reduce server load
   });
-
-  const marketplaceSearch = useMutation({
-    mutationFn: async (searchFilters: any) => {
-      console.log('🌐 Marketplace search with filters:', searchFilters);
-      console.log('📦 Request body:', JSON.stringify(searchFilters, null, 2));
-      
-      // Create a timeout controller for the request
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minutes timeout
-      
-      try {
-        const response = await fetch('/api/marketplace/search', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Visitor-ID': await (await import('@/lib/visitorId')).getVisitorId(),
-          },
-          body: JSON.stringify(searchFilters),
-          credentials: 'include',
-          signal: controller.signal,
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Search failed: ${errorText}`);
-        }
-        
-        return response.json();
-      } catch (error: any) {
-        clearTimeout(timeoutId);
-        if (error.name === 'AbortError') {
-          throw new Error('Search is taking longer than expected. Please try again with more specific filters.');
-        }
-        throw error;
-      }
-    },
-    onSuccess: (data) => {
-      console.log('✅ Marketplace search successful:', data);
-      
-      // Manually refetch usage status after search to update remaining searches
-      queryClient.invalidateQueries({ queryKey: ["/api/usage/status"] });
-      
-      // Auto-switch to All Portals tab to show search results
-      setActiveTab("marketplace");
-      
-      // Transform API response to match MarketplaceResults expected structure
-      const transformedResult = {
-        listings: data.listings || [],
-        analytics: {
-          totalListings: data.total || 0,
-          avgPrice: data.listings && data.listings.length > 0 ? 
-            data.listings.reduce((sum: number, car: any) => sum + car.price, 0) / data.listings.length : 0,
-          priceRange: {
-            min: data.listings && data.listings.length > 0 ? 
-              Math.min(...data.listings.map((car: any) => car.price)) : 0,
-            max: data.listings && data.listings.length > 0 ? 
-              Math.max(...data.listings.map((car: any) => car.price)) : 0
-          },
-          mostCommonFuelType: 'Petrol', // Default for now
-          avgMileage: data.listings && data.listings.length > 0 ? 
-            data.listings.reduce((sum: number, car: any) => sum + car.mileage, 0) / data.listings.length : 0,
-          sourcesCount: data.listings ? 
-            data.listings.reduce((acc: Record<string, number>, car: any) => {
-              acc[car.source] = (acc[car.source] || 0) + 1;
-              return acc;
-            }, {}) : {},
-          locationDistribution: data.listings ? 
-            data.listings.reduce((acc: Record<string, number>, car: any) => {
-              acc[car.city || car.location] = (acc[car.city || car.location] || 0) + 1;
-              return acc;
-            }, {}) : {},
-          priceByLocation: {},
-          historicalTrend: 'stable' as const
-        },
-        recommendations: {
-          bestDeals: data.listings ? data.listings.slice(0, 3) : [],
-          overpriced: [],
-          newListings: data.listings ? data.listings.slice(0, 5) : [],
-          certified: data.listings ? data.listings.filter((car: any) => car.verificationStatus === 'certified').slice(0, 3) : []
-        }
-      };
-      
-      setMarketplaceResult(transformedResult);
-      setMarketplaceError(null);
-    },
-    onError: (error: any) => {
-      console.error('❌ Marketplace search failed:', error);
-      
-      // Handle search limit exceeded
-      if (error.isSearchLimitExceeded) {
-        console.log('🔥 Search limit exceeded in marketplace search');
-        setSearchLimitData(error.data);
-        setShowSearchLimitPopup(true);
-        setMarketplaceResult(null);
-      } else {
-        setMarketplaceError(error.message || 'Failed to search marketplace');
-        setMarketplaceResult(null);
-      }
-    }
-  });
-
-  const handleMarketplaceSearch = (searchFilters: any) => {
-    console.log('🔄 Starting marketplace search...');
-    
-    // Update search query if not already set
-    if (!currentSearchQuery) {
-      const queryParts = [];
-      if (searchFilters.brand) queryParts.push(searchFilters.brand);
-      if (searchFilters.city) queryParts.push(searchFilters.city);
-      if (searchFilters.fuelType) queryParts.push(searchFilters.fuelType);
-      if (searchFilters.priceMin || searchFilters.priceMax) {
-        const min = searchFilters.priceMin || 0;
-        const max = searchFilters.priceMax || 1000000;
-        queryParts.push(`₹${min/100000}L-${max/100000}L`);
-      }
-      setCurrentSearchQuery(queryParts.join(' ') || 'All Cars');
-    }
-    
-    // Clean up filters
-    const cleanFilters = { ...searchFilters };
-    Object.keys(cleanFilters).forEach(key => {
-      if (cleanFilters[key] === undefined || cleanFilters[key] === null) {
-        delete cleanFilters[key];
-      }
-      // Convert empty string brand to undefined so backend handles it correctly
-      if (key === 'brand' && cleanFilters[key] === "") {
-        delete cleanFilters[key];
-      }
-    });
-    
-    console.log('🚨 CLEAN FILTERS BEING SENT:', JSON.stringify(cleanFilters, null, 2));
-    marketplaceSearch.mutate(cleanFilters);
-  };
 
   const sortedCars = useMemo(() => {
     return [...cars].sort((a, b) => {
@@ -480,7 +271,7 @@ function HomeContent() {
         <HeroSection 
           onSearch={handleHeroSearch}
           hasSearched={hasSearched}
-          isSearching={marketplaceSearch.isPending}
+          isSearching={isLoading}
         />
         
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-8">
@@ -493,27 +284,8 @@ function HomeContent() {
               </TabsTrigger>
               <TabsTrigger value="marketplace" className="flex items-center gap-2 text-sm sm:text-base font-medium">
                 <Globe className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="hidden sm:inline">
-                  {marketplaceResult ? 
-                    `Search Results (${marketplaceResult.analytics?.totalListings || 0})` : 
-                    'All Portals'
-                  }
-                </span>
-                <span className="sm:hidden">
-                  {marketplaceResult ? 
-                    `Results (${marketplaceResult.analytics?.totalListings || 0})` : 
-                    'Portals'
-                  }
-                </span>
-                {(() => {
-                  const usage = usageStatusData as UsageStatus | undefined;
-                  return usage && !usage.isAuthenticated ? (
-                    <Badge variant="secondary" className="text-xs ml-1">
-                      <span className="hidden sm:inline">{usage.searchesLeft}/{usage.totalLimit} in 30d</span>
-                      <span className="sm:hidden">{usage.searchesLeft}/{usage.totalLimit}</span>
-                    </Badge>
-                  ) : null;
-                })()}
+                <span className="hidden sm:inline">Info</span>
+                <span className="sm:hidden">Info</span>
               </TabsTrigger>
             </TabsList>
 
@@ -599,32 +371,16 @@ function HomeContent() {
             </TabsContent>
 
             <TabsContent value="marketplace">
-              {marketplaceResult ? (
-                <MarketplaceResults 
-                  searchResult={marketplaceResult}
-                  isLoading={marketplaceSearch.isPending}
-                  error={marketplaceError}
-                  searchQuery={currentSearchQuery}
-                />
-              ) : marketplaceSearch.isPending ? (
-                <MarketplaceResults 
-                  searchResult={null as any}
-                  isLoading={true}
-                  error={null}
-                  searchQuery={currentSearchQuery}
-                />
-              ) : (
-                <div className="text-center py-12">
-                  <Globe className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">Search Across All Portals</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Use the advanced search above to find cars from CarDekho, OLX, Cars24, CarWale, and more.
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Get comprehensive market insights, price comparisons, and access to thousands of verified listings.
-                  </p>
-                </div>
-              )}
+              <div className="text-center py-12">
+                <Globe className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-xl font-semibold mb-2">All Results Shown in Local Tab</h3>
+                <p className="text-muted-foreground mb-4">
+                  Search results from all platforms (CarDekho, OLX, Cars24, CarWale, etc.) are displayed in the Local Listings tab.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Use the search form above to filter by brand, budget, city, and more.
+                </p>
+              </div>
             </TabsContent>
 
           </Tabs>
