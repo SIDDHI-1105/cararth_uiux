@@ -2052,7 +2052,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const data = schema.parse(req.body);
       const { userPrice, ...carData } = data;
 
-      const comparison = await priceComparisonService.comparePrices(carData, userPrice);
+      const insights = await priceComparisonService.getPriceInsights(carData);
+      const comparison = {
+        ...insights,
+        userPrice,
+        difference: userPrice - insights.averagePrice,
+        percentageDifference: ((userPrice - insights.averagePrice) / insights.averagePrice * 100).toFixed(2)
+      };
       res.json(comparison);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -6461,12 +6467,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     // Get or create a personal listing source for the user
-    let listingSource = await storage.getListingSourceByName(`${userId}-personal`);
+    const sourceName = `${userId}-personal`;
+    const allSources = await storage.getListingSources();
+    let listingSource = allSources.find(s => s.name === sourceName);
     
     if (!listingSource) {
       // Create a personal listing source for the user
       listingSource = await storage.createListingSource({
-        name: `${userId}-personal`,
+        name: sourceName,
         displayName: user.email || 'Personal Listings',
         type: 'individual_seller',
         apiEndpoint: null,
