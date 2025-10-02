@@ -1,0 +1,255 @@
+REPLIT AGENT PROMPT — Cararth AI Insights (Phase 1–3)
+PURPOSE
+Build an AI-driven valuation & insights engine for cararth.com that:
+1. Ingests SIAM (last 12 months) + CarDekho market data.
+2. Normalizes listing fields with Gemini.
+3. Produces granular listing analysis & indicative pricing via GPT-5, cross-checked by Perplexity, and finalized/phrased by Anthropic.
+4. Exposes results in DB, search index and a UI widget on each listing page.
+
+ASSUMPTIONS (do not ask)
+- Firecrawl or equivalent extracts CarDekho public listings; SIAM CSV/Excel is publicly available and will be uploaded to S3 by ops if needed.
+- LLM keys and other secrets exist in Replit secrets.
+- Stack: Next.js (TS), Node backend, Prisma/Postgres, Redis + BullMQ, Elasticsearch/OpenSearch, S3-compatible storage.
+- Use existing LLMs: GPT-5, Gemini, Anthropic, Perplexity.
+
+PRIORITY (implement in this order)
+1. Data ingestion & normalization (SIAM + CarDekho).
+2. LLM analysis pipeline (normalize → price inference → live-check → narrative).
+3. DB/indexing, API, and UI widget on listing page.
+4. Tests, monitoring, and docs.
+
+DELIVERABLES (Phase 1–3)
+A. Data: siam_data table, market_data table (CarDekho extracts), and canonical listings enriched with AI insights.
+B. LLM pipeline: background queue jobs that run normalization, pricing, live-check, and narrative generation.
+C. API & UI: /api/ai-insights/:listing_id, and an AI Insights widget on listing detail pages.
+D. Tests & Acceptance: unit/integration tests and acceptance checklist.
+
+SCHEMA & PRISMA MIGRATIONS
+Add these models to prisma/schema.prisma (run migration after PR):
+
+model SiamData {
+  id          String   @id @default(uuid())
+  month       DateTime
+  oem         String
+  model_family String
+  registrations Int
+  production   Int?
+  state        String?
+  meta         Json?
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+}
+
+model MarketData {
+  id             String   @id @default(uuid())
+  source         String   // cardekho|other
+  source_listing_id String
+  listed_price   Float?
+  currency       String   @default("INR")
+  make           String
+  model          String
+  variant        String?
+  year           Int?
+  color          String?
+  transmission   String?
+  kms            Int?
+  city           String?
+  images         String[]
+  raw_payload_url String?
+  ingested_at    DateTime @default(now())
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+}
+
+model AIInsight {
+  id                   String   @id @default(uuid())
+  listing_id           String   // FK -> Listing.id (canonical)
+  generated_price_low  Float?
+  generated_price_high Float?
+  suggested_price      Float?
+  price_confidence     Float?   // 0.0-1.0
+  ageing_index         Float?   // normalized 0-1
+  mileage_score        Float?   // normalized 0-1 (lower=good)
+  comparable_count     Int?
+  comparables_sample   Json?    // small set of comparables found
+  llm_reports          Json?    // full LLM outputs (GPT5, Perplexity, Anthropic)
+  status               String   @default("pending") // pending|ready|review
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+
+  @@index([listing_id])
+}
+
+API ROUTES (implement)
+- POST /api/ai-insights/trigger/:listing_id  — enqueue insight job (protected)
+- GET  /api/ai-insights/:listing_id         — returns AIInsight (public-safe fields)
+- GET  /api/ai-insights/:listing_id/report  — (admin) full llm_reports
+- GET  /api/market/refresh-cardekho         — (protected) trigger ingest job for Cardekho snapshots in S3
+- POST /api/siam/upload                      — upload SIAM CSV/Excel (protected), parse into siam_data
+
+DATA INGESTION TASKS (Phase 1)
+1. SIAM ingestion
+  - Implement /api/siam/upload to accept CSV/XLSX. Normalize columns to siam_data model.
+  - Store original file in S3 and record ingestion metadata.
+  - Parse last 12 months and create siam_data rows.
+
+2. CarDekho (market_data) ingestion
+  - Reprocess latest Firecrawl snapshots for CarDekho from S3; parse into market_data (map source_listing_id -> fields).
+  - If Firecrawl not available, use provided NDJSON snapshots. Keep raw_payload_url reference.
+  - Create nightly job to append new market_data rows and prune duplicates (keep latest per source_listing_id).
+
+3. Normalization (Gemini)
+  - Build a normalization service (llm-normalize) that:
+    • Maps variant strings to canonical variant keys (use a mapping table).
+    • Normalizes make/model naming, transmissions, colors.
+    • Outputs: normalized object + normalization_confidence.
+  - Run normalization on newly ingested market_data items and store normalized fields in market_data or a separate normalization cache.
+
+LLM PIPELINE (Phase 2) — background jobs (BullMQ)
+For each listing to analyze:
+Step 0: Gather inputs
+  - canonical listing JSON (cararth Listing table).
+  - join matching market_data items (same make/model/year/variant +/- fuzzy).
+  - slice SIAM data relevant to make/model & region (last 12 months).
+Step 1: Normalization (Gemini)
+  - Ensure fields normalized and variants mapped.
+  - Save normalization report.
+
+Step 2: Price inference (GPT-5)
+  - Provide GPT-5 with:
+    • canonical listing JSON
+    • top N market comparables (price, kms, year, city)
+    • SIAM trends for that model (monthly registrations)
+    • simple market heuristics (depreciation rates baseline)
+  - Prompt GPT-5 to return structured JSON:
+    {
+      "generated_price_low": number,
+      "generated_price_high": number,
+      "suggested_price": number,
+      "price_confidence": 0.0-1.0,
+      "factors": ["ageing","mileage","variant_rarity","color","region_demand"],
+      "raw_explanation": "text"
+    }
+  - Save GPT-5 output in llm_reports.
+
+Step 3: Live cross-check (Perplexity)
+  - Use Perplexity to fetch latest comparable listing URLs and compute similarity/confidence.
+  - Return top 5 live comparables and a copyright/similarity score.
+  - If Perplexity finds many comps with price outside GPT-5 range, mark price_confidence down.
+
+Step 4: Safety & phrasing (Anthropic)
+  - Provide Anthropic with the GPT-5 result + Perplexity comparables to produce a final user-friendly paragraph <= 150 words and a short cautionary disclaimer.
+  - Anthropic should also check for any PII or policy issues and redact sensitive content.
+
+Step 5: Persist AIInsight
+  - Compute ageing_index = function(year, months_since_reg, model_lifecycle_from_siam)
+  - Compute mileage_score = compare kms vs model-age baseline (from market_data+SIAM)
+  - Store AIInsight row with llm_reports and status ready.
+
+LLM PROMPTS (concrete starters)
+A. Gemini normalization prompt (short)
+"Normalize vehicle fields. Input: {make, model, variant, raw_text_variant}. Output JSON: {make, model, variant, normalized_variant_id, confidence, notes}."
+
+B. GPT-5 pricing prompt (structured)
+"Inputs:
+- Listing: <<<JSON LISTING>>>
+- Comparables (array): <<<JSON COMPARABLES>>>
+- SIAM monthly registration series for model: <<<CSV or JSON series>>>
+- Rules: prefer structured factors; return JSON only.
+Task:
+Estimate a reasonable market price range (low, high) and a suggested_price. Provide price_confidence 0-1, key factors, and a short explanation. Return exact JSON."
+
+C. Perplexity live-check prompt
+"Given this listing description and make/model/year, search the web for current comparable listings and return top 5 URLs with listed prices and similarity scores."
+
+D. Anthropic final narrative
+"Using the analysis JSON, produce a short consumer-friendly paragraph (<=150 words) that explains the price range, key risk factors, and confidence. If confidence <0.4 add the phrase 'High uncertainty — consult dealer'. Do not include PII."
+
+UI: AI Insights widget (frontend)
+- Location: listing detail page, under price & beside seller contact.
+- Compact view (collapsed):
+  • Badge: "Cararth AI Insights (Beta)"
+  • Display: "Indicative price: ₹X – ₹Y  • Confidence: High/Med/Low"
+- Expanded view:
+  • Suggested price, confidence meter, ageing_index, mileage_score (visual meter), top 3 factors, 3 sample comparables (title, price, link), last updated timestamp.
+  • Button: "Explain this price" → opens modal with Anthropic-paraphrased explanation + "How we calculated this" (GPT-5 factors bullet list).
+  • Feedback buttons: 👍 / 👎 (sends small feedback event to tune models).
+
+Where to show in listing JSON (API)
+GET /api/ai-insights/:listing_id returns:
+{
+  "listing_id": "...",
+  "price_range": {"low": 980000, "high": 1040000},
+  "suggested_price": 1010000,
+  "confidence": 0.82,
+  "ageing_index": 0.56,
+  "mileage_score": 0.42,
+  "factors": ["age", "mileage", "variant_rarity"],
+  "comparables": [{ "url":"...", "price":..., "kms":..., "similarity":0.87}, ...],
+  "explanation": "Anthropic-rendered text",
+  "last_updated":"ISO"
+}
+
+DISPLAY & UX NOTES
+- Always show a short disclaimer: "Indicative valuation provided by AI. Actual prices vary; negotiate with seller."
+- If listing_risk_score (existing pipeline) > threshold, show "Restricted — valuation not provided" and route to admin review.
+- Feedback loop: store user feedback to improve calibration.
+
+TESTS & QA
+- Unit tests:
+  • normalization mapping test (variants mapping).
+  • GPT-5 prompt tests with sample inputs => JSON schema validated.
+  • Perplexity wrapper returns comparables with expected fields.
+- Integration tests:
+  • end-to-end on a sample canonical listing: pipeline runs -> AIInsight row created -> API returns consistent JSON -> UI renders.
+  • failure scenarios: incomplete SIAM slice, no comparables, low-confidence branches.
+- E2E:
+  • Simulated CarDekho snapshot -> generate insight -> compare suggested_price vs median of comparables (assert within tolerance for 80% of cases).
+
+MONITORING & METRICS
+- Track: insights_generated_per_day, avg_price_confidence, feedback_rate (thumbs), pct_insights_with_comparables, LLM_latency_by_stage, LLM_error_rate.
+- Alerts: price_confidence_avg < 0.4 for >100 listings/day, LLM failure rate > 5%.
+
+SECURITY & PRIVACY
+- LLM outputs and raw inputs stored in DB/S3 but sensitive fields encrypted (use application-level encryption).
+- Rate-limit API endpoints to prevent abuse.
+- Do not store or display seller PII in LLM outputs.
+- Include opt-out toggle for sellers who don't want AI insights displayed (respect partner agreements).
+
+ACCEPTANCE CRITERIA (Phase 1–3)
+- SIAM: last 12 months ingested and queryable.
+- Market data: CarDekho recent snapshots ingested and normalized.
+- For 100 sample canonical listings, pipeline produces AIInsight rows within 60s of enqueue (or within job SLA), and suggested_price JSON validates against schema.
+- UI widget renders with price range and explanation and feedback buttons; feedback events recorded.
+- Perplexity comparables returned for >=70% of tested listings.
+- Manual spot-check: for 20 random listings, suggested_price within ±15% of median of live comparables for at least 14/20 listings.
+
+ENVIRONMENT VARIABLES (must be in Replit secrets)
+- LLM_GPT5_KEY
+- LLM_GEMINI_KEY
+- LLM_ANTHROPIC_KEY
+- LLM_PERPLEXITY_KEY
+- DATABASE_URL
+- REDIS_URL
+- S3_ENDPOINT / S3_ACCESS_KEY / S3_SECRET / S3_BUCKET
+- FIRECRAWL_API_KEY (if reprocessing)
+- JWT_SECRET (for protected endpoints)
+- ELASTICSEARCH_URL
+
+TIMELINE & PR BREAKDOWN (recommended)
+- Day 0–7: SIAM ingestion + CarDekho snapshot reprocessing; normalization service (Gemini) + mapping tests.
+- Day 8–14: GPT-5 pricing model implementation + Perplexity integration; store llm_reports.
+- Day 15–21: Anthropic narrative flow + AIInsight persistence; API endpoints.
+- Day 22–28: Frontend widget, feedback, tests, monitoring dashboard, and rollout to staging.
+- Day 29–35: Pilot on 100 live listings; gather feedback and adjust thresholds; then ramp to production.
+
+DOCUMENTATION & RUNBOOK (deliver with PRs)
+- README per PR: how to run locally (docker-compose: Postgres, Redis, ES), env vars, sample SIAM/CarDekho payloads, how to trigger jobs and validate outputs.
+- Runbook: how to re-run an insight job, how to purge llm_reports, how to rotate LLM keys.
+
+ASSUMPTIONS & SAFEGUARDS
+- If SIAM mapping to a specific variant is ambiguous, the system should lower confidence and surface that to the UI.
+- If the domain's ToS or listing_risk_score blocks automated valuation, mark AIInsight.status = "blocked" and do not compute until admin review.
+- Log all LLM prompts/outputs for audit purposes (retain per legal retention policy).
+
+END OF PROMPT
