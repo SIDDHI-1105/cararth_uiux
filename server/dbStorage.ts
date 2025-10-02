@@ -2667,4 +2667,47 @@ export class DatabaseStorage implements IStorage {
       return undefined;
     }
   }
+
+  // Hero stats for dynamic homepage
+  async getHeroStats(): Promise<{
+    totalListings: number;
+    totalPlatforms: number;
+    platforms: Array<{ name: string; count: number }>;
+  }> {
+    try {
+      // Get portal-wise listing counts
+      const portalCounts = await this.db
+        .select({
+          portal: cachedPortalListings.portal,
+          count: sql<number>`count(*)::int`
+        })
+        .from(cachedPortalListings)
+        .groupBy(cachedPortalListings.portal)
+        .orderBy(desc(sql`count(*)`));
+
+      // Get total listing count
+      const totalResult = await this.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(cachedPortalListings);
+      
+      const totalListings = totalResult[0]?.count || 0;
+      const totalPlatforms = portalCounts.length;
+
+      return {
+        totalListings,
+        totalPlatforms,
+        platforms: portalCounts.map((p: { portal: string; count: number }) => ({
+          name: p.portal,
+          count: p.count
+        }))
+      };
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getHeroStats operation');
+      return {
+        totalListings: 0,
+        totalPlatforms: 0,
+        platforms: []
+      };
+    }
+  }
 }

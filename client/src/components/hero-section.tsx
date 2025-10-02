@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search } from "lucide-react";
@@ -17,11 +18,28 @@ interface HeroSearchProps {
   isSearching?: boolean;
 }
 
+interface HeroStats {
+  success: boolean;
+  totalListings: number;
+  totalPlatforms: number;
+  platforms: Array<{
+    name: string;
+    count: number;
+  }>;
+  lastUpdated: string;
+}
+
 export default function HeroSection({ onSearch, hasSearched = false, isSearching = false }: HeroSearchProps) {
   const [brand, setBrand] = useState("");
   const [budget, setBudget] = useState("");
   const [city, setCity] = useState("");
   const [fuelType, setFuelType] = useState("");
+
+  // Fetch dynamic hero stats
+  const { data: heroStats, isLoading: statsLoading } = useQuery<HeroStats>({
+    queryKey: ['/api/hero-stats'],
+    refetchInterval: 60000, // Refetch every minute for real-time updates
+  });
 
   const handleSearch = () => {
     onSearch({ 
@@ -52,42 +70,58 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
               Buyers: Search all platforms in one place. Sellers: Post once, reach everywhere.
             </p>
             
-            {/* Live Stats */}
+            {/* Live Stats - Dynamic */}
             <div className="flex justify-center items-center gap-6 mb-6 text-sm sm:text-base">
               <div className="flex items-center gap-2">
-                <span className="text-3xl sm:text-4xl font-bold text-primary">300+</span>
+                <span className="text-3xl sm:text-4xl font-bold text-primary" data-testid="stat-total-listings">
+                  {statsLoading ? (
+                    <span className="animate-pulse">...</span>
+                  ) : (
+                    `${heroStats?.totalListings || 0}+`
+                  )}
+                </span>
                 <span className="text-muted-foreground">Verified Listings</span>
               </div>
               <div className="h-8 w-px bg-border"></div>
               <div className="flex items-center gap-2">
-                <span className="text-3xl sm:text-4xl font-bold text-primary">6</span>
+                <span className="text-3xl sm:text-4xl font-bold text-primary" data-testid="stat-total-platforms">
+                  {statsLoading ? (
+                    <span className="animate-pulse">...</span>
+                  ) : (
+                    heroStats?.totalPlatforms || 0
+                  )}
+                </span>
                 <span className="text-muted-foreground">Live Platforms</span>
               </div>
             </div>
             
-            {/* Connected Platforms Display - Real sources with live data */}
+            {/* Connected Platforms Display - Dynamic real-time data */}
             <div className="mb-8">
               <p className="text-sm text-muted-foreground mb-4">Aggregating Live Listings From:</p>
               <div className="flex flex-wrap justify-center items-center gap-3 opacity-80">
-                {[
-                  { name: "CarDekho", count: 191 },
-                  { name: "CarWale", count: 32 },
-                  { name: "OLX", count: 27 },
-                  { name: "Cars24", count: 21 },
-                  { name: "Maruti TrueValue", count: 21 },
-                  { name: "Facebook Marketplace", count: 16 }
-                ].map((source) => (
-                  <div 
-                    key={source.name} 
-                    className="text-sm font-medium px-3 py-1.5 rounded-md border shadow-sm text-foreground bg-background/70 dark:bg-card/70 border-border flex items-center gap-2"
-                  >
-                    <span>{source.name}</span>
-                    <span className="text-xs text-primary font-bold">({source.count})</span>
+                {statsLoading ? (
+                  <div className="animate-pulse flex gap-3">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                      <div key={i} className="h-8 w-32 bg-muted rounded-md"></div>
+                    ))}
                   </div>
-                ))}
-                <div className="text-sm font-medium text-primary font-bold px-3 py-1.5 bg-primary/10 rounded-md border border-primary/20">
-                  + More Coming Soon
-                </div>
+                ) : (
+                  <>
+                    {heroStats?.platforms.map((platform) => (
+                      <div 
+                        key={platform.name} 
+                        className="text-sm font-medium px-3 py-1.5 rounded-md border shadow-sm text-foreground bg-background/70 dark:bg-card/70 border-border flex items-center gap-2"
+                        data-testid={`platform-${platform.name.toLowerCase().replace(/\s+/g, '-')}`}
+                      >
+                        <span>{platform.name}</span>
+                        <span className="text-xs text-primary font-bold">({platform.count})</span>
+                      </div>
+                    ))}
+                    <div className="text-sm font-medium text-primary font-bold px-3 py-1.5 bg-primary/10 rounded-md border border-primary/20">
+                      + More Coming Soon
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>

@@ -206,6 +206,13 @@ export interface IStorage {
   // Canonical listings management
   getFlaggedListings(options?: { limit?: number }): Promise<any[]>;
   updateCanonicalListingStatus(listingId: string, status: string): Promise<any | undefined>;
+  
+  // Hero stats for dynamic homepage
+  getHeroStats(): Promise<{
+    totalListings: number;
+    totalPlatforms: number;
+    platforms: Array<{ name: string; count: number }>;
+  }>;
 }
 
 export class MemStorage implements IStorage {
@@ -1359,6 +1366,22 @@ export class MemStorage implements IStorage {
 
   async updateCanonicalListingStatus(listingId: string, status: string): Promise<any | undefined> {
     return undefined;
+  }
+
+  // Hero stats for dynamic homepage
+  async getHeroStats(): Promise<{
+    totalListings: number;
+    totalPlatforms: number;
+    platforms: Array<{ name: string; count: number }>;
+  }> {
+    // Return mock data for in-memory storage
+    return {
+      totalListings: this.cars.size,
+      totalPlatforms: 1,
+      platforms: [
+        { name: 'In-Memory Storage', count: this.cars.size }
+      ]
+    };
   }
 
   // Partner invite system - in-memory stubs

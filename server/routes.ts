@@ -592,6 +592,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Hero stats endpoint - public endpoint for dynamic hero section
+  app.get('/api/hero-stats', async (req, res) => {
+    try {
+      const stats = await storage.getHeroStats();
+      
+      res.json({
+        success: true,
+        totalListings: stats.totalListings,
+        totalPlatforms: stats.totalPlatforms,
+        platforms: stats.platforms,
+        lastUpdated: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Hero stats endpoint error:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to fetch hero stats',
+        totalListings: 0,
+        totalPlatforms: 0,
+        platforms: []
+      });
+    }
+  });
+
   // Image authenticity monitoring endpoints
   app.get('/api/monitoring/image-authenticity', async (req, res) => {
     try {
