@@ -174,7 +174,7 @@ export class OfficialFirecrawlMcpService extends EventEmitter {
   /**
    * Send JSON-RPC request to MCP server
    */
-  private async sendJsonRpcRequest(method: string, params?: any): Promise<any> {
+  private async sendJsonRpcRequest(method: string, params?: any, timeoutMs: number = 90000): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!this.mcpProcess?.stdin) {
         reject(new Error('MCP process not ready'));
@@ -192,7 +192,7 @@ export class OfficialFirecrawlMcpService extends EventEmitter {
       const timeout = setTimeout(() => {
         this.pendingRequests.delete(id);
         reject(new Error(`MCP request timeout: ${method}`));
-      }, 30000);
+      }, timeoutMs);
 
       this.pendingRequests.set(id, { resolve, reject, timeout });
 
@@ -212,33 +212,48 @@ export class OfficialFirecrawlMcpService extends EventEmitter {
     try {
       console.log(`🔗 Official MCP extraction: ${url}`);
       
-      // Use the official MCP firecrawl_extract tool
+      // Use the official MCP firecrawl_extract tool (allow generous timeout for complex pages)
       const result = await this.sendJsonRpcRequest('tools/call', {
         name: 'firecrawl_extract',
         arguments: {
-          url,
+          urls: [url], // MCP expects array of URLs
           schema: this.getCarListingSchema(),
-          prompt,
-          timeout: 60000,
-          waitFor: 8000
+          prompt
+          // No timeout constraints - let Firecrawl run as long as needed
         }
-      });
+      }, 300000); // 5-minute RPC timeout for complex marketplace pages
 
       console.log(`✅ MCP extraction completed for: ${url}`);
+      console.log(`📦 MCP result type: ${typeof result}, has content: ${!!result?.content}, is array: ${Array.isArray(result?.content)}`);
       
-      // Parse and validate the response
-      if (result?.content) {
-        const extractedData = typeof result.content === 'string' 
-          ? JSON.parse(result.content) 
-          : result.content;
+      // Parse and validate the MCP response (content is an array of parts)
+      if (result?.content && Array.isArray(result.content)) {
+        console.log(`📋 MCP content parts: ${result.content.length}, types: ${result.content.map((p: any) => p.type).join(', ')}`);
         
-        if (extractedData?.listings && Array.isArray(extractedData.listings)) {
-          return {
-            success: true,
-            data: extractedData,
-            listings: extractedData.listings
-          };
+        // Find the JSON content part from MCP response array
+        const jsonPart = result.content.find((part: any) => 
+          part.type === 'application/json' || part.type === 'text' 
+        );
+        
+        if (jsonPart?.text) {
+          console.log(`📄 Found JSON part, parsing ${jsonPart.text.length} chars...`);
+          const extractedData = JSON.parse(jsonPart.text);
+          
+          if (extractedData?.listings && Array.isArray(extractedData.listings)) {
+            console.log(`✅ Found ${extractedData.listings.length} listings in MCP response`);
+            return {
+              success: true,
+              data: extractedData,
+              listings: extractedData.listings
+            };
+          } else {
+            console.error(`❌ Parsed data has no listings array. Keys: ${Object.keys(extractedData || {}).join(', ')}`);
+          }
+        } else {
+          console.error(`❌ No JSON part found in content. Available: ${JSON.stringify(result.content[0])}`);
         }
+      } else {
+        console.error(`❌ MCP response has no content array. Result: ${JSON.stringify(result).substring(0, 300)}`);
       }
 
       return {
