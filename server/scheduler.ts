@@ -196,6 +196,203 @@ export class InternalScheduler {
           } catch (error) {
             console.error('❌ Reddit scraping failed:', error);
           }
+          
+          // Hyundai H-Promise certified pre-owned
+          try {
+            const { HyundaiPromiseScraper } = await import('./hyundaiPromiseScraper.js');
+            const { cachedPortalListings } = await import('../shared/schema.js');
+            const hyundaiScraper = new HyundaiPromiseScraper();
+            const result = await hyundaiScraper.scrapeListings({ maxPages: 3 });
+            
+            if (result.success && result.listings.length > 0) {
+              // Persist authenticated listings to database
+              let saved = 0;
+              for (const listing of result.listings) {
+                try {
+                  // Skip listings without required fields
+                  if (!listing.price || listing.price <= 0) {
+                    console.log(`⚠️ Skipping Hyundai listing without price: ${listing.title}`);
+                    continue;
+                  }
+                  
+                  // Check if listing already exists
+                  const existing = await storage.db
+                    .select()
+                    .from(cachedPortalListings)
+                    .where((eb: any) => eb.eq(cachedPortalListings.url, listing.url))
+                    .limit(1);
+                  
+                  if (existing.length === 0) {
+                    // Calculate hash for deduplication
+                    const hash = `hyundai-${listing.url}`;
+                    
+                    await storage.db.insert(cachedPortalListings).values({
+                      portal: 'Hyundai H-Promise',
+                      externalId: listing.id,
+                      url: listing.url,
+                      title: listing.title,
+                      brand: listing.brand,
+                      model: listing.model,
+                      year: listing.year,
+                      price: listing.price.toString(),
+                      mileage: listing.mileage || null,
+                      fuelType: listing.fuelType || null,
+                      transmission: listing.transmission || null,
+                      location: listing.location,
+                      city: listing.city,
+                      description: listing.description || null,
+                      images: listing.images || [],
+                      sellerType: listing.sellerType || 'dealer',
+                      verificationStatus: listing.verificationStatus || 'unverified',
+                      listingDate: listing.listingDate,
+                      hash: hash,
+                      origin: 'scraped'
+                    });
+                    saved++;
+                  }
+                } catch (err) {
+                  console.error(`❌ Failed to save Hyundai listing: ${err}`);
+                }
+              }
+              console.log(`✅ Hyundai H-Promise scraping: ${saved} new listings saved (${result.authenticatedListings} authenticated from ${result.totalFound} found)`);
+            } else if (!result.success) {
+              console.error(`❌ Hyundai H-Promise scraping failed: ${result.errors?.join(', ')}`);
+            } else {
+              console.log(`✅ Hyundai H-Promise scraping: No new listings found`);
+            }
+          } catch (error) {
+            console.error('❌ Hyundai H-Promise scraping failed:', error);
+          }
+          
+          // Mahindra First Choice certified pre-owned
+          try {
+            const { MahindraFirstChoiceScraper } = await import('./mahindraFirstChoiceScraper.js');
+            const { cachedPortalListings } = await import('../shared/schema.js');
+            const mahindraScraper = new MahindraFirstChoiceScraper();
+            const result = await mahindraScraper.scrapeListings({ maxPages: 3 });
+            
+            if (result.success && result.listings.length > 0) {
+              // Persist authenticated listings to database
+              let saved = 0;
+              for (const listing of result.listings) {
+                try {
+                  // Skip listings without required fields
+                  if (!listing.price || listing.price <= 0) {
+                    console.log(`⚠️ Skipping Mahindra listing without price: ${listing.title}`);
+                    continue;
+                  }
+                  
+                  const existing = await storage.db
+                    .select()
+                    .from(cachedPortalListings)
+                    .where((eb: any) => eb.eq(cachedPortalListings.url, listing.url))
+                    .limit(1);
+                  
+                  if (existing.length === 0) {
+                    const hash = `mahindra-${listing.url}`;
+                    
+                    await storage.db.insert(cachedPortalListings).values({
+                      portal: 'Mahindra First Choice',
+                      externalId: listing.id,
+                      url: listing.url,
+                      title: listing.title,
+                      brand: listing.brand,
+                      model: listing.model,
+                      year: listing.year,
+                      price: listing.price.toString(),
+                      mileage: listing.mileage || null,
+                      fuelType: listing.fuelType || null,
+                      transmission: listing.transmission || null,
+                      location: listing.location,
+                      city: listing.city,
+                      description: listing.description || null,
+                      images: listing.images || [],
+                      sellerType: listing.sellerType || 'dealer',
+                      verificationStatus: listing.verificationStatus || 'unverified',
+                      listingDate: listing.listingDate,
+                      hash: hash,
+                      origin: 'scraped'
+                    });
+                    saved++;
+                  }
+                } catch (err) {
+                  console.error(`❌ Failed to save Mahindra listing: ${err}`);
+                }
+              }
+              console.log(`✅ Mahindra First Choice scraping: ${saved} new listings saved (${result.authenticatedListings} authenticated from ${result.totalFound} found)`);
+            } else if (!result.success) {
+              console.error(`❌ Mahindra First Choice scraping failed: ${result.errors?.join(', ')}`);
+            } else {
+              console.log(`✅ Mahindra First Choice scraping: No new listings found`);
+            }
+          } catch (error) {
+            console.error('❌ Mahindra First Choice scraping failed:', error);
+          }
+          
+          // EauctionsIndia bank auctions
+          try {
+            const { EauctionsIndiaScraper } = await import('./eauctionsIndiaScraper.js');
+            const { cachedPortalListings } = await import('../shared/schema.js');
+            const bankAuctionScraper = new EauctionsIndiaScraper();
+            const result = await bankAuctionScraper.scrapeListings({ bank: 'all', maxPages: 2 });
+            
+            if (result.success && result.listings.length > 0) {
+              // Persist authenticated listings to database
+              let saved = 0;
+              for (const listing of result.listings) {
+                try {
+                  // Skip listings without required fields
+                  if (!listing.price || listing.price <= 0) {
+                    console.log(`⚠️ Skipping bank auction listing without price: ${listing.title}`);
+                    continue;
+                  }
+                  
+                  const existing = await storage.db
+                    .select()
+                    .from(cachedPortalListings)
+                    .where((eb: any) => eb.eq(cachedPortalListings.url, listing.url))
+                    .limit(1);
+                  
+                  if (existing.length === 0) {
+                    const hash = `bankauction-${listing.url}`;
+                    
+                    await storage.db.insert(cachedPortalListings).values({
+                      portal: 'EauctionsIndia',
+                      externalId: listing.id,
+                      url: listing.url,
+                      title: listing.title,
+                      brand: listing.brand,
+                      model: listing.model,
+                      year: listing.year,
+                      price: listing.price.toString(),
+                      mileage: listing.mileage || null,
+                      fuelType: listing.fuelType || null,
+                      transmission: listing.transmission || null,
+                      location: listing.location,
+                      city: listing.city,
+                      description: listing.description || null,
+                      images: listing.images || [],
+                      sellerType: 'bank',
+                      verificationStatus: listing.verificationStatus || 'unverified',
+                      listingDate: listing.listingDate,
+                      hash: hash,
+                      origin: 'scraped'
+                    });
+                    saved++;
+                  }
+                } catch (err) {
+                  console.error(`❌ Failed to save bank auction listing: ${err}`);
+                }
+              }
+              console.log(`✅ EauctionsIndia bank auctions: ${saved} new listings saved (${result.authenticatedListings} authenticated from ${result.totalFound} found)`);
+            } else if (!result.success) {
+              console.error(`❌ EauctionsIndia scraping failed: ${result.errors?.join(', ')}`);
+            } else {
+              console.log(`✅ EauctionsIndia bank auctions: No new listings found`);
+            }
+          } catch (error) {
+            console.error('❌ EauctionsIndia scraping failed:', error);
+          }
         }
         
         // Mark this hour as executed for today
