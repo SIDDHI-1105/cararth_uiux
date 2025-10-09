@@ -76,9 +76,80 @@ function HomeContent() {
     const baseSchema = createWebsiteSchema();
     const orgSchema = createOrganizationSchema();
     
+    // FAQ Schema for SEO/LLM optimization
+    const faqSchema = {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is CarArth.com?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "CarArth.com is India's first AI-powered used car search engine for both buyers and sellers, bringing listings from multiple sources into one smart, unified experience."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does CarArth find cars from multiple platforms?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "CarArth uses legally compliant web crawlers (Firecrawl and Apify) to fetch publicly available listings and organize them for easier discovery."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How is CarArth different from Cars24 or OLX Autos?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "CarArth is a search engine, not a dealer. It aggregates verified listings from different platforms instead of selling directly."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is CarArth data legal and verified?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. CarArth only indexes publicly available information and complies with Indian data and intermediary laws."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How can sellers list their cars?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Sellers can list via CarArth's syndication form and have their car appear on multiple platforms simultaneously."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What are the benefits of using AI in CarArth?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "AI helps match buyers to the most relevant listings, ensures zero duplication, and provides price insights using data from SIAM and market trends."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does CarArth charge sellers or buyers?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Basic listing is free; premium syndication and featured listings are optional paid upgrades."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Where does CarArth operate?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The pilot phase is live in Telangana, with expansion plans across India."
+          }
+        }
+      ]
+    };
+    
     return {
       "@context": "https://schema.org",
-      "@graph": [baseSchema, orgSchema]
+      "@graph": [baseSchema, orgSchema, faqSchema]
     };
   }, []);
 
