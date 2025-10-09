@@ -1,0 +1,136 @@
+🧠 REPLIT EXECUTION PROMPT: CARARTH.COM SELLER SYNDICATION — 100% AUTOMATION, COMPLIANCE-READY (PHASE 1 LAUNCH)
+Title: Deploy 100% Automated, Compliance-Ready Seller Syndication System for CarArth.com (Phase 1: OLX, Quikr, Facebook Marketplace)
+🎯 Objective
+Enable CarArth.com to allow sellers to post a car once and have it automatically:
+Verified and stored (with consent).
+Populated under “Exclusive Listings” in the buyer section.
+Syndicated across OLX Autos, Quikr Cars, and Facebook Marketplace automatically.
+Tagged with “Powered by CarArth.com” on every external platform.
+Audited, logged, and compliant with Indian intermediary and data laws (DPDP Act 2023).
+All syndication must only proceed after seller consent and avoid duplication across platforms via AI checks.
+⚙️ Tech Stack to Use
+Frontend: React (Replit)
+Backend: Flask (Python)
+Database: PostgreSQL
+Automation: Firecrawl + Apify
+AI Layer: GPT-5, Gemini, Anthropic (Claude), Perplexity
+Notifications: SendGrid or Gmail API
+Hosting: Replit
+🧩 Implementation Scope
+1. Seller Form + Consent Flow
+Add /sell page with fields:
+Name, Email, Phone, Car Brand, Model, Variant, Year, Color, Fuel Type, Transmission, Mileage, Price, City, Upload Images.
+Add mandatory checkbox + modal:
+“I agree to CarArth.com’s Terms & Conditions and authorize CarArth.com to publish my listing across verified marketplaces (OLX, Quikr, Facebook Marketplace).”
+Store consent metadata: seller_id, ip_address, timestamp, terms_version, consent_status=TRUE.
+Link to /terms page.
+2. Legal Disclaimer & /terms Page
+Plain-language disclaimer:
+“By submitting your vehicle for listing on CarArth.com, you authorize CarArth Technologies Pvt. Ltd. to publish your listing across verified marketplaces (OLX, Quikr, Facebook Marketplace). CarArth acts as an intermediary only — it does not modify, sell, or claim ownership of your content. You may withdraw consent anytime.”
+T&C must include:
+Consent and authority.
+Scope of syndication.
+Data handling and withdrawal clause.
+Liability disclaimer.
+Compliance under Indian IT and DPDP laws.
+3. Database Setup (PostgreSQL)
+Create tables:
+sellers — seller info
+listings — car details
+consent_log — consent records
+deduplication_log — duplicate check results
+syndication_log — platform posting records
+api_audit_log — outbound request/response logs
+4. AI Deduplication Microservice
+Before posting:
+Firecrawl & Apify search existing listings (OLX, Quikr, Facebook).
+Gemini compares attributes (make, model, year, price).
+Claude validates context.
+GPT-5 final decision — confidence score ≥ 0.85 → mark duplicate → skip syndication for that platform.
+Log all results in deduplication_log.
+5. Syndication Orchestrator (Automation Engine)
+Create a Flask orchestrator to:
+Accept standardized listing JSON (car_listing.json).
+Convert to platform-specific payloads.
+Append "Powered by CarArth.com" to titles/descriptions.
+Post via:
+OLX Autos: Apify actor or form automation.
+Quikr Cars: JSON POST or Apify automation.
+Facebook Marketplace: Facebook Graph API (requires verified CarArth business page).
+Write all results to syndication_log and api_audit_log.
+✅ Each post must include:
+listing_id, platform, status, url, powered_by, timestamp.
+6. Seller Notifications
+After syndication:
+Send email + dashboard update:
+“Your car listing is now live on OLX Autos, Quikr, and Facebook Marketplace. Duplicate detected on [X] — skipped reposting.”
+Include URLs, timestamps, and “Powered by CarArth.com” label.
+7. Buyer Section Integration
+Once seller submits → listing appears in Buyer Section → “Exclusive Listings” tab.
+Badge: “Verified Listing — Powered by CarArth.com”.
+Field: exclusive_show=true for verified, active listings.
+8. Compliance & Audit
+Maintain logs for every action in api_audit_log.
+Store consent + IP in consent_log.
+Add withdraw endpoint:
+POST /api/listings/{id}/withdraw → marks listing withdrawn, attempts delist.
+Add /admin/audit route for viewing API logs and platform status.
+Ensure rate-limiting: one syndication per platform per listing (per minute).
+9. Canonical JSON Schema (car_listing.json)
+{
+  "listing_id": "uuid",
+  "seller_id": "uuid",
+  "title": "Maruti Swift VXi 2019 - Excellent condition",
+  "brand": "Maruti",
+  "model": "Swift",
+  "variant": "VXi",
+  "year": 2019,
+  "color": "White",
+  "transmission": "Manual",
+  "fuel_type": "Petrol",
+  "mileage_km": 42000,
+  "price_inr": 550000,
+  "city": "Hyderabad",
+  "description": "Well maintained, single owner, service history available.",
+  "images": ["https://cdn.cararth.com/img1.jpg", "https://cdn.cararth.com/img2.jpg"],
+  "consent_version": "v1.0",
+  "consent_ts": "2025-10-09T12:00:00Z"
+}
+10. Immediate Platform Integrations (Phase 1)
+Platform	Integration	Method
+OLX Autos	✅	Apify actor (browser automation, rate-limited)
+Quikr Cars	✅	JSON POST (public form API)
+Facebook Marketplace	✅	Graph API (verified CarArth page token)
+Each listing must carry “Powered by CarArth.com” attribution.
+11. Monitoring & Alerts
+Build /admin/syndication/health route to show platform success/failure stats.
+Send email/Slack alert if syndication failure rate > 5% or rate-limit triggered.
+Log all Apify/Firecrawl responses in api_audit_log for traceability.
+12. Timeline (Immediate Execution)
+Week	Milestone	Output
+Week 1	Seller form, consent flow, DB setup	Listings + legal compliance ready
+Week 2	Deduplication + OLX + Quikr adapters	First automated posts live
+Week 3	Facebook Graph API + notification system	Full Phase 1 rollout
+Week 4	QA, monitoring, audit dashboard	Telangana pilot launch
+13. Environment Variables
+APIFY_TOKEN=
+FIRECRAWL_KEY=
+FACEBOOK_APP_ID=
+FACEBOOK_APP_SECRET=
+FACEBOOK_PAGE_TOKEN=
+SENDGRID_API_KEY=
+DB_URL=
+SENTRY_DSN=
+14. Acceptance Criteria
+✅ Seller form + consent works (no listing without consent).
+✅ Deduplication prevents re-posting duplicates.
+✅ Syndication successful to OLX, Quikr, Facebook (with attribution).
+✅ Seller receives platform URLs and “skipped” summary.
+✅ Buyer section auto-updates with Exclusive Listings.
+✅ Full audit trail stored and exportable.
+🚀 Start Execution Immediately
+Deploy backend services and DB migrations.
+Integrate Firecrawl + Apify + Facebook API keys.
+Test one live seller submission and verify listings appear on OLX, Quikr, Facebook.
+Confirm attribution, notifications, and compliance logs.
+Push live to Replit production environment.
