@@ -71,6 +71,18 @@ export default function Navbar() {
               >
                 🚗 Throttle Talk
               </Link>
+              <button
+                onClick={() => {
+                  const faqSection = document.getElementById('faq');
+                  if (faqSection) {
+                    faqSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }}
+                className="px-4 py-2 rounded-lg text-base md:text-lg font-semibold transition-all duration-300 text-foreground hover:text-accent hover:bg-accent/10"
+                data-testid="button-faq"
+              >
+                FAQs
+              </button>
             </div>
           </div>
           
@@ -197,6 +209,21 @@ export default function Navbar() {
               >
                 🚗 Throttle Talk
               </Link>
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setTimeout(() => {
+                    const faqSection = document.getElementById('faq');
+                    if (faqSection) {
+                      faqSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }, 100);
+                }}
+                className="block w-full text-left px-4 py-4 rounded-lg text-lg font-semibold transition-all duration-300 min-h-[44px] flex items-center text-foreground hover:text-accent hover:bg-accent/10"
+                data-testid="mobile-button-faq"
+              >
+                FAQs
+              </button>
               <div className="pt-2 border-t border-border mt-2 space-y-3">
                 {/* Social Media Links - Mobile */}
                 <div className="px-3">
