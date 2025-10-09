@@ -20,6 +20,7 @@ import ThrottleTalk from "./pages/news";
 import Community from "./pages/community";
 import PrivacyPolicy from "./pages/privacy-policy";
 import TermsOfService from "./pages/terms-of-service";
+import SyndicationTerms from "./pages/terms";
 import DataSourcesPolicy from "./pages/data-sources-policy";
 import ApiCompliance from "./pages/api-compliance";
 import AiTrainingDashboard from "./pages/ai-training-dashboard";
@@ -46,6 +47,7 @@ function Router() {
       <Route path="/news" component={ThrottleTalk} />
       <Route path="/community" component={Community} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
+      <Route path="/terms" component={SyndicationTerms} />
       <Route path="/terms-of-service" component={TermsOfService} />
       <Route path="/data-sources-policy" component={DataSourcesPolicy} />
       <Route path="/api-compliance" component={ApiCompliance} />
