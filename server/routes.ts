@@ -18,7 +18,9 @@ import {
   insertUserSearchIntentSchema,
   insertAiAnalysisMetricsSchema,
   sellerInfoSchema,
-  type SellerInfo
+  type SellerInfo,
+  insertSellerListingSchema,
+  type InsertSellerListing
 } from "@shared/schema";
 import {
   authenticityRequestSchema,
@@ -74,6 +76,8 @@ import { logError, ErrorCategory, createAppError, asyncHandler } from "./errorHa
 import multer from "multer";
 import { parse } from "csv-parse/sync";
 import { bulkUploadJobs } from "@shared/schema";
+import { SyndicationOrchestrator } from "./syndicationOrchestrator.js";
+import { AIDeduplicationService } from "./aiDeduplicationService.js";
 
 // Security utility functions to prevent PII leakage in logs
 const maskPhoneNumber = (phone: string): string => {
@@ -1753,6 +1757,164 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Failed to get contact inquiries:', error);
       res.status(500).json({ error: "Failed to retrieve contact inquiries" });
+    }
+  });
+
+  // SELLER SYNDICATION ROUTES
+  
+  // Submit seller listing for syndication
+  app.post("/api/seller/submit", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Validate listing data
+      const listingData = insertSellerListingSchema.parse({
+        ...req.body,
+        sellerId: userId,
+      });
+      
+      console.log(`🚀 New seller listing submission from user ${userId}`);
+      
+      // Create seller listing
+      const listing = await storage.createSellerListing(listingData as InsertSellerListing);
+      
+      // Log consent
+      await (storage as any).logSellerConsent({
+        sellerId: userId,
+        listingId: listing.id,
+        platformsAuthorized: listing.targetPlatforms || ['OLX', 'Quikr', 'Facebook'],
+        consentType: 'initial_submission',
+        ipAddress: req.ip || 'unknown',
+        userAgent: req.headers['user-agent'] || 'unknown'
+      });
+      
+      console.log(`✅ Consent logged for listing ${listing.id}`);
+      
+      // Run AI deduplication (async, don't block response)
+      (async () => {
+        try {
+          const deduplicationService = new AIDeduplicationService(storage as any);
+          const deduplicationMatches = await deduplicationService.checkForDuplicates(listing);
+          
+          console.log(`🔍 Deduplication complete for listing ${listing.id}: ${deduplicationMatches.length} potential duplicates found`);
+          
+          // If high confidence duplicates found (≥85%), skip syndication
+          const highConfidenceDuplicates = deduplicationMatches.filter((d: any) => d.confidence >= 0.85);
+          
+          if (highConfidenceDuplicates.length === 0) {
+            // No high-confidence duplicates, proceed with syndication
+            console.log(`📡 Starting syndication for listing ${listing.id}`);
+            const orchestrator = new SyndicationOrchestrator(storage as any);
+            const consentedPlatforms = listing.targetPlatforms || ['OLX', 'Quikr', 'Facebook'];
+            const results = await orchestrator.syndicateListing(listing, consentedPlatforms);
+            
+            console.log(`✅ Syndication complete for listing ${listing.id}:`, 
+              results.map((r: any) => `${r.platform}=${r.success ? 'success' : 'failed'}`).join(', '));
+          } else {
+            console.log(`⚠️ Skipping syndication for listing ${listing.id}: ${highConfidenceDuplicates.length} high-confidence duplicates found`);
+          }
+        } catch (error) {
+          console.error(`❌ Error in deduplication/syndication for listing ${listing.id}:`, error);
+        }
+      })();
+      
+      res.status(201).json({
+        success: true,
+        listing,
+        message: "Listing submitted successfully. Syndication in progress."
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid listing data", details: error.errors });
+      }
+      console.error('Failed to submit seller listing:', error);
+      res.status(500).json({ error: "Failed to submit listing" });
+    }
+  });
+  
+  // Withdraw listing from all platforms
+  app.post("/api/listings/:id/withdraw", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const listingId = req.params.id;
+      
+      // Get listing and verify ownership
+      const listings = await storage.getSellerListings(userId);
+      const listing = listings.find((l: any) => l.id === listingId);
+      
+      if (!listing) {
+        return res.status(404).json({ error: "Listing not found" });
+      }
+      
+      console.log(`🛑 Withdrawing listing ${listingId} for user ${userId}`);
+      
+      // Update listing status
+      await storage.updateSellerListing(listingId, { status: 'withdrawn' });
+      
+      // Log consent withdrawal
+      await (storage as any).logSellerConsent({
+        sellerId: userId,
+        listingId: listingId,
+        platformsAuthorized: [],
+        consentType: 'withdrawal',
+        ipAddress: req.ip || 'unknown',
+        userAgent: req.headers['user-agent'] || 'unknown'
+      });
+      
+      // TODO: Implement actual platform withdrawal API calls
+      // For now, just mark as withdrawn in our system
+      
+      res.json({
+        success: true,
+        message: "Listing withdrawn successfully"
+      });
+    } catch (error) {
+      console.error('Failed to withdraw listing:', error);
+      res.status(500).json({ error: "Failed to withdraw listing" });
+    }
+  });
+  
+  // Admin: Get syndication health and audit logs
+  app.get("/admin/syndication/health", isAuthenticated, async (req: any, res) => {
+    try {
+      // TODO: Add admin role check
+      const userId = req.user.claims.sub;
+      
+      // Get recent execution logs for each platform
+      const olxLogs = await (storage as any).getSyndicationLogsByPlatform('OLX', { limit: 10 });
+      const quikrLogs = await (storage as any).getSyndicationLogsByPlatform('Quikr', { limit: 10 });
+      const fbLogs = await (storage as any).getSyndicationLogsByPlatform('Facebook', { limit: 10 });
+      const recentLogs = [...olxLogs, ...quikrLogs, ...fbLogs].sort((a: any, b: any) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      ).slice(0, 20);
+      
+      // Get recent API audit logs
+      const recentApiLogs = await (storage as any).getApiAuditLogs({ limit: 50 });
+      
+      // Calculate platform success rates
+      const platformStats: Record<string, { total: number; success: number; failed: number }> = {};
+      
+      for (const log of recentLogs) {
+        if (!platformStats[log.platform]) {
+          platformStats[log.platform] = { total: 0, success: 0, failed: 0 };
+        }
+        platformStats[log.platform].total++;
+        if (log.success) {
+          platformStats[log.platform].success++;
+        } else {
+          platformStats[log.platform].failed++;
+        }
+      }
+      
+      res.json({
+        platformStats,
+        recentExecutions: recentLogs,
+        recentApiCalls: recentApiLogs,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Failed to get syndication health:', error);
+      res.status(500).json({ error: "Failed to retrieve health data" });
     }
   });
 
