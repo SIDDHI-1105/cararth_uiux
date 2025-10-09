@@ -147,17 +147,13 @@ export class InternalScheduler {
         console.log(`🔄 Running ${pipelineMode} ingestion pipeline`);
         
         if (pipelineMode === 'lean_v1') {
-          // Import and run orchestrated ingestion with status check
+          // Import and run orchestrated ingestion
           const { orchestratedBatchIngestion } = await import('./orchestratedIngestion.js');
-          const status = orchestratedBatchIngestion.getSystemStatus();
           
-          if (!status.isRunning) {
-            const cities = ['hyderabad', 'bangalore', 'mumbai', 'delhi', 'pune', 'chennai'];
-            await orchestratedBatchIngestion.runIngestion(cities);
-            console.log('✅ Orchestrated lean ingestion completed successfully');
-          } else {
-            console.log('⏳ Orchestrated ingestion already in progress, skipping scheduled run');
-          }
+          // Run orchestrated ingestion (has internal concurrency handling)
+          const cities = ['hyderabad', 'bangalore', 'mumbai', 'delhi', 'pune', 'chennai'];
+          await orchestratedBatchIngestion.runIngestion(cities);
+          console.log('✅ Orchestrated lean ingestion completed successfully');
         } else {
           // Fallback to legacy batch ingestion
           const { batchIngestionService } = await import('./batchIngestion.js');
