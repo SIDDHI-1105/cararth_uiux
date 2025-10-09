@@ -24,6 +24,10 @@ import {
   ingestionLogs,
   partnerInvites,
   partnerAccounts,
+  sellerConsentLog,
+  deduplicationResults,
+  syndicationExecutionLog,
+  externalApiAuditLog,
   type User, 
   type InsertUser, 
   type UpsertUser,
@@ -56,7 +60,15 @@ import {
   type SarfaesiJob,
   type InsertSarfaesiJob,
   type AdminAuditLog,
-  type InsertAdminAuditLog
+  type InsertAdminAuditLog,
+  type SellerConsentLog,
+  type InsertSellerConsentLog,
+  type DeduplicationResult,
+  type InsertDeduplicationResult,
+  type SyndicationExecutionLog,
+  type InsertSyndicationExecutionLog,
+  type ExternalApiAuditLog,
+  type InsertExternalApiAuditLog
 } from "@shared/schema";
 import type { IStorage } from "./storage.js";
 import { logError, ErrorCategory, createAppError } from "./errorHandling.js";
@@ -2708,6 +2720,253 @@ export class DatabaseStorage implements IStorage {
         totalPlatforms: 0,
         platforms: []
       };
+    }
+  }
+
+  // ============================================================================
+  // SELLER SYNDICATION COMPLIANCE & AUTOMATION IMPLEMENTATIONS
+  // ============================================================================
+  
+  // Seller Consent Management
+  async logSellerConsent(consent: InsertSellerConsentLog): Promise<SellerConsentLog> {
+    try {
+      const result = await this.db.insert(sellerConsentLog).values(consent).returning();
+      logError({ message: 'Seller consent logged', statusCode: 200 }, 'logSellerConsent success');
+      return result[0];
+    } catch (error) {
+      const appError = createAppError('Database operation failed', 500, ErrorCategory.DATABASE);
+      logError(appError, 'logSellerConsent operation');
+      throw appError;
+    }
+  }
+
+  async getSellerConsent(userId: string): Promise<SellerConsentLog | undefined> {
+    try {
+      const result = await this.db.select().from(sellerConsentLog)
+        .where(and(eq(sellerConsentLog.userId, userId), eq(sellerConsentLog.consentStatus, true)))
+        .orderBy(desc(sellerConsentLog.consentTimestamp))
+        .limit(1);
+      return result[0];
+    } catch (error) {
+      const appError = createAppError('Database operation failed', 500, ErrorCategory.DATABASE);
+      logError(appError, 'getSellerConsent operation');
+      throw appError;
+    }
+  }
+
+  async getSellerConsentHistory(userId: string): Promise<SellerConsentLog[]> {
+    try {
+      return await this.db.select().from(sellerConsentLog)
+        .where(eq(sellerConsentLog.userId, userId))
+        .orderBy(desc(sellerConsentLog.consentTimestamp));
+    } catch (error) {
+      const appError = createAppError('Database operation failed', 500, ErrorCategory.DATABASE);
+      logError(appError, 'getSellerConsentHistory operation');
+      throw appError;
+    }
+  }
+
+  async revokeSellerConsent(userId: string, ipAddress: string, userAgent: string): Promise<SellerConsentLog> {
+    try {
+      // Fetch the current active consent to preserve metadata
+      const currentConsent = await this.getSellerConsent(userId);
+      const revocation: InsertSellerConsentLog = {
+        userId,
+        sellerId: userId,
+        consentType: 'syndication',
+        consentStatus: false,
+        termsVersion: currentConsent?.termsVersion || 'v1.0',
+        ipAddress,
+        userAgent,
+        platformsConsented: currentConsent?.platformsConsented || []
+      };
+      const result = await this.db.insert(sellerConsentLog).values(revocation).returning();
+      logError({ message: 'Seller consent revoked', statusCode: 200 }, 'revokeSellerConsent success');
+      return result[0];
+    } catch (error) {
+      const appError = createAppError('Database operation failed', 500, ErrorCategory.DATABASE);
+      logError(appError, 'revokeSellerConsent operation');
+      throw appError;
+    }
+  }
+
+  // Deduplication Management
+  async createDeduplicationResult(result: InsertDeduplicationResult): Promise<DeduplicationResult> {
+    try {
+      const dbResult = await this.db.insert(deduplicationResults).values(result).returning();
+      logError({ message: 'Deduplication result created', statusCode: 200 }, 'createDeduplicationResult success');
+      return dbResult[0];
+    } catch (error) {
+      const appError = createAppError('Database operation failed', 500, ErrorCategory.DATABASE);
+      logError(appError, 'createDeduplicationResult operation');
+      throw appError;
+    }
+  }
+
+  async getDeduplicationResults(listingId: string): Promise<DeduplicationResult[]> {
+    try {
+      return await this.db.select().from(deduplicationResults)
+        .where(eq(deduplicationResults.listingId, listingId))
+        .orderBy(desc(deduplicationResults.createdAt));
+    } catch (error) {
+      const appError = createAppError('Database operation failed', 500, ErrorCategory.DATABASE);
+      logError(appError, 'getDeduplicationResults operation');
+      throw appError;
+    }
+  }
+
+  async getDeduplicationResultByPlatform(listingId: string, platform: string): Promise<DeduplicationResult | undefined> {
+    try {
+      const result = await this.db.select().from(deduplicationResults)
+        .where(and(eq(deduplicationResults.listingId, listingId), eq(deduplicationResults.platform, platform)))
+        .limit(1);
+      return result[0];
+    } catch (error) {
+      const appError = createAppError('Database operation failed', 500, ErrorCategory.DATABASE);
+      logError(appError, 'getDeduplicationResultByPlatform operation');
+      throw appError;
+    }
+  }
+
+  // Syndication Execution Management
+  async createSyndicationLog(log: InsertSyndicationExecutionLog): Promise<SyndicationExecutionLog> {
+    try {
+      const result = await this.db.insert(syndicationExecutionLog).values(log).returning();
+      logError({ message: 'Syndication log created', statusCode: 200 }, 'createSyndicationLog success');
+      return result[0];
+    } catch (error) {
+      const appError = createAppError('Database operation failed', 500, ErrorCategory.DATABASE);
+      logError(appError, 'createSyndicationLog operation');
+      throw appError;
+    }
+  }
+
+  async updateSyndicationLog(id: string, updates: Partial<SyndicationExecutionLog>): Promise<SyndicationExecutionLog | undefined> {
+    try {
+      const result = await this.db.update(syndicationExecutionLog)
+        .set(updates)
+        .where(eq(syndicationExecutionLog.id, id))
+        .returning();
+      logError({ message: 'Syndication log updated', statusCode: 200 }, 'updateSyndicationLog success');
+      return result[0];
+    } catch (error) {
+      const appError = createAppError('Database operation failed', 500, ErrorCategory.DATABASE);
+      logError(appError, 'updateSyndicationLog operation');
+      throw appError;
+    }
+  }
+
+  async getSyndicationLogs(listingId: string): Promise<SyndicationExecutionLog[]> {
+    try {
+      return await this.db.select().from(syndicationExecutionLog)
+        .where(eq(syndicationExecutionLog.listingId, listingId))
+        .orderBy(desc(syndicationExecutionLog.executedAt));
+    } catch (error) {
+      const appError = createAppError('Database operation failed', 500, ErrorCategory.DATABASE);
+      logError(appError, 'getSyndicationLogs operation');
+      throw appError;
+    }
+  }
+
+  async getSyndicationLogsByPlatform(platform: string, options?: { limit?: number; status?: string }): Promise<SyndicationExecutionLog[]> {
+    try {
+      const conditions = [eq(syndicationExecutionLog.platform, platform)];
+      if (options?.status) {
+        conditions.push(eq(syndicationExecutionLog.status, options.status));
+      }
+      
+      let query = this.db.select().from(syndicationExecutionLog)
+        .where(and(...conditions))
+        .orderBy(desc(syndicationExecutionLog.executedAt));
+      
+      if (options?.limit) {
+        query = query.limit(options.limit);
+      }
+      
+      return await query;
+    } catch (error) {
+      const appError = createAppError('Database operation failed', 500, ErrorCategory.DATABASE);
+      logError(appError, 'getSyndicationLogsByPlatform operation');
+      throw appError;
+    }
+  }
+
+  async getSyndicationLogsBySeller(sellerId: string): Promise<SyndicationExecutionLog[]> {
+    try {
+      return await this.db.select().from(syndicationExecutionLog)
+        .where(eq(syndicationExecutionLog.sellerId, sellerId))
+        .orderBy(desc(syndicationExecutionLog.executedAt));
+    } catch (error) {
+      const appError = createAppError('Database operation failed', 500, ErrorCategory.DATABASE);
+      logError(appError, 'getSyndicationLogsBySeller operation');
+      throw appError;
+    }
+  }
+
+  async getFailedSyndications(options?: { limit?: number }): Promise<SyndicationExecutionLog[]> {
+    try {
+      const limit = options?.limit || 50;
+      return await this.db.select().from(syndicationExecutionLog)
+        .where(eq(syndicationExecutionLog.status, 'failed'))
+        .orderBy(desc(syndicationExecutionLog.executedAt))
+        .limit(limit);
+    } catch (error) {
+      const appError = createAppError('Database operation failed', 500, ErrorCategory.DATABASE);
+      logError(appError, 'getFailedSyndications operation');
+      throw appError;
+    }
+  }
+
+  // External API Audit Management
+  async logExternalApiCall(log: InsertExternalApiAuditLog): Promise<ExternalApiAuditLog> {
+    try {
+      const result = await this.db.insert(externalApiAuditLog).values(log).returning();
+      return result[0];
+    } catch (error) {
+      const appError = createAppError('Database operation failed', 500, ErrorCategory.DATABASE);
+      logError(appError, 'logExternalApiCall operation');
+      throw appError;
+    }
+  }
+
+  async getApiAuditLogs(options?: { apiProvider?: string; operationType?: string; userId?: string; listingId?: string; isError?: boolean; limit?: number }): Promise<ExternalApiAuditLog[]> {
+    try {
+      const conditions = [];
+      if (options?.apiProvider) conditions.push(eq(externalApiAuditLog.apiProvider, options.apiProvider));
+      if (options?.operationType) conditions.push(eq(externalApiAuditLog.operationType, options.operationType));
+      if (options?.userId) conditions.push(eq(externalApiAuditLog.userId, options.userId));
+      if (options?.listingId) conditions.push(eq(externalApiAuditLog.listingId, options.listingId));
+      if (options?.isError !== undefined) conditions.push(eq(externalApiAuditLog.isError, options.isError));
+      
+      let query = this.db.select().from(externalApiAuditLog);
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+      query = query.orderBy(desc(externalApiAuditLog.createdAt));
+      if (options?.limit) {
+        query = query.limit(options.limit);
+      }
+      return await query;
+    } catch (error) {
+      const appError = createAppError('Database operation failed', 500, ErrorCategory.DATABASE);
+      logError(appError, 'getApiAuditLogs operation');
+      throw appError;
+    }
+  }
+
+  async getApiAuditStats(provider: string): Promise<{ totalCalls: number; errorCount: number; totalCost: number; avgResponseTime: number }> {
+    try {
+      const result = await this.db.select({
+        totalCalls: count(),
+        errorCount: sql<number>`count(case when is_error = true then 1 end)::int`,
+        totalCost: sql<number>`coalesce(sum(estimated_cost), 0)::numeric`,
+        avgResponseTime: sql<number>`coalesce(avg(response_time_ms), 0)::int`
+      }).from(externalApiAuditLog).where(eq(externalApiAuditLog.apiProvider, provider));
+      return result[0] || { totalCalls: 0, errorCount: 0, totalCost: 0, avgResponseTime: 0 };
+    } catch (error) {
+      const appError = createAppError('Database operation failed', 500, ErrorCategory.DATABASE);
+      logError(appError, 'getApiAuditStats operation');
+      throw appError;
     }
   }
 }

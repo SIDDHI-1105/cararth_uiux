@@ -27,7 +27,15 @@ import {
   type SarfaesiJob,
   type InsertSarfaesiJob,
   type AdminAuditLog,
-  type InsertAdminAuditLog
+  type InsertAdminAuditLog,
+  type SellerConsentLog,
+  type InsertSellerConsentLog,
+  type DeduplicationResult,
+  type InsertDeduplicationResult,
+  type SyndicationExecutionLog,
+  type InsertSyndicationExecutionLog,
+  type ExternalApiAuditLog,
+  type InsertExternalApiAuditLog
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -212,6 +220,47 @@ export interface IStorage {
     totalListings: number;
     totalPlatforms: number;
     platforms: Array<{ name: string; count: number }>;
+  }>;
+  
+  // ============================================================================
+  // SELLER SYNDICATION COMPLIANCE & AUTOMATION
+  // DPDP Act 2023 compliant consent, deduplication, syndication, and audit
+  // ============================================================================
+  
+  // Seller Consent Management
+  logSellerConsent(consent: InsertSellerConsentLog): Promise<SellerConsentLog>;
+  getSellerConsent(userId: string): Promise<SellerConsentLog | undefined>;
+  getSellerConsentHistory(userId: string): Promise<SellerConsentLog[]>;
+  revokeSellerConsent(userId: string, ipAddress: string, userAgent: string): Promise<SellerConsentLog>;
+  
+  // Deduplication Management
+  createDeduplicationResult(result: InsertDeduplicationResult): Promise<DeduplicationResult>;
+  getDeduplicationResults(listingId: string): Promise<DeduplicationResult[]>;
+  getDeduplicationResultByPlatform(listingId: string, platform: string): Promise<DeduplicationResult | undefined>;
+  
+  // Syndication Execution Management
+  createSyndicationLog(log: InsertSyndicationExecutionLog): Promise<SyndicationExecutionLog>;
+  updateSyndicationLog(id: string, updates: Partial<SyndicationExecutionLog>): Promise<SyndicationExecutionLog | undefined>;
+  getSyndicationLogs(listingId: string): Promise<SyndicationExecutionLog[]>;
+  getSyndicationLogsByPlatform(platform: string, options?: { limit?: number; status?: string }): Promise<SyndicationExecutionLog[]>;
+  getSyndicationLogsBySeller(sellerId: string): Promise<SyndicationExecutionLog[]>;
+  getFailedSyndications(options?: { limit?: number }): Promise<SyndicationExecutionLog[]>;
+  
+  // External API Audit Management
+  logExternalApiCall(log: InsertExternalApiAuditLog): Promise<ExternalApiAuditLog>;
+  getApiAuditLogs(options?: {
+    apiProvider?: string;
+    operationType?: string;
+    userId?: string;
+    listingId?: string;
+    isError?: boolean;
+    limit?: number;
+  }): Promise<ExternalApiAuditLog[]>;
+  getApiAuditStats(provider: string): Promise<{
+    totalCalls: number;
+    errorCount: number;
+    totalCost: number;
+    avgResponseTime: number;
   }>;
 }
 
