@@ -1975,39 +1975,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin: Get syndication health and audit logs
   app.get("/admin/syndication/health", isAuthenticated, async (req: any, res) => {
     try {
-      // TODO: Add admin role check
-      const userId = req.user.claims.sub;
+      // Check admin role
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ error: 'Admin access required' });
+      }
       
       // Get recent execution logs for each platform
       const olxLogs = await (storage as any).getSyndicationLogsByPlatform('OLX', { limit: 10 });
       const quikrLogs = await (storage as any).getSyndicationLogsByPlatform('Quikr', { limit: 10 });
       const fbLogs = await (storage as any).getSyndicationLogsByPlatform('Facebook', { limit: 10 });
-      const recentLogs = [...olxLogs, ...quikrLogs, ...fbLogs].sort((a: any, b: any) => 
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      ).slice(0, 20);
+      const allLogs = [...olxLogs, ...quikrLogs, ...fbLogs];
       
       // Get recent API audit logs
       const recentApiLogs = await (storage as any).getApiAuditLogs({ limit: 50 });
       
-      // Calculate platform success rates
-      const platformStats: Record<string, { total: number; success: number; failed: number }> = {};
+      // Calculate platform stats with success rates
+      const platformStatsMap: Record<string, { total: number; success: number; failed: number; lastPostAt: Date | null }> = {};
       
-      for (const log of recentLogs) {
-        if (!platformStats[log.platform]) {
-          platformStats[log.platform] = { total: 0, success: 0, failed: 0 };
+      for (const log of allLogs) {
+        if (!platformStatsMap[log.platform]) {
+          platformStatsMap[log.platform] = { total: 0, success: 0, failed: 0, lastPostAt: null };
         }
-        platformStats[log.platform].total++;
+        platformStatsMap[log.platform].total++;
         if (log.success) {
-          platformStats[log.platform].success++;
+          platformStatsMap[log.platform].success++;
         } else {
-          platformStats[log.platform].failed++;
+          platformStatsMap[log.platform].failed++;
+        }
+        
+        // Track most recent post
+        if (!platformStatsMap[log.platform].lastPostAt || log.createdAt > platformStatsMap[log.platform].lastPostAt) {
+          platformStatsMap[log.platform].lastPostAt = log.createdAt;
         }
       }
       
+      // Convert to array format expected by frontend
+      const platforms = Object.entries(platformStatsMap).map(([platform, stats]) => ({
+        platform,
+        totalListings: stats.total,
+        successfulPosts: stats.success,
+        failedPosts: stats.failed,
+        successRate: stats.total > 0 ? (stats.success / stats.total) * 100 : 0,
+        lastPostAt: stats.lastPostAt ? stats.lastPostAt.toISOString() : null,
+      }));
+      
+      // Get compliance data (consent logs)
+      const activeConsents = await (storage as any).getActiveConsentCount?.() || 0;
+      const revokedConsents = await (storage as any).getRevokedConsentCount?.() || 0;
+      const totalConsents = activeConsents + revokedConsents;
+      
       res.json({
-        platformStats,
-        recentExecutions: recentLogs,
-        recentApiCalls: recentApiLogs,
+        platforms,
+        recentAuditLogs: recentApiLogs,
+        compliance: {
+          activeConsents,
+          revokedConsents,
+          totalConsents,
+        },
         timestamp: new Date().toISOString()
       });
     } catch (error) {
