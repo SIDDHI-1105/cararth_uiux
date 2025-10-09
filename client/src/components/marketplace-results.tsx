@@ -11,10 +11,11 @@ import {
   TrendingUp, TrendingDown, Minus, ExternalLink, Verified, 
   MapPin, Calendar, Gauge, Fuel, Settings, Star, Filter,
   BarChart3, Users, Clock, Award, Eye, Phone, Database, Shield,
-  CheckCircle, Info, DollarSign
+  CheckCircle, Info, DollarSign, Sparkles
 } from "lucide-react";
 import { Link } from "wouter";
 import { hasValidImages } from "@/lib/car-utils";
+import { useQuery } from "@tanstack/react-query";
 
 interface MarketplaceListing {
   id: string;
@@ -73,6 +74,46 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
   const [selectedCar, setSelectedCar] = useState<MarketplaceListing | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showDataProcessing, setShowDataProcessing] = useState(true);
+  
+  // Extract filters from search query (if available) to apply to exclusive listings
+  const searchFilters = useMemo(() => {
+    const params: Record<string, string> = {};
+    
+    // Extract city from searchQuery if present
+    const cityMatch = searchQuery?.match(/(?:in|near|at|from)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i);
+    if (cityMatch) {
+      params.city = cityMatch[1].trim();
+    }
+    
+    // Extract brand/model from search result if available
+    if (searchResult?.listings && searchResult.listings.length > 0) {
+      const firstListing = searchResult.listings[0];
+      if (firstListing.brand) params.brand = firstListing.brand;
+      if (firstListing.model) params.model = firstListing.model;
+    }
+    
+    // Extract price range from analytics
+    if (searchResult?.analytics?.priceRange) {
+      params.priceMin = String(searchResult.analytics.priceRange.min);
+      params.priceMax = String(searchResult.analytics.priceRange.max);
+    }
+    
+    return params;
+  }, [searchQuery, searchResult]);
+  
+  // Fetch exclusive CarArth listings with filters
+  const { data: exclusiveData, isLoading: exclusiveLoading } = useQuery<{ listings: MarketplaceListing[]; total: number }>({
+    queryKey: ['/api/exclusive-listings', searchFilters],
+    queryFn: async () => {
+      const params = new URLSearchParams(searchFilters);
+      const url = `/api/exclusive-listings${params.toString() ? `?${params.toString()}` : ''}`;
+      const res = await fetch(url, { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch exclusive listings');
+      return res.json();
+    },
+    staleTime: 30000, // 30 seconds
+    refetchInterval: 60000, // Auto-refresh every minute for real-time updates
+  });
 
   // Sort listings to prioritize those with valid images
   const sortedListings = useMemo(() => {
@@ -558,8 +599,12 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
 
       {/* Listings */}
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="all" data-testid="tab-all">All ({sortedListings.length})</TabsTrigger>
+          <TabsTrigger value="exclusive" data-testid="tab-exclusive" className="gap-1">
+            <Sparkles className="w-3 h-3" />
+            Exclusive ({exclusiveData?.total || 0})
+          </TabsTrigger>
           <TabsTrigger value="bestDeals" data-testid="tab-best-deals">Best Deals ({searchResult.recommendations.bestDeals.length})</TabsTrigger>
           <TabsTrigger value="newListings" data-testid="tab-new">New ({searchResult.recommendations.newListings.length})</TabsTrigger>
           <TabsTrigger value="certified" data-testid="tab-certified">Certified ({searchResult.recommendations.certified.length})</TabsTrigger>
@@ -567,6 +612,52 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
 
         <TabsContent value="all" className="space-y-4">
           {sortedListings.map(listing => renderListingCard(listing))}
+        </TabsContent>
+
+        <TabsContent value="exclusive" className="space-y-4">
+          {exclusiveLoading ? (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" />
+                  <span>Loading exclusive listings...</span>
+                </div>
+              </CardContent>
+            </Card>
+          ) : exclusiveData?.listings && exclusiveData.listings.length > 0 ? (
+            <>
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 p-4 rounded-lg border border-blue-200 dark:border-blue-800 mb-4">
+                <div className="flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <h3 className="font-semibold text-blue-900 dark:text-blue-100">CarArth Exclusive Listings</h3>
+                </div>
+                <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                  Verified sellers • Authenticated documents • Direct contact • No middlemen
+                </p>
+              </div>
+              {exclusiveData.listings.map(listing => renderListingCard({
+                ...listing,
+                source: 'CarArth Exclusive'
+              }, false))}
+            </>
+          ) : (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <Sparkles className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No Exclusive Listings Yet</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Be the first to list your car exclusively on CarArth for maximum visibility.
+                  </p>
+                  <Link href="/sell-car">
+                    <Button className="btn-metallic" data-testid="button-list-car">
+                      List Your Car
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="bestDeals" className="space-y-4">

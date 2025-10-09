@@ -2271,6 +2271,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get price insights for a car
+  // Get exclusive CarArth seller listings
+  app.get("/api/exclusive-listings", async (req, res) => {
+    try {
+      const { city, brand, model, priceMin, priceMax, limit = 20 } = req.query;
+      
+      if (!(storage instanceof DatabaseStorage)) {
+        return res.status(501).json({ error: 'Exclusive listings require database storage' });
+      }
+      
+      // Build SQL query to get seller listings
+      let query = db
+        .select({
+          id: sellerListings.id,
+          title: sellerListings.title,
+          brand: sellerListings.brand,
+          model: sellerListings.model,
+          year: sellerListings.year,
+          price: sellerListings.price,
+          mileage: sellerListings.mileage,
+          fuelType: sellerListings.fuelType,
+          transmission: sellerListings.transmission,
+          location: sellerListings.location,
+          city: sellerListings.city,
+          state: sellerListings.state,
+          description: sellerListings.description,
+          features: sellerListings.features,
+          frontPhoto: sellerListings.frontPhoto,
+          rearPhoto: sellerListings.rearPhoto,
+          leftSidePhoto: sellerListings.leftSidePhoto,
+          rightSidePhoto: sellerListings.rightSidePhoto,
+          interiorPhoto: sellerListings.interiorPhoto,
+          engineBayPhoto: sellerListings.engineBayPhoto,
+          additionalPhotos: sellerListings.additionalPhotos,
+          createdAt: sellerListings.createdAt,
+          maskedContactId: sellerListings.maskedContactId,
+        })
+        .from(sellerListings)
+        .where(eq(sellerListings.isActive, true))
+        .$dynamic();
+      
+      // Apply filters
+      if (city) {
+        query = query.where(eq(sellerListings.city, city as string));
+      }
+      if (brand) {
+        query = query.where(eq(sellerListings.brand, brand as string));
+      }
+      if (model) {
+        query = query.where(eq(sellerListings.model, model as string));
+      }
+      if (priceMin) {
+        query = query.where(gte(sellerListings.price, priceMin as string));
+      }
+      if (priceMax) {
+        query = query.where(lte(sellerListings.price, priceMax as string));
+      }
+      
+      const listings = await query
+        .orderBy(desc(sellerListings.createdAt))
+        .limit(parseInt(limit as string));
+      
+      // Transform to marketplace format
+      const formattedListings = listings.map(listing => ({
+        id: listing.id,
+        title: listing.title,
+        brand: listing.brand,
+        model: listing.model,
+        year: listing.year,
+        price: parseFloat(listing.price as string),
+        mileage: listing.mileage,
+        fuelType: listing.fuelType,
+        transmission: listing.transmission,
+        location: listing.location,
+        city: listing.city,
+        source: 'CarArth Exclusive',
+        url: `/car/${listing.id}`,
+        images: [
+          listing.frontPhoto,
+          listing.rearPhoto,
+          listing.leftSidePhoto,
+          listing.rightSidePhoto,
+          listing.interiorPhoto,
+          listing.engineBayPhoto,
+          ...(listing.additionalPhotos || [])
+        ].filter(Boolean),
+        description: listing.description || '',
+        features: listing.features || [],
+        condition: 'verified',
+        verificationStatus: 'verified' as const,
+        listingDate: listing.createdAt || new Date(),
+        sellerType: 'verified' as const,
+        isExclusive: true,
+      }));
+      
+      res.json({ 
+        listings: formattedListings,
+        total: formattedListings.length 
+      });
+    } catch (error: any) {
+      console.error('Error fetching exclusive listings:', error);
+      res.status(500).json({ error: 'Failed to fetch exclusive listings' });
+    }
+  });
+
   app.get("/api/cars/:id/price-insights", async (req, res) => {
     try {
       const car = await storage.getCar(req.params.id);
