@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -43,6 +44,11 @@ const simplifiedSellCarSchema = z.object({
   leftSidePhoto: z.string().url('Left side photo is required').optional(),
   rightSidePhoto: z.string().url('Right side photo is required').optional(),
   interiorPhoto: z.string().url('Interior photo is required').optional(),
+  
+  // DPDP Act 2023 Compliance: Mandatory consent for cross-platform syndication
+  syndicationConsent: z.boolean().refine(val => val === true, {
+    message: 'You must accept the syndication terms to publish your listing'
+  }),
 });
 
 const BRANDS = [
@@ -79,6 +85,7 @@ export default function SellCar() {
       city: "",
       actualPhone: "",
       actualEmail: "",
+      syndicationConsent: false,
     },
   });
 
@@ -557,6 +564,38 @@ export default function SellCar() {
                   </p>
                 </div>
               )}
+
+              {/* DPDP Act 2023 Compliance: Mandatory Syndication Consent */}
+              <FormField
+                control={form.control}
+                name="syndicationConsent"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 bg-muted/50">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        data-testid="checkbox-syndication-consent"
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="text-sm font-medium leading-relaxed">
+                        I authorize CarArth to syndicate my listing to OLX, Quikr, and Facebook Marketplace, and consent to data processing as described in the{" "}
+                        <a 
+                          href="/terms" 
+                          target="_blank" 
+                          className="text-primary underline hover:text-primary/80"
+                          data-testid="link-terms"
+                        >
+                          Syndication Terms & Authorization
+                        </a>
+                        {" "}(DPDP Act 2023 compliant)
+                      </FormLabel>
+                      <FormMessage />
+                    </div>
+                  </FormItem>
+                )}
+              />
 
               <Button 
                 type="submit" 
