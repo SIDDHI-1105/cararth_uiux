@@ -1613,6 +1613,200 @@ export const insertBulkUploadJobSchema = createInsertSchema(bulkUploadJobs).omit
   updatedAt: true,
 });
 
+// ============================================================================
+// SELLER SYNDICATION COMPLIANCE & AUTOMATION SYSTEM
+// DPDP Act 2023 compliant consent tracking, deduplication, and audit logs
+// ============================================================================
+
+// Seller Consent Log - Detailed consent tracking with IP for DPDP Act 2023
+export const sellerConsentLog = pgTable("seller_consent_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Seller identification
+  userId: varchar("user_id").notNull(), // FK to users
+  sellerId: varchar("seller_id").notNull(), // Same as userId, for clarity
+  
+  // Consent details
+  consentType: text("consent_type").notNull(), // 'syndication', 'data_sharing', 'terms_acceptance'
+  consentStatus: boolean("consent_status").notNull(), // TRUE = consented, FALSE = revoked
+  termsVersion: varchar("terms_version").notNull(), // e.g., 'v1.0', 'v2.0'
+  
+  // Legal tracking
+  ipAddress: text("ip_address").notNull(), // Capture IP for compliance
+  userAgent: text("user_agent"), // Browser/device info
+  
+  // Syndication scope
+  platformsConsented: text("platforms_consented").array().default([]), // ['OLX', 'Quikr', 'Facebook']
+  
+  // Timestamps
+  consentTimestamp: timestamp("consent_timestamp").defaultNow(),
+  expiresAt: timestamp("expires_at"), // Optional expiry for time-limited consent
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_consent_log_user").on(table.userId),
+  index("idx_consent_log_status").on(table.consentStatus),
+  index("idx_consent_log_timestamp").on(table.consentTimestamp),
+]);
+
+// Deduplication Results - AI-powered duplicate detection logs
+export const deduplicationResults = pgTable("deduplication_results", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Source listing
+  listingId: varchar("listing_id").notNull(), // The listing being checked
+  
+  // Deduplication analysis
+  platform: text("platform").notNull(), // 'OLX', 'Quikr', 'Facebook'
+  isDuplicate: boolean("is_duplicate").notNull(), // Final decision
+  confidenceScore: decimal("confidence_score", { precision: 3, scale: 2 }).notNull(), // 0.00-1.00
+  
+  // AI Analysis Pipeline
+  firecrawlResults: jsonb("firecrawl_results"), // Search results from Firecrawl
+  geminiAnalysis: jsonb("gemini_analysis"), // Attribute comparison from Gemini
+  claudeValidation: jsonb("claude_validation"), // Context validation from Claude
+  openaiDecision: jsonb("openai_decision"), // Final decision from OpenAI
+  
+  // Matched listings
+  potentialDuplicates: jsonb("potential_duplicates").default([]), // Array of matched listings
+  
+  // Decision metadata
+  skipSyndication: boolean("skip_syndication").default(false), // TRUE = skip this platform
+  skipReason: text("skip_reason"), // Human-readable reason
+  
+  // Processing metrics
+  processingTimeMs: integer("processing_time_ms"),
+  totalCost: decimal("total_cost", { precision: 8, scale: 4 }), // USD cost for LLM calls
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_dedup_listing").on(table.listingId),
+  index("idx_dedup_platform").on(table.platform),
+  index("idx_dedup_duplicate").on(table.isDuplicate),
+]);
+
+// Syndication Execution Log - Enhanced platform posting with attribution
+export const syndicationExecutionLog = pgTable("syndication_execution_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Listing reference
+  listingId: varchar("listing_id").notNull(), // FK to sellerListings
+  sellerId: varchar("seller_id").notNull(), // FK to users
+  
+  // Platform details
+  platform: text("platform").notNull(), // 'OLX', 'Quikr', 'Facebook'
+  
+  // Execution status
+  status: text("status").notNull(), // 'pending', 'success', 'failed', 'retrying'
+  
+  // Platform response
+  platformListingId: text("platform_listing_id"), // External platform's ID
+  platformUrl: text("platform_url"), // Direct link to listing
+  
+  // CarArth Attribution
+  poweredByAttribution: boolean("powered_by_attribution").default(true), // TRUE = "Powered by CarArth.com" added
+  attributionText: text("attribution_text"), // Actual text used
+  
+  // Error handling
+  errorMessage: text("error_message"),
+  errorStack: text("error_stack"),
+  retryCount: integer("retry_count").default(0),
+  nextRetryAt: timestamp("next_retry_at"),
+  
+  // API details
+  requestPayload: jsonb("request_payload"), // What was sent
+  responsePayload: jsonb("response_payload"), // What was received
+  
+  // Timestamps
+  executedAt: timestamp("executed_at").defaultNow(),
+  succeededAt: timestamp("succeeded_at"),
+  failedAt: timestamp("failed_at"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_syndication_listing").on(table.listingId),
+  index("idx_syndication_seller").on(table.sellerId),
+  index("idx_syndication_platform").on(table.platform),
+  index("idx_syndication_status").on(table.status),
+]);
+
+// External API Audit Log - Compliance tracking for all external API calls
+export const externalApiAuditLog = pgTable("external_api_audit_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // API details
+  apiProvider: text("api_provider").notNull(), // 'Apify', 'Facebook', 'Firecrawl', 'OpenAI', 'Gemini'
+  apiEndpoint: text("api_endpoint").notNull(), // Specific endpoint called
+  httpMethod: text("http_method").notNull(), // 'GET', 'POST', 'PUT', 'DELETE'
+  
+  // Request context
+  userId: varchar("user_id"), // User who triggered (if applicable)
+  listingId: varchar("listing_id"), // Associated listing (if applicable)
+  operationType: text("operation_type").notNull(), // 'syndication', 'deduplication', 'scraping', 'validation'
+  
+  // Request/Response
+  requestHeaders: jsonb("request_headers"),
+  requestBody: jsonb("request_body"),
+  responseStatus: integer("response_status"), // HTTP status code
+  responseBody: jsonb("response_body"),
+  
+  // Performance & Cost
+  responseTimeMs: integer("response_time_ms"),
+  estimatedCost: decimal("estimated_cost", { precision: 8, scale: 4 }), // USD
+  
+  // Error tracking
+  isError: boolean("is_error").default(false),
+  errorMessage: text("error_message"),
+  errorCode: text("error_code"),
+  
+  // Rate limiting
+  rateLimitHit: boolean("rate_limit_hit").default(false),
+  rateLimitReset: timestamp("rate_limit_reset"),
+  
+  // Compliance
+  ipAddress: text("ip_address"), // Originating IP
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_api_audit_provider").on(table.apiProvider),
+  index("idx_api_audit_operation").on(table.operationType),
+  index("idx_api_audit_user").on(table.userId),
+  index("idx_api_audit_listing").on(table.listingId),
+  index("idx_api_audit_error").on(table.isError),
+  index("idx_api_audit_created").on(table.createdAt),
+]);
+
+// Insert schemas for seller syndication tables
+export const insertSellerConsentLogSchema = createInsertSchema(sellerConsentLog).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertDeduplicationResultSchema = createInsertSchema(deduplicationResults).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSyndicationExecutionLogSchema = createInsertSchema(syndicationExecutionLog).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertExternalApiAuditLogSchema = createInsertSchema(externalApiAuditLog).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Type exports for seller syndication
+export type InsertSellerConsentLog = z.infer<typeof insertSellerConsentLogSchema>;
+export type SellerConsentLog = typeof sellerConsentLog.$inferSelect;
+export type InsertDeduplicationResult = z.infer<typeof insertDeduplicationResultSchema>;
+export type DeduplicationResult = typeof deduplicationResults.$inferSelect;
+export type InsertSyndicationExecutionLog = z.infer<typeof insertSyndicationExecutionLogSchema>;
+export type SyndicationExecutionLog = typeof syndicationExecutionLog.$inferSelect;
+export type InsertExternalApiAuditLog = z.infer<typeof insertExternalApiAuditLogSchema>;
+export type ExternalApiAuditLog = typeof externalApiAuditLog.$inferSelect;
+
 // Type exports
 export type InsertListingSource = z.infer<typeof insertListingSourceSchema>;
 export type ListingSource = typeof listingSources.$inferSelect;
