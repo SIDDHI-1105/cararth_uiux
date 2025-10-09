@@ -419,3 +419,235 @@ export async function retryNotification(
     carTitle,
   });
 }
+
+/**
+ * Build WhatsApp message for syndication results
+ */
+function buildWhatsAppMessage(sellerName: string, syndicationData: {
+  listingTitle: string;
+  platformResults: Array<{
+    platform: string;
+    success: boolean;
+    platformUrl?: string;
+    error?: string;
+  }>;
+  duplicates?: Array<{
+    platform: string;
+    matchUrl: string;
+    confidence: number;
+  }>;
+}): string {
+  const platformLines = syndicationData.platformResults.map(p => {
+    if (p.success && p.platformUrl) {
+      return `✅ *${p.platform}*: ${p.platformUrl}`;
+    } else {
+      return `❌ *${p.platform}*: ${p.error || 'Failed'}`;
+    }
+  }).join('\n');
+  
+  let duplicateWarning = '';
+  if (syndicationData.duplicates && syndicationData.duplicates.length > 0) {
+    const dupLines = syndicationData.duplicates.map(d => 
+      `• ${d.platform} (${(d.confidence * 100).toFixed(0)}% match): ${d.matchUrl}`
+    ).join('\n');
+    duplicateWarning = `\n\n⚠️ *Potential Duplicates:*\n${dupLines}\n\nYour listing was NOT posted to these platforms to avoid duplicates.`;
+  }
+  
+  return `🚗 *Your Listing is Now Live!*
+
+Hi ${sellerName},
+
+Your car listing "${syndicationData.listingTitle}" has been syndicated.
+
+*Platform Status:*
+${platformLines}${duplicateWarning}
+
+You can manage your listings in your CarArth dashboard.
+
+_This is an automated notification from CarArth._`;
+}
+
+/**
+ * Send WhatsApp message for syndication (similar to lead notification)
+ */
+async function sendWhatsAppMessage(
+  phone: string,
+  message: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN || !process.env.TWILIO_WHATSAPP_NUMBER) {
+    return { success: false, error: 'WhatsApp not configured' };
+  }
+  
+  try {
+    const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+    const normalizedPhone = normalizePhoneNumber(phone, 'IN');
+    
+    if (!normalizedPhone) {
+      return { success: false, error: `Invalid phone number: ${phone}` };
+    }
+    
+    const msg = await client.messages.create({
+      body: message,
+      from: process.env.TWILIO_WHATSAPP_NUMBER,
+      to: `whatsapp:${normalizedPhone}`,
+    });
+    
+    console.log(`✅ WhatsApp syndication notification sent to ${phone} (SID: ${msg.sid})`);
+    return { success: true };
+  } catch (error: any) {
+    console.error('❌ WhatsApp syndication notification failed:', error);
+    return { success: false, error: error.message || 'WhatsApp send failed' };
+  }
+}
+
+/**
+ * Send syndication result notification to seller
+ */
+export async function notifySellerSyndication(
+  sellerInfo: {
+    id: string;
+    name: string;
+    email: string;
+    phone?: string;
+    emailVerified: boolean;
+    phoneVerified: boolean;
+  },
+  syndicationData: {
+    listingTitle: string;
+    platformResults: Array<{
+      platform: string;
+      success: boolean;
+      platformUrl?: string;
+      error?: string;
+    }>;
+    duplicates?: Array<{
+      platform: string;
+      matchUrl: string;
+      confidence: number;
+    }>;
+  }
+): Promise<NotificationResult> {
+  console.log(`📬 Notifying seller ${sellerInfo.name} about syndication results`);
+  
+  let emailResult: { success: boolean; error?: string } | null = null;
+  let whatsappResult: { success: boolean; error?: string } | null = null;
+  
+  // Try WhatsApp first if phone verified (preferred for India)
+  if (sellerInfo.phoneVerified && sellerInfo.phone) {
+    const whatsappMessage = buildWhatsAppMessage(sellerInfo.name, syndicationData);
+    whatsappResult = await sendWhatsAppMessage(sellerInfo.phone, whatsappMessage);
+  }
+  
+  // Try email (simultaneously or as fallback)
+  const transporter = await createEmailTransporter();
+  if (transporter) {
+    if (!sellerInfo.emailVerified) {
+      console.log(`⚠️ Email ${sellerInfo.email} not verified, sending anyway`);
+    }
+  
+  try {
+    // Build platform results HTML
+    const platformsHtml = syndicationData.platformResults
+      .map(p => {
+        if (p.success && p.platformUrl) {
+          return `
+            <div style="background-color: #d1fae5; padding: 12px; border-radius: 6px; margin: 8px 0;">
+              <strong style="color: #065f46;">✅ ${p.platform}</strong><br>
+              <a href="${p.platformUrl}" style="color: #2563eb;">View listing →</a>
+            </div>
+          `;
+        } else {
+          return `
+            <div style="background-color: #fee2e2; padding: 12px; border-radius: 6px; margin: 8px 0;">
+              <strong style="color: #991b1b;">❌ ${p.platform}</strong><br>
+              <span style="color: #7f1d1d; font-size: 14px;">${p.error || 'Posting failed'}</span>
+            </div>
+          `;
+        }
+      })
+      .join('');
+    
+    // Build duplicates warning if any
+    let duplicatesHtml = '';
+    if (syndicationData.duplicates && syndicationData.duplicates.length > 0) {
+      const duplicatesList = syndicationData.duplicates
+        .map(d => `
+          <li>
+            <strong>${d.platform}</strong> (${(d.confidence * 100).toFixed(0)}% match)<br>
+            <a href="${d.matchUrl}" style="color: #2563eb;">View potential duplicate →</a>
+          </li>
+        `)
+        .join('');
+      
+      duplicatesHtml = `
+        <div style="background-color: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin-top: 0; color: #92400e;">⚠️ Potential Duplicates Detected</h3>
+          <p>We found similar listings on these platforms:</p>
+          <ul>${duplicatesList}</ul>
+          <p style="font-size: 14px; color: #78350f;">
+            Your listing was NOT posted to these platforms to avoid duplicates. 
+            Please review these listings to ensure they're not yours.
+          </p>
+        </div>
+      `;
+    }
+    
+    const mailOptions = {
+      from: process.env.SMTP_FROM || 'noreply@cararth.com',
+      to: sellerInfo.email,
+      subject: `Your listing "${syndicationData.listingTitle}" has been syndicated`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #2563eb;">Your Listing is Now Live!</h2>
+          
+          <p>Hi ${sellerInfo.name},</p>
+          
+          <p>Your car listing <strong>"${syndicationData.listingTitle}"</strong> has been syndicated to multiple platforms.</p>
+          
+          <h3>Platform Status:</h3>
+          ${platformsHtml}
+          
+          ${duplicatesHtml}
+          
+          <p>You can manage your listings and view detailed analytics in your CarArth dashboard.</p>
+          
+          <p style="color: #6b7280; font-size: 12px; margin-top: 30px;">
+            This is an automated notification from CarArth. 
+            You're receiving this because you submitted a car listing on our platform.
+          </p>
+        </div>
+      `,
+    };
+    
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Syndication email sent to ${sellerInfo.email}`);
+    
+    emailResult = { success: true };
+  } catch (error) {
+    console.error('❌ Syndication email failed:', error);
+    emailResult = { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Email send failed' 
+    };
+  }
+  }
+  
+  // Determine overall result
+  const whatsappSuccess = whatsappResult?.success || false;
+  const emailSuccess = emailResult?.success || false;
+  
+  if (whatsappSuccess && emailSuccess) {
+    return { success: true, method: 'both', deliveredAt: new Date() };
+  } else if (whatsappSuccess) {
+    return { success: true, method: 'whatsapp', deliveredAt: new Date() };
+  } else if (emailSuccess) {
+    return { success: true, method: 'email', deliveredAt: new Date() };
+  } else {
+    const errors = [whatsappResult?.error, emailResult?.error].filter(Boolean).join('; ');
+    return { 
+      success: false, 
+      method: 'none', 
+      error: errors || 'No verified contact methods available' 
+    };
+  }
+}

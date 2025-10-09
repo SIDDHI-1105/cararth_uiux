@@ -1801,17 +1801,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // If high confidence duplicates found (≥85%), skip syndication
           const highConfidenceDuplicates = deduplicationMatches.filter((d: any) => d.confidence >= 0.85);
           
+          let syndicationResults: any[] = [];
+          const consentedPlatforms = listing.targetPlatforms || ['OLX', 'Quikr', 'Facebook'];
+          
           if (highConfidenceDuplicates.length === 0) {
             // No high-confidence duplicates, proceed with syndication
             console.log(`📡 Starting syndication for listing ${listing.id}`);
             const orchestrator = new SyndicationOrchestrator(storage as any);
-            const consentedPlatforms = listing.targetPlatforms || ['OLX', 'Quikr', 'Facebook'];
-            const results = await orchestrator.syndicateListing(listing, consentedPlatforms);
+            syndicationResults = await orchestrator.syndicateListing(listing, consentedPlatforms);
             
             console.log(`✅ Syndication complete for listing ${listing.id}:`, 
-              results.map((r: any) => `${r.platform}=${r.success ? 'success' : 'failed'}`).join(', '));
+              syndicationResults.map((r: any) => `${r.platform}=${r.success ? 'success' : 'failed'}`).join(', '));
           } else {
             console.log(`⚠️ Skipping syndication for listing ${listing.id}: ${highConfidenceDuplicates.length} high-confidence duplicates found`);
+            
+            // Create explicit "skipped" entries for each platform
+            syndicationResults = consentedPlatforms.map((platform: string) => ({
+              platform,
+              success: false,
+              error: `Skipped: High-confidence duplicate found (≥85%)`
+            }));
+          }
+          
+          // Send notification to seller with results
+          try {
+            const user = await storage.getUser(userId);
+            if (user) {
+              const { notifySellerSyndication } = await import('./notificationService.js');
+              await notifySellerSyndication(
+                {
+                  id: user.id,
+                  name: user.firstName || user.email.split('@')[0],
+                  email: user.email,
+                  phone: user.phone,
+                  emailVerified: user.emailVerified || false,
+                  phoneVerified: user.phoneVerified || false,
+                },
+                {
+                  listingTitle: listing.title,
+                  platformResults: syndicationResults.map((r: any) => ({
+                    platform: r.platform,
+                    success: r.success,
+                    platformUrl: r.platformUrl,
+                    error: r.error
+                  })),
+                  duplicates: highConfidenceDuplicates.map((d: any) => ({
+                    platform: d.platform,
+                    matchUrl: d.matchUrl,
+                    confidence: d.confidence
+                  }))
+                }
+              );
+            }
+          } catch (notificationError) {
+            console.error(`❌ Failed to send notification for listing ${listing.id}:`, notificationError);
+            // Don't throw - notification failure shouldn't break syndication
           }
         } catch (error) {
           console.error(`❌ Error in deduplication/syndication for listing ${listing.id}:`, error);
@@ -1871,6 +1915,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Failed to withdraw listing:', error);
       res.status(500).json({ error: "Failed to withdraw listing" });
+    }
+  });
+  
+  // Get seller's syndication status for dashboard
+  app.get("/api/seller/syndication-status", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Get seller's listings with syndication logs
+      const listings = await storage.getSellerListings(userId);
+      
+      const listingsWithStatus = await Promise.all(
+        listings.map(async (listing: any) => {
+          const syndicationLogs = await (storage as any).getSyndicationLogs(listing.id);
+          const deduplicationResults = await (storage as any).getDeduplicationResults(listing.id);
+          
+          return {
+            id: listing.id,
+            title: listing.title,
+            brand: listing.brand,
+            model: listing.model,
+            year: listing.year,
+            price: listing.price,
+            status: listing.status,
+            createdAt: listing.createdAt,
+            syndication: {
+              logs: syndicationLogs.map((log: any) => ({
+                platform: log.platform,
+                success: log.success,
+                platformListingId: log.platformListingId,
+                platformUrl: log.platformUrl,
+                errorMessage: log.errorMessage,
+                retryCount: log.retryCount,
+                createdAt: log.createdAt
+              })),
+              duplicates: deduplicationResults.map((dup: any) => ({
+                platform: dup.platform,
+                confidence: dup.matchConfidence,
+                matchUrl: dup.matchUrl,
+                skipSyndication: dup.skipSyndication,
+                skipReason: dup.skipReason
+              }))
+            }
+          };
+        })
+      );
+      
+      res.json({
+        listings: listingsWithStatus,
+        totalListings: listings.length,
+      });
+    } catch (error) {
+      console.error('Failed to get syndication status:', error);
+      res.status(500).json({ error: "Failed to retrieve syndication status" });
     }
   });
   
