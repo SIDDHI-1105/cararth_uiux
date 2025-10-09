@@ -30,6 +30,7 @@ interface UsageStatus {
 }
 import { BrandWordmark } from "@/components/brand-wordmark";
 import { Link } from "wouter";
+import { FAQSection } from "@/components/faq-section";
 
 function HomeContent() {
   const [filters, setFilters] = useState<Record<string, any>>({});
@@ -405,6 +406,9 @@ function HomeContent() {
           </div>
         </div>
       </div>
+
+      {/* FAQ Section */}
+      <FAQSection />
 
       {/* Search Limit Popup */}
       <SearchLimitPopup

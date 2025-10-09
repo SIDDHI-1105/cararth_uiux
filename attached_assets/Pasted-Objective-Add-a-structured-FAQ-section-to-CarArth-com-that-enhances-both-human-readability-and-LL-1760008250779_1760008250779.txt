@@ -1,0 +1,65 @@
+Objective:  
+Add a structured FAQ section to CarArth.com that enhances both human readability and LLM discoverability (Google, ChatGPT, Gemini, Perplexity). The FAQs should address the most common user questions related to buying, selling, and the AI-powered features of CarArth.
+
+Placement:  
+- Add the FAQ section below the "About" or "How CarArth Works" section on the homepage (main landing page).  
+- Also link a small “FAQs” button in the top navigation bar (anchor scrolls down to the FAQ section).  
+
+Functional Requirements:  
+1. **Frontend Design:**  
+   - Use collapsible accordion-style FAQ boxes (e.g., each question expands on click).  
+   - Clean, minimal, responsive design — match CarArth’s theme colors (#0b3a66, white, teal accents).  
+   - Heading: “Frequently Asked Questions (FAQs)”.  
+   - Add 6–8 key Q&As listed below.  
+
+2. **Content (Preload FAQs):**  
+   - **Q1:** What is CarArth.com?  
+     **A:** CarArth.com is India’s first AI-powered used car search engine for both buyers and sellers, bringing listings from multiple sources into one smart, unified experience.  
+
+   - **Q2:** How does CarArth find cars from multiple platforms?  
+     **A:** CarArth uses legally compliant web crawlers (Firecrawl and Apify) to fetch publicly available listings and organize them for easier discovery.  
+
+   - **Q3:** How is CarArth different from Cars24 or OLX Autos?  
+     **A:** CarArth is a search engine, not a dealer. It aggregates verified listings from different platforms instead of selling directly.  
+
+   - **Q4:** Is CarArth data legal and verified?  
+     **A:** Yes. CarArth only indexes publicly available information and complies with Indian data and intermediary laws.  
+
+   - **Q5:** How can sellers list their cars?  
+     **A:** Sellers can list via CarArth’s syndication form and have their car appear on multiple platforms simultaneously.  
+
+   - **Q6:** What are the benefits of using AI in CarArth?  
+     **A:** AI helps match buyers to the most relevant listings, ensures zero duplication, and provides price insights using data from SIAM and market trends.  
+
+   - **Q7:** Does CarArth charge sellers or buyers?  
+     **A:** Basic listing is free; premium syndication and featured listings are optional paid upgrades.  
+
+   - **Q8:** Where does CarArth operate?  
+     **A:** The pilot phase is live in Telangana, with expansion plans across India.  
+
+3. **SEO / LLM Optimization:**  
+   - Embed FAQ schema (JSON-LD structured data) inside the `<head>` section of the homepage using the following schema example:  
+
+   ```json
+   {
+     "@context": "https://schema.org",
+     "@type": "FAQPage",
+     "mainEntity": [
+       {
+         "@type": "Question",
+         "name": "What is CarArth.com?",
+         "acceptedAnswer": {
+           "@type": "Answer",
+           "text": "CarArth.com is India’s first AI-powered used car search engine for buyers and sellers."
+         }
+       },
+       {
+         "@type": "Question",
+         "name": "How does CarArth find cars from multiple platforms?",
+         "acceptedAnswer": {
+           "@type": "Answer",
+           "text": "CarArth uses legally compliant crawlers to gather publicly available listings and organize them for better discovery."
+         }
+       }
+     ]
+   }
