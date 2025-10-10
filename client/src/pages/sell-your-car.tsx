@@ -12,7 +12,6 @@ import {
   Shield, 
   CheckCircle2,
   ArrowRight,
-  Phone,
   Globe
 } from 'lucide-react';
 import { Link } from 'wouter';
@@ -563,16 +562,10 @@ export default function SellYourCar() {
           <p className="text-xl mb-8 opacity-90">
             Start selling your car today. No fees. Maximum reach.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex justify-center">
             <Button size="lg" variant="secondary" className="text-lg px-8 py-6" onClick={scrollToForm} data-testid="button-footer-cta">
               List Your Car Free
               <ArrowRight className="ml-2 w-5 h-5" />
-            </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8 py-6 bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground/10" asChild data-testid="button-footer-contact">
-              <a href="tel:1800-XXX-XXXX">
-                <Phone className="mr-2 w-5 h-5" />
-                Call Us: 1800-XXX-XXXX
-              </a>
             </Button>
           </div>
         </div>
