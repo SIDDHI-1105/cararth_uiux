@@ -60,7 +60,7 @@ export default function SocialMediaLinks({
         <Youtube className={iconSize} />
       </span>
       <a 
-        href="https://www.linkedin.com/company/cararth"
+        href="https://www.linkedin.com/company/109275569"
         target="_blank"
         rel="noopener noreferrer"
         className={baseStyles}
