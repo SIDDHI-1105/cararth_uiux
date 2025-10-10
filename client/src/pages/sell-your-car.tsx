@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { 
-  Car, 
   TrendingUp, 
   Users, 
   Zap, 
@@ -14,10 +13,10 @@ import {
   CheckCircle2,
   ArrowRight,
   Phone,
-  Mail,
   Globe
 } from 'lucide-react';
 import { Link } from 'wouter';
+import cararthLogo from '@assets/cararth-logo.png';
 
 interface HeroStats {
   totalListings: number;
@@ -48,19 +47,19 @@ export default function SellYourCar() {
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {
       metaDescription.setAttribute('content', 
-        'Sell your used car quickly and easily on Cararth. List once and reach lakhs of buyers across OLX, Cars24, CarDekho, Facebook Marketplace and more. Zero commission. Verified buyers only.'
+        'Sell your used car quickly and easily on Cararth. List once and reach lakhs of buyers across OLX, Cars24, CarDekho, Facebook Marketplace and more. Verified buyers only.'
       );
     } else {
       const meta = document.createElement('meta');
       meta.name = 'description';
-      meta.content = 'Sell your used car quickly and easily on Cararth. List once and reach lakhs of buyers across OLX, Cars24, CarDekho, Facebook Marketplace and more. Zero commission. Verified buyers only.';
+      meta.content = 'Sell your used car quickly and easily on Cararth. List once and reach lakhs of buyers across OLX, Cars24, CarDekho, Facebook Marketplace and more. Verified buyers only.';
       document.head.appendChild(meta);
     }
 
     // Open Graph tags for social sharing
     const ogTags = [
       { property: 'og:title', content: 'Sell Your Car Online - Reach Lakhs of Buyers | Cararth' },
-      { property: 'og:description', content: 'List your car once, appear on 10+ platforms. Get the best price with AI-powered insights. Zero commission for sellers.' },
+      { property: 'og:description', content: 'List your car once, appear on 10+ platforms. Get the best price with AI-powered insights.' },
       { property: 'og:type', content: 'website' },
       { property: 'og:url', content: window.location.href },
       { property: 'og:site_name', content: 'Cararth' },
@@ -152,11 +151,8 @@ export default function SellYourCar() {
       <nav className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/">
-              <a className="text-2xl font-bold text-primary flex items-center gap-2">
-                <Car className="w-8 h-8" />
-                Cararth
-              </a>
+            <Link href="/" className="flex items-center">
+              <img src={cararthLogo} alt="Cararth" className="h-10 md:h-12" />
             </Link>
             <Link href="/">
               <Button variant="outline" size="sm">
@@ -291,9 +287,9 @@ export default function SellYourCar() {
                   <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
                     <CheckCircle2 className="w-6 h-6 text-primary" />
                   </div>
-                  <h3 className="text-xl font-bold mb-3">Zero Commission</h3>
+                  <h3 className="text-xl font-bold mb-3">Best Price Guaranteed</h3>
                   <p className="text-muted-foreground">
-                    Launch offer: No listing fees, no commission on sale. Keep 100% of your car's value.
+                    Get the best market value for your car with our AI-powered price insights and wide buyer reach.
                   </p>
                 </CardContent>
               </Card>
