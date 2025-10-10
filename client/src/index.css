@@ -26,24 +26,24 @@
 }
 
 :root {
-  /* Clean Minimal Color System - High Contrast for Readability */
+  /* Clean Minimal Color System - High Contrast */
   --background: hsl(0 0% 100%);
-  --foreground: hsl(0 0% 5%);
+  --foreground: hsl(0 0% 9%);
   --card: hsl(0 0% 100%);
-  --card-foreground: hsl(0 0% 5%);
+  --card-foreground: hsl(0 0% 9%);
   --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(0 0% 5%);
+  --popover-foreground: hsl(0 0% 9%);
   --primary: hsl(220 100% 50%);
   --primary-foreground: hsl(0 0% 98%);
   --secondary: hsl(210 15% 96%);
-  --secondary-foreground: hsl(0 0% 5%);
+  --secondary-foreground: hsl(0 0% 9%);
   --muted: hsl(210 15% 96%);
-  --muted-foreground: hsl(0 0% 35%);
+  --muted-foreground: hsl(0 0% 45%);
   --accent: hsl(220 100% 50%);
   --accent-foreground: hsl(0 0% 98%);
   --destructive: hsl(0 84% 60%);
   --destructive-foreground: hsl(0 0% 98%);
-  --border: hsl(214 20% 85%);
+  --border: hsl(214 20% 90%);
   --input: hsl(214 20% 96%);
   --ring: hsl(220 100% 50%);
   --radius: 8px;
