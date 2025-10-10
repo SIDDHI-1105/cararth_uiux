@@ -110,7 +110,7 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
                     {heroStats?.platforms.map((platform) => (
                       <div 
                         key={platform.name} 
-                        className="text-sm font-medium px-3 py-1.5 rounded-md border shadow-sm text-foreground bg-background/70 dark:bg-card/70 border-border flex items-center gap-2"
+                        className="text-sm font-semibold px-3 py-1.5 rounded-md border shadow-sm bg-card text-card-foreground border-border flex items-center gap-2"
                         data-testid={`platform-${platform.name.toLowerCase().replace(/\s+/g, '-')}`}
                       >
                         <span>{platform.name}</span>
