@@ -78,6 +78,121 @@ app.use((req, res, next) => {
     // Add health check endpoint  
     app.get('/health', createHealthCheckHandler());
     
+    // Server-side rendering for car detail pages (for social media crawlers)
+    app.get('/car/:id', async (req, res, next) => {
+      try {
+        const { storage } = await import('./storage.js');
+        const car = await storage.getCar(req.params.id);
+        
+        if (!car) {
+          // If car not found, pass to next handler (SPA will show 404)
+          return next();
+        }
+        
+        // HTML escape helper for safe meta tag insertion
+        const escapeHtml = (str: string) => {
+          return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+        };
+        
+        // Format price helper
+        const formatPrice = (price: number | string) => {
+          const priceNum = typeof price === 'string' ? parseFloat(price) : price;
+          if (priceNum >= 10000000) return `₹${(priceNum / 10000000).toFixed(2)} Cr`;
+          if (priceNum >= 100000) return `₹${(priceNum / 100000).toFixed(2)} L`;
+          return `₹${priceNum.toLocaleString('en-IN')}`;
+        };
+        
+        // Format mileage helper
+        const formatMileage = (mileage: number | string | null | undefined) => {
+          if (!mileage) return "0 km";
+          const mileageNum = typeof mileage === 'string' ? parseInt(mileage) : mileage;
+          return `${mileageNum.toLocaleString('en-IN')} km`;
+        };
+        
+        const carImage = (car.images && car.images[0]) || 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&h=600&fit=crop';
+        const carTitle = escapeHtml(`${car.title} - ${formatPrice(car.price)} | CarArth`);
+        const carDescription = escapeHtml(`${car.year} ${car.title} for sale at ${formatPrice(car.price)}. ${formatMileage(car.mileage)} driven, ${car.transmission} transmission, ${car.fuelType} fuel. Located in ${car.city}, ${car.state}. ${car.isVerified ? 'Verified ✓' : ''} listing on CarArth.`);
+        const carUrl = escapeHtml(`https://cararth.com/car/${car.id}`);
+        const carImageEscaped = escapeHtml(carImage);
+        
+        // Read the base HTML template
+        const fs = await import('fs/promises');
+        const path = await import('path');
+        const htmlPath = path.join(process.cwd(), 'client', 'index.html');
+        let html = await fs.readFile(htmlPath, 'utf-8');
+        
+        // Replace meta tags with car-specific data (all values are escaped)
+        html = html
+          .replace(/<title>.*?<\/title>/, `<title>${carTitle}</title>`)
+          .replace(/<meta name="description" content=".*?">/, `<meta name="description" content="${carDescription}">`)
+          .replace(/<meta property="og:type" content=".*?">/, `<meta property="og:type" content="product">`)
+          .replace(/<meta property="og:url" content=".*?">/, `<meta property="og:url" content="${carUrl}">`)
+          .replace(/<meta property="og:title" content=".*?">/, `<meta property="og:title" content="${carTitle}">`)
+          .replace(/<meta property="og:description" content=".*?">/, `<meta property="og:description" content="${carDescription}">`)
+          .replace(/<meta property="og:image" content=".*?">/, `<meta property="og:image" content="${carImageEscaped}">`)
+          .replace(/<meta property="twitter:url" content=".*?">/, `<meta property="twitter:url" content="${carUrl}">`)
+          .replace(/<meta property="twitter:title" content=".*?">/, `<meta property="twitter:title" content="${carTitle}">`)
+          .replace(/<meta property="twitter:description" content=".*?">/, `<meta property="twitter:description" content="${carDescription}">`)
+          .replace(/<meta property="twitter:image" content=".*?">/, `<meta property="twitter:image" content="${carImageEscaped}">`)
+          .replace(/<link rel="canonical" href=".*?">/, `<link rel="canonical" href="${carUrl}">`);
+        
+        // Add structured data for the car (JSON.stringify handles escaping)
+        const structuredData = {
+          "@context": "https://schema.org",
+          "@type": "Car",
+          "name": `${car.brand} ${car.model}`,
+          "brand": {
+            "@type": "Brand",
+            "name": car.brand
+          },
+          "model": car.model,
+          "vehicleModelDate": car.year,
+          "fuelType": car.fuelType,
+          "vehicleTransmission": car.transmission,
+          "mileageFromOdometer": {
+            "@type": "QuantitativeValue",
+            "value": car.mileage,
+            "unitCode": "KMT"
+          },
+          "image": carImage,
+          "offers": {
+            "@type": "Offer",
+            "price": typeof car.price === 'string' ? parseFloat(car.price) : car.price,
+            "priceCurrency": "INR",
+            "availability": "https://schema.org/InStock",
+            "url": `https://cararth.com/car/${car.id}`,
+            "seller": {
+              "@type": "AutoDealer",
+              "name": "CarArth"
+            }
+          }
+        };
+        
+        // Inject structured data before closing head tag
+        // Use safe JSON serialization for script context (escape <, >, / to prevent script breakout)
+        const safeJsonLd = JSON.stringify(structuredData)
+          .replace(/</g, '\\u003c')
+          .replace(/>/g, '\\u003e')
+          .replace(/\//g, '\\u002f');
+        
+        html = html.replace(
+          '</head>',
+          `<script type="application/ld+json">${safeJsonLd}</script>\n  </head>`
+        );
+        
+        res.setHeader('Content-Type', 'text/html');
+        res.send(html);
+      } catch (error) {
+        console.error('Error rendering car detail page:', error);
+        next(); // Pass to SPA on error
+      }
+    });
+    
     // Explicit routes for static files (must be before Vite catch-all)
     app.get('/robots.txt', (req, res) => {
       res.sendFile('robots.txt', { root: 'public' });
