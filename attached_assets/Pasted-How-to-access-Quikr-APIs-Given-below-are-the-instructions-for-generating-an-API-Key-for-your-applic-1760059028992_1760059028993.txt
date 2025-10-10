@@ -1,0 +1,522 @@
+How to access Quikr APIs
+
+Given below are the instructions for generating an API Key for your application and API usage:
+From the dashboard create a shared secret for your application
+Please note that you can generate only one App ID for one application (web/app)
+Click on “Provision an app”
+Add an app name (could even be your team name)
+Click on “Show Secret” to see your shared secret
+Note the app secret and the app id
+Generating an access token
+From your app,
+POST https://api.quikr.com/app/auth/access_token
+Content-Type: application/json { “appId” : “app id”, “signature" : “”}
+
+signature = Hmac-sha1 ("app_secret", data)
+where data = email + appId + today’s date in yyyy-MM-dd format
+Response will contain the 'token' and the 'token_id' .
+IMP: This token is valid for the day on which it is issued. Everyday, it needs to be generated afresh.
+Calling the Quikr APIs
+Access the Quikr APIs by sending the following information in the request headers:
+X-Quikr-App-Id: App Id as received during registration
+X-Quikr-Token-Id: Token ID received while generating the access token
+X-Quikr-Signature-v2: Hmac-sha1 signature → Hmac-sha1("token", appId + email + date in yyyy-MM-dd format)
+General
+
+Given below are the instructions for generating an API Key for your application and API usage:
+Quikr Developer Platform API Version: By default, all requests receive the v1.0 version of the API.
+Exception Repsonse: In case of authentication Failure, HTTP 401, Unauthorized response will be received.
+Throttling : All APIs on QDP have rate limits. Following Error Response will be sent when limits are breached.
+HTTP 429 “Too many requests”.
+Schema
+All API access is over HTTPS, and accessed from the api.quikr.com domain. All data is sent and received as JSON.
+GET /public/trending?city=31 HTTP/1.1
+	Host: api.quikr.com
+	Content-Type: application/json
+	X-Quikr-App-Id: 123
+	X-Quikr-Token-Id: 2593149
+	X-Quikr-Signature: 1ef1b433325fda673f9e24d36aad43fb2a97f9aa
+	Cache-Control: no-cache
+            
+All timestamps are returned in Unix time (also known as POSIX time or Epoch time)
+Parameters
+Many API methods take optional parameters. For GET requests, parameters can be specified as an HTTP query string parameter.For POST, PATCH, PUT, and DELETE requests, parameters should be encoded as JSON with a Content-Type of ‘application/json’.
+Root Endpoint
+You can issue a GET request to the root endpoint to get all the endpoint categories that the API supports:
+Client Errors
+Client errors on API calls that receive request bodies:
+Sending invalid JSON will result in a 400 Bad Request response.
+HTTP/1.1 400 Bad Request
+Content-Length: 35
+{"message":"Problems parsing JSON"}
+                
+Sending the wrong type of JSON values will result in a 400 Bad Request response.
+HTTP/1.1 400 Bad Request
+Content-Length: 40
+{"message":"Body should be a JSON object"}
+HTTP Redirects
+Any HTTP request will be redirected by sending HTTP 301 response. Some of the clients may break because of this.
+Quikr Developer Platform Library
+
+Description
+QDP Libaries are used to generate all the X-QUIKR-CLIENT-HEADERS used to access the quikr APIs.We are here with reducing your efforts to generate security headers. You can use this library with very less efforts of coding.
+
+Steps to Integrate Jar File:
+From the dashboard create a shared secret for your application.Note the app secret and the app id.
+Download and Add Jar or phpfolder to your project.
+Initialize host, appId, email Id and secret Key in init function.
+getInstance() function will check if any of the initialized value is null .
+Generating an access token : getToken()
+Generate Auth Headers By Passing Token: getAuthHeaders(token) will generate all request headers by passing token that will be helpful for accessing the Quikr APIs .
+            Java:
+                Properties p = new Properties();
+		p.setProperty("host","");
+		p.setProperty("appId",””);
+		p.setProperty("email","");
+		p.setProperty("secretKey","");
+		QDPServiceImpl.init(p);
+		final QDPService qdpService = QDPServiceImpl.getInstance();
+		Token result = qdpService.getToken();
+		Map map=qdpService.getAuthHeaders(result);
+            
+            Php:
+                $qdp=new QDPServiceImpl();
+                $token=new Token();
+                $properties_array = array("host"=>"","appId"=>"","secretKey"=>"","email"=> "");
+                $qdp->init($properties_array);
+                $qdp->getInstance();
+                $token=$qdp->getToken();
+                $array = $qdp->getAuthHeaders($token);
+                        
+Generate Auth Headers By using Stored Token: getAuthHeaders() will generate all request headers that will be helpful for accessing the Quikr APIs.
+            Java:
+                Properties p = new Properties();
+		p.setProperty("host","");
+		p.setProperty("appId", “”);
+		p.setProperty("email","");
+		p.setProperty("secretKey","");
+		QDPServiceImpl.init(p);
+		final QDPService qdpService = QDPServiceImpl.getInstance();
+		Map map=qdpService.getAuthHeaders();	
+                                     
+            Php:
+                $qdp=new QDPServiceImpl();
+                $token=new Token();
+                $properties_array = array("host"=>"","appId"=>"","secretKey"=>"","email"=> "");
+                $qdp->init($properties_array);
+                $qdp->getInstance();
+                $array =$qdp->getAuthHeaders();
+ 
+
+Document Link:
+Documentation
+
+Download Java Jar File:
+Java Library
+
+Download Php Jar File:
+Php Library
+Quikr Developer Platform APIs
+
+AdsByLocation
+Description: This API will help you fetch Ads by location from Quikr
+Method : GET 
+EndPoint : https://api.quikr.com/public/adsByLocation
+Output Format : Json
+Rate Limit(per minute) : 1000
+Parameters :
+lat : latitude (mandatory)
+lon : longitude (mandatory)
+radius : defaults to 10 kms
+from : defaults to 0
+size : defaults to 25
+Sample Input :
+https://api.quikr.com/public/adsByLocation?lat=28.64649963&lon=77.22570038&from=0&size=1
+Sample Output :
+{
+  "AdsByLocationResponse": {
+    "AdsByLocationData": {
+      "success": true,
+      "total": 3113,
+      "timeTaken": 19,
+      "responseCode": 200,
+      "docs": [
+        {
+          "order_paymentFor": "H",
+          "attribute_Ad_Type": "offer",
+          "order_paymentStatus": "1",
+          "cityName": "Delhi",
+          "attribute_You_are": "Dealer",
+          "order_createdTimestamp": "1438171297",
+          "order_updatedTimestamp": "1438171334",
+          "order_orderUpdatedReason": "null",
+          "categoryName": "iPods, MP3 Players",
+          "attribute_presence": "0",
+          "order_parentpackid": "0",
+          "order_invoiceId": "LF/311/2015-2016",
+          "attribute_Price": "1000",
+          "metaCategoryName": "Electronics & Appliances",
+          "attribute_Brand_name": "iPod Touch",
+          "verified_mobile": "0",
+          "attribute_Condition": "New",
+          "status": "0",
+          "adExpireTime": "1440763334",
+          "ad_locality": "Ajmeri Gate",
+          "order_productStatus": "N",
+          "content": "test adtest adtest adtest adtest adtest adtest adtest adtest adtest adtest adtest adtest adtest adtest adtest adtest adtest adtest adtest adtest adtest adtest adtest adtest adtest ad",
+          "ad_quality_score": "5.2",
+          "order_packid": "0",
+          "images": "",
+          "order_orderId": "NH1408157783DELO193210393",
+          "cas": "2",
+          "order_remark": "",
+          "image_count": "0",
+          "order_table_id": "193210393",
+          "order_amount": "75",
+          "title": "test adtest adtest adtest adtest adtest adtest ad",
+          "order_modeofpayment": "CITRUS",
+          "order_attempts": "1",
+          "geo_pin": "28.64649963,77.22570038",
+          "recentlyViewedTime": "0",
+          "createdTime": "1438171334",
+          "order_paymentType": "o",
+          "stateName": "Delhi",
+          "attribute_last_online": 1438262277363,
+          "ad_view_count": 5
+        }
+      ]
+    },
+    "MetaData": {
+      "requestId": "2bcbfa3f-3586-43a5-b165-9209b8dd4edc"
+    }
+  }
+}
+AdsByCategory
+Description: This API will help you fetch Ads by Category from Quikr
+Method : GET
+EndPoint : https://api.quikr.com/public/adsByCategory
+Output Format : Json
+Rate Limit (per minute) : 1000
+List of city names/city Id attribute
+List of Quikr category Id
+Parameters :
+categoryId : quikr category Id
+city : city name
+from : defaults to 0
+size : defaults to 25
+Either categoryId or city is mandatory.
+Sample Input :
+https://api.quikr.com/public/adsByCategory?categoryId=71&city=Delhi&from=0&size=2
+Sample Output :
+{
+  "AdsByCategoryResponse": {
+    "AdsByCategoryData": {
+      "success": true,
+      "total": 631,
+      "timeTaken": 9,
+      "responseCode": 200,
+      "docs": [
+        {
+          "attribute_Ad_Type": "offer",
+          "cityName": "Delhi",
+          "attribute_You_are": "Dealer",
+          "attribute_Year": "2003",
+          "categoryName": "Cars",
+          "attribute_presence": "0",
+          "attribute_Price": "66661",
+          "attribute_Variant": "Exclusive Edition",
+          "year": "2003",
+          "metaCategoryName": "Cars & Bikes",
+          "attribute_Brand_name": "Hyundai",
+          "verified_mobile": "0",
+          "attribute_Condition": "Used",
+          "status": "0",
+          "adExpireTime": "1445239278",
+          "ad_locality": "Mathikere",
+          "content": "this is posting for h2h test this is posting for h2h test this is posting for h2h test this is posting for h2h te",
+          "ad_quality_score": "8.3",
+         "images": [
+            "http://teja2.kuikr.com/i6/20150408/Apple-iphone-6-and-6-plus-korian-copy-8500-12500-Delhi-ak_L860230946-1428473601.jpeg",
+            "http://teja2.kuikr.com/i4/20150408/Apple-iphone-6-and-6-plus-korian-copy-8500-12500-Delhi-ak_L1493048484-1428473619.jpeg",
+            "http://teja2.kuikr.com/i6/20150408/Apple-iphone-6-and-6-plus-korian-copy-8500-12500-Delhi-ak_L830615072-1428473627.jpeg"
+          ]
+,
+          "cas": "2",
+          "attribute_Insurance_Valid_Till": "2016/14/29",
+          "image_count": "2",
+          "title": "2003 Hyundai i10 Exclusive Edition - 8,552 kms driven",
+          "recentlyViewedTime": "0",
+          "attribute_No_of_owners": "Two",
+          "createdTime": "1437463278",
+          "stateName": "Delhi",
+          "attribute_Model": "i10",
+          "kms_Driven": "8552",
+          "attribute_last_online": 1438256343956,
+          "ad_view_count": 5
+        }
+      ]
+    },
+    "MetaData": {
+      "requestId": "a053d5d6-4ded-4a2d-88cb-dc32e001715f"
+    }
+  }
+}
+Trending
+Description: This API will share with you the trending items on Quikr in a city
+Method : GET
+EndPoint : https://api.quikr.com/public/trending
+Output Format : Json
+Rate Limit (per minute) : 1000
+List of city names/Id attribute
+Parameters : City(optional)
+Sample Input :
+https://api.quikr.com/public/trending?city=31
+Sample Output :
+{
+  "getTrendingResponse": {
+    "trendingData": [
+      {
+        "cat_id": 149,
+        "count": 13,
+        "attr": {
+          "attribute_Model": "Nexus 5 64GB",
+          "attribute_Brand_name": "LG"
+        }
+      },
+      {
+        "cat_id": 71,
+        "count": 5,
+        "attr": {
+          "attribute_Model": "Santa Fe",
+          "attribute_Brand_name": "Hyundai"
+        }
+      }
+    ],
+    "MetaData": {
+      "requestId": "469b629e-e72e-4e97-8ba8-7c8bfd04ab2b"
+    }
+  }
+}
+LiveOnQuikr
+Description: This API will merely share with you details like current live users, Ads posted in last min etc
+Method : GET
+EndPoint : https://api.quikr.com/public/liveOnQuikr
+Output Format : Json
+Rate Limit (per minute) : 1000
+Sample Input :
+https://api.quikr.com/public/liveOnQuikr
+Sample Output :
+Sample Output:
+
+           {
+  "liveOnQuikrResponse": {
+    "liveOnQuikrData": {
+      "adCount": 370,
+      "activeChats": 9612,
+      "onlineUsers": 48681
+    },
+    "MetaData": {
+      "requestId": "01a370d7-951d-43c6-b76e-04fa18b0fc40"
+    }
+  }
+}
+Reply
+Description: You can use Reply API to connect buyers and sellers between a developer’s app and Quikr. This is the mode through which the direct communication between buyer-seller will work.
+Method:POST
+Endpoint :https://api.quikr.com/public/reply
+OutputFormat : JSON
+Non Mandatory Param :replyMobile
+Rate Limit (per minute) : 10
+Non Mandatory Param : replyMobile
+Sample Input :
+https://api.quikr.com/public/reply
+Sample Output :
+{
+"adId":1408154458,
+"replyEmailId":"vaibhav4u06@gmail.com",
+"replyMobile":"8587846691",
+"replyContent":"car for those who have one car and two bikes",
+"userAgent":"Mozzila Firefox",
+"replierIp":"192.168.24.118"
+}
+
+Sample Response:
+{
+  "ReplyResponse": {
+    "data": {
+      "status": "success"
+    },
+    "MetaData": {
+      "requestId": "0d231582-5928-4967-9ee0-5aa60ba99e0e"
+    }
+  }
+}
+,
+
+Failure Sample Response :
+{
+  "ReplyResponse": {
+    "errors": [
+      {
+        "code": "AD_REPLY_CONTENT_MISSING",
+        "message": "Reply Content is missing"
+      }
+    ],
+    "MetaData": {
+      "requestId": "cf88a363-c094-4b4c-9320-60ef5b8c96ce"
+    }
+  }
+}
+Post/Edit Ad
+a. Post Ad API
+Description: This API will allow you to post an Ad on Quikr platform which after due reviews will be made live on Quikr in real time. The below documentation is for posting and editing an Ad on Quikr. Additionally if you wish to post images to your Ad you need to use the below documentation for Image Upload to get the image urls which you can provide in Post Ad API.
+EndPoint : https://api.quikr.com/public/postAds					
+Method:POST
+OutputFormat : JSON
+Rate Limit (per minute) : 10
+Mandatory Param :
+	1. email
+	2. subCategory
+	3. cityName
+	4. locations
+	5. title
+	6. description
+	7. Attributes
+        8. remoteAddr 
+Request Params
+email:- email Id of the owner of the Ad Poster[Mandatory]
+subCategory:- category in which requester wants to post An Ad. See list of valid categories over here [Mandatory]
+cityName:- Name of the city in which ad is being posted. [Mandatory]
+locations:- location in the city where ad is being posted . [Mandatory] For valid locations and cityNames see Locations
+userMobile:- Valid Mobile number for the Ad owner[optional]
+title: title of the ad(Min 10 chars) [Mandatory]
+description: description of the ad (min 30 characters) [Mandatory]
+Attributes:- Json Node which contain key value pair for the Id’s. [Mandatory based on category]
+images :- Images upto a maximum of 8 images. [optional]
+Attribute Value:- Values which have to be chosen for any particular mandatory attribute in for a drop down selection from a list view.
+remoteAddr:- Remote Address is client Ip Address.
+Sample Request :
+{ 
+"email": "Villasr173145kjadsjkfdjfh23446@qa.com",
+"remoteAddr": "192.168.51.57",
+"subCategory": "cars",
+"cityName": "Bangalore",
+"title": "Hi this is a dummy title  a dummy ad in the repo",
+"description": "This is a dummy description of atleast 30 characters.",
+"locations": "Adugodi",
+"userMobile":"9999999999",
+"attributes":
+{ "Ad_Type": "offer", "You_are": "Individual", "Kms_Driven": "1000", "Condition": "New", "Year": "2014", "Brand_name": "Honda", "Model": "City" }
+}
+Sample Request :
+{
+  "PostAdResponse": {
+    "data": {
+      "adId": "1408177334",
+            “status”: “Your ad will be live shortly”
+    },
+    "MetaData": {
+      "requestId": "d2224d9e-9d61-4672-94e4-4991894a10c3"
+    }
+  }
+}
+b. Edit Ad
+EndPoint : https://api.quikr.com/public/editAds
+Method:POST
+OutputFormat : JSON
+Rate Limit (per minute) : 10
+Request Params
+In addition to params taken by post Ad edit Ad take following more params
+adId:- Ad Id of the ad which has to be updated
+Sample Request
+{ 
+“adId”: “1408177334”,
+"email": "Villasr173145kjadsjkfdjfh23446@qa.com",
+"remoteAddr": "192.168.51.57",
+"subCategory": "cars",
+"cityName": "Bangalore",
+"title": "Hi this is a dummy title  a dummy ad in the repo",
+"description": "This is a dummy description of atleast 30 characters.",
+"locations": "Adugodi",
+"userMobile":"9999999999",
+"attributes":
+{ "Ad_Type": "offer", "You_are": "Individual", "Kms_Driven": "1000", "Condition": "New", "Year": "2014", "Brand_name": "Honda", "Model": "City" }
+}
+c. Image Upload
+Request Params
+image -> file[file input]
+URL : http://raven.kuikr.com/upload
+Response will be :
+{"status":"success","filename":"i4_ak_L808820511-1406884749.jpeg","filesize":64356,"fileurl":"http:\/\/teja1.kuikr.com\/i4\/20140801\/ak_L808820511-1406884749_sm.jpeg"}
+There are four sizes of given image,based on your requirement you can use any of.
+File url from Response,other sizes:
+http://teja1.kuikr.com/i4/20140801/ak_L808820511-1406884749_sm.jpeg
+http://teja1.kuikr.com/i4/20140801/ak_L808820511-1406884749.jpeg
+http://teja1.kuikr.com/i4/20140801/ak_L808820511-1406884749_gv.jpeg
+http://teja1.kuikr.com/i4/20140801/ak_L808820511-1406884749_lg.jpeg
+User Ads
+Description: This API will help you to fetch User Ads
+Method : POST
+EndPoint : https://api.quikr.com/platform/v1/userAds
+Output Format : Json
+Headers :
+X-Quikr-Client : qdp.<App Id>
+Parameters :
+email : Email Id
+mobile : Mobile number
+from : default is 0
+size : default is 25
+Sample Input :
+{ 
+  "email":<User Email>
+}
+Sample Output :
+{
+  "GetOwnAdsResponse": {
+    "data": {
+      "success": true,
+      "total": 5,
+      "timeTaken": 1,
+      "responseCode": 200,
+      "docs": [
+        <Ad Details>
+      ]
+    }
+  }
+}
+Response Code:
+Status codes indicate the result of the HTTP request.
+1XX - informational
+2XX - success
+3XX - redirection
+4XX - client error
+5XX - server error
+GET Requests
+200 OK: Successful request with Representation in the response body
+302 FOUND: Redirect response when the representation is available at the URI in the Location response header.
+304 NOT MODIFIED: The client's cached version of the representation has not changed.
+401 UNAUTHORIZED: Invalid credentials, not authorized.
+404 NOT FOUND: Requested resource was not found.
+429 TOO MANY REQUESTS: Request denied due to too many simultaneous requests.
+500 SERVER ERROR: An internal server error occurred and the representation was not returned.
+503 SERVICE UNAVAILABLE: Due to service outage the representation is temporarily unavailable. Please wait for a bit and try again.
+HTTP POST and PUT Requests
+200 OK: The resource was successfully updated.
+201 CREATED: The create request was successful.
+400 BAD REQUEST: The data provided in the request was invalid. Please check response body for details.
+401 UNAUTHORIZED: Invalid credentials, not authorized.
+404 NOT FOUND: Requested resource was not found.
+405 METHOD NOT ALLOWED: POST/ PUT methods are not available for this resource.
+429 TOO MANY REQUESTS: Request denied due to too many simultaneous requests.
+500 SERVER ERROR: An internal server error occurred and the representation was not returned.
+503 SERVICE UNAVAILABLE: Due to service outage the representation is temporarily unavailable. Please wait for a bit and try again.
+HTTP DELETE Requests
+204 OK: The resource was successfully deleted.
+401 UNAUTHORIZED : Invalid credentials, not authorized.
+404 NOT FOUND: Requested resource was not found.
+405 METHOD NOT ALLOWED: DELETE method is not available for this resource.
+429 TOO MANY REQUESTS: Request denied due to too many simultaneous requests.
+500 SERVER ERROR: An internal server error occurred and the representation was not returned.
+503 SERVICE UNAVAILABLE: Due to service outage the representation is temporarily unavailable. Please wait for a bit and try again.
+  dvlpr-support@quikr.com
+Copyright Quikr India Pvt. Ltd. 2016

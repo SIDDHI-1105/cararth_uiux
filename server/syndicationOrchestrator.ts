@@ -1,5 +1,6 @@
 import type { IStorage } from './storage';
 import type { SellerListing, InsertSyndicationExecutionLog, InsertExternalApiAuditLog } from '../shared/schema';
+import { createHmac } from 'crypto';
 
 /**
  * Platform-specific listing format
@@ -111,10 +112,13 @@ export class SyndicationOrchestrator {
   private readonly OLX_CLIENT_ID = process.env.OLX_CLIENT_ID;
   private readonly OLX_CLIENT_SECRET = process.env.OLX_CLIENT_SECRET;
   private readonly QUIKR_APP_ID = process.env.QUIKR_APP_ID;
-  private readonly QUIKR_TOKEN_ID = process.env.QUIKR_TOKEN_ID;
-  private readonly QUIKR_SIGNATURE = process.env.QUIKR_SIGNATURE;
+  private readonly QUIKR_SECRET = process.env.QUIKR_SECRET;
+  private readonly QUIKR_EMAIL = process.env.QUIKR_EMAIL;
   private readonly FACEBOOK_ACCESS_TOKEN = process.env.FACEBOOK_ACCESS_TOKEN;
   private readonly FACEBOOK_CATALOG_ID = process.env.FACEBOOK_CATALOG_ID;
+
+  // Quikr token cache (valid for current day only)
+  private quikrTokenCache: { token: string; tokenId: string; date: string } | null = null;
 
   constructor(storage: IStorage) {
     this.storage = storage;
@@ -361,12 +365,70 @@ export class SyndicationOrchestrator {
   }
 
   /**
+   * Get or refresh Quikr access token (valid for current day only)
+   */
+  private async getQuikrToken(): Promise<{ token: string; tokenId: string }> {
+    const today = new Date().toISOString().split('T')[0]; // yyyy-MM-dd
+
+    // Return cached token if still valid for today
+    if (this.quikrTokenCache && this.quikrTokenCache.date === today) {
+      return { token: this.quikrTokenCache.token, tokenId: this.quikrTokenCache.tokenId };
+    }
+
+    if (!this.QUIKR_APP_ID || !this.QUIKR_SECRET || !this.QUIKR_EMAIL) {
+      throw new Error('Quikr API credentials not configured');
+    }
+
+    // Generate signature: Hmac-sha1("app_secret", email + appId + date)
+    const signatureData = `${this.QUIKR_EMAIL}${this.QUIKR_APP_ID}${today}`;
+    const signature = createHmac('sha1', this.QUIKR_SECRET)
+      .update(signatureData)
+      .digest('hex');
+
+    // Request access token
+    const response = await fetch('https://api.quikr.com/app/auth/access_token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        appId: this.QUIKR_APP_ID,
+        signature
+      })
+    });
+
+    const data = await response.json();
+    await this.logApiCall('Quikr', 'POST /app/auth/access_token', response.status, data, !response.ok);
+
+    if (!response.ok || !data.token || !data.token_id) {
+      throw new Error(`Quikr token generation failed: ${JSON.stringify(data)}`);
+    }
+
+    // Cache token for the day
+    this.quikrTokenCache = {
+      token: data.token,
+      tokenId: data.token_id,
+      date: today
+    };
+
+    return { token: data.token, tokenId: data.token_id };
+  }
+
+  /**
    * Post listing to Quikr via API
    */
   private async postToQuikr(listing: SellerListing, retryCount: number): Promise<SyndicationResult> {
-    if (!this.QUIKR_APP_ID || !this.QUIKR_TOKEN_ID) {
+    if (!this.QUIKR_APP_ID || !this.QUIKR_EMAIL) {
       throw new Error('Quikr API credentials not configured');
     }
+
+    // Get fresh token
+    const { token, tokenId } = await this.getQuikrToken();
+    const today = new Date().toISOString().split('T')[0];
+
+    // Generate API signature: Hmac-sha1("token", appId + email + date)
+    const signatureData = `${this.QUIKR_APP_ID}${this.QUIKR_EMAIL}${today}`;
+    const apiSignature = createHmac('sha1', token)
+      .update(signatureData)
+      .digest('hex');
 
     const platformListing = this.convertToQuikrFormat(listing);
     let response;
@@ -377,8 +439,8 @@ export class SyndicationOrchestrator {
         headers: {
           'Content-Type': 'application/json',
           'X-Quikr-App-Id': this.QUIKR_APP_ID,
-          'X-Quikr-Token-Id': this.QUIKR_TOKEN_ID,
-          'X-Quikr-Signature': this.QUIKR_SIGNATURE || ''
+          'X-Quikr-Token-Id': tokenId,
+          'X-Quikr-Signature-v2': apiSignature
         },
         body: JSON.stringify(platformListing)
       });
