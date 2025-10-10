@@ -8,6 +8,7 @@ import ContactModal from "@/components/contact-modal";
 import PriceInsights from "@/components/price-insights";
 import LoanWidget from "@/components/loan-widget";
 import SocialShareButtons from "@/components/social-share-buttons";
+import { SEOHead, createCarListingSchema } from "@/components/seo-head";
 import { Phone, Calendar, MapPin, User, Star, Check, ArrowLeft, MessageCircle, Shield } from "lucide-react";
 import { Link } from "wouter";
 import { type Car, type User as UserType } from "@shared/schema";
@@ -78,6 +79,23 @@ export default function CarDetail() {
 
   return (
     <Layout containerSize="lg">
+      <SEOHead 
+        title={`${car.title} - ${formatPrice(car.price)} | CarArth`}
+        description={`${car.year} ${car.title} for sale at ${formatPrice(car.price)}. ${formatMileage(car.mileage)} driven, ${car.transmission} transmission, ${car.fuelType} fuel. Located in ${car.city}, ${car.state}. Verified ${car.isVerified ? '✓' : ''} listing on CarArth.`}
+        keywords={`${car.brand}, ${car.model}, ${car.year} ${car.brand} ${car.model}, used ${car.brand} ${car.model}, ${car.city} used cars, ${car.fuelType} cars, ${car.transmission} cars`}
+        ogImage={(car.images && car.images[0]) || FALLBACK_CAR_IMAGE_URL}
+        ogType="product"
+        structuredData={createCarListingSchema({
+          brand: car.brand,
+          model: car.model,
+          year: car.year,
+          fuelType: car.fuelType,
+          transmission: car.transmission,
+          mileage: car.mileage,
+          price: car.price
+        })}
+        canonical={typeof window !== 'undefined' ? window.location.href : `https://cararth.com/car/${car.id}`}
+      />
       <div className="max-w-4xl mx-auto p-6">
         <Link href="/">
           <Button variant="ghost" className="mb-4" data-testid="button-back">
