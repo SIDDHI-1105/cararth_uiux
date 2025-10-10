@@ -25,13 +25,16 @@ export default function SocialMediaLinks({
 
   return (
     <div className={`flex space-x-3 ${className}`}>
-      <span 
-        className="text-muted-foreground/50 cursor-not-allowed opacity-60"
+      <a 
+        href="https://www.facebook.com/profile.php?id=61580985187223"
+        target="_blank"
+        rel="noopener noreferrer"
+        className={baseStyles}
         data-testid="social-facebook"
-        title="Coming Soon - Follow us on Facebook"
+        title="Follow us on Facebook"
       >
         <Facebook className={iconSize} />
-      </span>
+      </a>
       <span 
         className="text-muted-foreground/50 cursor-not-allowed opacity-60"
         data-testid="social-x"
@@ -39,13 +42,16 @@ export default function SocialMediaLinks({
       >
         <X className={iconSize} />
       </span>
-      <span 
-        className="text-muted-foreground/50 cursor-not-allowed opacity-60"
+      <a 
+        href="https://www.instagram.com/cararthofficial"
+        target="_blank"
+        rel="noopener noreferrer"
+        className={baseStyles}
         data-testid="social-instagram"
-        title="Coming Soon - Follow us on Instagram"
+        title="Follow us on Instagram"
       >
         <Instagram className={iconSize} />
-      </span>
+      </a>
       <span 
         className="text-muted-foreground/50 cursor-not-allowed opacity-60"
         data-testid="social-youtube"
