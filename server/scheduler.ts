@@ -261,6 +261,69 @@ export class InternalScheduler {
             console.error('❌ Reddit scraping failed:', error);
           }
           
+          // Apify OLX scraping - Major cities
+          const apiToken = process.env.APIFY_API_TOKEN;
+          if (apiToken) {
+            const { ApifyOlxScraper } = await import('./apifyOlxScraper.js');
+            const olxScraper = new ApifyOlxScraper(apiToken, storage);
+            const citiesToScrape = ['hyderabad', 'bangalore', 'mumbai', 'delhi', 'pune'];
+            
+            for (const city of citiesToScrape) {
+              const olxRunId = await scraperHealthMonitor.startRun(`OLX ${city}`, 'marketplace');
+              try {
+                const result = await olxScraper.scrapeOlxCars(city, 50); // 50 listings per city
+                await scraperHealthMonitor.completeRun(olxRunId, {
+                  success: result.success,
+                  totalFound: result.scrapedCount,
+                  newListingsSaved: result.savedCount
+                });
+                console.log(`✅ OLX ${city} scraping: ${result.savedCount} new listings`);
+              } catch (error) {
+                await scraperHealthMonitor.completeRun(olxRunId, {
+                  success: false,
+                  totalFound: 0,
+                  newListingsSaved: 0,
+                  error: error instanceof Error ? error.message : String(error),
+                  errorStack: error instanceof Error ? error.stack : undefined
+                });
+                console.error(`❌ OLX ${city} scraping failed:`, error);
+              }
+            }
+          } else {
+            console.warn('⚠️ Skipping OLX scraping: APIFY_API_TOKEN not configured');
+          }
+          
+          // Apify Facebook Marketplace scraping - Major cities
+          if (apiToken) {
+            const { ApifyFacebookScraper } = await import('./apifyFacebookScraper.js');
+            const facebookScraper = new ApifyFacebookScraper(apiToken, storage);
+            const citiesToScrape = ['hyderabad', 'bangalore', 'mumbai', 'delhi', 'pune'];
+            
+            for (const city of citiesToScrape) {
+              const fbRunId = await scraperHealthMonitor.startRun(`Facebook Marketplace ${city}`, 'marketplace');
+              try {
+                const result = await facebookScraper.scrapeFacebookCars(city, 50); // 50 listings per city
+                await scraperHealthMonitor.completeRun(fbRunId, {
+                  success: result.success,
+                  totalFound: result.scrapedCount,
+                  newListingsSaved: result.savedCount
+                });
+                console.log(`✅ Facebook Marketplace ${city} scraping: ${result.savedCount} new listings`);
+              } catch (error) {
+                await scraperHealthMonitor.completeRun(fbRunId, {
+                  success: false,
+                  totalFound: 0,
+                  newListingsSaved: 0,
+                  error: error instanceof Error ? error.message : String(error),
+                  errorStack: error instanceof Error ? error.stack : undefined
+                });
+                console.error(`❌ Facebook Marketplace ${city} scraping failed:`, error);
+              }
+            }
+          } else {
+            console.warn('⚠️ Skipping Facebook Marketplace scraping: APIFY_API_TOKEN not configured');
+          }
+          
           // Hyundai H-Promise certified pre-owned
           const hyundaiRunId = await scraperHealthMonitor.startRun('Hyundai H-Promise', 'certified');
           try {

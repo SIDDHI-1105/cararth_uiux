@@ -2069,10 +2069,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Run scraping (don't await - respond immediately)
       scraper.scrapeOlxCars(city, maxListings || 100)
         .then(result => {
-          console.log(`✅ Apify scraping completed:`, result);
+          console.log(`✅ Apify OLX scraping completed:`, result);
         })
         .catch(error => {
-          console.error(`❌ Apify scraping failed:`, error);
+          console.error(`❌ Apify OLX scraping failed:`, error);
         });
 
       res.json({ 
@@ -2080,7 +2080,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'in_progress'
       });
     } catch (error) {
-      console.error('Failed to start Apify scraping:', error);
+      console.error('Failed to start Apify OLX scraping:', error);
+      res.status(500).json({ error: 'Failed to start scraping' });
+    }
+  });
+
+  // Admin: Trigger Apify Facebook Marketplace scraping
+  app.post('/api/admin/scrape-facebook', isAuthenticated, async (req: any, res) => {
+    try {
+      // Check admin role
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ error: 'Admin access required' });
+      }
+
+      const { city, maxListings } = req.body;
+      
+      if (!city) {
+        return res.status(400).json({ error: 'City is required' });
+      }
+
+      // Import and initialize Apify Facebook scraper
+      const { ApifyFacebookScraper } = await import('./apifyFacebookScraper.js');
+      const apiToken = process.env.APIFY_API_TOKEN;
+      
+      if (!apiToken) {
+        return res.status(500).json({ error: 'Apify API token not configured' });
+      }
+
+      const scraper = new ApifyFacebookScraper(apiToken, storage);
+      
+      // Run scraping (don't await - respond immediately)
+      scraper.scrapeFacebookCars(city, maxListings || 100)
+        .then(result => {
+          console.log(`✅ Apify Facebook scraping completed:`, result);
+        })
+        .catch(error => {
+          console.error(`❌ Apify Facebook scraping failed:`, error);
+        });
+
+      res.json({ 
+        message: `Facebook Marketplace scraping started for ${city}`,
+        status: 'in_progress'
+      });
+    } catch (error) {
+      console.error('Failed to start Apify Facebook scraping:', error);
       res.status(500).json({ error: 'Failed to start scraping' });
     }
   });

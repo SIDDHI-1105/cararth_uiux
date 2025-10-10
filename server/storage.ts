@@ -262,6 +262,10 @@ export interface IStorage {
     totalCost: number;
     avgResponseTime: number;
   }>;
+  
+  // Cached portal listings (Apify scrapers)
+  createCachedPortalListing(listing: any): Promise<any>;
+  searchCachedPortalListings(filters: any): Promise<any[]>;
 }
 
 export class MemStorage implements IStorage {
