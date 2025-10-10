@@ -46,19 +46,19 @@ export default function SellYourCar() {
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {
       metaDescription.setAttribute('content', 
-        'Join Cararth\'s beta program to sell your car with AI-powered insights. Early access to India\'s smartest car marketplace. Be among the first sellers with priority support.'
+        'Join Cararth\'s beta for automated seller syndication. List once, reach buyers across multiple marketplaces. AI-powered insights with multi-marketplace distribution.'
       );
     } else {
       const meta = document.createElement('meta');
       meta.name = 'description';
-      meta.content = 'Join Cararth\'s beta program to sell your car with AI-powered insights. Early access to India\'s smartest car marketplace. Be among the first sellers with priority support.';
+      meta.content = 'Join Cararth\'s beta for automated seller syndication. List once, reach buyers across multiple marketplaces. AI-powered insights with multi-marketplace distribution.';
       document.head.appendChild(meta);
     }
 
     // Open Graph tags for social sharing
     const ogTags = [
       { property: 'og:title', content: 'Join Cararth Beta - Early Access Car Marketplace | Cararth' },
-      { property: 'og:description', content: 'Join our beta program and sell your car with AI-powered insights. Early access to India\'s smartest car marketplace.' },
+      { property: 'og:description', content: 'Beta access to automated seller syndication. List once, distribute across multiple marketplaces with AI-powered insights.' },
       { property: 'og:type', content: 'website' },
       { property: 'og:url', content: window.location.href },
       { property: 'og:site_name', content: 'Cararth' },
@@ -80,7 +80,7 @@ export default function SellYourCar() {
     const twitterTags = [
       { name: 'twitter:card', content: 'summary_large_image' },
       { name: 'twitter:title', content: 'Join Cararth Beta - Early Access Car Marketplace | Cararth' },
-      { name: 'twitter:description', content: 'Join our beta program and sell your car with AI-powered insights. Early access to India\'s smartest car marketplace.' },
+      { name: 'twitter:description', content: 'Beta access to automated seller syndication. List once, distribute across multiple marketplaces with AI-powered insights.' },
     ];
 
     twitterTags.forEach(tag => {
@@ -171,7 +171,7 @@ export default function SellYourCar() {
                 Sell Your Car to <span className="text-primary">Lakhs of Buyers</span>
               </h1>
               <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-                Join our beta program for early access to India's smartest car marketplace. Be among the first sellers to experience AI-powered pricing.
+                Join our beta to experience automated seller syndication. List once, reach buyers across multiple marketplaces with AI-powered insights.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <Button size="lg" className="text-lg px-8 py-6" onClick={scrollToForm} data-testid="button-list-now">
@@ -226,9 +226,9 @@ export default function SellYourCar() {
                   <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
                     <Globe className="w-6 h-6 text-primary" />
                   </div>
-                  <h3 className="text-xl font-bold mb-3">Beta Testing Phase</h3>
+                  <h3 className="text-xl font-bold mb-3">Automated Seller Syndication</h3>
                   <p className="text-muted-foreground">
-                    We're currently in beta, testing our AI-powered marketplace. Join now and help shape the future of car selling in India.
+                    List your car once and we automatically distribute it across multiple marketplaces. Beta testers get early access to this powerful feature.
                   </p>
                 </CardContent>
               </Card>
@@ -325,9 +325,9 @@ export default function SellYourCar() {
                 <div className="w-16 h-16 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
                   2
                 </div>
-                <h3 className="text-xl font-bold mb-3">Beta Launch Benefits</h3>
+                <h3 className="text-xl font-bold mb-3">Multi-Marketplace Distribution</h3>
                 <p className="text-muted-foreground">
-                  As a beta seller, you'll get priority support and exclusive features as we build India's best car marketplace.
+                  Your listing automatically syndicates to multiple marketplaces. Beta sellers get priority placement and exclusive syndication features.
                 </p>
               </div>
 
@@ -409,7 +409,7 @@ export default function SellYourCar() {
                     </li>
                     <li className="flex items-start gap-3">
                       <CheckCircle2 className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
-                      <span>Early access to beta features</span>
+                      <span>Automated multi-marketplace syndication</span>
                     </li>
                     <li className="flex items-start gap-3">
                       <CheckCircle2 className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
@@ -540,10 +540,10 @@ export default function SellYourCar() {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-block px-6 py-3 bg-primary/10 border-2 border-primary/20 rounded-full mb-6">
-              <span className="text-primary font-bold text-lg">🚀 Currently in Beta Testing</span>
+              <span className="text-primary font-bold text-lg">🚀 Beta: Multi-Marketplace Syndication</span>
             </div>
             <p className="text-muted-foreground text-lg">
-              We're refining our platform with early adopters. Join now to get exclusive beta access and help us build India's most trusted car marketplace.
+              We're testing automated seller syndication with early adopters. List once, reach buyers everywhere. Join our beta for exclusive access to multi-marketplace distribution.
             </p>
           </div>
         </div>
@@ -556,7 +556,7 @@ export default function SellYourCar() {
             Join Thousands of Happy Sellers
           </h2>
           <p className="text-xl mb-8 opacity-90">
-            Join our beta program today. Early access. Priority support.
+            Experience automated seller syndication. List once, distribute across multiple marketplaces.
           </p>
           <div className="flex justify-center">
             <Button size="lg" variant="secondary" className="text-lg px-8 py-6" onClick={scrollToForm} data-testid="button-footer-cta">
