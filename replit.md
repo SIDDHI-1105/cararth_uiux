@@ -39,8 +39,8 @@ Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, an
 - **Image-Based Quality Ranking**: Search results use image quality scoring (-15 to +18 points based on count/quality) for more relevant listings.
 - **Dynamic Hero Section**: Real-time statistics displayed on the homepage, showing total listings and platform counts, with data fetched from the database and updated frequently.
 - **Social Media Integration & Sharing**: 
-  - Active social media presence with Facebook and Instagram links in footer site-wide
-  - Car listing social sharing with Facebook, WhatsApp, and native share support
+  - Active social media presence with Facebook, Instagram, and LinkedIn links in footer site-wide
+  - Car listing social sharing with Facebook, WhatsApp, LinkedIn, and native share support
   - Server-side rendered Open Graph meta tags for optimal social previews
   - Car-specific meta tags (title, description, image) for each listing
   - Secure HTML escaping to prevent XSS attacks in shared content
