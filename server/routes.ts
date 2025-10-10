@@ -2461,9 +2461,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         transmission: car.transmission
       };
 
-      const insights = await priceComparisonService.getPriceInsights(carData);
-      res.json(insights);
+      // Fetch all data in parallel for better performance
+      const [siamData, trendsData, insights] = await Promise.all([
+        storage.getSiamDataByBrandModel(car.brand, car.model),
+        storage.getGoogleTrendsData(`${car.brand} ${car.model}`),
+        priceComparisonService.getPriceInsights(carData)
+      ]);
+      
+      // Enhance with real market intelligence
+      const enhancedInsights = {
+        ...insights,
+        sources: [
+          ...(insights.sources || []),
+          ...(siamData ? ['SIAM Monthly Sales'] : []),
+          ...(trendsData ? ['Google Trends'] : [])
+        ],
+        marketIntelligence: {
+          siamData: siamData ? {
+            monthlyUnits: siamData.unitsSold,
+            growthYoY: parseFloat(siamData.growthYoY?.toString() || '0'),
+            marketShare: parseFloat(siamData.marketShare?.toString() || '0'),
+            lastUpdated: siamData.verifiedAt
+          } : null,
+          trendsData: trendsData ? {
+            searchVolume: trendsData.searchVolume,
+            trendDirection: trendsData.trendDirection,
+            changePercent: parseFloat(trendsData.changePercent?.toString() || '0'),
+            lastUpdated: trendsData.collectedAt
+          } : null
+        }
+      };
+
+      res.json(enhancedInsights);
     } catch (error) {
+      console.error('Price insights error:', error);
       res.status(500).json({ error: "Failed to fetch price insights" });
     }
   });

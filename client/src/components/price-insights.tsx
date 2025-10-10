@@ -17,6 +17,20 @@ interface PriceInsight {
   recommendation: string;
   sources: string[];
   lastUpdated: string;
+  marketIntelligence?: {
+    siamData?: {
+      monthlyUnits: number;
+      growthYoY: number;
+      marketShare: number;
+      lastUpdated: string;
+    };
+    trendsData?: {
+      searchVolume: number;
+      trendDirection: string;
+      changePercent: number;
+      lastUpdated: string;
+    };
+  };
 }
 
 interface PriceInsightsProps {
@@ -179,6 +193,74 @@ export default function PriceInsights({ car }: PriceInsightsProps) {
                 <span className="ml-1 capitalize">{insights.marketTrend}</span>
               </Badge>
             </div>
+
+            {/* Real Market Intelligence - SIAM & Google Trends */}
+            {insights.marketIntelligence && (insights.marketIntelligence.siamData || insights.marketIntelligence.trendsData) ? (
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 space-y-3">
+                <h4 className="font-semibold text-blue-900 flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4" />
+                  Real Market Intelligence
+                </h4>
+                
+                {insights.marketIntelligence.siamData ? (
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="bg-white rounded p-2">
+                      <div className="text-xs text-muted-foreground">Monthly Sales</div>
+                      <div className="text-lg font-bold text-blue-900" data-testid="text-siam-units">
+                        {insights.marketIntelligence.siamData.monthlyUnits.toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="bg-white rounded p-2">
+                      <div className="text-xs text-muted-foreground">YoY Growth</div>
+                      <div className="text-lg font-bold text-green-600" data-testid="text-siam-growth">
+                        +{insights.marketIntelligence.siamData.growthYoY}%
+                      </div>
+                    </div>
+                    <div className="bg-white rounded p-2">
+                      <div className="text-xs text-muted-foreground">Market Share</div>
+                      <div className="text-lg font-bold text-purple-600" data-testid="text-siam-share">
+                        {insights.marketIntelligence.siamData.marketShare}%
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-sm text-blue-700 bg-blue-100 rounded p-2">
+                    ℹ️ SIAM sales data not available for this model yet
+                  </div>
+                )}
+                
+                {insights.marketIntelligence.trendsData ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-white rounded p-2">
+                      <div className="text-xs text-muted-foreground">Search Interest</div>
+                      <div className="text-lg font-bold text-indigo-900" data-testid="text-trends-volume">
+                        {insights.marketIntelligence.trendsData.searchVolume}/100
+                      </div>
+                    </div>
+                    <div className="bg-white rounded p-2">
+                      <div className="text-xs text-muted-foreground">Trend</div>
+                      <div className="text-lg font-bold capitalize text-green-600" data-testid="text-trends-direction">
+                        {insights.marketIntelligence.trendsData.trendDirection} ({insights.marketIntelligence.trendsData.changePercent > 0 ? '+' : ''}{insights.marketIntelligence.trendsData.changePercent}%)
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-sm text-blue-700 bg-blue-100 rounded p-2">
+                    ℹ️ Google Trends data not available for this model yet
+                  </div>
+                )}
+                
+                <div className="text-xs text-blue-700">
+                  ✓ Data from SIAM (Society of Indian Automobile Manufacturers) & Google Trends
+                </div>
+              </div>
+            ) : (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <div className="text-sm text-muted-foreground">
+                  💡 Real market intelligence data (SIAM sales & Google Trends) will appear here when available for this car model
+                </div>
+              </div>
+            )}
 
             {/* Recommendation */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">

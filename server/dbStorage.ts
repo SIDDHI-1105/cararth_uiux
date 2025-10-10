@@ -2969,4 +2969,52 @@ export class DatabaseStorage implements IStorage {
       throw appError;
     }
   }
+
+  // ============================================================================
+  // REAL MARKET INTELLIGENCE: SIAM & GOOGLE TRENDS
+  // ============================================================================
+  
+  async getSiamDataByBrandModel(brand: string, model?: string): Promise<any> {
+    try {
+      const { siamSalesData } = await import('@shared/schema.js');
+      
+      const conditions = [
+        eq(siamSalesData.brand, brand)
+      ];
+      
+      if (model) {
+        conditions.push(eq(siamSalesData.model, model));
+      }
+      
+      const result = await this.db
+        .select()
+        .from(siamSalesData)
+        .where(and(...conditions))
+        .orderBy(desc(siamSalesData.year), desc(siamSalesData.month))
+        .limit(1);
+      
+      return result[0] || null;
+    } catch (error) {
+      console.error('Error fetching SIAM data:', error);
+      return null;
+    }
+  }
+  
+  async getGoogleTrendsData(searchTerm: string): Promise<any> {
+    try {
+      const { googleTrendsData } = await import('@shared/schema.js');
+      
+      const result = await this.db
+        .select()
+        .from(googleTrendsData)
+        .where(eq(googleTrendsData.searchTerm, searchTerm))
+        .orderBy(desc(googleTrendsData.date))
+        .limit(1);
+      
+      return result[0] || null;
+    } catch (error) {
+      console.error('Error fetching Google Trends data:', error);
+      return null;
+    }
+  }
 }
