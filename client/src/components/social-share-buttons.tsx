@@ -1,4 +1,4 @@
-import { Facebook, Share2 } from "lucide-react";
+import { Facebook, Share2, Linkedin } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 
@@ -31,6 +31,14 @@ export default function SocialShareButtons({
     window.open(
       `https://wa.me/?text=${shareText}`,
       '_blank'
+    );
+  };
+
+  const handleLinkedInShare = () => {
+    window.open(
+      `https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}`,
+      '_blank',
+      'width=600,height=400'
     );
   };
 
@@ -70,6 +78,17 @@ export default function SocialShareButtons({
       >
         <SiWhatsapp className="h-4 w-4" />
         Share on WhatsApp
+      </Button>
+
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleLinkedInShare}
+        className="gap-2 text-blue-600 hover:text-blue-700 dark:text-blue-500"
+        data-testid="button-share-linkedin"
+      >
+        <Linkedin className="h-4 w-4" />
+        Share on LinkedIn
       </Button>
 
       {typeof navigator !== 'undefined' && 'share' in navigator && (

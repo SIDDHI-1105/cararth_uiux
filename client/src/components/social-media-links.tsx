@@ -59,13 +59,16 @@ export default function SocialMediaLinks({
       >
         <Youtube className={iconSize} />
       </span>
-      <span 
-        className="text-muted-foreground/50 cursor-not-allowed opacity-60"
+      <a 
+        href="https://www.linkedin.com/company/cararth"
+        target="_blank"
+        rel="noopener noreferrer"
+        className={baseStyles}
         data-testid="social-linkedin"
-        title="Coming Soon - Connect on LinkedIn"
+        title="Connect with us on LinkedIn"
       >
         <Linkedin className={iconSize} />
-      </span>
+      </a>
     </div>
   );
 }
