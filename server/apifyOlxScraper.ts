@@ -99,78 +99,73 @@ export class ApifyOlxScraper {
       throw new Error('Listing URL is required for deduplication');
     }
 
-    // Check for existing listing by searching for title and price (approximate dedup)
-    const existingListings = await this.storage.searchCars({
-      brand: this.extractBrand(item.title || ''),
-      priceMin: this.parsePrice(item.price || '0') - 10000,
-      priceMax: this.parsePrice(item.price || '0') + 10000,
-      city: city
-    });
+    // Generate hash for deduplication (portal + URL)
+    const crypto = await import('crypto');
+    const hash = crypto.createHash('sha256')
+      .update(`OLX:${item.url}`)
+      .digest('hex');
 
-    // More precise dedup check - same URL in description or same title
-    const isDuplicate = existingListings.some((car: any) => 
-      car.description?.includes(item.url) || car.title === item.title
-    );
-
-    if (isDuplicate) {
-      console.log(`⏭️ Skipping duplicate: ${item.title}`);
-      throw new Error(`Duplicate listing already exists: ${item.title}`);
-    }
-
-    // Get or create system seller for scraped listings
-    const systemSeller = await this.getOrCreateSystemSeller();
-
-    // Extract car details from OLX listing
-    const carData = {
-      sellerId: systemSeller.id,
+    // Extract car details
+    const price = this.parsePrice(item.price || '0');
+    const brand = this.extractBrand(item.title || '');
+    const model = this.extractModel(item.title || '');
+    
+    // Prepare cached portal listing data
+    const listingData = {
+      portal: 'OLX',
+      externalId: item.id || item.url.split('/').pop() || hash.substring(0, 16),
+      url: item.url,
+      hash: hash,
+      
+      // Car details
       title: item.title || 'Unknown Car',
-      brand: this.extractBrand(item.title || ''),
-      model: this.extractModel(item.title || ''),
+      brand: brand,
+      model: model,
       year: this.extractYear(item.title || item.description || ''),
-      price: this.parsePrice(item.price || '0').toString(),
+      price: price.toString(),
       mileage: this.extractMileage(item.description || ''),
       fuelType: this.extractFuelType(item.description || ''),
       transmission: this.extractTransmission(item.description || ''),
       owners: 1,
+      
+      // Location
       location: item.location || city,
       city: city,
-      state: 'India', // OLX India scraper
-      description: `${item.description || ''}\n\nSource: OLX\nOriginal URL: ${item.url}`,
+      state: this.extractState(item.location || city),
+      
+      // Additional data
+      description: item.description || '',
       features: [],
       images: item.images || [],
-      source: 'OLX via Apify',
-      isVerified: false,
-      isSold: false
+      sellerType: 'individual', // OLX is primarily individual sellers
+      verificationStatus: 'unverified',
+      condition: this.extractCondition(item.description || ''),
+      
+      // Quality scoring (conservative for scraped data)
+      qualityScore: 50,
+      sourceWeight: 60, // OLX is a major portal
+      hasRealImage: (item.images && item.images.length > 0),
+      specValid: true,
+      imageAuthenticity: 0,
+      
+      // Listing metadata
+      listingDate: item.postedDate ? new Date(item.postedDate) : new Date(),
+      sourceMeta: {
+        scrapedAt: new Date().toISOString(),
+        apifyActorRun: true,
+        originalData: {
+          id: item.id,
+          location: item.location
+        }
+      },
+      
+      // Partner fields (not applicable for scraped)
+      origin: 'scraped'
     };
 
-    // Save to database using the standard createCar method
-    await this.storage.createCar(carData);
-    console.log(`✅ Saved OLX listing: ${item.title}`);
-  }
-
-  /**
-   * Get or create system seller for scraped listings
-   */
-  private async getOrCreateSystemSeller(): Promise<{ id: string }> {
-    const systemEmail = 'olx-scraper@cararth.com';
-    
-    // Try to find existing system seller
-    let seller = await this.storage.getUserByEmail(systemEmail);
-    
-    if (!seller) {
-      // Create system seller
-      seller = await this.storage.createUser({
-        name: 'OLX Scraper',
-        username: 'olx-scraper',
-        email: systemEmail,
-        phone: '+910000000000',
-        password: 'system-account', // Won't be used for login
-        role: 'user'
-      });
-      console.log(`✅ Created system seller for OLX scraped listings`);
-    }
-    
-    return { id: seller.id };
+    // Save to cachedPortalListings table (will throw on duplicate hash)
+    await this.storage.createCachedPortalListing(listingData);
+    console.log(`✅ Saved OLX listing to portal cache: ${item.title}`);
   }
 
   /**
@@ -304,5 +299,57 @@ export class ApifyOlxScraper {
       return 'Automatic';
     }
     return 'Manual';
+  }
+
+  /**
+   * Extract state from location
+   */
+  private extractState(location: string): string {
+    const stateMap: Record<string, string> = {
+      'mumbai': 'Maharashtra',
+      'delhi': 'Delhi',
+      'bangalore': 'Karnataka',
+      'hyderabad': 'Telangana',
+      'chennai': 'Tamil Nadu',
+      'kolkata': 'West Bengal',
+      'pune': 'Maharashtra',
+      'ahmedabad': 'Gujarat',
+      'jaipur': 'Rajasthan',
+      'lucknow': 'Uttar Pradesh',
+      'surat': 'Gujarat',
+      'noida': 'Uttar Pradesh',
+      'gurgaon': 'Haryana',
+      'gurugram': 'Haryana',
+      'faridabad': 'Haryana',
+      'ghaziabad': 'Uttar Pradesh'
+    };
+
+    const lowerLocation = location.toLowerCase();
+    for (const [city, state] of Object.entries(stateMap)) {
+      if (lowerLocation.includes(city)) {
+        return state;
+      }
+    }
+    
+    return 'India'; // Default fallback
+  }
+
+  /**
+   * Extract condition from description
+   */
+  private extractCondition(description: string): string {
+    const lowerDesc = description.toLowerCase();
+    
+    if (lowerDesc.includes('excellent') || lowerDesc.includes('like new')) {
+      return 'excellent';
+    }
+    if (lowerDesc.includes('good') || lowerDesc.includes('well maintained')) {
+      return 'good';
+    }
+    if (lowerDesc.includes('fair') || lowerDesc.includes('needs work')) {
+      return 'fair';
+    }
+    
+    return 'good'; // Default to good for OLX listings
   }
 }
