@@ -3,7 +3,8 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
   insertCarSchema, 
-  insertContactSchema, 
+  insertContactSchema,
+  insertSellerLeadSchema, 
   insertSubscriptionSchema, 
   insertFeaturedListingSchema,
   insertConversationSchema,
@@ -1711,6 +1712,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid contact data", details: error.errors });
       }
       res.status(500).json({ error: "Failed to create contact inquiry" });
+    }
+  });
+
+  // Create seller lead from landing page
+  app.post("/api/seller-leads", async (req, res) => {
+    try {
+      const leadData = insertSellerLeadSchema.parse(req.body);
+      const lead = await storage.createSellerLead(leadData);
+      
+      console.log(`🎯 New seller lead: ${lead.name} (${lead.sellerType}) - ${lead.email}`);
+      
+      res.status(201).json({ success: true, lead });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid lead data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create seller lead" });
     }
   });
 

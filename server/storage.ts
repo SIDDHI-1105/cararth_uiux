@@ -6,6 +6,8 @@ import {
   type InsertCar, 
   type Contact, 
   type InsertContact, 
+  type SellerLead,
+  type InsertSellerLead,
   type Subscription, 
   type InsertSubscription, 
   type FeaturedListing, 
@@ -70,6 +72,9 @@ export interface IStorage {
   updateContact(contactId: string, updates: Partial<Contact>): Promise<Contact | null>;
   getContactsForCar(carId: string): Promise<Contact[]>;
   getContactsForSeller(sellerId: string): Promise<Contact[]>;
+  
+  // Seller leads from landing page
+  createSellerLead(lead: InsertSellerLead): Promise<SellerLead>;
   
   // Premium subscription operations
   createSubscription(subscription: InsertSubscription): Promise<Subscription>;
@@ -272,6 +277,7 @@ export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private cars: Map<string, Car>;
   private contacts: Map<string, Contact>;
+  private sellerLeads: Map<string, SellerLead>;
   private subscriptions: Map<string, Subscription>;
   private featuredListings: Map<string, FeaturedListing>;
   private conversations: Map<string, Conversation>;
@@ -286,6 +292,7 @@ export class MemStorage implements IStorage {
     this.users = new Map();
     this.cars = new Map();
     this.contacts = new Map();
+    this.sellerLeads = new Map();
     this.subscriptions = new Map();
     this.featuredListings = new Map();
     this.conversations = new Map();
@@ -723,6 +730,22 @@ export class MemStorage implements IStorage {
         const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
         return bTime - aTime; // Latest first
       });
+  }
+
+  async createSellerLead(insertLead: InsertSellerLead): Promise<SellerLead> {
+    const id = randomUUID();
+    const sellerLead: SellerLead = {
+      ...insertLead,
+      id,
+      message: insertLead.message || null,
+      status: 'new',
+      contactedAt: null,
+      convertedAt: null,
+      notes: null,
+      createdAt: new Date(),
+    };
+    this.sellerLeads.set(id, sellerLead);
+    return sellerLead;
   }
 
   // Premium subscription operations

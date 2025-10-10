@@ -8,6 +8,7 @@ import Home from "./pages/home";
 import CarDetail from "./pages/car-detail";
 import MarketplaceListing from "./pages/marketplace-listing";
 import SellCar from "./pages/sell-car";
+import SellYourCar from "./pages/sell-your-car";
 import MessagesPage from "./pages/messages";
 import Blog from "./pages/blog";
 import AdminBlog from "./pages/admin-blog";
@@ -37,6 +38,7 @@ function Router() {
       <Route path="/marketplace/:id" component={MarketplaceListing} />
       <Route path="/sell" component={SellCar} />
       <Route path="/sell-car" component={SellCar} />
+      <Route path="/sell-your-car" component={SellYourCar} />
       <Route path="/messages" component={MessagesPage} />
       <Route path="/blog" component={Blog} />
       <Route path="/admin/blog" component={AdminBlog} />

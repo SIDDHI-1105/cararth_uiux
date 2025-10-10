@@ -124,6 +124,21 @@ export const contacts = pgTable("contacts", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Seller leads from landing page campaign
+export const sellerLeads = pgTable("seller_leads", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  phone: text("phone").notNull(),
+  email: text("email").notNull(),
+  sellerType: text("seller_type").notNull(), // 'individual' | 'dealer'
+  message: text("message"),
+  status: text("status").default('new'), // 'new' | 'contacted' | 'converted' | 'rejected'
+  contactedAt: timestamp("contacted_at"),
+  convertedAt: timestamp("converted_at"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -148,6 +163,15 @@ export const insertCarSchema = createInsertSchema(cars).omit({
 export const insertContactSchema = createInsertSchema(contacts).omit({
   id: true,
   createdAt: true,
+});
+
+export const insertSellerLeadSchema = createInsertSchema(sellerLeads).omit({
+  id: true,
+  createdAt: true,
+  status: true,
+  contactedAt: true,
+  convertedAt: true,
+  notes: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -182,6 +206,8 @@ export type SellerInfo = z.infer<typeof sellerInfoSchema>;
 export type Car = typeof cars.$inferSelect;
 export type InsertContact = z.infer<typeof insertContactSchema>;
 export type Contact = typeof contacts.$inferSelect;
+export type InsertSellerLead = z.infer<typeof insertSellerLeadSchema>;
+export type SellerLead = typeof sellerLeads.$inferSelect;
 
 // Premium subscriptions table
 export const subscriptions = pgTable("subscriptions", {
