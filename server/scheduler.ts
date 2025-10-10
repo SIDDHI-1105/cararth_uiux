@@ -154,6 +154,124 @@ export class InternalScheduler {
           const cities = ['hyderabad', 'bangalore', 'mumbai', 'delhi', 'pune', 'chennai'];
           await orchestratedBatchIngestion.runIngestion(cities);
           console.log('✅ Orchestrated lean ingestion completed successfully');
+          
+          // ADDITIONAL SCRAPERS: Run forum and auction scrapers alongside lean pipeline
+          console.log('🔄 Running additional forum and auction scrapers...');
+          const { DatabaseStorage } = await import('./dbStorage.js');
+          const storage = new DatabaseStorage();
+          
+          // Team-BHP classifieds (owner forum listings)
+          const teamBhpRunId = await scraperHealthMonitor.startRun('Team-BHP', 'forum');
+          try {
+            const { teamBhpScraper } = await import('./teamBhpScraper.js');
+            const result = await teamBhpScraper.scrapeLatestListings(storage.db);
+            await scraperHealthMonitor.completeRun(teamBhpRunId, {
+              success: true,
+              totalFound: result.newListings || 0,
+              newListingsSaved: result.newListings || 0
+            });
+            console.log(`✅ Team-BHP scraping: ${result.newListings} new listings from owner forums`);
+          } catch (error) {
+            await scraperHealthMonitor.completeRun(teamBhpRunId, {
+              success: false,
+              totalFound: 0,
+              newListingsSaved: 0,
+              error: error instanceof Error ? error.message : String(error),
+              errorStack: error instanceof Error ? error.stack : undefined
+            });
+            console.error('❌ Team-BHP scraping failed:', error);
+          }
+          
+          // EauctionsIndia bank auctions
+          const bankRunId = await scraperHealthMonitor.startRun('EauctionsIndia', 'auction');
+          try {
+            const { EauctionsIndiaScraper } = await import('./eauctionsIndiaScraper.js');
+            const { cachedPortalListings } = await import('../shared/schema.js');
+            const bankAuctionScraper = new EauctionsIndiaScraper();
+            const result = await bankAuctionScraper.scrapeListings({ bank: 'all', maxPages: 2 });
+            
+            if (result.success && result.listings.length > 0) {
+              // Persist authenticated listings to database
+              let saved = 0;
+              for (const listing of result.listings) {
+                try {
+                  // Skip listings without required fields
+                  if (!listing.price || listing.price <= 0) {
+                    console.log(`⚠️ Skipping bank auction listing without price: ${listing.title}`);
+                    continue;
+                  }
+                  
+                  const existing = await storage.db
+                    .select()
+                    .from(cachedPortalListings)
+                    .where((eb: any) => eb.eq(cachedPortalListings.url, listing.url))
+                    .limit(1);
+                  
+                  if (existing.length === 0) {
+                    const hash = `bankauction-${listing.url}`;
+                    
+                    await storage.db.insert(cachedPortalListings).values({
+                      portal: 'EauctionsIndia',
+                      externalId: listing.id,
+                      url: listing.url,
+                      title: listing.title,
+                      brand: listing.brand,
+                      model: listing.model,
+                      year: listing.year,
+                      price: listing.price.toString(),
+                      mileage: listing.mileage || null,
+                      fuelType: listing.fuelType || null,
+                      transmission: listing.transmission || null,
+                      location: listing.location,
+                      city: listing.city,
+                      description: listing.description || null,
+                      images: listing.images || [],
+                      sellerType: 'bank',
+                      verificationStatus: listing.verificationStatus || 'unverified',
+                      listingDate: listing.listingDate,
+                      hash: hash,
+                      origin: 'scraped'
+                    });
+                    saved++;
+                  }
+                } catch (err) {
+                  console.error(`❌ Failed to save bank auction listing: ${err}`);
+                }
+              }
+              await scraperHealthMonitor.completeRun(bankRunId, {
+                success: true,
+                totalFound: result.totalFound || 0,
+                newListingsSaved: saved
+              });
+              console.log(`✅ EauctionsIndia bank auctions: ${saved} new listings saved (${result.authenticatedListings} authenticated from ${result.totalFound} found)`);
+            } else if (!result.success) {
+              await scraperHealthMonitor.completeRun(bankRunId, {
+                success: false,
+                totalFound: 0,
+                newListingsSaved: 0,
+                error: result.errors?.join(', ')
+              });
+              console.error(`❌ EauctionsIndia scraping failed: ${result.errors?.join(', ')}`);
+            } else {
+              await scraperHealthMonitor.completeRun(bankRunId, {
+                success: true,
+                totalFound: 0,
+                newListingsSaved: 0
+              });
+              console.log(`✅ EauctionsIndia bank auctions: No new listings found`);
+            }
+          } catch (error) {
+            await scraperHealthMonitor.completeRun(bankRunId, {
+              success: false,
+              totalFound: 0,
+              newListingsSaved: 0,
+              error: error instanceof Error ? error.message : String(error),
+              errorStack: error instanceof Error ? error.stack : undefined
+            });
+            console.error('❌ EauctionsIndia scraping failed:', error);
+          }
+          
+          console.log('✅ Additional scrapers completed');
         } else {
           // Fallback to legacy batch ingestion
           const { batchIngestionService } = await import('./batchIngestion.js');

@@ -360,15 +360,18 @@ export class EauctionsIndiaScraper {
         selector: '.cover-image'
       });
 
+      // Bank auctions: Allow listings even if images fail (they often use generic placeholders)
+      let publicImageUrls: string[] = [];
+      
       if (!imageResult.success || !imageResult.passedGate) {
         console.log(`⚠️ Pre-extracted image failed authenticity validation: ${imageUrl} - ${imageResult.rejectionReasons?.join(', ') || 'Unknown reason'}`);
-        return null;
+        console.log(`📋 Proceeding with bank auction listing without images (institutional source)`);
+        // Continue without images - bank auctions are trusted institutional sources
+      } else {
+        console.log(`📸 1 pre-extracted image passed authenticity gate (score: ${imageResult.authenticityScore})`);
+        // Use the original image URL for serving (since we have it directly)
+        publicImageUrls = [imageUrl];
       }
-
-      console.log(`📸 1 pre-extracted image passed authenticity gate (score: ${imageResult.authenticityScore})`);
-
-      // Use the original image URL for serving (since we have it directly)
-      const publicImageUrls = [imageUrl];
 
       // Extract car metadata from the listing page
       const carData = await this.extractListingData(listingUrl, bankName);

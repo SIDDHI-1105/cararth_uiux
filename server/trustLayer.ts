@@ -349,7 +349,8 @@ export class TrustLayer {
                                 listing?.source?.toLowerCase().includes('promise');
                                 
       // Allow OEM sources to pass even without strict image verification
-      if (isTrustedOEMSource && listing?.images && listing.images.length > 0) {
+      // Bank auctions and OEM sources can proceed even with no images (institutional trust)
+      if (isTrustedOEMSource) {
         console.log(`🏭 OEM source bypassed zero tolerance policy: ${listing.source}`);
         // Continue with approval process for OEM sources
       } else {
@@ -374,7 +375,8 @@ export class TrustLayer {
                                 listing?.source?.toLowerCase().includes('promise');
                                 
       // Allow OEM sources to pass even with failed gate images
-      if (isTrustedOEMSource && listing?.images && listing.images.length > 0) {
+      // Bank auctions and OEM sources can proceed even with failed/no images (institutional trust)
+      if (isTrustedOEMSource) {
         console.log(`🏭 OEM source bypassed authenticity gate failure: ${listing.source}`);
         // Continue with approval process for OEM sources
       } else {
@@ -395,6 +397,21 @@ export class TrustLayer {
                               listing?.source?.toLowerCase().includes('eauctions') ||
                               listing?.source?.toLowerCase().includes('first choice') ||
                               listing?.source?.toLowerCase().includes('promise');
+    
+    // Bank auctions get special approval - institutional trust regardless of content/trust scores
+    const isBankAuction = listing?.source?.toLowerCase().includes('bank') ||
+                         listing?.source?.toLowerCase().includes('auction') ||
+                         listing?.source?.toLowerCase().includes('eauctions');
+    
+    if (isBankAuction) {
+      console.log(`🏦 Bank auction approved via institutional trust: ${listing?.source} (trust score: ${trustScore}, moderation: ${moderationResult.severity})`);
+      return {
+        approved: true,
+        actions: ['approve'],
+        issues: [],
+        explanation: 'Bank auction approved via institutional trust (bank-backed asset)'
+      };
+    }
     
     // OEM sources get approved with lower thresholds
     if (isTrustedOEMSource && moderationResult.isClean && trustScore >= 30) {
