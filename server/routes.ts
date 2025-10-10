@@ -2041,6 +2041,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin: Trigger Apify OLX scraping
+  app.post('/api/admin/scrape-olx', isAuthenticated, async (req: any, res) => {
+    try {
+      // Check admin role
+      const user = await storage.getUser(req.user.claims.sub);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ error: 'Admin access required' });
+      }
+
+      const { city, maxListings } = req.body;
+      
+      if (!city) {
+        return res.status(400).json({ error: 'City is required' });
+      }
+
+      // Import and initialize Apify scraper
+      const { ApifyOlxScraper } = await import('./apifyOlxScraper.js');
+      const apiToken = process.env.APIFY_API_TOKEN;
+      
+      if (!apiToken) {
+        return res.status(500).json({ error: 'Apify API token not configured' });
+      }
+
+      const scraper = new ApifyOlxScraper(apiToken, storage);
+      
+      // Run scraping (don't await - respond immediately)
+      scraper.scrapeOlxCars(city, maxListings || 100)
+        .then(result => {
+          console.log(`✅ Apify scraping completed:`, result);
+        })
+        .catch(error => {
+          console.error(`❌ Apify scraping failed:`, error);
+        });
+
+      res.json({ 
+        message: `OLX scraping started for ${city}`,
+        status: 'in_progress'
+      });
+    } catch (error) {
+      console.error('Failed to start Apify scraping:', error);
+      res.status(500).json({ error: 'Failed to start scraping' });
+    }
+  });
+
   // Community Posts API - Create new post
   app.post('/api/community/posts', isAuthenticated, async (req: any, res) => {
     try {
