@@ -46,9 +46,16 @@ export default function AdminSyndication() {
     refetchInterval: 30000, // Auto-refresh every 30 seconds
   });
 
+  const { data: scraperData, isLoading: scraperLoading, refetch: refetchScrapers } = useQuery({
+    queryKey: ['/api/scraper-health'],
+    refetchInterval: 30000, // Auto-refresh every 30 seconds
+  });
+
   const platformStats = (healthData as any)?.platforms || [];
   const recentLogs = (healthData as any)?.recentAuditLogs || [];
   const complianceData = (healthData as any)?.compliance || {};
+  const scraperStats = (scraperData as any)?.scrapers || [];
+  const scraperSummary = (scraperData as any)?.summary || { total: 0, healthy: 0, failing: 0 };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('en-IN', {
@@ -114,10 +121,14 @@ export default function AdminSyndication() {
       </div>
 
       <Tabs defaultValue="platforms" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="platforms" data-testid="tab-platforms">
             <BarChart3 className="w-4 h-4 mr-2" />
             Platform Stats
+          </TabsTrigger>
+          <TabsTrigger value="scrapers" data-testid="tab-scrapers">
+            <Database className="w-4 h-4 mr-2" />
+            Scrapers
           </TabsTrigger>
           <TabsTrigger value="audit" data-testid="tab-audit">
             <FileText className="w-4 h-4 mr-2" />
@@ -246,6 +257,167 @@ export default function AdminSyndication() {
                             <strong>{stat.failedPosts}</strong> failed
                           </span>
                         </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Scrapers Tab */}
+        <TabsContent value="scrapers" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">Total Scrapers</p>
+                    <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">
+                      {scraperSummary.total || 0}
+                    </p>
+                  </div>
+                  <Database className="w-8 h-8 text-blue-500" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-green-700 dark:text-green-300">Healthy</p>
+                    <p className="text-3xl font-bold text-green-900 dark:text-green-100">
+                      {scraperSummary.healthy || 0}
+                    </p>
+                  </div>
+                  <CheckCircle className="w-8 h-8 text-green-500" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-red-700 dark:text-red-300">Failing</p>
+                    <p className="text-3xl font-bold text-red-900 dark:text-red-100">
+                      {scraperSummary.failing || 0}
+                    </p>
+                  </div>
+                  <XCircle className="w-8 h-8 text-red-500" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>Active Scrapers</span>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => refetchScrapers()}
+                  data-testid="button-refresh-scrapers"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Refresh
+                </Button>
+              </CardTitle>
+              <CardDescription>
+                Monitor scraper health and trigger manual runs
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {scraperStats.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">
+                    No scrapers configured
+                  </p>
+                ) : (
+                  scraperStats.map((scraper: any) => (
+                    <div
+                      key={scraper.name}
+                      className="p-4 rounded-lg border border-border dark:border-gray-700 hover:bg-muted/50 dark:hover:bg-gray-900/50 transition-colors"
+                      data-testid={`scraper-${scraper.name}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="font-semibold text-lg">{scraper.name}</h3>
+                            {scraper.status === 'healthy' ? (
+                              <Badge className="bg-green-500/10 text-green-700 border-green-200">
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                Healthy
+                              </Badge>
+                            ) : scraper.status === 'failing' ? (
+                              <Badge className="bg-red-500/10 text-red-700 border-red-200">
+                                <XCircle className="w-3 h-3 mr-1" />
+                                Failing
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline">
+                                <Clock className="w-3 h-3 mr-1" />
+                                Unknown
+                              </Badge>
+                            )}
+                          </div>
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                            <div>
+                              <span className="text-muted-foreground">Total Runs:</span>
+                              <span className="font-medium ml-1">{scraper.totalRuns || 0}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Success:</span>
+                              <span className="font-medium ml-1 text-green-600">{scraper.successCount || 0}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Failed:</span>
+                              <span className="font-medium ml-1 text-red-600">{scraper.failureCount || 0}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Last Run:</span>
+                              <span className="font-medium ml-1">
+                                {scraper.lastRunAt ? formatDate(scraper.lastRunAt) : 'Never'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {scraper.name === 'OLX Apify Scraper' && (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            data-testid="button-trigger-olx-scrape"
+                            onClick={async () => {
+                              try {
+                                const city = prompt('Enter city to scrape (e.g., Delhi, Mumbai):');
+                                if (!city) return;
+                                
+                                const response = await fetch('/api/admin/scrape-olx', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ city, maxListings: 100 })
+                                });
+                                
+                                if (response.ok) {
+                                  alert(`OLX scraping started for ${city}!`);
+                                  refetchScrapers();
+                                } else {
+                                  alert('Failed to start scraping');
+                                }
+                              } catch (error) {
+                                alert('Error starting scraper');
+                              }
+                            }}
+                          >
+                            <RefreshCw className="w-4 h-4 mr-2" />
+                            Trigger Scrape
+                          </Button>
+                        )}
                       </div>
                     </div>
                   ))
