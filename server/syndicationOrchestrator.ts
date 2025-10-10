@@ -45,6 +45,47 @@ interface SyndicationResult {
 }
 
 /**
+ * Token bucket rate limiter for API throttling
+ */
+class RateLimiter {
+  private tokens: number;
+  private lastRefill: number;
+  private readonly maxTokens: number;
+  private readonly refillRate: number; // tokens per second
+
+  constructor(maxTokens: number, refillRate: number) {
+    this.maxTokens = maxTokens;
+    this.refillRate = refillRate;
+    this.tokens = maxTokens;
+    this.lastRefill = Date.now();
+  }
+
+  async acquire(): Promise<void> {
+    // Loop until we have a token available
+    while (true) {
+      this.refill();
+
+      if (this.tokens >= 1) {
+        this.tokens -= 1;
+        return;
+      }
+
+      // Wait until next token is available
+      const waitTime = (1 - this.tokens) / this.refillRate * 1000;
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+      // Loop back to refill and check again
+    }
+  }
+
+  private refill(): void {
+    const now = Date.now();
+    const timePassed = (now - this.lastRefill) / 1000;
+    this.tokens = Math.min(this.maxTokens, this.tokens + timePassed * this.refillRate);
+    this.lastRefill = now;
+  }
+}
+
+/**
  * SyndicationOrchestrator - Distributes seller listings across multiple platforms
  * 
  * Workflow:
@@ -52,11 +93,19 @@ interface SyndicationResult {
  * 2. Posts to OLX (via Partner API), Quikr (via API), Facebook (via Graph API)
  * 3. Handles retries and error logging
  * 4. Saves execution logs to database
+ * 5. Rate limiting to prevent API quota exhaustion
  */
 export class SyndicationOrchestrator {
   private storage: IStorage;
   private readonly MAX_RETRIES = 3;
   private readonly RETRY_DELAY_MS = 2000;
+
+  // Rate limiters per platform (10 requests/minute = 0.167 req/sec)
+  private readonly rateLimiters = {
+    olx: new RateLimiter(10, 0.167),
+    quikr: new RateLimiter(10, 0.167),
+    facebook: new RateLimiter(10, 0.167),
+  };
 
   // API credentials from environment
   private readonly OLX_CLIENT_ID = process.env.OLX_CLIENT_ID;
@@ -111,7 +160,39 @@ export class SyndicationOrchestrator {
   }
 
   /**
-   * Syndicate to a single platform with retry logic
+   * Batch syndication with queue-based processing
+   * Processes multiple listings sequentially to respect rate limits
+   */
+  async syndicateBatch(
+    listings: Array<{ listing: SellerListing; consentedPlatforms: string[] }>
+  ): Promise<Map<string, SyndicationResult[]>> {
+    const allResults = new Map<string, SyndicationResult[]>();
+    
+    console.log(`📦 Starting batch syndication for ${listings.length} listings`);
+
+    for (const { listing, consentedPlatforms } of listings) {
+      try {
+        const results = await this.syndicateListing(listing, consentedPlatforms);
+        allResults.set(listing.id, results);
+        
+        // Brief delay between listings to prevent thundering herd
+        await this.delay(500);
+      } catch (error) {
+        console.error(`❌ Batch syndication failed for listing ${listing.id}:`, error);
+        allResults.set(listing.id, consentedPlatforms.map(platform => ({
+          platform,
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        })));
+      }
+    }
+
+    console.log(`✅ Batch syndication complete: ${allResults.size} listings processed`);
+    return allResults;
+  }
+
+  /**
+   * Syndicate to a single platform with retry logic and rate limiting
    */
   private async syndicateToplatform(
     listing: SellerListing,
@@ -120,6 +201,13 @@ export class SyndicationOrchestrator {
   ): Promise<SyndicationResult> {
     try {
       console.log(`📤 Syndicating to ${platform} (attempt ${attempt}/${this.MAX_RETRIES})`);
+
+      // Acquire rate limit token before API call
+      const platformKey = platform.toLowerCase() as keyof typeof this.rateLimiters;
+      if (this.rateLimiters[platformKey]) {
+        await this.rateLimiters[platformKey].acquire();
+        console.log(`🎫 Rate limit token acquired for ${platform}`);
+      }
 
       let result: SyndicationResult;
       switch (platform.toLowerCase()) {
@@ -140,10 +228,18 @@ export class SyndicationOrchestrator {
     } catch (error) {
       console.error(`❌ Failed to syndicate to ${platform}:`, error);
 
-      // Retry logic
+      // Check if rate limit error (429)
+      const isRateLimitError = error instanceof Error && 
+        (error.message.includes('429') || error.message.includes('rate limit') || error.message.includes('Too Many Requests'));
+
+      // Retry logic with exponential backoff for rate limits
       if (attempt < this.MAX_RETRIES) {
-        console.log(`🔄 Retrying ${platform} in ${this.RETRY_DELAY_MS}ms...`);
-        await this.delay(this.RETRY_DELAY_MS);
+        const delayMs = isRateLimitError 
+          ? this.RETRY_DELAY_MS * Math.pow(2, attempt - 1) // Exponential backoff for rate limits
+          : this.RETRY_DELAY_MS;
+        
+        console.log(`🔄 Retrying ${platform} in ${delayMs}ms...${isRateLimitError ? ' (rate limit detected)' : ''}`);
+        await this.delay(delayMs);
         return this.syndicateToplatform(listing, platform, attempt + 1);
       }
 
