@@ -7,6 +7,7 @@ import Layout from "@/components/layout";
 import ContactModal from "@/components/contact-modal";
 import PriceInsights from "@/components/price-insights";
 import LoanWidget from "@/components/loan-widget";
+import SocialShareButtons from "@/components/social-share-buttons";
 import { Phone, Calendar, MapPin, User, Star, Check, ArrowLeft, MessageCircle, Shield } from "lucide-react";
 import { Link } from "wouter";
 import { type Car, type User as UserType } from "@shared/schema";
@@ -85,7 +86,7 @@ export default function CarDetail() {
           </Button>
         </Link>
 
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-4">
           <h1 className="text-3xl font-bold" data-testid="text-car-title">{car.title}</h1>
           {car.isVerified && (
             <Badge className="bg-green-100 text-green-800" data-testid="badge-verified">
@@ -93,6 +94,15 @@ export default function CarDetail() {
               Verified
             </Badge>
           )}
+        </div>
+
+        {/* Social Share Buttons */}
+        <div className="mb-6">
+          <SocialShareButtons 
+            url={typeof window !== 'undefined' ? window.location.href : `https://cararth.com/car/${car.id}`}
+            title={car.title}
+            description={`${car.year} ${car.title} - ${formatPrice(car.price)} | ${formatMileage(car.mileage)} driven | ${car.city}, ${car.state}`}
+          />
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
