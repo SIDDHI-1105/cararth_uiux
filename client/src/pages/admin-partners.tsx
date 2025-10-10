@@ -89,52 +89,52 @@ function AnalyticsAndScrapers() {
             <div className="space-y-6">
               {/* Summary Stats */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="p-4 rounded-lg bg-muted dark:bg-gray-800">
-                  <div className="text-sm text-muted-foreground dark:text-gray-400">Total Listings</div>
-                  <div className="text-2xl font-bold text-foreground dark:text-white">{analytics.total || 0}</div>
+                <div className="p-4 rounded-lg bg-muted">
+                  <div className="text-sm text-muted-foreground">Total Listings</div>
+                  <div className="text-2xl font-bold">{analytics.total || 0}</div>
                 </div>
-                <div className="p-4 rounded-lg bg-muted dark:bg-gray-800">
-                  <div className="text-sm text-muted-foreground dark:text-gray-400">Sources</div>
-                  <div className="text-2xl font-bold text-foreground dark:text-white">{analytics.summary?.totalSources || 0}</div>
+                <div className="p-4 rounded-lg bg-muted">
+                  <div className="text-sm text-muted-foreground">Sources</div>
+                  <div className="text-2xl font-bold">{analytics.summary?.totalSources || 0}</div>
                 </div>
-                <div className="p-4 rounded-lg bg-green-500/10 dark:bg-green-900/20">
-                  <div className="text-sm text-green-700 dark:text-green-400">Fresh (7 days)</div>
-                  <div className="text-2xl font-bold text-green-700 dark:text-green-400">{analytics.summary?.freshListings || 0}</div>
+                <div className="p-4 rounded-lg bg-green-500/10">
+                  <div className="text-sm text-green-700">Fresh (7 days)</div>
+                  <div className="text-2xl font-bold text-green-700">{analytics.summary?.freshListings || 0}</div>
                 </div>
-                <div className="p-4 rounded-lg bg-blue-500/10 dark:bg-blue-900/20">
-                  <div className="text-sm text-blue-700 dark:text-blue-400">Recent (30 days)</div>
-                  <div className="text-2xl font-bold text-blue-700 dark:text-blue-400">{analytics.summary?.recentListings || 0}</div>
+                <div className="p-4 rounded-lg bg-blue-500/10">
+                  <div className="text-sm text-blue-700">Recent (30 days)</div>
+                  <div className="text-2xl font-bold text-blue-700">{analytics.summary?.recentListings || 0}</div>
                 </div>
               </div>
 
               {/* Source Breakdown */}
               <div className="space-y-3">
-                <h3 className="font-semibold text-foreground dark:text-white">By Source</h3>
+                <h3 className="font-semibold">By Source</h3>
                 {analytics.bySource && analytics.bySource.length > 0 ? (
                   analytics.bySource.map((source: any) => {
                     const percentage = analytics.total > 0 ? ((source.total / analytics.total) * 100).toFixed(1) : '0.0';
                     const daysSinceNewest = Math.floor((Date.now() - new Date(source.newest).getTime()) / (1000 * 60 * 60 * 24));
                     
                     return (
-                      <div key={source.portal} className="p-4 rounded-lg border border-border dark:border-gray-700 bg-background dark:bg-gray-950">
+                      <div key={source.portal} className="p-4 rounded-lg border bg-card">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-3">
-                            <span className="font-medium text-foreground dark:text-white">{source.portal}</span>
+                            <span className="font-medium">{source.portal}</span>
                             <Badge variant="outline">{percentage}%</Badge>
                           </div>
-                          <span className="text-sm text-muted-foreground dark:text-gray-400">
+                          <span className="text-sm text-muted-foreground">
                             {source.total} listings
                           </span>
                         </div>
                         
-                        <div className="w-full h-2 bg-muted dark:bg-gray-800 rounded-full overflow-hidden mb-2">
+                        <div className="w-full h-2 bg-muted rounded-full overflow-hidden mb-2">
                           <div 
                             className="h-full bg-primary"
                             style={{ width: `${percentage}%` }}
                           />
                         </div>
                         
-                        <div className="flex items-center justify-between text-xs text-muted-foreground dark:text-gray-400">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
                           <div className="flex gap-4">
                             <span>Last 7d: {source.last7Days}</span>
                             <span>Last 30d: {source.last30Days}</span>

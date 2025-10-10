@@ -220,7 +220,7 @@ export default function AdminSyndication() {
                   platformStats.map((stat: PlatformStat) => (
                     <div
                       key={stat.platform}
-                      className="p-4 rounded-lg border border-border dark:border-gray-700 bg-background dark:bg-gray-950"
+                      className="p-4 rounded-lg border bg-card"
                       data-testid={`platform-${stat.platform.toLowerCase().replace(/\s+/g, '-')}`}
                     >
                       <div className="flex items-center justify-between mb-3">

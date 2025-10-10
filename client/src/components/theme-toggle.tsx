@@ -6,26 +6,37 @@ export default function ThemeToggle() {
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    // Check for saved theme preference or default to 'light' mode
-    const theme = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    // Priority: User's explicit choice > Default to light mode
+    // This ensures mobile devices don't force dark mode
+    const savedTheme = localStorage.getItem('theme');
     
-    if (theme === 'dark' || (!theme && prefersDark)) {
+    if (savedTheme === 'dark') {
       setIsDark(true);
       document.documentElement.classList.add('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
     } else {
+      // Default to light mode, even if system prefers dark
+      // User can explicitly choose dark mode using the toggle
       setIsDark(false);
       document.documentElement.classList.remove('dark');
+      document.documentElement.setAttribute('data-theme', 'light');
+      
+      // Save default light preference if not set
+      if (!savedTheme) {
+        localStorage.setItem('theme', 'light');
+      }
     }
   }, []);
 
   const toggleTheme = () => {
     if (isDark) {
       document.documentElement.classList.remove('dark');
+      document.documentElement.setAttribute('data-theme', 'light');
       localStorage.setItem('theme', 'light');
       setIsDark(false);
     } else {
       document.documentElement.classList.add('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
       localStorage.setItem('theme', 'dark');
       setIsDark(true);
     }

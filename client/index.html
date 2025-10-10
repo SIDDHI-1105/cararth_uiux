@@ -1,6 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <!-- Theme initialization - Runs before page load to prevent flash -->
+    <script>
+      (function() {
+        // Priority: User's explicit choice > Default to light mode
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+          document.documentElement.classList.add('dark');
+          document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+          // Default to light mode on mobile, even if system prefers dark
+          document.documentElement.classList.remove('dark');
+          document.documentElement.setAttribute('data-theme', 'light');
+          if (!savedTheme) {
+            localStorage.setItem('theme', 'light');
+          }
+        }
+      })();
+    </script>
+    
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-B5GJ9X3GXZ"></script>
     <script>
