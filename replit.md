@@ -34,6 +34,9 @@ Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, an
 - **Enterprise Partner Syndication**: Enables partners to post listings once for multi-platform distribution. Core components include partner source management, canonical listings, multi-LLM compliance pipeline (OpenAI, Gemini, Anthropic, Perplexity), and ingestion service. Supports webhook, manual batch, and Firecrawl/Crawl4AI scraping.
 - **Partner Self-Service Portal**: Intuitive dashboard for dealers to manage inventory with real-time marketplace updates. Features include shareable invite links, partner accounts with role-based access, instant cache invalidation, and a non-technical Add Listing form. Includes a Bulk Upload feature for CSV and media files with real-time progress tracking.
 - **Automated Forum & Marketplace Scraping**: Daily scraping from quality owner communities like Team-BHP Classifieds, TheAutomotiveIndia Marketplace, Quikr Cars, and Reddit r/CarsIndia.
+- **Apify-Powered Marketplace Scraping**: Automated scraping from OLX and Facebook Marketplace via Apify actors, running daily at 11:00 IST for 5 major cities (Hyderabad, Bangalore, Mumbai, Delhi, Pune). Includes health monitoring, retry logic, and admin manual trigger endpoints.
+- **Real Market Intelligence**: SIAM sales data and Google Trends integration for price insights, showing market trends and popularity metrics for specific car models.
+- **Image-Based Quality Ranking**: Search results use image quality scoring (-15 to +18 points based on count/quality) for more relevant listings.
 - **Dynamic Hero Section**: Real-time statistics displayed on the homepage, showing total listings and platform counts, with data fetched from the database and updated frequently.
 
 ## External Dependencies
@@ -70,6 +73,7 @@ Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, an
 ### Web Scraping
 - **Firecrawl**: Premium web scraping service with LLM-powered extraction.
 - **Crawl4AI**: Free, self-hosted web scraping with LLM extraction (used as backup/legacy).
+- **Apify**: Cloud-based web scraping and automation platform for OLX and Facebook Marketplace data extraction.
 
 ### Notification & Communication
 - **Twilio**: WhatsApp Business API for instant seller notifications.
