@@ -40,25 +40,25 @@ export default function SellYourCar() {
   // SEO Metadata
   useEffect(() => {
     // Set page title
-    document.title = 'Sell Your Car Online - List on 10+ Platforms | Cararth';
+    document.title = 'Sell Your Car Online - Join Our Beta | Cararth';
     
     // Set meta description
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {
       metaDescription.setAttribute('content', 
-        'Sell your used car quickly and easily on Cararth. List once and reach lakhs of buyers across OLX, Cars24, CarDekho, Facebook Marketplace and more. Verified buyers only.'
+        'Join Cararth\'s beta program to sell your car with AI-powered insights. Early access to India\'s smartest car marketplace. Be among the first sellers with priority support.'
       );
     } else {
       const meta = document.createElement('meta');
       meta.name = 'description';
-      meta.content = 'Sell your used car quickly and easily on Cararth. List once and reach lakhs of buyers across OLX, Cars24, CarDekho, Facebook Marketplace and more. Verified buyers only.';
+      meta.content = 'Join Cararth\'s beta program to sell your car with AI-powered insights. Early access to India\'s smartest car marketplace. Be among the first sellers with priority support.';
       document.head.appendChild(meta);
     }
 
     // Open Graph tags for social sharing
     const ogTags = [
-      { property: 'og:title', content: 'Sell Your Car Online - Reach Lakhs of Buyers | Cararth' },
-      { property: 'og:description', content: 'List your car once, appear on 10+ platforms. Get the best price with AI-powered insights.' },
+      { property: 'og:title', content: 'Join Cararth Beta - Early Access Car Marketplace | Cararth' },
+      { property: 'og:description', content: 'Join our beta program and sell your car with AI-powered insights. Early access to India\'s smartest car marketplace.' },
       { property: 'og:type', content: 'website' },
       { property: 'og:url', content: window.location.href },
       { property: 'og:site_name', content: 'Cararth' },
@@ -79,8 +79,8 @@ export default function SellYourCar() {
     // Twitter Card tags
     const twitterTags = [
       { name: 'twitter:card', content: 'summary_large_image' },
-      { name: 'twitter:title', content: 'Sell Your Car Online - Reach Lakhs of Buyers | Cararth' },
-      { name: 'twitter:description', content: 'List your car once, appear on 10+ platforms. Get the best price with AI-powered insights.' },
+      { name: 'twitter:title', content: 'Join Cararth Beta - Early Access Car Marketplace | Cararth' },
+      { name: 'twitter:description', content: 'Join our beta program and sell your car with AI-powered insights. Early access to India\'s smartest car marketplace.' },
     ];
 
     twitterTags.forEach(tag => {
@@ -171,7 +171,7 @@ export default function SellYourCar() {
                 Sell Your Car to <span className="text-primary">Lakhs of Buyers</span>
               </h1>
               <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-                List once, reach buyers across 10+ platforms. Get the best price for your car with zero hassle.
+                Join our beta program for early access to India's smartest car marketplace. Be among the first sellers to experience AI-powered pricing.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <Button size="lg" className="text-lg px-8 py-6" onClick={scrollToForm} data-testid="button-list-now">
@@ -188,8 +188,8 @@ export default function SellYourCar() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
               <Card className="border-2">
                 <CardContent className="pt-6 text-center">
-                  <div className="text-4xl font-bold text-primary mb-2">{stats?.totalPlatforms || 10}+</div>
-                  <div className="text-muted-foreground">Platform Reach</div>
+                  <div className="text-4xl font-bold text-primary mb-2">BETA</div>
+                  <div className="text-muted-foreground">Early Access Program</div>
                 </CardContent>
               </Card>
               <Card className="border-2">
@@ -226,9 +226,9 @@ export default function SellYourCar() {
                   <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
                     <Globe className="w-6 h-6 text-primary" />
                   </div>
-                  <h3 className="text-xl font-bold mb-3">Multi-Platform Syndication</h3>
+                  <h3 className="text-xl font-bold mb-3">Beta Testing Phase</h3>
                   <p className="text-muted-foreground">
-                    List once, appear on OLX, Cars24, CarDekho, CarWale, Facebook Marketplace and more. Maximum visibility guaranteed.
+                    We're currently in beta, testing our AI-powered marketplace. Join now and help shape the future of car selling in India.
                   </p>
                 </CardContent>
               </Card>
@@ -325,9 +325,9 @@ export default function SellYourCar() {
                 <div className="w-16 h-16 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
                   2
                 </div>
-                <h3 className="text-xl font-bold mb-3">We Promote Everywhere</h3>
+                <h3 className="text-xl font-bold mb-3">Beta Launch Benefits</h3>
                 <p className="text-muted-foreground">
-                  Your listing automatically appears on 10+ platforms. Thousands of buyers see your car.
+                  As a beta seller, you'll get priority support and exclusive features as we build India's best car marketplace.
                 </p>
               </div>
 
@@ -409,7 +409,7 @@ export default function SellYourCar() {
                     </li>
                     <li className="flex items-start gap-3">
                       <CheckCircle2 className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
-                      <span>Multi-platform compliance automation</span>
+                      <span>Early access to beta features</span>
                     </li>
                     <li className="flex items-start gap-3">
                       <CheckCircle2 className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
@@ -535,20 +535,16 @@ export default function SellYourCar() {
         </div>
       </section>
 
-      {/* Platform Trust Signals */}
+      {/* Beta Status */}
       <section className="py-16 bg-card/30">
         <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
-            <p className="text-center text-muted-foreground mb-8">
-              Your listings will appear on these trusted platforms
-            </p>
-            <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">
-              {(stats?.platforms?.slice(0, 8) ?? []).map((platform) => (
-                <div key={platform.name} className="text-sm font-semibold px-4 py-2 border rounded-md bg-card">
-                  {platform.name}
-                </div>
-              ))}
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="inline-block px-6 py-3 bg-primary/10 border-2 border-primary/20 rounded-full mb-6">
+              <span className="text-primary font-bold text-lg">🚀 Currently in Beta Testing</span>
             </div>
+            <p className="text-muted-foreground text-lg">
+              We're refining our platform with early adopters. Join now to get exclusive beta access and help us build India's most trusted car marketplace.
+            </p>
           </div>
         </div>
       </section>
@@ -560,7 +556,7 @@ export default function SellYourCar() {
             Join Thousands of Happy Sellers
           </h2>
           <p className="text-xl mb-8 opacity-90">
-            Start selling your car today. No fees. Maximum reach.
+            Join our beta program today. Early access. Priority support.
           </p>
           <div className="flex justify-center">
             <Button size="lg" variant="secondary" className="text-lg px-8 py-6" onClick={scrollToForm} data-testid="button-footer-cta">
