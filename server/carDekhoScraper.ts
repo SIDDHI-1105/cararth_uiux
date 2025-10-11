@@ -56,19 +56,30 @@ export class CarDekhoScraper {
       // Parse HTML
       const $ = cheerio.load(response.data);
 
-      // Extract listings - CarDekho uses different selectors, we'll try multiple patterns
+      // Extract listings - CarDekho uses .cardColumn class for listing cards
       const listings: any[] = [];
 
-      // Try pattern 1: Standard listing cards
-      $('.gsc_col-12').each((index, element) => {
+      $('.cardColumn').each((index, element) => {
         if (index >= maxListings) return false;
 
         const $elem = $(element);
-        const title = $elem.find('h3, .title').first().text().trim();
-        const price = $elem.find('.price, .gsc_col-xs-12.priceDtl').first().text().trim();
+        
+        // Extract title from the card
+        const title = $elem.find('h2, h3, [class*="title"]').first().text().trim();
+        
+        // Extract price - look for price text patterns
+        const priceText = $elem.text();
+        const priceMatch = priceText.match(/₹[\d.,]+ (?:Lakh|Cr|Crore)/i);
+        const price = priceMatch ? priceMatch[0] : '';
+        
+        // Extract link
         const link = $elem.find('a').first().attr('href');
+        
+        // Extract image
         const image = $elem.find('img').first().attr('src') || $elem.find('img').first().attr('data-src');
-        const description = $elem.find('.descri, .gsc_row').text().trim();
+        
+        // Extract description/details (mileage, fuel type, etc.)
+        const description = $elem.text().trim();
 
         if (title && price && link) {
           listings.push({
@@ -81,29 +92,6 @@ export class CarDekhoScraper {
           });
         }
       });
-
-      // Try pattern 2: Alternative card structure
-      if (listings.length === 0) {
-        $('.list_ul li, .used_car_list li').each((index, element) => {
-          if (index >= maxListings) return false;
-
-          const $elem = $(element);
-          const title = $elem.find('h2, h3, .car-name').text().trim();
-          const price = $elem.find('.price-text, .car-price').text().trim();
-          const link = $elem.find('a').first().attr('href');
-          const image = $elem.find('img').first().attr('src');
-
-          if (title && price && link) {
-            listings.push({
-              title,
-              price,
-              url: link.startsWith('http') ? link : `${this.BASE_URL}${link}`,
-              image,
-              location: city
-            });
-          }
-        });
-      }
 
       scrapedCount = listings.length;
       console.log(`📦 Scraped ${scrapedCount} listings from CarDekho`);
