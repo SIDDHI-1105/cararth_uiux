@@ -393,7 +393,7 @@ export class TrustLayer {
       // Allow institutional sources to pass even without strict image verification
       // Banks and OEMs are verified institutional sources with their own image systems
       if (isInstitutional) {
-        console.log(`🏭 Institutional source bypassed zero tolerance policy: ${listing.source}`);
+        console.log(`🏭 Institutional source bypassed zero tolerance policy: ${listing?.source || 'Unknown'}`);
         // Continue with approval process for institutional sources
       } else {
         return {
@@ -413,7 +413,7 @@ export class TrustLayer {
       // Allow institutional sources to pass even with failed gate images
       // Banks and OEMs have their own verified image systems
       if (isInstitutional) {
-        console.log(`🏭 Institutional source bypassed authenticity gate failure: ${listing.source}`);
+        console.log(`🏭 Institutional source bypassed authenticity gate failure: ${listing?.source || 'Unknown'}`);
         // Continue with approval process for institutional sources
       } else {
         return {
