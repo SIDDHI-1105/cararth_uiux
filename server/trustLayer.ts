@@ -71,7 +71,10 @@ export class TrustLayer {
       
       // Government Auctions
       'SARFAESI Bank Auction',
-      'MSTC e-Auction'
+      'MSTC e-Auction',
+      
+      // Major Automotive Portals (bypass broken perceptual hash for known sources)
+      'CarDekho'
     ]);
     
     this.blacklistedKeywords = new Set([
