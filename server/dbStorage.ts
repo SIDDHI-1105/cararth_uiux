@@ -1554,9 +1554,32 @@ export class DatabaseStorage implements IStorage {
     
     
     try {
+      // Use upsert to handle duplicates gracefully - update if exists, insert if new
+      // The hash column is the deduplication key (portal + URL)
       const result = await this.db
         .insert(cachedPortalListings)
         .values(listing)
+        .onConflictDoUpdate({
+          target: cachedPortalListings.hash,
+          set: {
+            title: listing.title,
+            brand: listing.brand,
+            model: listing.model,
+            year: listing.year,
+            price: listing.price,
+            mileage: listing.mileage,
+            fuelType: listing.fuelType,
+            transmission: listing.transmission,
+            owners: listing.owners,
+            location: listing.location,
+            description: listing.description,
+            images: listing.images,
+            url: listing.url,
+            portal: listing.portal,
+            verificationStatus: listing.verificationStatus,
+            fetchedAt: listing.fetchedAt,
+          },
+        })
         .returning();
       
       const newListing = result[0];
@@ -1567,9 +1590,10 @@ export class DatabaseStorage implements IStorage {
         .filter(key => key.startsWith('portal_search:') || key.startsWith('portal_count:') || key.startsWith('portal_filters:'))
         .forEach(key => this.cache.delete(key));
       
-      logError({ message: 'Cached portal listing created successfully', statusCode: 200 }, 'createCachedPortalListing success');
+      logError({ message: 'Cached portal listing created/updated successfully', statusCode: 200 }, 'createCachedPortalListing success');
       return newListing;
     } catch (error) {
+      console.error('🔥 Database upsert error details:', error);
       logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'createCachedPortalListing operation');
       throw new Error('Failed to create cached portal listing - please try again');
     }
