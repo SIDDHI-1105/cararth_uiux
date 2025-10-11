@@ -39,6 +39,10 @@ export class TrustLayer {
   private trustedSources: Set<string>;
   private blacklistedKeywords: Set<string>;
   
+  // STRICT INSTITUTIONAL ALLOWLIST - Only verified institutional sources
+  // Replaces broad keyword matching to prevent spam
+  private institutionalSources: Set<string>;
+  
   constructor() {
     this.claude = new ClaudeCarListingService();
     this.trustedSources = new Set([
@@ -46,6 +50,28 @@ export class TrustLayer {
       'cars24.com', 
       'carwale.com',
       'autotrader.in'
+    ]);
+    
+    // STRICT ALLOWLIST: Only exact verified institutional sources
+    this.institutionalSources = new Set([
+      // Bank Auctions (eauctions.gov.in platform)
+      'EauctionsIndia - State Bank of India',
+      'EauctionsIndia - Punjab National Bank',
+      'EauctionsIndia - Bank of Baroda',
+      'EauctionsIndia - ICICI Bank',
+      'EauctionsIndia - HDFC Bank',
+      'EauctionsIndia - Axis Bank',
+      
+      // OEM Certified Programs (exact source names only)
+      'Maruti True Value',
+      'Hyundai H-Promise',
+      'Honda Auto Terrace',
+      'Toyota U Trust',
+      'Mahindra First Choice',
+      
+      // Government Auctions
+      'SARFAESI Bank Auction',
+      'MSTC e-Auction'
     ]);
     
     this.blacklistedKeywords = new Set([
@@ -56,8 +82,20 @@ export class TrustLayer {
       'fake',
       'scam',
       'urgent sale',
-      'immediate cash'
+      'immediate cash',
+      'finalise the loan',  // Spam pattern found in database
+      'loan approved'        // Spam pattern
     ]);
+  }
+  
+  /**
+   * Check if source is a verified institutional source (strict matching)
+   */
+  private isInstitutionalSource(source: string | undefined): boolean {
+    if (!source) return false;
+    
+    // Exact match only - no keyword fuzzy matching
+    return this.institutionalSources.has(source);
   }
 
   /**
@@ -97,14 +135,8 @@ export class TrustLayer {
       // Determine final verification status based on validation results
       let finalVerificationStatus: 'verified' | 'unverified' | 'certified' = 'unverified';
       
-      // Check if this is a trusted OEM/Bank source
-      const isTrustedOEMSource = listing.source?.toLowerCase().includes('maruti') || 
-                                listing.source?.toLowerCase().includes('true value') ||
-                                listing.source?.toLowerCase().includes('bank') ||
-                                listing.source?.toLowerCase().includes('auction') ||
-                                listing.source?.toLowerCase().includes('eauctions') ||
-                                listing.source?.toLowerCase().includes('first choice') ||
-                                listing.source?.toLowerCase().includes('promise');
+      // Check if this is a verified institutional source (strict allowlist)
+      const isTrustedOEMSource = this.isInstitutionalSource(listing.source);
       
       if (decision.approved) {
         if (imageAuthenticityResult.hasVerifiedImages) {
@@ -327,32 +359,39 @@ export class TrustLayer {
     explanation: string;
   } {
     
-    // Critical violations - immediate rejection
-    if (moderationResult.severity === 'critical' || fraudScore < 30) {
+    // Critical and HIGH violations - immediate rejection
+    // FIXED: High severity violations now also reject (was only logging before)
+    if (moderationResult.severity === 'critical' || moderationResult.severity === 'high' || fraudScore < 30) {
+      const reasons = [];
+      if (moderationResult.severity === 'critical' || moderationResult.severity === 'high') {
+        reasons.push(`Content moderation: ${moderationResult.severity} severity`);
+        reasons.push(...moderationResult.violations);
+      }
+      if (fraudScore < 30) {
+        reasons.push('High fraud risk detected');
+      }
+      
+      console.log(`🚫 REJECTION: ${listing?.title || 'Unknown'}`);
+      console.log(`   Reasons: ${reasons.join(', ')}`);
+      
       return {
         approved: false,
         actions: ['reject'],
-        issues: ['Critical content violations or fraud patterns detected'],
-        explanation: 'Listing rejected due to critical trust issues'
+        issues: reasons,
+        explanation: `Listing rejected: ${reasons.join('; ')}`
       };
     }
 
-    // HARD GATE: Zero tolerance for unverified images - PERMANENT FIX (with OEM exception)
+    // HARD GATE: Zero tolerance for unverified images - PERMANENT FIX (with institutional exception)
     if (imageAuthenticityResult && !imageAuthenticityResult.hasVerifiedImages) {
-      // Check if this is a trusted OEM source
-      const isTrustedOEMSource = listing?.source?.toLowerCase().includes('maruti') || 
-                                listing?.source?.toLowerCase().includes('true value') ||
-                                listing?.source?.toLowerCase().includes('bank') ||
-                                listing?.source?.toLowerCase().includes('auction') ||
-                                listing?.source?.toLowerCase().includes('eauctions') ||
-                                listing?.source?.toLowerCase().includes('first choice') ||
-                                listing?.source?.toLowerCase().includes('promise');
+      // Check if this is a verified institutional source (strict allowlist)
+      const isInstitutional = this.isInstitutionalSource(listing?.source);
                                 
-      // Allow OEM sources to pass even without strict image verification
-      // Bank auctions and OEM sources can proceed even with no images (institutional trust)
-      if (isTrustedOEMSource) {
-        console.log(`🏭 OEM source bypassed zero tolerance policy: ${listing.source}`);
-        // Continue with approval process for OEM sources
+      // Allow institutional sources to pass even without strict image verification
+      // Banks and OEMs are verified institutional sources with their own image systems
+      if (isInstitutional) {
+        console.log(`🏭 Institutional source bypassed zero tolerance policy: ${listing.source}`);
+        // Continue with approval process for institutional sources
       } else {
         return {
           approved: false,
@@ -363,22 +402,16 @@ export class TrustLayer {
       }
     }
 
-    // HARD GATE: Must have at least one image that passed the authenticity gate (with OEM exception)
+    // HARD GATE: Must have at least one image that passed the authenticity gate (with institutional exception)
     if (imageAuthenticityResult && imageAuthenticityResult.passedGateCount === 0 && imageAuthenticityResult.totalImageCount > 0) {
-      // Check if this is a trusted OEM source
-      const isTrustedOEMSource = listing?.source?.toLowerCase().includes('maruti') || 
-                                listing?.source?.toLowerCase().includes('true value') ||
-                                listing?.source?.toLowerCase().includes('bank') ||
-                                listing?.source?.toLowerCase().includes('auction') ||
-                                listing?.source?.toLowerCase().includes('eauctions') ||
-                                listing?.source?.toLowerCase().includes('first choice') ||
-                                listing?.source?.toLowerCase().includes('promise');
+      // Check if this is a verified institutional source (strict allowlist)
+      const isInstitutional = this.isInstitutionalSource(listing?.source);
                                 
-      // Allow OEM sources to pass even with failed gate images
-      // Bank auctions and OEM sources can proceed even with failed/no images (institutional trust)
-      if (isTrustedOEMSource) {
-        console.log(`🏭 OEM source bypassed authenticity gate failure: ${listing.source}`);
-        // Continue with approval process for OEM sources
+      // Allow institutional sources to pass even with failed gate images
+      // Banks and OEMs have their own verified image systems
+      if (isInstitutional) {
+        console.log(`🏭 Institutional source bypassed authenticity gate failure: ${listing.source}`);
+        // Continue with approval process for institutional sources
       } else {
         return {
           approved: false,
@@ -389,38 +422,18 @@ export class TrustLayer {
       }
     }
     
-    // Check if this is a trusted OEM source for lenient approval
-    const isTrustedOEMSource = listing?.source?.toLowerCase().includes('maruti') || 
-                              listing?.source?.toLowerCase().includes('true value') ||
-                              listing?.source?.toLowerCase().includes('bank') ||
-                              listing?.source?.toLowerCase().includes('auction') ||
-                              listing?.source?.toLowerCase().includes('eauctions') ||
-                              listing?.source?.toLowerCase().includes('first choice') ||
-                              listing?.source?.toLowerCase().includes('promise');
+    // Check if this is a verified institutional source (strict allowlist)
+    const isInstitutional = this.isInstitutionalSource(listing?.source);
     
-    // Bank auctions get special approval - institutional trust regardless of content/trust scores
-    const isBankAuction = listing?.source?.toLowerCase().includes('bank') ||
-                         listing?.source?.toLowerCase().includes('auction') ||
-                         listing?.source?.toLowerCase().includes('eauctions');
-    
-    if (isBankAuction) {
-      console.log(`🏦 Bank auction approved via institutional trust: ${listing?.source} (trust score: ${trustScore}, moderation: ${moderationResult.severity})`);
+    // Institutional sources get special approval - verified institutional trust
+    // IMPORTANT: Still requires clean moderation (spam and high violations still rejected above)
+    if (isInstitutional && moderationResult.isClean && trustScore >= 20) {
+      console.log(`🏛️ Institutional source approved: ${listing?.source} (trust score: ${trustScore})`);
       return {
         approved: true,
         actions: ['approve'],
         issues: [],
-        explanation: 'Bank auction approved via institutional trust (bank-backed asset)'
-      };
-    }
-    
-    // OEM sources get approved with lower thresholds
-    if (isTrustedOEMSource && moderationResult.isClean && trustScore >= 30) {
-      console.log(`🏭 OEM source approved with relaxed trust threshold: ${listing?.source} (score: ${trustScore})`);
-      return {
-        approved: true,
-        actions: ['approve'],
-        issues: [],
-        explanation: 'OEM source approved with certified status'
+        explanation: `Institutional source approved: ${listing?.source}`
       };
     }
     

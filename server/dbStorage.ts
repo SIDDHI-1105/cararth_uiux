@@ -1509,8 +1509,50 @@ export class DatabaseStorage implements IStorage {
 
   /**
    * Create a new cached portal listing
+   * 
+   * DEFENSIVE GATE: Requires Trust Layer validation
+   * Listings MUST come from listingIngestionService to ensure validation
    */
   async createCachedPortalListing(listing: InsertCachedPortalListing): Promise<CachedPortalListing> {
+    // CRITICAL SECURITY GATE: Enforce VALID Trust Layer validation
+    // Only allow listings with REAL Trust Layer results (not dummy objects)
+    
+    const trustAnalysis = (listing.sourceMeta as any)?.trustAnalysis;
+    
+    // Validate Trust Layer result structure
+    const hasValidTrustAnalysis = trustAnalysis && 
+                                   typeof trustAnalysis === 'object' &&
+                                   typeof trustAnalysis.approved === 'boolean' &&
+                                   typeof trustAnalysis.trustScore === 'number' &&
+                                   trustAnalysis.trustScore >= 0 &&
+                                   trustAnalysis.trustScore <= 100 &&
+                                   Array.isArray(trustAnalysis.issues);
+    
+    if (!hasValidTrustAnalysis) {
+      const error = new Error(
+        `SECURITY VIOLATION: Invalid or missing Trust Layer validation. ` +
+        `All listings MUST go through listingIngestionService.ingestListing() with VALID Trust Layer results. ` +
+        `Listing: ${listing.title || 'Unknown'} from ${listing.portal || 'Unknown'}. ` +
+        `Trust analysis: ${JSON.stringify(trustAnalysis || 'missing')}`
+      );
+      console.error('🚨 TRUST LAYER BYPASS BLOCKED:', error.message);
+      throw error;
+    }
+    
+    // Additional validation: Only save if Trust Layer APPROVED the listing
+    if (!trustAnalysis.approved) {
+      const error = new Error(
+        `TRUST LAYER REJECTION: Listing was rejected by Trust Layer. ` +
+        `Listing: ${listing.title || 'Unknown'} from ${listing.portal || 'Unknown'}. ` +
+        `Trust score: ${trustAnalysis.trustScore}, Issues: ${trustAnalysis.issues?.join(', ') || 'none'}`
+      );
+      console.error('🚫 REJECTED LISTING BLOCKED FROM STORAGE:', error.message);
+      throw error;
+    }
+    
+    console.log(`✅ Storage gate passed: ${listing.title} (Trust score: ${trustAnalysis.trustScore}, Approved: ${trustAnalysis.approved})`);
+    
+    
     try {
       const result = await this.db
         .insert(cachedPortalListings)

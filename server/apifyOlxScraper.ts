@@ -1,5 +1,7 @@
 import { ApifyClient } from 'apify-client';
 import type { IStorage } from './storage';
+import { listingIngestionService } from './listingIngestionService';
+import type { MarketplaceListing } from './marketplaceAggregator';
 
 /**
  * ApifyOlxScraper - Scrapes car listings from OLX India using Apify
@@ -92,80 +94,56 @@ export class ApifyOlxScraper {
   }
 
   /**
-   * Save a scraped OLX listing to the database
+   * Save a scraped OLX listing to the database via centralized ingestion service
    */
   private async saveOlxListing(item: any, city: string): Promise<void> {
     if (!item.url) {
       throw new Error('Listing URL is required for deduplication');
     }
 
-    // Generate hash for deduplication (portal + URL)
+    // Generate unique ID for the listing
     const crypto = await import('crypto');
-    const hash = crypto.createHash('sha256')
+    const listingId = crypto.createHash('sha256')
       .update(`OLX:${item.url}`)
-      .digest('hex');
+      .digest('hex').substring(0, 16);
 
     // Extract car details
     const price = this.parsePrice(item.price || '0');
     const brand = this.extractBrand(item.title || '');
     const model = this.extractModel(item.title || '');
     
-    // Prepare cached portal listing data
-    const listingData = {
-      portal: 'OLX',
-      externalId: item.id || item.url.split('/').pop() || hash.substring(0, 16),
-      url: item.url,
-      hash: hash,
-      
-      // Car details
+    // Create MarketplaceListing object
+    const listing: MarketplaceListing = {
+      id: listingId,
       title: item.title || 'Unknown Car',
       brand: brand,
       model: model,
       year: this.extractYear(item.title || item.description || ''),
-      price: price.toString(),
+      price: price,
       mileage: this.extractMileage(item.description || ''),
       fuelType: this.extractFuelType(item.description || ''),
       transmission: this.extractTransmission(item.description || ''),
-      owners: 1,
-      
-      // Location
       location: item.location || city,
       city: city,
-      state: this.extractState(item.location || city),
-      
-      // Additional data
+      source: 'OLX',
+      url: item.url,
+      images: item.images || [],
       description: item.description || '',
       features: [],
-      images: item.images || [],
-      sellerType: 'individual', // OLX is primarily individual sellers
-      verificationStatus: 'unverified',
       condition: this.extractCondition(item.description || ''),
-      
-      // Quality scoring (conservative for scraped data)
-      qualityScore: 50,
-      sourceWeight: 60, // OLX is a major portal
-      hasRealImage: (item.images && item.images.length > 0),
-      specValid: true,
-      imageAuthenticity: 0,
-      
-      // Listing metadata
+      verificationStatus: 'unverified', // Will be set by Trust Layer
       listingDate: item.postedDate ? new Date(item.postedDate) : new Date(),
-      sourceMeta: {
-        scrapedAt: new Date().toISOString(),
-        apifyActorRun: true,
-        originalData: {
-          id: item.id,
-          location: item.location
-        }
-      },
-      
-      // Partner fields (not applicable for scraped)
-      origin: 'scraped'
+      sellerType: 'individual'
     };
 
-    // Save to cachedPortalListings table (will throw on duplicate hash)
-    await this.storage.createCachedPortalListing(listingData);
-    console.log(`✅ Saved OLX listing to portal cache: ${item.title}`);
+    // Use centralized ingestion service (includes Trust Layer validation)
+    const result = await listingIngestionService.ingestListing(listing, 'OLX');
+    
+    if (result.saved) {
+      console.log(`✅ OLX listing saved with status: ${result.trustResult.finalVerificationStatus}`);
+    } else {
+      console.log(`❌ OLX listing rejected: ${result.reason}`);
+    }
   }
 
   /**
