@@ -28,6 +28,7 @@ import ApiCompliance from "./pages/api-compliance";
 import AiTrainingDashboard from "./pages/ai-training-dashboard";
 import FinancingPage from "./pages/financing";
 import ScraperStatus from "./pages/scraper-status";
+import SpinnyDeals from "./pages/spinny-deals";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -58,6 +59,7 @@ function Router() {
       <Route path="/ai-training-dashboard" component={AiTrainingDashboard} />
       <Route path="/financing" component={FinancingPage} />
       <Route path="/admin/scraper-status" component={ScraperStatus} />
+      <Route path="/spinny-deals-hyderabad" component={SpinnyDeals} />
       <Route component={NotFound} />
     </Switch>
   );

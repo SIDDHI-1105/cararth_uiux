@@ -1,0 +1,31 @@
+### Replit Prompt for Spinny Curation Page
+
+This prompt is tailored for your non-technical background to create a simple React page in Replit for curating Spinny.com listings on CarArth.com. It uses your existing React + TypeScript + Vite stack with TanStack Query to fetch and display manually curated Spinny URLs (e.g., 10-20 listings/week from Hyderabad). The page will show titles, prices, and links with a "Spinny Certified" badge, styled with Tailwind CSS. Share this directly with your Replit agent or support team.
+
+---
+
+### Prompt for Replit Agent
+
+"Build a Spinny curation page for CarArth.com in my existing React + TypeScript + Vite project on Replit. Here’s what to do:
+
+1. **Setup**: Use my current React setup. Install 'tanstack/react-query' and '@tanstack/react-query-devtools' (run 'npm install @tanstack/react-query @tanstack/react-query-devtools' if needed).
+2. **Page Creation**: Add a new page at /spinny-deals-hyderabad. Create a file SpinnyDeals.tsx in the src/pages folder with:
+   - A header: 'Spinny Certified Deals in Hyderabad'.
+   - A list of cars fetched via TanStack Query.
+3. **Data Source**: Use a hardcoded array of 10 sample Spinny listings (e.g., [{'title': 'Hyundai Creta 2020', 'price': '950000', 'link': 'https://www.spinny.com/used-cars/hyderabad/creta-12345'}]) as a starting point. Replace with manual curation later (e.g., copy-paste from Spinny site).
+4. **Query Setup**: Configure TanStack Query to fetch this data. Cache for 24 hours and show a loading spinner while fetching.
+5. **Display**: Render each listing as a card with title, price (₹ format), and a 'Spinny Certified' badge (green background). Link opens in a new tab. Use Tailwind CSS for styling (e.g., 'bg-green-500 text-white p-2 rounded').
+6. **Routing**: Integrate with Wouter to route /spinny-deals-hyderabad to this page.
+7. **Test**: Run the app and check the page at http://localhost:5173/spinny-deals-hyderabad. Ensure it loads without errors.
+8. **Deploy**: Make it live on my Replit URL. Keep it simple—I’m not technical!
+
+No API keys or complex auth needed yet—just a static curation page. Let me know if it works or needs tweaks!"
+
+---
+
+### Notes for You
+- **Non-Technical Simplicity**: This uses static data to avoid coding complexity. You can update the array manually later (e.g., via a Replit text file).
+- **Next Steps**: After deployment (by Sunday, Oct 12, 6 PM IST), visit your Replit URL (e.g., https://your-replit-name.replit.app/spinny-deals-hyderabad) to see it. Share the link with me for feedback!
+- **Scaling**: Once live, add 10-20 real Spinny links weekly from their public pages, staying within ToS (link only, no republishing).
+
+This kickstarts your 200-450 Spinny listing goal within the ₹50K/mo budget. Need help updating the data? Let me know!

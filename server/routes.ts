@@ -6085,6 +6085,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ results, summary });
   }));
 
+  // Manual marketplace scraper trigger (admin only) - Run Apify and CarDekho scrapers on-demand
+  app.post('/api/admin/scrapers/marketplace/run', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    const { scrapers, cities } = req.body; // scrapers: ['olx', 'facebook', 'cardekho'] or 'all', cities: ['hyderabad', 'bangalore'] or undefined for all
+    
+    if (!('db' in storage)) {
+      return res.status(503).json({ error: 'Scraper execution requires database storage' });
+    }
+
+    const results: any = {};
+    const citiesToScrape = cities || ['hyderabad', 'bangalore', 'mumbai', 'delhi', 'pune'];
+    const scrapersToRun = scrapers === 'all' 
+      ? ['olx', 'facebook', 'cardekho']
+      : Array.isArray(scrapers) ? scrapers : [scrapers];
+
+    // Run OLX scraper
+    if (scrapersToRun.includes('olx') && process.env.APIFY_API_TOKEN) {
+      try {
+        const { ApifyOlxScraper } = await import('./apifyOlxScraper.js');
+        const olxScraper = new ApifyOlxScraper(process.env.APIFY_API_TOKEN, storage);
+        
+        for (const city of citiesToScrape) {
+          const result = await olxScraper.scrapeOlxCars(city, 50);
+          results[`olx-${city}`] = {
+            scraper: 'OLX',
+            city,
+            success: result.success,
+            scrapedCount: result.scrapedCount,
+            savedCount: result.savedCount,
+            errors: result.errors
+          };
+        }
+      } catch (error) {
+        results['olx'] = {
+          scraper: 'OLX',
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        };
+      }
+    }
+
+    // Run Facebook scraper
+    if (scrapersToRun.includes('facebook') && process.env.APIFY_API_TOKEN) {
+      try {
+        const { ApifyFacebookScraper } = await import('./apifyFacebookScraper.js');
+        const fbScraper = new ApifyFacebookScraper(process.env.APIFY_API_TOKEN, storage);
+        
+        for (const city of citiesToScrape) {
+          const result = await fbScraper.scrapeFacebookCars(city, 50);
+          results[`facebook-${city}`] = {
+            scraper: 'Facebook Marketplace',
+            city,
+            success: result.success,
+            scrapedCount: result.scrapedCount,
+            savedCount: result.savedCount,
+            errors: result.errors
+          };
+        }
+      } catch (error) {
+        results['facebook'] = {
+          scraper: 'Facebook Marketplace',
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        };
+      }
+    }
+
+    // Run CarDekho scraper
+    if (scrapersToRun.includes('cardekho')) {
+      try {
+        const { CarDekhoScraper } = await import('./carDekhoScraper.js');
+        const carDekhoScraper = new CarDekhoScraper(storage);
+        
+        for (const city of citiesToScrape) {
+          const result = await carDekhoScraper.scrapeCarDekhoCars(city, 50);
+          results[`cardekho-${city}`] = {
+            scraper: 'CarDekho',
+            city,
+            success: result.success,
+            scrapedCount: result.scrapedCount,
+            savedCount: result.savedCount,
+            errors: result.errors
+          };
+        }
+      } catch (error) {
+        results['cardekho'] = {
+          scraper: 'CarDekho',
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        };
+      }
+    }
+
+    // Calculate summary
+    const resultValues = Object.values(results);
+    const summary = {
+      totalScrapers: resultValues.length,
+      successful: resultValues.filter((r: any) => r.success).length,
+      totalSaved: resultValues.reduce((sum: number, r: any) => sum + (r.savedCount || 0), 0),
+      totalScraped: resultValues.reduce((sum: number, r: any) => sum + (r.scrapedCount || 0), 0),
+    };
+
+    res.json({ results, summary });
+  }));
+
   // Crawl4AI ingestion trigger (admin only)
   app.post('/api/admin/partners/:id/crawl4ai', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
     const { id: sourceId } = req.params;

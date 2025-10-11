@@ -442,6 +442,33 @@ export class InternalScheduler {
             console.warn('⚠️ Skipping Facebook Marketplace scraping: APIFY_API_TOKEN not configured');
           }
           
+          // CarDekho scraping - Hyderabad focus to increase listings
+          const { CarDekhoScraper } = await import('./carDekhoScraper.js');
+          const carDekhoScraper = new CarDekhoScraper(storage);
+          const carDekhoCities = ['hyderabad', 'bangalore', 'mumbai', 'delhi', 'pune'];
+          
+          for (const city of carDekhoCities) {
+            const carDekhoRunId = await scraperHealthMonitor.startRun(`CarDekho ${city}`, 'marketplace');
+            try {
+              const result = await carDekhoScraper.scrapeCarDekhoCars(city, 50); // 50 listings per city
+              await scraperHealthMonitor.completeRun(carDekhoRunId, {
+                success: result.success,
+                totalFound: result.scrapedCount,
+                newListingsSaved: result.savedCount
+              });
+              console.log(`✅ CarDekho ${city} scraping: ${result.savedCount} new listings`);
+            } catch (error) {
+              await scraperHealthMonitor.completeRun(carDekhoRunId, {
+                success: false,
+                totalFound: 0,
+                newListingsSaved: 0,
+                error: error instanceof Error ? error.message : String(error),
+                errorStack: error instanceof Error ? error.stack : undefined
+              });
+              console.error(`❌ CarDekho ${city} scraping failed:`, error);
+            }
+          }
+          
           // Hyundai H-Promise certified pre-owned
           const hyundaiRunId = await scraperHealthMonitor.startRun('Hyundai H-Promise', 'certified');
           try {
