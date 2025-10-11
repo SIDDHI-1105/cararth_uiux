@@ -609,9 +609,12 @@ export class OrchestratedBatchIngestion {
   private async storeEnhancedListings(listings: EnhancedMarketplaceListing[]): Promise<number> {
     let storedCount = 0;
     
+    // Import listingIngestionService for Trust Layer validation
+    const { listingIngestionService } = await import('./listingIngestionService');
+    
     for (const listing of listings) {
       try {
-        // Store in cached_portal_listings table
+        // Prepare listing data for ingestion
         const cacheData = {
           id: listing.id,
           title: listing.title,
@@ -630,19 +633,24 @@ export class OrchestratedBatchIngestion {
           url: listing.url,
           condition: listing.condition,
           sellerType: listing.sellerType,
-          verificationStatus: listing.verificationStatus,
+          description: (listing as any).description || '',
           listingDate: new Date(),
           owners: 1
         };
         
-        // Use storage interface to save - check if method exists (only in DatabaseStorage)
-        if ('createCachedPortalListing' in storage) {
-          await (storage as any).createCachedPortalListing(cacheData);
+        // Route through Trust Layer validation via listingIngestionService
+        // This ensures spam filtering, content moderation, and proper verificationStatus
+        const result = await listingIngestionService.ingestListing(
+          cacheData as any,
+          listing.source || 'Batch Ingestion'
+        );
+        
+        if (result.saved) {
+          storedCount++;
+          console.log(`✅ Batch listing saved via Trust Layer: ${listing.title} (${result.trustResult.finalVerificationStatus})`);
         } else {
-          // Fallback for MemStorage - just log that we would store it
-          console.log(`💾 Would store listing ${listing.id} in database if available`);
+          console.log(`🚫 Batch listing rejected by Trust Layer: ${listing.title} - ${result.reason}`);
         }
-        storedCount++;
         
       } catch (error) {
         console.error(`🚨 Failed to store listing ${listing.id}:`, error);

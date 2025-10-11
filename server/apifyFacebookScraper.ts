@@ -1,5 +1,6 @@
 import { ApifyClient } from 'apify-client';
 import type { IStorage } from './storage';
+import { listingIngestionService } from './listingIngestionService';
 
 /**
  * ApifyFacebookScraper - Scrapes car listings from Facebook Marketplace using Apify
@@ -7,7 +8,7 @@ import type { IStorage } from './storage';
  * Features:
  * - Uses apify/facebook-marketplace-scraper actor
  * - Extracts car details, prices, images, seller info
- * - Saves scraped listings to database
+ * - Routes through Trust Layer validation via listingIngestionService
  * - Handles deduplication with portal+URL unique identifier
  */
 export class ApifyFacebookScraper {
@@ -138,19 +139,26 @@ export class ApifyFacebookScraper {
       condition: item.condition || 'used',
       listingDate: item.date || new Date().toISOString(),
       
-      // Quality defaults (will be updated by quality scoring)
-      qualityScore: 60, // Default for Facebook Marketplace listings
-      hasVerifiedImages: false,
-      hasCompleteListing: !!(item.title && item.price && item.description),
+      // Source metadata (will be enriched by Trust Layer)
+      source: 'Facebook Marketplace',
       
       // Timestamps
       scrapedAt: new Date().toISOString(),
       lastUpdated: new Date().toISOString()
     };
 
-    // Save to cachedPortalListings table
-    await this.storage.createCachedPortalListing(listingData as any);
-    console.log(`✅ Saved Facebook listing: ${listingData.title} - ${listingData.city}`);
+    // Route through Trust Layer validation via listingIngestionService
+    // This ensures spam filtering, content moderation, and proper verificationStatus
+    const result = await listingIngestionService.ingestListing(
+      listingData as any, 
+      'Facebook Marketplace'
+    );
+    
+    if (result.saved) {
+      console.log(`✅ Saved Facebook listing via Trust Layer: ${listingData.title} (Status: ${result.trustResult.finalVerificationStatus})`);
+    } else {
+      console.log(`🚫 Facebook listing rejected by Trust Layer: ${listingData.title} - ${result.reason}`);
+    }
   }
 
   /**
