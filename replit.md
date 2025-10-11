@@ -29,6 +29,12 @@ Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, an
 - **Seller Contact & Notification System**: Uses `libphonenumber-js` for phone normalization, Twilio Business API for WhatsApp notifications, Nodemailer for email fallback, and smart retry logic.
 - **AI Search Engine Optimization**: Enhanced Schema.org structured data, AI-friendly robots.txt, comprehensive sitemap.xml, machine-readable data endpoint (`/api/ai-info`), static file serving.
 - **Scraper Monitoring**: Production-ready, self-healing system with persistent retry state, exponential backoff, and database-backed health logs for all scrapers. Includes an admin dashboard for real-time status.
+- **Trust Layer & Listing Validation Architecture** (October 2025):
+  - **Centralized Ingestion Service** (`server/listingIngestionService.ts`): ALL scrapers must route through `listingIngestionService.ingestListing()` which enforces mandatory Trust Layer validation before database save. Sets proper `verificationStatus` from Trust Layer's `finalVerificationStatus`.
+  - **Hardened Content Moderation** (`server/trustLayer.ts`): HIGH severity violations (not just critical) now REJECT listings. Spam keywords blacklisted: "finalise the loan", "loan approved", etc. Prevents spam from bypassing validation.
+  - **Strict Institutional Allowlist** (`server/trustLayer.ts`): Replaced broad keyword matching (`includes('bank')`, `includes('auction')`) with exact source matching from verified allowlist. Only institutional sources like "Maruti True Value", "Hyundai H-Promise", "EauctionsIndia - State Bank of India" get special trust treatment.
+  - **Defensive Storage Gate** (`server/dbStorage.ts`): Database layer validates Trust Layer result structure (requires `approved: boolean`, `trustScore: 0-100`, `issues: []`) and **ONLY saves approved listings**. Prevents bypass attempts and forged Trust Layer results.
+  - **All Scrapers Validated**: OLX, Facebook Marketplace, and batch ingestion updated to use centralized ingestion service. No scraper can bypass Trust Layer validation.
 
 ### Feature Specifications
 - **Enterprise Partner Syndication**: Enables partners to post listings once for multi-platform distribution. Core components include partner source management, canonical listings, multi-LLM compliance pipeline (OpenAI, Gemini, Anthropic, Perplexity), and ingestion service. Supports webhook, manual batch, and Firecrawl/Crawl4AI scraping.
