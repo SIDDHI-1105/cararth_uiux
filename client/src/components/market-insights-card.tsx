@@ -134,9 +134,16 @@ export default function MarketInsightsCard({ car }: MarketInsightsCardProps) {
               <CardTitle className="text-lg flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-purple-500" />
                 AI Market Insights
-                <Badge variant="outline" className="ml-2 text-xs">
-                  Powered by Grok
-                </Badge>
+                <a 
+                  href="https://x.ai?utm_source=cararth&utm_medium=referral&utm_campaign=market_insights" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="ml-2"
+                >
+                  <Badge variant="outline" className="text-xs hover:bg-purple-50 dark:hover:bg-purple-900 transition-colors cursor-pointer">
+                    Powered by xAI Grok
+                  </Badge>
+                </a>
               </CardTitle>
               {isOpen ? (
                 <ChevronUp className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition" />
@@ -184,9 +191,12 @@ export default function MarketInsightsCard({ car }: MarketInsightsCardProps) {
                     </p>
                   </div>
                   <Badge 
-                    className={`${getDealBadgeColor(insightMutation.data.insight.dealQuality.badge)} text-white text-xs ml-2`}
+                    className={`${getDealBadgeColor(insightMutation.data.insight.dealQuality.badge)} text-white text-xs ml-2 animate-in fade-in-50 slide-in-from-right-5`}
                     data-testid="badge-deal"
                   >
+                    {insightMutation.data.insight.dealQuality.badge === 'Excellent Deal' && '🎯 '}
+                    {insightMutation.data.insight.dealQuality.badge === 'Good Deal' && '✨ '}
+                    {insightMutation.data.insight.dealQuality.badge === 'Fair Price' && '👍 '}
                     {insightMutation.data.insight.dealQuality.badge}
                   </Badge>
                 </div>
@@ -239,17 +249,27 @@ export default function MarketInsightsCard({ car }: MarketInsightsCardProps) {
                 </div>
 
                 <div className="pt-2 border-t">
-                  <p className="text-xs text-muted-foreground mb-2">Data Sources:</p>
+                  <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+                    <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    Data Sourced From:
+                  </p>
                   <div className="flex flex-wrap gap-1">
                     {insightMutation.data.insight.sources.slice(0, 4).map((source, index) => (
                       <a
                         key={index}
-                        href={source.url}
+                        href={`${source.url}?utm_source=cararth&utm_medium=referral&utm_campaign=market_insights`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-900/30 text-xs text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors"
                         data-testid={`link-source-${index}`}
                       >
+                        {source.name.includes('SIAM') && '📊 '}
+                        {source.name.includes('VAHAN') && '🚗 '}
+                        {source.name.includes('CarDekho') && '🔍 '}
+                        {source.name.includes('Spinny') && '✓ '}
+                        {source.name.includes('OLX') && '📱 '}
                         {source.name.split(' ')[0]}
                         <ExternalLink className="h-2 w-2" />
                       </a>
