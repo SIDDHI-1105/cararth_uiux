@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Layout from "@/components/layout";
 import ContactModal from "@/components/contact-modal";
-import PriceInsights from "@/components/price-insights";
+import MarketInsightsCard from "@/components/market-insights-card";
 import LoanWidget from "@/components/loan-widget";
 import SocialShareButtons from "@/components/social-share-buttons";
 import { SEOHead, createCarListingSchema } from "@/components/seo-head";
@@ -214,8 +214,8 @@ export default function CarDetail() {
               ))}
             </div>
 
-            {/* Price Insights Component */}
-            <PriceInsights car={car} />
+            {/* AI Market Insights Component */}
+            <MarketInsightsCard car={car} />
           </div>
           
           <div className="space-y-6">
