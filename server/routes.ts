@@ -6266,6 +6266,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   }));
 
+  // Get Telangana Market Intelligence for specific vehicle (public endpoint)
+  app.get('/api/telangana-insights/:brand/:model', asyncHandler(async (req: any, res: any) => {
+    const { brand, model } = req.params;
+    const { city } = req.query;
+    
+    if (!brand || !model) {
+      return res.status(400).json({ 
+        error: 'Brand and model parameters are required' 
+      });
+    }
+    
+    const { getTelanganaMarketInsights } = await import('./telanganaInsightsService.js');
+    
+    const insights = await getTelanganaMarketInsights(
+      brand as string, 
+      model as string, 
+      city as string | undefined
+    );
+    
+    if (!insights) {
+      return res.status(404).json({
+        error: 'No market insights available for this vehicle',
+        message: 'This vehicle may not have sufficient registration data in Telangana'
+      });
+    }
+    
+    res.json(insights);
+  }));
+
   // Crawl4AI ingestion trigger (admin only)
   app.post('/api/admin/partners/:id/crawl4ai', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
     const { id: sourceId } = req.params;

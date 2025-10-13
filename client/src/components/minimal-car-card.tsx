@@ -132,35 +132,48 @@ export default function MinimalCarCard({
           )}
 
           {/* Source Badge with Haptic Feedback */}
-          {getCarSource(car) && (
-            <HapticButton
-              onClick={() => {
-                // Different haptic patterns for different source types
-                const sourceLower = (getCarSource(car) || '').toLowerCase();
-                if (sourceLower.includes('maruti') || sourceLower.includes('true value')) {
-                  feedback.success(); // Premium feel for OEM sources
-                } else if (sourceLower.includes('bank') || sourceLower.includes('auction')) {
-                  feedback.notification(); // Official feel for institutional sources
-                } else {
-                  feedback.selection(); // Standard feel for marketplace sources
-                }
-              }}
-              hapticType="selection"
-              className="absolute top-2 left-2 bg-transparent border-none p-0 hover:bg-transparent"
-              aria-label={`Data source: ${getCarSource(car)} - tap for more info`}
-            >
-              <Badge 
-                className={cn(
-                  "text-sm cursor-pointer hover:scale-105 transition-transform duration-200 shadow-sm font-medium",
-                  getSourceBadgeColor(getCarSource(car))
-                )}
-                data-testid={`badge-source-${car.id}`}
-                title={`Sourced from: ${getCarSource(car)}`}
+          <div className="absolute top-2 left-2 flex gap-2">
+            {getCarSource(car) && (
+              <HapticButton
+                onClick={() => {
+                  // Different haptic patterns for different source types
+                  const sourceLower = (getCarSource(car) || '').toLowerCase();
+                  if (sourceLower.includes('maruti') || sourceLower.includes('true value')) {
+                    feedback.success(); // Premium feel for OEM sources
+                  } else if (sourceLower.includes('bank') || sourceLower.includes('auction')) {
+                    feedback.notification(); // Official feel for institutional sources
+                  } else {
+                    feedback.selection(); // Standard feel for marketplace sources
+                  }
+                }}
+                hapticType="selection"
+                className="bg-transparent border-none p-0 hover:bg-transparent"
+                aria-label={`Data source: ${getCarSource(car)} - tap for more info`}
               >
-                {getCarSource(car)}
+                <Badge 
+                  className={cn(
+                    "text-sm cursor-pointer hover:scale-105 transition-transform duration-200 shadow-sm font-medium",
+                    getSourceBadgeColor(getCarSource(car))
+                  )}
+                  data-testid={`badge-source-${car.id}`}
+                  title={`Sourced from: ${getCarSource(car)}`}
+                >
+                  {getCarSource(car)}
+                </Badge>
+              </HapticButton>
+            )}
+            
+            {/* Telangana Market Intelligence Badge */}
+            {car.state?.toLowerCase() === 'telangana' && (
+              <Badge 
+                className="bg-purple-600 text-white text-xs shadow-sm"
+                data-testid={`badge-telangana-insights-${car.id}`}
+                title="Market insights available for this vehicle"
+              >
+                📊 Insights
               </Badge>
-            </HapticButton>
-          )}
+            )}
+          </div>
 
           {/* Favorite Button */}
           <button

@@ -10,7 +10,8 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { 
   Car, FileText, Camera, Eye, Globe, TrendingUp, 
-  CheckCircle2, Upload, MapPin, Package, AlertCircle, CheckCircle, Loader2
+  CheckCircle2, Upload, MapPin, Package, AlertCircle, CheckCircle, Loader2,
+  BarChart3, TrendingDown, Activity
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,6 +22,7 @@ import type { UploadResult } from '@uppy/core';
 import Layout from "@/components/layout";
 import AIPriceWidget from "@/components/ai-price-widget";
 import { useAuth } from "@/hooks/useAuth";
+import { Badge } from "@/components/ui/badge";
 
 // Simplified schema with only essential fields
 const simplifiedSellCarSchema = z.object({
@@ -73,6 +75,7 @@ export default function SellCar() {
     rightSidePhoto: false,
     interiorPhoto: false,
   });
+  const [marketInsights, setMarketInsights] = useState<any>(null);
 
   const form = useForm<z.infer<typeof simplifiedSellCarSchema>>({
     resolver: zodResolver(simplifiedSellCarSchema),
@@ -86,6 +89,30 @@ export default function SellCar() {
       actualPhone: "",
       actualEmail: "",
       syndicationConsent: false,
+    },
+  });
+
+  // Fetch market insights mutation
+  const fetchInsightsMutation = useMutation({
+    mutationFn: async ({ brand, model, city }: { brand: string; model: string; city?: string }) => {
+      const response = await apiRequest("GET", `/api/telangana-insights/${brand}/${model}${city ? `?city=${city}` : ''}`);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setMarketInsights(data);
+      toast({
+        title: "✅ Market Insights Loaded!",
+        description: `Found ${data.totalRegistrations.toLocaleString()} registrations in Telangana`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "No Data Available",
+        description: error.message === "No market insights available for this vehicle" 
+          ? "Market insights available for Telangana vehicles only. Other states coming soon!"
+          : "Unable to fetch market insights at this time.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -338,6 +365,97 @@ export default function SellCar() {
                     }}
                     className="mb-4"
                   />
+                </div>
+
+                {/* Telangana Market Intelligence */}
+                <div className="mt-4 pt-4 border-t border-border">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5 text-purple-600" />
+                      <h3 className="font-semibold">Market Intelligence</h3>
+                      <Badge variant="outline" className="text-xs">Telangana</Badge>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const brand = form.getValues('brand');
+                        const model = form.getValues('model');
+                        const city = form.getValues('city');
+                        
+                        if (!brand || !model) {
+                          toast({
+                            title: "Missing Information",
+                            description: "Please select brand and model first",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        
+                        fetchInsightsMutation.mutate({ brand, model, city });
+                      }}
+                      disabled={fetchInsightsMutation.isPending}
+                    >
+                      {fetchInsightsMutation.isPending ? (
+                        <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Loading...</>
+                      ) : (
+                        <><Activity className="h-4 w-4 mr-2" /> Get Insights</>
+                      )}
+                    </Button>
+                  </div>
+
+                  {marketInsights ? (
+                    <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950 p-4 rounded-lg space-y-3">
+                      {/* Demand Score */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">Demand Score:</span>
+                        <Badge 
+                          variant={marketInsights.demandScore === 'HIGH' ? 'default' : marketInsights.demandScore === 'MEDIUM' ? 'secondary' : 'outline'}
+                          className={marketInsights.demandScore === 'HIGH' ? 'bg-green-600' : ''}
+                        >
+                          {marketInsights.demandScore === 'HIGH' && '🔥 '}
+                          {marketInsights.demandScore === 'MEDIUM' && '⚡ '}
+                          {marketInsights.demandScore === 'LOW' && '💤 '}
+                          {marketInsights.demandScore}
+                        </Badge>
+                      </div>
+
+                      {/* Key Insights */}
+                      <div className="space-y-2">
+                        {marketInsights.insights.map((insight: string, index: number) => (
+                          <div key={index} className="text-sm text-muted-foreground flex items-start gap-2">
+                            <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0 text-purple-600" />
+                            <span>{insight}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Stats */}
+                      <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border/50">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Total Registrations</p>
+                          <p className="font-semibold">{marketInsights.totalRegistrations.toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Last Month</p>
+                          <p className="font-semibold flex items-center gap-1">
+                            {marketInsights.lastMonthRegistrations}
+                            {marketInsights.demandTrend === 'UP' && <TrendingUp className="h-4 w-4 text-green-600" />}
+                            {marketInsights.demandTrend === 'DOWN' && <TrendingDown className="h-4 w-4 text-red-600" />}
+                          </p>
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-muted-foreground pt-2 border-t border-border/50">
+                        📊 {marketInsights.dataSource}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Get real-time market demand insights for Telangana vehicles powered by official RTA data
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -66,6 +66,15 @@ Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, an
   - Integration with Grok AI for enhanced market analysis
   - Admin endpoints: `/api/admin/telangana-rta/sync` (manual refresh), `/api/telangana-rta/status` (data status), `/api/telangana-rta/vehicle-stats` (specific vehicle stats)
   - Database schema uses existing `vehicleRegistrations` table with `dataSource: 'Telangana Open Data Portal'`
+- **Telangana Market Intelligence** (October 2025): Real-time market insights for sellers and buyers using official Telangana RTA data. Zero-cost competitive advantage leveraging government data. Features:
+  - **Seller Experience**: "Get Market Insights" button on listing form shows demand score (HIGH/MEDIUM/LOW), buyer preferences (fuel/transmission), trending data, and district popularity
+  - **Buyer Experience**: Market Intelligence card on car detail pages for Telangana vehicles with registration statistics, demand trends, and authentic government data
+  - **Demand Scoring**: Intelligent scoring based on registration volume - HIGH (>100/month), MEDIUM (30-100/month), LOW (<30/month)
+  - **Trend Analysis**: Month-over-month trend calculation with visual indicators (📈 UP, 📉 DOWN, ➡️ STABLE)
+  - **Insights Generation**: AI-powered insights like "🔥 High demand! 523 registrations last month", "⛽ 67% prefer Petrol", "📍 Most popular in Hyderabad"
+  - **State Expansion**: "Coming Soon" placeholders for non-Telangana states to build anticipation
+  - **API Endpoint**: `/api/telangana-insights/:brand/:model?city=` for real-time market data
+  - **Service**: `telanganaInsightsService.ts` with comprehensive market intelligence queries
 
 ## External Dependencies
 

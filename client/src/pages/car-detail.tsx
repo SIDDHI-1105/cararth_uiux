@@ -3,13 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Layout from "@/components/layout";
 import ContactModal from "@/components/contact-modal";
 import MarketInsightsCard from "@/components/market-insights-card";
 import LoanWidget from "@/components/loan-widget";
 import SocialShareButtons from "@/components/social-share-buttons";
 import { SEOHead, createCarListingSchema } from "@/components/seo-head";
-import { Phone, Calendar, MapPin, User, Star, Check, ArrowLeft, MessageCircle, Shield } from "lucide-react";
+import { Phone, Calendar, MapPin, User, Star, Check, ArrowLeft, MessageCircle, Shield, TrendingUp, TrendingDown, Activity } from "lucide-react";
 import { Link } from "wouter";
 import { type Car, type User as UserType } from "@shared/schema";
 import { BrandWordmark } from "@/components/brand-wordmark";
@@ -27,6 +28,17 @@ export default function CarDetail() {
   const { data: seller, isLoading: sellerLoading } = useQuery<UserType>({
     queryKey: ["/api/cars", id, "seller"],
     enabled: !!id,
+  });
+
+  // Fetch Telangana Market Intelligence (only for Telangana vehicles)
+  const { data: telanganaInsights } = useQuery({
+    queryKey: ["/api/telangana-insights", car?.brand, car?.model, car?.city],
+    queryFn: async () => {
+      const response = await fetch(`/api/telangana-insights/${car?.brand}/${car?.model}${car?.city ? `?city=${car.city}` : ''}`);
+      if (!response.ok) return null;
+      return response.json();
+    },
+    enabled: !!car && car.state?.toLowerCase() === 'telangana',
   });
 
   const formatPrice = (price: string) => {
@@ -216,6 +228,77 @@ export default function CarDetail() {
 
             {/* AI Market Insights Component */}
             <MarketInsightsCard car={car} />
+
+            {/* Telangana Market Intelligence */}
+            {car.state?.toLowerCase() === 'telangana' && telanganaInsights && (
+              <Card className="mt-6 border-purple-200 dark:border-purple-800">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5 text-purple-600" />
+                    Telangana Market Intelligence
+                    <Badge variant="outline" className="text-xs ml-auto">Official RTA Data</Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Demand Score */}
+                  <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950/50 dark:to-blue-950/50 rounded-lg">
+                    <span className="font-medium">Demand Score:</span>
+                    <Badge 
+                      variant={telanganaInsights.demandScore === 'HIGH' ? 'default' : telanganaInsights.demandScore === 'MEDIUM' ? 'secondary' : 'outline'}
+                      className={telanganaInsights.demandScore === 'HIGH' ? 'bg-green-600' : ''}
+                    >
+                      {telanganaInsights.demandScore === 'HIGH' && '🔥 '}
+                      {telanganaInsights.demandScore === 'MEDIUM' && '⚡ '}
+                      {telanganaInsights.demandScore === 'LOW' && '💤 '}
+                      {telanganaInsights.demandScore}
+                    </Badge>
+                  </div>
+
+                  {/* Key Insights */}
+                  <div className="space-y-2">
+                    {telanganaInsights.insights.slice(0, 4).map((insight: string, index: number) => (
+                      <div key={index} className="text-sm text-muted-foreground flex items-start gap-2">
+                        <Check className="h-4 w-4 mt-0.5 flex-shrink-0 text-purple-600" />
+                        <span>{insight}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Registration Stats */}
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Total Registrations</p>
+                      <p className="text-lg font-semibold">{telanganaInsights.totalRegistrations.toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Last Month</p>
+                      <p className="text-lg font-semibold flex items-center gap-1">
+                        {telanganaInsights.lastMonthRegistrations}
+                        {telanganaInsights.demandTrend === 'UP' && <TrendingUp className="h-4 w-4 text-green-600" />}
+                        {telanganaInsights.demandTrend === 'DOWN' && <TrendingDown className="h-4 w-4 text-red-600" />}
+                      </p>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground pt-2 border-t">
+                    📊 {telanganaInsights.dataSource}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Coming Soon for Other States */}
+            {car.state?.toLowerCase() !== 'telangana' && (
+              <Card className="mt-6 border-dashed border-2">
+                <CardContent className="py-6 text-center">
+                  <Activity className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm font-medium mb-1">Market Intelligence</p>
+                  <p className="text-xs text-muted-foreground">
+                    Available for Telangana vehicles only. {car.state} coming soon!
+                  </p>
+                </CardContent>
+              </Card>
+            )}
           </div>
           
           <div className="space-y-6">
