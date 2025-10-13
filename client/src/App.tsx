@@ -29,6 +29,7 @@ import AiTrainingDashboard from "./pages/ai-training-dashboard";
 import FinancingPage from "./pages/financing";
 import ScraperStatus from "./pages/scraper-status";
 import SpinnyDeals from "./pages/spinny-deals";
+import MarketInsights from "./pages/MarketInsights";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -60,6 +61,7 @@ function Router() {
       <Route path="/financing" component={FinancingPage} />
       <Route path="/admin/scraper-status" component={ScraperStatus} />
       <Route path="/spinny-deals-hyderabad" component={SpinnyDeals} />
+      <Route path="/market-insights" component={MarketInsights} />
       <Route component={NotFound} />
     </Switch>
   );

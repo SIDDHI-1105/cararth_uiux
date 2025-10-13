@@ -79,6 +79,8 @@ import { parse } from "csv-parse/sync";
 import { bulkUploadJobs } from "@shared/schema";
 import { SyndicationOrchestrator } from "./syndicationOrchestrator.js";
 import { AIDeduplicationService } from "./aiDeduplicationService.js";
+import { grokService } from "./grokService.js";
+import { marketDataService } from "./marketDataService.js";
 
 // Security utility functions to prevent PII leakage in logs
 const maskPhoneNumber = (phone: string): string => {
@@ -7238,6 +7240,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sourceName: source?.name || 'Partner Portal',
         expiresAt: invite.expiresAt
       }
+    });
+  }));
+
+  // Market Insights: Get latest market data
+  app.get('/api/market-insights/data', asyncHandler(async (req: any, res: any) => {
+    const data = await marketDataService.getMarketData();
+    res.json({
+      success: true,
+      data
+    });
+  }));
+
+  // Market Insights: Generate AI-powered insights using Grok
+  app.post('/api/market-insights/generate', asyncHandler(async (req: any, res: any) => {
+    const requestSchema = z.object({
+      query: z.string().min(1, 'Query is required'),
+      carDetails: z.object({
+        model: z.string().optional(),
+        variant: z.string().optional(),
+        year: z.number().optional(),
+        color: z.string().optional(),
+        transmission: z.string().optional(),
+        fuel: z.string().optional(),
+        mileage: z.number().optional(),
+        price: z.number().optional(),
+        location: z.string().optional()
+      }).optional()
+    });
+
+    const validated = requestSchema.parse(req.body);
+    
+    const insight = await grokService.generateInsight({
+      query: validated.query,
+      carDetails: validated.carDetails
+    });
+
+    res.json({
+      success: true,
+      insight
     });
   }));
 
