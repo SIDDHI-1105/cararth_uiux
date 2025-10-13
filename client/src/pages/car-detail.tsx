@@ -8,7 +8,6 @@ import ContactModal from "@/components/contact-modal";
 import PriceInsights from "@/components/price-insights";
 import LoanWidget from "@/components/loan-widget";
 import SocialShareButtons from "@/components/social-share-buttons";
-import MarketInsightsCard from "@/components/market-insights-card";
 import { SEOHead, createCarListingSchema } from "@/components/seo-head";
 import { Phone, Calendar, MapPin, User, Star, Check, ArrowLeft, MessageCircle, Shield } from "lucide-react";
 import { Link } from "wouter";
@@ -217,9 +216,6 @@ export default function CarDetail() {
 
             {/* Price Insights Component */}
             <PriceInsights car={car} />
-
-            {/* AI Market Insights Component */}
-            <MarketInsightsCard car={car} />
           </div>
           
           <div className="space-y-6">
