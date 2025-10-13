@@ -71,17 +71,6 @@ export default function Navbar() {
               >
                 🚗 Throttle Talk
               </Link>
-              <Link 
-                href="/market-insights" 
-                className={`px-4 py-2 rounded-lg text-base md:text-lg font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 hover:shadow-lg ${
-                  location === "/market-insights" 
-                    ? "text-white bg-gradient-to-r from-purple-500 to-pink-600 shadow-md" 
-                    : "text-foreground hover:text-white hover:bg-gradient-to-r hover:from-purple-500 hover:to-pink-600 hover:shadow-md border-2 border-purple-500/20 hover:border-purple-500"
-                }`}
-                data-testid="link-market-insights"
-              >
-                📊 Market Insights
-              </Link>
               <button
                 onClick={() => {
                   const faqSection = document.getElementById('faq');
@@ -219,18 +208,6 @@ export default function Navbar() {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 🚗 Throttle Talk
-              </Link>
-              <Link 
-                href="/market-insights" 
-                className={`block px-4 py-4 rounded-lg text-lg font-semibold transition-all duration-300 min-h-[44px] flex items-center transform active:scale-95 ${
-                  location === "/market-insights" 
-                    ? "text-white bg-gradient-to-r from-purple-500 to-pink-600 shadow-md" 
-                    : "text-foreground hover:text-white hover:bg-gradient-to-r hover:from-purple-500 hover:to-pink-600 hover:shadow-md border-2 border-purple-500/20"
-                }`}
-                data-testid="mobile-link-market-insights"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                📊 Market Insights
               </Link>
               <button
                 onClick={() => {
