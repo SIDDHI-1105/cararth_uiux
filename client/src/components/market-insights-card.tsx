@@ -95,9 +95,9 @@ export default function MarketInsightsCard({ car }: MarketInsightsCardProps) {
         query: `${car.brand} ${car.model} ${car.year} in ${car.city}`,
         carDetails: {
           model: `${car.brand} ${car.model}`,
-          variant: car.variant || undefined,
+          variant: undefined, // Not available in schema
           year: car.year,
-          color: car.color || undefined,
+          color: undefined, // Not available in schema
           transmission: car.transmission,
           fuel: car.fuelType,
           mileage: car.mileage,
