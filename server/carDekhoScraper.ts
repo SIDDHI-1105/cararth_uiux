@@ -22,9 +22,9 @@ export class CarDekhoScraper {
   }
 
   /**
-   * Scrape CarDekho car listings for a specific city
+   * Scrape CarDekho car listings for a specific city with pagination support
    */
-  async scrapeCarDekhoCars(city: string, maxListings: number = 50): Promise<{
+  async scrapeCarDekhoCars(city: string, maxListings: number = 500): Promise<{
     success: boolean;
     scrapedCount: number;
     savedCount: number;
@@ -36,68 +36,97 @@ export class CarDekhoScraper {
 
     try {
       console.log(`🚀 Starting CarDekho scrape for ${city}...`);
-
-      // Build CarDekho search URL
-      const citySlug = city.toLowerCase().replace(/\s+/g, '-');
-      const searchUrl = `${this.BASE_URL}/used-cars+in+${citySlug}`;
       
-      console.log(`📡 Fetching from: ${searchUrl}`);
+      const citySlug = city.toLowerCase().replace(/\s+/g, '-');
+      const allListings: any[] = [];
+      
+      // Scrape multiple pages to get more listings
+      let currentPage = 1;
+      const maxPages = Math.ceil(maxListings / 20); // ~20 listings per page
+      
+      while (allListings.length < maxListings && currentPage <= maxPages) {
+        try {
+          // Build URL with page number - CarDekho uses ?pagenumber=X format
+          const searchUrl = currentPage === 1 
+            ? `${this.BASE_URL}/used-cars+in+${citySlug}`
+            : `${this.BASE_URL}/used-cars+in+${citySlug}?pagenumber=${currentPage}`;
+          
+          console.log(`📡 Fetching page ${currentPage}: ${searchUrl}`);
 
-      // Fetch the page
-      const response = await axios.get(searchUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.5'
-        },
-        timeout: 30000
-      });
-
-      // Parse HTML
-      const $ = cheerio.load(response.data);
-
-      // Extract listings - CarDekho uses .cardColumn class for listing cards
-      const listings: any[] = [];
-
-      $('.cardColumn').each((index, element) => {
-        if (index >= maxListings) return false;
-
-        const $elem = $(element);
-        
-        // Extract title from the card
-        const title = $elem.find('h2, h3, [class*="title"]').first().text().trim();
-        
-        // Extract price - look for price text patterns
-        const priceText = $elem.text();
-        const priceMatch = priceText.match(/₹[\d.,]+ (?:Lakh|Cr|Crore)/i);
-        const price = priceMatch ? priceMatch[0] : '';
-        
-        // Extract link
-        const link = $elem.find('a').first().attr('href');
-        
-        // Extract image
-        const image = $elem.find('img').first().attr('src') || $elem.find('img').first().attr('data-src');
-        
-        // Extract description/details (mileage, fuel type, etc.)
-        const description = $elem.text().trim();
-
-        if (title && price && link) {
-          listings.push({
-            title,
-            price,
-            url: link.startsWith('http') ? link : `${this.BASE_URL}${link}`,
-            image,
-            description,
-            location: city
+          // Fetch the page
+          const response = await axios.get(searchUrl, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+              'Accept-Language': 'en-US,en;q=0.5'
+            },
+            timeout: 30000
           });
-        }
-      });
 
-      scrapedCount = listings.length;
-      console.log(`📦 Scraped ${scrapedCount} listings from CarDekho`);
+          // Parse HTML
+          const $ = cheerio.load(response.data);
+
+          // Extract listings from this page
+          const pageListings: any[] = [];
+
+          $('.cardColumn').each((index, element) => {
+            const $elem = $(element);
+            
+            // Extract title from the card
+            const title = $elem.find('h2, h3, [class*="title"]').first().text().trim();
+            
+            // Extract price - look for price text patterns
+            const priceText = $elem.text();
+            const priceMatch = priceText.match(/₹[\d.,]+ (?:Lakh|Cr|Crore)/i);
+            const price = priceMatch ? priceMatch[0] : '';
+            
+            // Extract link
+            const link = $elem.find('a').first().attr('href');
+            
+            // Extract image
+            const image = $elem.find('img').first().attr('src') || $elem.find('img').first().attr('data-src');
+            
+            // Extract description/details (mileage, fuel type, etc.)
+            const description = $elem.text().trim();
+
+            if (title && price && link) {
+              pageListings.push({
+                title,
+                price,
+                url: link.startsWith('http') ? link : `${this.BASE_URL}${link}`,
+                image,
+                description,
+                location: city
+              });
+            }
+          });
+
+          console.log(`📦 Found ${pageListings.length} listings on page ${currentPage}`);
+          
+          // If no listings found on this page, we've reached the end
+          if (pageListings.length === 0) {
+            console.log(`✅ No more listings found, stopping at page ${currentPage}`);
+            break;
+          }
+          
+          allListings.push(...pageListings);
+          currentPage++;
+          
+          // Rate limit between pages: 2 seconds
+          await this.delay(2000);
+          
+        } catch (pageError) {
+          console.error(`❌ Error fetching page ${currentPage}:`, pageError);
+          errors.push(`Page ${currentPage} failed: ${pageError instanceof Error ? pageError.message : 'Unknown error'}`);
+          break; // Stop pagination on error
+        }
+      }
+
+      scrapedCount = allListings.length;
+      console.log(`📦 Total scraped: ${scrapedCount} listings from ${currentPage - 1} pages`);
 
       // Save each listing
-      for (const item of listings) {
+      for (const item of allListings) {
         try {
           await this.saveCarDekhoListing(item, city);
           savedCount++;
