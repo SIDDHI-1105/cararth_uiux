@@ -52,6 +52,13 @@ Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, an
   - Car-specific meta tags (title, description, image) for each listing
   - Secure HTML escaping to prevent XSS attacks in shared content
   - Schema.org structured data with safe JSON-LD serialization for crawlers
+- **xAI Grok Market Insights** (October 2025): AI-powered granular market intelligence engine for Hyderabad/Telangana used cars. Analyzes trends at model, variant, color, transmission, fuel type, and location level using real-time data from SIAM (wholesales), VAHAN (registrations), CarDekho (2,851 listings), Spinny (1,014 certified), and OLX. Features include:
+  - Deal quality scoring (0-100) with visual badges (Excellent/Good/Fair/Above Market/Premium)
+  - Price comparison against market averages with percentage difference
+  - Granular breakdown: model trends, variant analysis, color preferences, transmission/fuel patterns, Hyderabad-specific insights
+  - Source credibility with backlinks to SIAM, VAHAN, CarDekho, Spinny, OLX for SEO
+  - Fallback mode when API unavailable (uses cached market data)
+  - Accessible via `/market-insights` page with sample data button for demo
 
 ## External Dependencies
 
@@ -83,6 +90,7 @@ Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, an
 - **Google Gemini**: For PII detection.
 - **Anthropic Claude**: For copyright analysis.
 - **Perplexity**: For future market intelligence.
+- **xAI Grok**: For granular market insights and AI-powered used car analysis.
 
 ### Web Scraping
 - **Firecrawl**: Premium web scraping service with LLM-powered extraction.
