@@ -78,6 +78,29 @@ export interface MarketDataSnapshot {
       };
     };
   };
+  telanganaRta: {
+    official: {
+      totalRecords: number;
+      latestMonth: string;
+      topBrands: Array<{
+        brand: string;
+        registrations: number;
+        share: string;
+      }>;
+      fuelTrends: {
+        petrol: string;
+        diesel: string;
+        cng: string;
+        electric: string;
+      };
+      transmissionSplit: {
+        manual: string;
+        automatic: string;
+      };
+      popularDistricts: string[];
+      dataSource: string;
+    };
+  };
   general: {
     marketSize2025: string;
     cagr: string;
@@ -108,7 +131,7 @@ export class MarketDataService {
     }
 
     // Refresh data
-    this.cachedData = this.fetchLatestData();
+    this.cachedData = await this.fetchLatestData();
     this.lastRefresh = new Date();
     
     return this.cachedData;
@@ -118,9 +141,134 @@ export class MarketDataService {
    * Fetch latest market data from all sources
    * NOTE: In production, this would fetch from APIs. For now, using Oct 2025 baseline data.
    */
-  private fetchLatestData(): MarketDataSnapshot {
+  private async fetchTelanganaRtaData() {
+    try {
+      const { db } = await import('./db.js');
+      const { vehicleRegistrations } = await import('../shared/schema.js');
+      const { sql } = await import('drizzle-orm');
+
+      // Get latest stats and TOTAL registrations count (using SUM, not COUNT)
+      const stats = await db
+        .select({
+          totalRecords: sql<number>`COALESCE(SUM(${vehicleRegistrations.registrationsCount}), 0)::int`,
+          latestYear: sql<number>`MAX(${vehicleRegistrations.year})::int`,
+          latestMonth: sql<number>`MAX(${vehicleRegistrations.month})::int`,
+        })
+        .from(vehicleRegistrations)
+        .where(sql`${vehicleRegistrations.state} = 'Telangana'`);
+
+      const totalRegistrations = stats[0]?.totalRecords || 0;
+
+      // Get top brands
+      const topBrands = await db
+        .select({
+          brand: vehicleRegistrations.brand,
+          registrations: sql<number>`SUM(${vehicleRegistrations.registrationsCount})::int`
+        })
+        .from(vehicleRegistrations)
+        .where(sql`${vehicleRegistrations.state} = 'Telangana'`)
+        .groupBy(vehicleRegistrations.brand)
+        .orderBy(sql`registrations DESC`)
+        .limit(5);
+
+      // Get fuel type distribution
+      const fuelData = await db
+        .select({
+          fuelType: vehicleRegistrations.fuelType,
+          count: sql<number>`SUM(${vehicleRegistrations.registrationsCount})::int`
+        })
+        .from(vehicleRegistrations)
+        .where(sql`${vehicleRegistrations.state} = 'Telangana'`)
+        .groupBy(vehicleRegistrations.fuelType);
+
+      // Get transmission split
+      const transmissionData = await db
+        .select({
+          transmission: vehicleRegistrations.transmission,
+          count: sql<number>`SUM(${vehicleRegistrations.registrationsCount})::int`
+        })
+        .from(vehicleRegistrations)
+        .where(sql`${vehicleRegistrations.state} = 'Telangana'`)
+        .groupBy(vehicleRegistrations.transmission);
+
+      // Get popular districts
+      const districts = await db
+        .select({
+          city: vehicleRegistrations.city,
+          count: sql<number>`SUM(${vehicleRegistrations.registrationsCount})::int`
+        })
+        .from(vehicleRegistrations)
+        .where(sql`
+          ${vehicleRegistrations.state} = 'Telangana' 
+          AND ${vehicleRegistrations.city} IS NOT NULL
+        `)
+        .groupBy(vehicleRegistrations.city)
+        .orderBy(sql`count DESC`)
+        .limit(5);
+
+      // Calculate percentages using FULL dataset totals, not just top 5
+      const totalFuel = fuelData.reduce((sum, f) => sum + (f.count || 0), 0);
+      const totalTransmission = transmissionData.reduce((sum, t) => sum + (t.count || 0), 0);
+
+      return {
+        totalRecords: totalRegistrations,
+        latestMonth: `${stats[0]?.latestYear || 2025}-${String(stats[0]?.latestMonth || 1).padStart(2, '0')}`,
+        topBrands: topBrands.map(b => ({
+          brand: b.brand,
+          registrations: b.registrations || 0,
+          share: totalRegistrations > 0 
+            ? `${((b.registrations || 0) / totalRegistrations * 100).toFixed(1)}%`
+            : '0%'
+        })),
+        fuelTrends: {
+          petrol: totalFuel > 0
+            ? `${((fuelData.find(f => f.fuelType?.toLowerCase() === 'petrol')?.count || 0) / totalFuel * 100).toFixed(1)}%`
+            : '0%',
+          diesel: totalFuel > 0
+            ? `${((fuelData.find(f => f.fuelType?.toLowerCase() === 'diesel')?.count || 0) / totalFuel * 100).toFixed(1)}%`
+            : '0%',
+          cng: totalFuel > 0
+            ? `${((fuelData.find(f => f.fuelType?.toLowerCase() === 'cng')?.count || 0) / totalFuel * 100).toFixed(1)}%`
+            : '0%',
+          electric: totalFuel > 0
+            ? `${((fuelData.find(f => f.fuelType?.toLowerCase().includes('electric') || f.fuelType?.toLowerCase() === 'ev')?.count || 0) / totalFuel * 100).toFixed(1)}%`
+            : '0%'
+        },
+        transmissionSplit: {
+          manual: totalTransmission > 0
+            ? `${((transmissionData.find(t => t.transmission?.toLowerCase() === 'manual')?.count || 0) / totalTransmission * 100).toFixed(1)}%`
+            : '0%',
+          automatic: totalTransmission > 0
+            ? `${((transmissionData.find(t => t.transmission?.toLowerCase().includes('auto'))?.count || 0) / totalTransmission * 100).toFixed(1)}%`
+            : '0%'
+        },
+        popularDistricts: districts.map(d => d.city || 'Unknown'),
+        dataSource: 'Telangana Open Data Portal'
+      };
+    } catch (error) {
+      console.error('Error fetching Telangana RTA data:', error);
+      return {
+        totalRecords: 0,
+        latestMonth: '2025-10',
+        topBrands: [],
+        fuelTrends: { petrol: '0%', diesel: '0%', cng: '0%', electric: '0%' },
+        transmissionSplit: { manual: '0%', automatic: '0%' },
+        popularDistricts: [],
+        dataSource: 'Telangana Open Data Portal (unavailable)'
+      };
+    }
+  }
+
+  /**
+   * Fetch latest market data from all sources
+   * NOTE: In production, this would fetch from APIs. For now, using Oct 2025 baseline data.
+   */
+  private async fetchLatestData(): Promise<MarketDataSnapshot> {
     const now = new Date();
     const nextRefresh = new Date(now.getTime() + this.CACHE_DURATION_HOURS * 60 * 60 * 1000);
+
+    // Fetch real Telangana RTA data
+    const telanganaRtaData = await this.fetchTelanganaRtaData();
 
     return {
       siam: {
@@ -255,6 +403,9 @@ export class MarketDataService {
           }
         }
       },
+      telanganaRta: {
+        official: telanganaRtaData
+      },
       general: {
         marketSize2025: 'USD 36.39 Billion',
         cagr: '14.95%',
@@ -277,8 +428,8 @@ export class MarketDataService {
   /**
    * Get formatted data for Grok AI prompt
    */
-  getFormattedDataForAI(): string {
-    const data = this.cachedData || this.fetchLatestData();
+  async getFormattedDataForAI(): Promise<string> {
+    const data = this.cachedData || await this.fetchLatestData();
     
     return `
 SIAM Data (Sep 2025):
@@ -290,6 +441,14 @@ VAHAN Registrations:
 - National: ${data.vahan.nationalRegistrations.may2025.total.toLocaleString()} (May 2025, ${data.vahan.nationalRegistrations.may2025.momChange} MoM)
 - Telangana: ${data.vahan.telangana.urbanGrowth}
 - Hyderabad: ${data.vahan.telangana.hyderabadFocus}
+
+TELANGANA RTA OFFICIAL DATA (${data.telanganaRta.official.dataSource}):
+- Total Records: ${data.telanganaRta.official.totalRecords.toLocaleString()} registrations
+- Latest Data: ${data.telanganaRta.official.latestMonth}
+- Top Brands: ${data.telanganaRta.official.topBrands.map(b => `${b.brand} (${b.share})`).join(', ')}
+- Fuel Distribution: Petrol ${data.telanganaRta.official.fuelTrends.petrol}, Diesel ${data.telanganaRta.official.fuelTrends.diesel}, CNG ${data.telanganaRta.official.fuelTrends.cng}, Electric ${data.telanganaRta.official.fuelTrends.electric}
+- Transmission: Manual ${data.telanganaRta.official.transmissionSplit.manual}, Automatic ${data.telanganaRta.official.transmissionSplit.automatic}
+- Popular Districts: ${data.telanganaRta.official.popularDistricts.join(', ')}
 
 CarDekho Hyderabad:
 - Total Listings: ${data.cardekho.hyderabad.totalListings.toLocaleString()}

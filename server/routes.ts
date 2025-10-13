@@ -6191,6 +6191,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ results, summary });
   }));
 
+  // ============================================================================
+  // TELANGANA RTA DATA ENDPOINTS - Official Government Data Integration
+  // ============================================================================
+
+  // Sync Telangana Open Data Portal registration data (admin only)
+  app.post('/api/admin/telangana-rta/sync', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    const { datasetUrl } = req.body; // Optional custom dataset URL
+    
+    const { syncTelanganaRtaData } = await import('./telanganaRtaService.js');
+    
+    const result = await syncTelanganaRtaData(datasetUrl);
+    
+    if (result.success) {
+      res.json({
+        success: true,
+        message: 'Telangana RTA data synced successfully',
+        ...result
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        message: 'Failed to sync Telangana RTA data',
+        error: result.error
+      });
+    }
+  }));
+
+  // Get Telangana vehicle statistics for specific car (public endpoint)
+  app.get('/api/telangana-rta/vehicle-stats', asyncHandler(async (req: any, res: any) => {
+    const { brand, model, city } = req.query;
+    
+    if (!brand || !model) {
+      return res.status(400).json({ 
+        error: 'Brand and model parameters are required' 
+      });
+    }
+    
+    const { getTelanganaVehicleStats } = await import('./telanganaRtaService.js');
+    
+    const stats = await getTelanganaVehicleStats(
+      brand as string, 
+      model as string, 
+      city as string | undefined
+    );
+    
+    res.json(stats);
+  }));
+
+  // Get latest Telangana RTA data status (public endpoint)
+  app.get('/api/telangana-rta/status', asyncHandler(async (req: any, res: any) => {
+    const { db } = await import('./db.js');
+    const { vehicleRegistrations } = await import('../shared/schema.js');
+    const { sql } = await import('drizzle-orm');
+    
+    // Get latest data stats
+    const stats = await db
+      .select({
+        totalRecords: sql<number>`COUNT(*)::int`,
+        latestYear: sql<number>`MAX(${vehicleRegistrations.year})::int`,
+        latestMonth: sql<number>`MAX(${vehicleRegistrations.month})::int`,
+        uniqueBrands: sql<number>`COUNT(DISTINCT ${vehicleRegistrations.brand})::int`,
+        uniqueModels: sql<number>`COUNT(DISTINCT ${vehicleRegistrations.model})::int`,
+        totalCities: sql<number>`COUNT(DISTINCT ${vehicleRegistrations.city})::int`,
+        lastUpdated: sql<Date>`MAX(${vehicleRegistrations.verifiedAt})`
+      })
+      .from(vehicleRegistrations)
+      .where(sql`${vehicleRegistrations.state} = 'Telangana'`);
+    
+    res.json({
+      status: 'active',
+      dataSource: 'Telangana Open Data Portal',
+      ...stats[0]
+    });
+  }));
+
   // Crawl4AI ingestion trigger (admin only)
   app.post('/api/admin/partners/:id/crawl4ai', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
     const { id: sourceId } = req.params;

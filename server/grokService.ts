@@ -76,7 +76,7 @@ export class GrokService {
 
     try {
       const marketData = await marketDataService.getMarketData();
-      const formattedData = marketDataService.getFormattedDataForAI();
+      const formattedData = await marketDataService.getFormattedDataForAI();
 
       const systemPrompt = this.buildSystemPrompt(formattedData);
       const userPrompt = this.buildUserPrompt(request);

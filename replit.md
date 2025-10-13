@@ -52,13 +52,20 @@ Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, an
   - Car-specific meta tags (title, description, image) for each listing
   - Secure HTML escaping to prevent XSS attacks in shared content
   - Schema.org structured data with safe JSON-LD serialization for crawlers
-- **xAI Grok Market Insights** (October 2025): AI-powered granular market intelligence engine for Hyderabad/Telangana used cars. Analyzes trends at model, variant, color, transmission, fuel type, and location level using real-time data from SIAM (wholesales), VAHAN (registrations), CarDekho (2,851 listings), Spinny (1,014 certified), and OLX. Features include:
+- **xAI Grok Market Insights** (October 2025): AI-powered granular market intelligence engine for Hyderabad/Telangana used cars. Analyzes trends at model, variant, color, transmission, fuel type, and location level using real-time data from SIAM (wholesales), VAHAN (registrations), **Telangana Open Data Portal** (official RTA registrations), CarDekho (2,851 listings), Spinny (1,014 certified), and OLX. Features include:
   - Deal quality scoring (0-100) with visual badges (Excellent/Good/Fair/Above Market/Premium)
   - Price comparison against market averages with percentage difference
   - Granular breakdown: model trends, variant analysis, color preferences, transmission/fuel patterns, Hyderabad-specific insights
   - Source credibility with backlinks to SIAM, VAHAN, CarDekho, Spinny, OLX for SEO
   - Fallback mode when API unavailable (uses cached market data)
   - Accessible via `/market-insights` page with sample data button for demo
+- **Telangana RTA Data Integration** (October 2025): Official government data integration for market intelligence. Since VAHAAN doesn't adequately cover Telangana, implemented direct integration with Telangana Open Data Portal (data.telangana.gov.in) for authentic registration statistics. Features:
+  - FREE official data source from Telangana Government
+  - Monthly vehicle registration statistics by brand, model, fuel type, transmission, district
+  - Auto-sync capabilities for fresh data (no API costs)
+  - Integration with Grok AI for enhanced market analysis
+  - Admin endpoints: `/api/admin/telangana-rta/sync` (manual refresh), `/api/telangana-rta/status` (data status), `/api/telangana-rta/vehicle-stats` (specific vehicle stats)
+  - Database schema uses existing `vehicleRegistrations` table with `dataSource: 'Telangana Open Data Portal'`
 
 ## External Dependencies
 
