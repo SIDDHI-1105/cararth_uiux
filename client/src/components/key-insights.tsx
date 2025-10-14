@@ -15,7 +15,7 @@ export default function KeyInsights() {
             </div>
             <div>
               <p className="text-gray-700 dark:text-gray-300" data-testid="text-insight-ai-verified">
-                <strong className="text-gray-900 dark:text-gray-100">AI-Verified Listings:</strong> Ensures trust with multi-LLM checks.
+                <strong className="text-gray-900 dark:text-gray-100">AI-Verified Listings:</strong> Multi-LLM checks (e.g., Gemini for OCR, Claude for compliance) ensure trust and accuracy.
               </p>
             </div>
           </div>
@@ -27,7 +27,7 @@ export default function KeyInsights() {
             </div>
             <div>
               <p className="text-gray-700 dark:text-gray-300" data-testid="text-insight-carbon-savings">
-                <strong className="text-gray-900 dark:text-gray-100">Carbon Savings Dashboard:</strong> Tracks eco-impact of each sale.
+                <strong className="text-gray-900 dark:text-gray-100">Carbon Savings Dashboard:</strong> Quantifies CO₂ reductions for each sale, promoting eco-friendly choices.
               </p>
             </div>
           </div>
@@ -39,7 +39,7 @@ export default function KeyInsights() {
             </div>
             <div>
               <p className="text-gray-700 dark:text-gray-300" data-testid="text-insight-syndication">
-                <strong className="text-gray-900 dark:text-gray-100">One-Upload Syndication:</strong> Reaches platforms like OLX and CarDekho instantly.
+                <strong className="text-gray-900 dark:text-gray-100">One-Upload Syndication:</strong> Maximizes reach by distributing listings to platforms like OLX, Cars24, CarDekho, and Facebook Marketplace.
               </p>
             </div>
           </div>

@@ -32,6 +32,7 @@ import { BrandWordmark } from "@/components/brand-wordmark";
 import { Link } from "wouter";
 import { FAQSection } from "@/components/faq-section";
 import KeyInsights from "@/components/key-insights";
+import HomepageIntro from "@/components/homepage-intro";
 
 function HomeContent() {
   const [filters, setFilters] = useState<Record<string, any>>({});
@@ -76,6 +77,34 @@ function HomeContent() {
   const structuredData = useMemo(() => {
     const baseSchema = createWebsiteSchema();
     const orgSchema = createOrganizationSchema();
+    
+    // ItemList Schema for Key Insights (LLM optimization)
+    const itemListSchema = {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": "CarArth Key Platform Features",
+      "description": "AI-powered features that make CarArth India's leading used car search engine",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "AI-Verified Listings",
+          "description": "Multi-LLM checks using Gemini for OCR and Claude for compliance ensure trust and accuracy in every car listing"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Carbon Savings Dashboard",
+          "description": "Quantifies CO₂ reductions for each sale, promoting eco-friendly choices and sustainable automotive practices"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "One-Upload Syndication",
+          "description": "Maximizes reach by distributing listings to platforms like OLX, Cars24, CarDekho, and Facebook Marketplace automatically"
+        }
+      ]
+    };
     
     // FAQ Schema for SEO/LLM optimization
     const faqSchema = {
@@ -150,7 +179,7 @@ function HomeContent() {
     
     return {
       "@context": "https://schema.org",
-      "@graph": [baseSchema, orgSchema, faqSchema]
+      "@graph": [baseSchema, orgSchema, itemListSchema, faqSchema]
     };
   }, []);
 
@@ -346,6 +375,8 @@ function HomeContent() {
           hasSearched={hasSearched}
           isSearching={isLoading}
         />
+        
+        <HomepageIntro />
         
         <KeyInsights />
         
