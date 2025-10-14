@@ -31,6 +31,7 @@ interface UsageStatus {
 import { BrandWordmark } from "@/components/brand-wordmark";
 import { Link } from "wouter";
 import { FAQSection } from "@/components/faq-section";
+import KeyInsights from "@/components/key-insights";
 
 function HomeContent() {
   const [filters, setFilters] = useState<Record<string, any>>({});
@@ -345,6 +346,8 @@ function HomeContent() {
           hasSearched={hasSearched}
           isSearching={isLoading}
         />
+        
+        <KeyInsights />
         
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-8">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6 sm:mb-8">
