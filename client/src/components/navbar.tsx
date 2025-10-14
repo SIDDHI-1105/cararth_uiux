@@ -130,9 +130,9 @@ export default function Navbar() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem asChild>
-                    <Link href="/profile" className="flex items-center">
+                    <Link href="/seller/settings" className="flex items-center">
                       <User className="w-4 h-4 mr-2" />
-                      Profile
+                      Settings
                     </Link>
                   </DropdownMenuItem>
                   {user.role === 'partner' && (
@@ -261,7 +261,7 @@ export default function Navbar() {
                       className="w-full"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      <Link href="/profile">View Profile</Link>
+                      <Link href="/seller/settings">Settings</Link>
                     </Button>
                     {user.role === 'partner' && (
                       <Button

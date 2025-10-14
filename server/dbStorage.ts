@@ -2217,6 +2217,46 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async updateSeller(sellerId: string, updates: { name?: string; phone?: string; email?: string }): Promise<User | undefined> {
+    try {
+      // Get current user to track old email for cache invalidation
+      const currentUser = await this.getUser(sellerId);
+      if (!currentUser) {
+        return undefined;
+      }
+
+      const result = await this.db
+        .update(users)
+        .set({
+          ...(updates.name && { name: updates.name }),
+          ...(updates.phone && { phone: updates.phone }),
+          ...(updates.email && { email: updates.email }),
+        })
+        .where(eq(users.id, sellerId))
+        .returning();
+      
+      const updatedUser = result[0];
+      if (updatedUser) {
+        // Clear user cache by ID
+        this.clearCache(`user:${sellerId}`);
+        
+        // Clear email cache - both old and new if email changed
+        if (currentUser.email) {
+          this.clearCache(`user:email:${currentUser.email}`);
+        }
+        if (updatedUser.email && updatedUser.email !== currentUser.email) {
+          this.clearCache(`user:email:${updatedUser.email}`);
+        }
+      }
+      
+      logError({ message: 'Seller profile updated successfully', statusCode: 200 }, 'updateSeller success');
+      return updatedUser;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'updateSeller operation');
+      throw new Error('Failed to update seller profile');
+    }
+  }
+
   // Partner source management
   async getListingSources(): Promise<any[]> {
     try {

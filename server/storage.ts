@@ -170,6 +170,9 @@ export interface IStorage {
   getSellerListings(sellerId: string, options?: { limit?: number; status?: string }): Promise<any[]>;
   updateSellerListing(listingId: string, updates: any): Promise<any>;
   
+  // Seller profile management
+  updateSeller(sellerId: string, updates: { name?: string; phone?: string; email?: string }): Promise<User | undefined>;
+  
   // Atomic listing creation with posting limits enforcement
   createSellerListingWithLimitsCheck(sellerId: string, listingData: any): Promise<{
     success: boolean;
@@ -1355,6 +1358,23 @@ export class MemStorage implements IStorage {
   async updateSellerListing(listingId: string, updates: any): Promise<any> {
     // In-memory storage doesn't persist seller listings
     return undefined;
+  }
+
+  async updateSeller(sellerId: string, updates: { name?: string; phone?: string; email?: string }): Promise<User | undefined> {
+    const user = this.users.get(sellerId);
+    if (!user) {
+      return undefined;
+    }
+    
+    const updatedUser = {
+      ...user,
+      ...(updates.name && { name: updates.name }),
+      ...(updates.phone && { phone: updates.phone }),
+      ...(updates.email && { email: updates.email }),
+    };
+    
+    this.users.set(sellerId, updatedUser);
+    return updatedUser;
   }
 
   // Atomic listing creation with limits check - in-memory stub

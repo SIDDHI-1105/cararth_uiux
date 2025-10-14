@@ -73,6 +73,7 @@ import { eauctionsIndiaScraper } from "./eauctionsIndiaScraper.js";
 import { sarfaesiScraper } from "./sarfaesiScraper.js";
 import { ObjectStorageService } from "./objectStorage.js";
 import crypto from "crypto";
+import { parsePhoneNumber, isValidPhoneNumber } from "libphonenumber-js";
 import { logError, ErrorCategory, createAppError, asyncHandler } from "./errorHandling.js";
 import multer from "multer";
 import { parse } from "csv-parse/sync";
@@ -6894,6 +6895,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({
         error: 'Failed to check limits',
         message: 'Unable to check your posting limits. Please try again later.'
+      });
+    }
+  }));
+
+  // PATCH /api/seller/profile - Update seller profile
+  app.patch('/api/seller/profile', isAuthenticated, asyncHandler(async (req: any, res: any) => {
+    try {
+      const userId = (req.user as any).claims?.sub;
+      if (!userId) {
+        return res.status(401).json({
+          error: 'Unauthorized',
+          message: 'User session invalid'
+        });
+      }
+
+      // Validation schema
+      const updateSchema = z.object({
+        name: z.string().min(2, 'Name must be at least 2 characters').max(100).optional(),
+        phone: z.string().optional(),
+        email: z.string().email('Invalid email format').optional()
+      });
+
+      const validated = updateSchema.parse(req.body);
+      
+      // Ensure at least one field is being updated
+      if (!validated.name && !validated.phone && !validated.email) {
+        return res.status(400).json({
+          error: 'No updates provided',
+          message: 'Please provide at least one field to update'
+        });
+      }
+      
+      // Normalize phone number if provided
+      if (validated.phone) {
+        if (!isValidPhoneNumber(validated.phone, 'IN')) {
+          return res.status(400).json({
+            error: 'Invalid phone number',
+            message: 'Please provide a valid Indian phone number'
+          });
+        }
+        const phoneNumber = parsePhoneNumber(validated.phone, 'IN');
+        validated.phone = phoneNumber.number; // E.164 format
+      }
+
+      const updatedUser = await storage.updateSeller(userId, validated);
+
+      if (!updatedUser) {
+        return res.status(404).json({
+          error: 'User not found',
+          message: 'Unable to update profile'
+        });
+      }
+
+      res.json({
+        success: true,
+        message: 'Profile updated successfully',
+        user: {
+          id: updatedUser.id,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          phone: updatedUser.phone
+        }
+      });
+
+    } catch (error: any) {
+      console.error('Profile update error:', error);
+
+      if (error.name === 'ZodError') {
+        return res.status(400).json({
+          error: 'Validation failed',
+          message: 'Please check your input',
+          details: error.errors
+        });
+      }
+
+      return res.status(500).json({
+        error: 'Failed to update profile',
+        message: 'Unable to update your profile. Please try again later.'
       });
     }
   }));
