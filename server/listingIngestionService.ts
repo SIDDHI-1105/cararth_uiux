@@ -90,23 +90,14 @@ export class ListingIngestionService {
 
       // Only save if Trust Layer approved
       if (trustResult.isApproved) {
-        // Save to database through storage interface
-        if ('createCachedPortalListing' in storage) {
-          await (storage as any).createCachedPortalListing(listingData);
-          console.log(`✅ Listing saved with status: ${trustResult.finalVerificationStatus}`);
-          return { 
-            saved: true, 
-            trustResult, 
-            reason: 'Approved by Trust Layer' 
-          };
-        } else {
-          console.warn('⚠️ Storage interface not available');
-          return { 
-            saved: false, 
-            trustResult, 
-            reason: 'Storage not available' 
-          };
-        }
+        // Save to MAIN cars table (not cache)
+        await storage.createCar(listingData as any);
+        console.log(`✅ Listing saved to cars table with status: ${trustResult.finalVerificationStatus}`);
+        return { 
+          saved: true, 
+          trustResult, 
+          reason: 'Approved by Trust Layer and saved to cars table' 
+        };
       } else {
         // Listing rejected by Trust Layer - do NOT save
         console.log(`❌ Listing rejected: ${trustResult.explanation}`);

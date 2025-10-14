@@ -270,14 +270,24 @@ export class BatchIngestionService {
   }
 
   /**
-   * Store normalized listing in database (upsert based on hash)
+   * Store normalized listing in MAIN cars table (not cache)
    */
   private async storeListing(listing: InsertCachedPortalListing): Promise<void> {
-    if ('createCachedPortalListing' in storage) {
-      // Use database storage method if available
-      await (storage as any).createCachedPortalListing(listing);
-    } else {
-      console.warn('⚠️ Database storage not available for batch ingestion');
+    try {
+      // Convert cached listing to car format and save to main cars table
+      const carListing = {
+        ...listing,
+        id: listing.externalId || crypto.randomUUID(),
+        // Ensure all required fields are present
+        sellerId: 'system-ingestion', // Temporary seller for batch ingestion
+        origin: 'scraped' as const
+      };
+      
+      await storage.createCar(carListing as any);
+      console.log(`✅ Saved to cars table: ${listing.title}`);
+    } catch (error) {
+      console.error(`❌ Failed to save listing to cars table: ${listing.title}`, error);
+      throw error;
     }
   }
 
