@@ -3833,10 +3833,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create new seller listing
-  app.post("/api/seller/listings", async (req, res) => {
+  app.post("/api/seller/listings", async (req: any, res) => {
     try {
       const listingData = req.body;
-      const listing = await sellerService.createListing("temp-seller", listingData);
+      
+      // Get authenticated user ID or create guest seller
+      let sellerId: string;
+      
+      if (req.isAuthenticated && req.isAuthenticated() && req.user?.claims?.sub) {
+        // Use authenticated user ID
+        sellerId = req.user.claims.sub;
+      } else {
+        // Create a guest seller record with their contact info
+        const guestSeller = await storage.createGuestSeller({
+          phone: listingData.actualPhone,
+          email: listingData.actualEmail,
+        });
+        sellerId = guestSeller.id;
+      }
+      
+      const listing = await sellerService.createListing(sellerId, listingData);
       res.status(201).json(listing);
     } catch (error) {
       console.error('Error creating seller listing:', error);

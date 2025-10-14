@@ -208,6 +208,32 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async createGuestSeller(contact: { phone: string; email: string }): Promise<User> {
+    try {
+      // Create a minimal guest seller record
+      const guestUser: InsertUser = {
+        username: `guest_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+        email: contact.email || `guest_${Date.now()}@cararth.temp`,
+        phone: contact.phone || '',
+        name: 'Guest Seller',
+        password: '', // No password for guest users
+        sellerType: 'private',
+      };
+      
+      const result = await this.db
+        .insert(users)
+        .values(guestUser)
+        .returning();
+      
+      const newUser = result[0];
+      this.setCache(`user:${newUser.id}`, newUser);
+      return newUser;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'createGuestSeller operation');
+      throw new Error('Failed to create guest seller - please try again');
+    }
+  }
+
   async upsertUser(user: UpsertUser): Promise<User> {
     try {
       const result = await this.db

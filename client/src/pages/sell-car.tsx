@@ -26,7 +26,6 @@ import { Badge } from "@/components/ui/badge";
 
 // Simplified schema with only essential fields
 const simplifiedSellCarSchema = z.object({
-  sellerId: z.string(),
   // Essential car details only
   brand: z.string().min(2, 'Brand is required'),
   model: z.string().min(1, 'Model is required'), 
@@ -80,7 +79,6 @@ export default function SellCar() {
   const form = useForm<z.infer<typeof simplifiedSellCarSchema>>({
     resolver: zodResolver(simplifiedSellCarSchema),
     defaultValues: {
-      sellerId: "temp-seller",
       brand: "",
       model: "",
       year: 2020,

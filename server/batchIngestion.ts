@@ -27,7 +27,7 @@ export class BatchIngestionService {
   private isIngesting = false;
 
   constructor() {
-    this.marketplaceAggregator = new MarketplaceAggregator();
+    this.marketplaceAggregator = new MarketplaceAggregator(storage as any);
   }
 
   /**
