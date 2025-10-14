@@ -30,6 +30,7 @@ import AiTrainingDashboard from "./pages/ai-training-dashboard";
 import FinancingPage from "./pages/financing";
 import ScraperStatus from "./pages/scraper-status";
 import SpinnyDeals from "./pages/spinny-deals";
+import FAQPage from "./pages/faq";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -54,6 +55,7 @@ function Router() {
       <Route path="/partner/dashboard" component={PartnerDashboard} />
       <Route path="/news" component={ThrottleTalk} />
       <Route path="/community" component={Community} />
+      <Route path="/faq" component={FAQPage} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms" component={SyndicationTerms} />
       <Route path="/terms-of-service" component={TermsOfService} />
