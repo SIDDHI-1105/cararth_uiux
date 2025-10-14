@@ -93,6 +93,9 @@ export default function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Legal & Support</h4>
             <div className="space-y-2 text-sm">
+              <Link href="/faq" className="block text-muted-foreground hover:text-accent transition-colors" data-testid="link-faq">
+                FAQ
+              </Link>
               <Link href="/data-sources-policy" className="block text-muted-foreground hover:text-accent transition-colors">
                 Data Sources Policy
               </Link>
