@@ -55,13 +55,21 @@ export class GrokService {
   private readonly apiKey: string | undefined;
   private readonly apiUrl = 'https://api.x.ai/v1/chat/completions';
   private readonly model = 'grok-beta';
+  private readonly perplexityApiKey: string | undefined;
+  private readonly perplexityApiUrl = 'https://api.perplexity.ai/chat/completions';
+  private readonly perplexityModel = 'sonar-pro';
 
   constructor() {
     this.apiKey = process.env.GROK_API_KEY;
+    this.perplexityApiKey = process.env.PERPLEXITY_API_KEY;
   }
 
   private isConfigured(): boolean {
     return !!this.apiKey;
+  }
+
+  private isPerplexityConfigured(): boolean {
+    return !!this.perplexityApiKey;
   }
 
   /**
@@ -101,6 +109,19 @@ export class GrokService {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Grok API error:', errorText);
+        
+        // If Grok is rate-limited (429) or credits exhausted, try Perplexity
+        if (response.status === 429) {
+          console.log(`🔄 Grok returned 429, checking Perplexity... (configured: ${this.isPerplexityConfigured()})`);
+          
+          if (this.isPerplexityConfigured()) {
+            console.log('✅ Perplexity API configured, using as fallback...');
+            return await this.generateInsightWithPerplexity(request);
+          } else {
+            console.warn('⚠️ Perplexity API not configured, using static fallback');
+          }
+        }
+        
         throw new Error(`Grok API request failed: ${response.status} ${response.statusText}`);
       }
 
@@ -117,6 +138,75 @@ export class GrokService {
       return insight;
     } catch (error) {
       console.error('Grok insight generation failed:', error);
+      
+      // If error is 429 and we haven't tried Perplexity yet, try it
+      if (error instanceof Error && error.message.includes('429') && this.isPerplexityConfigured()) {
+        console.log('Trying Perplexity fallback after Grok 429 error...');
+        try {
+          return await this.generateInsightWithPerplexity(request);
+        } catch (perplexityError) {
+          console.error('Perplexity also failed:', perplexityError);
+        }
+      }
+      
+      // Return data-driven fallback response
+      return await this.getFallbackInsight(request);
+    }
+  }
+
+  /**
+   * Generate market insights using Perplexity API (fallback when Grok exhausted)
+   */
+  private async generateInsightWithPerplexity(request: GrokInsightRequest): Promise<GrokInsightResponse> {
+    if (!this.isPerplexityConfigured()) {
+      console.warn('Perplexity API key not configured');
+      return await this.getFallbackInsight(request);
+    }
+
+    try {
+      const marketData = await marketDataService.getMarketData();
+      const formattedData = await marketDataService.getFormattedDataForAI();
+
+      const systemPrompt = this.buildSystemPrompt(formattedData);
+      const userPrompt = this.buildUserPrompt(request);
+
+      const response = await fetch(this.perplexityApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.perplexityApiKey}`
+        },
+        body: JSON.stringify({
+          model: this.perplexityModel,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+          temperature: 0.7,
+          max_tokens: 1500,
+          stream: false
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Perplexity API error:', errorText);
+        throw new Error(`Perplexity API request failed: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const aiResponse = data.choices?.[0]?.message?.content;
+
+      if (!aiResponse) {
+        throw new Error('No response from Perplexity AI');
+      }
+
+      // Parse the AI response using the same parser as Grok
+      const insight = this.parseGrokResponse(aiResponse, request);
+      
+      return insight;
+    } catch (error) {
+      console.error('Perplexity insight generation failed:', error);
       
       // Return data-driven fallback response
       return await this.getFallbackInsight(request);
