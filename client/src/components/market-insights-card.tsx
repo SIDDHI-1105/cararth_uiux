@@ -3,6 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -10,7 +11,10 @@ import {
   ChevronDown, 
   ChevronUp,
   Loader2,
-  ExternalLink 
+  BarChart3,
+  Fuel,
+  Gauge,
+  MapPin
 } from "lucide-react";
 import { type Car } from "@shared/schema";
 import {
@@ -134,16 +138,9 @@ export default function MarketInsightsCard({ car }: MarketInsightsCardProps) {
               <CardTitle className="text-lg flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-purple-500" />
                 AI Market Insights
-                <a 
-                  href="https://x.ai?utm_source=cararth&utm_medium=referral&utm_campaign=market_insights" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="ml-2"
-                >
-                  <Badge variant="outline" className="text-xs hover:bg-purple-50 dark:hover:bg-purple-900 transition-colors cursor-pointer">
-                    Powered by xAI Grok
-                  </Badge>
-                </a>
+                <Badge variant="outline" className="text-xs bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
+                  Powered by AI
+                </Badge>
               </CardTitle>
               {isOpen ? (
                 <ChevronUp className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition" />
@@ -202,48 +199,90 @@ export default function MarketInsightsCard({ car }: MarketInsightsCardProps) {
                 </div>
 
                 {insightMutation.data.insight.priceComparison && (
-                  <div className="bg-muted/50 p-3 rounded-lg">
-                    <div className="grid grid-cols-3 gap-3 text-center">
+                  <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
+                    <div className="grid grid-cols-3 gap-3 text-center mb-3">
                       <div>
-                        <p className="text-xs text-muted-foreground">Your Price</p>
-                        <p className="text-sm font-semibold" data-testid="text-your-price">
+                        <p className="text-xs text-muted-foreground mb-1">Your Price</p>
+                        <p className="text-lg font-bold text-purple-600 dark:text-purple-400" data-testid="text-your-price">
                           {insightMutation.data.insight.priceComparison.yourPrice}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground">Market Avg</p>
-                        <p className="text-sm font-semibold" data-testid="text-market-avg">
+                        <p className="text-xs text-muted-foreground mb-1">Market Avg</p>
+                        <p className="text-lg font-bold" data-testid="text-market-avg">
                           {insightMutation.data.insight.priceComparison.marketAverage}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground">Difference</p>
-                        <p className="text-sm font-semibold flex items-center justify-center gap-1" data-testid="text-diff">
+                        <p className="text-xs text-muted-foreground mb-1">Difference</p>
+                        <p className="text-lg font-bold flex items-center justify-center gap-1" data-testid="text-diff">
                           {insightMutation.data.insight.priceComparison.percentageDiff.startsWith('+') ? (
-                            <TrendingUp className="h-3 w-3 text-red-500" />
+                            <TrendingUp className="h-4 w-4 text-red-500" />
                           ) : (
-                            <TrendingDown className="h-3 w-3 text-green-500" />
+                            <TrendingDown className="h-4 w-4 text-green-500" />
                           )}
-                          {insightMutation.data.insight.priceComparison.percentageDiff}
+                          <span className={insightMutation.data.insight.priceComparison.percentageDiff.startsWith('+') ? 'text-red-500' : 'text-green-500'}>
+                            {insightMutation.data.insight.priceComparison.percentageDiff}
+                          </span>
                         </p>
                       </div>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-2 text-center">
+                    
+                    {/* Visual Price Comparison Bar */}
+                    <div className="space-y-1 mb-3">
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Below Market</span>
+                        <span>Above Market</span>
+                      </div>
+                      <div className="relative h-2 bg-gradient-to-r from-green-200 via-yellow-200 to-red-200 dark:from-green-900 dark:via-yellow-900 dark:to-red-900 rounded-full">
+                        <div 
+                          className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-purple-600 dark:bg-purple-400 rounded-full border-2 border-white dark:border-gray-900 shadow-lg"
+                          style={{ left: `${Math.min(Math.max((parseFloat(insightMutation.data.insight.priceComparison.percentageDiff) + 50), 0), 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                    
+                    <p className="text-xs text-center font-medium text-purple-700 dark:text-purple-300">
                       {insightMutation.data.insight.dealQuality.reason}
                     </p>
                   </div>
                 )}
 
-                <div className="space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground">Quick Insights:</p>
-                  <div className="grid grid-cols-1 gap-2 text-xs">
-                    <div className="flex items-start gap-2">
-                      <TrendingUp className="h-3 w-3 text-primary mt-0.5 flex-shrink-0" />
-                      <span className="text-muted-foreground">{insightMutation.data.insight.granularBreakdown.modelTrend}</span>
+                {/* Market Trends Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {/* Model & Location Insights */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                      <BarChart3 className="h-3 w-3" />
+                      Market Trends
+                    </p>
+                    <div className="space-y-1.5">
+                      <div className="flex items-start gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+                        <TrendingUp className="h-3 w-3 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                        <span className="text-xs text-blue-800 dark:text-blue-300">{insightMutation.data.insight.granularBreakdown.modelTrend}</span>
+                      </div>
+                      <div className="flex items-start gap-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-md">
+                        <MapPin className="h-3 w-3 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                        <span className="text-xs text-green-800 dark:text-green-300">{insightMutation.data.insight.granularBreakdown.locationInsight}</span>
+                      </div>
                     </div>
-                    <div className="flex items-start gap-2">
-                      <TrendingUp className="h-3 w-3 text-primary mt-0.5 flex-shrink-0" />
-                      <span className="text-muted-foreground">{insightMutation.data.insight.granularBreakdown.locationInsight}</span>
+                  </div>
+                  
+                  {/* Fuel & Transmission Preferences */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                      <Fuel className="h-3 w-3" />
+                      Buyer Preferences
+                    </p>
+                    <div className="space-y-1.5">
+                      <div className="flex items-start gap-2 p-2 bg-orange-50 dark:bg-orange-900/20 rounded-md">
+                        <Fuel className="h-3 w-3 text-orange-600 dark:text-orange-400 mt-0.5 flex-shrink-0" />
+                        <span className="text-xs text-orange-800 dark:text-orange-300">{insightMutation.data.insight.granularBreakdown.fuelTypeTrend}</span>
+                      </div>
+                      <div className="flex items-start gap-2 p-2 bg-purple-50 dark:bg-purple-900/20 rounded-md">
+                        <Gauge className="h-3 w-3 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
+                        <span className="text-xs text-purple-800 dark:text-purple-300">{insightMutation.data.insight.granularBreakdown.transmissionTrend}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -257,22 +296,19 @@ export default function MarketInsightsCard({ car }: MarketInsightsCardProps) {
                   </p>
                   <div className="flex flex-wrap gap-1">
                     {insightMutation.data.insight.sources.slice(0, 4).map((source, index) => (
-                      <a
+                      <div
                         key={index}
-                        href={`${source.url}?utm_source=cararth&utm_medium=referral&utm_campaign=market_insights`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-900/30 text-xs text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors"
-                        data-testid={`link-source-${index}`}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-900/30 text-xs text-purple-700 dark:text-purple-300"
+                        data-testid={`badge-source-${index}`}
                       >
                         {source.name.includes('SIAM') && '📊 '}
                         {source.name.includes('VAHAN') && '🚗 '}
                         {source.name.includes('CarDekho') && '🔍 '}
                         {source.name.includes('Spinny') && '✓ '}
                         {source.name.includes('OLX') && '📱 '}
+                        {source.name.includes('Telangana') && '🏛️ '}
                         {source.name.split(' ')[0]}
-                        <ExternalLink className="h-2 w-2" />
-                      </a>
+                      </div>
                     ))}
                   </div>
                 </div>

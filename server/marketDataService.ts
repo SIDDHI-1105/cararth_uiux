@@ -168,7 +168,7 @@ export class MarketDataService {
         .from(vehicleRegistrations)
         .where(sql`${vehicleRegistrations.state} = 'Telangana'`)
         .groupBy(vehicleRegistrations.brand)
-        .orderBy(sql`registrations DESC`)
+        .orderBy(sql`SUM(${vehicleRegistrations.registrationsCount}) DESC`)
         .limit(5);
 
       // Get fuel type distribution
