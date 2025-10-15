@@ -203,7 +203,7 @@ export class MarketDataService {
           AND ${vehicleRegistrations.city} IS NOT NULL
         `)
         .groupBy(vehicleRegistrations.city)
-        .orderBy(sql`count DESC`)
+        .orderBy(sql`SUM(${vehicleRegistrations.registrationsCount}) DESC`)
         .limit(5);
 
       // Calculate percentages using FULL dataset totals, not just top 5
