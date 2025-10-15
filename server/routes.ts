@@ -2862,10 +2862,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       let filters = searchSchema.parse(req.body);
       
-      // Apply default age filtering: 30 days unless specified
-      if (filters.listedWithinDays === undefined) {
-        filters = { ...filters, listedWithinDays: 30 };
-      }
+      // Removed default age filtering to show all available listings
+      // if (filters.listedWithinDays === undefined) {
+      //   filters = { ...filters, listedWithinDays: 30 };
+      // }
       
       logError({ message: 'Marketplace search initiated', statusCode: 200 }, 'Marketplace search request');
       
