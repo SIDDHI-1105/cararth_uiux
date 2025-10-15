@@ -271,6 +271,77 @@ export class InternalScheduler {
             console.error('❌ EauctionsIndia scraping failed:', error);
           }
           
+          // CRITICAL: Run individual scrapers (CarDekho, OLX, Facebook via Apify)
+          console.log('🔄 Running individual scrapers (CarDekho, OLX, Facebook)...');
+          
+          // CarDekho scraper
+          const carDekhoRunId = await scraperHealthMonitor.startRun('CarDekho', 'portal');
+          try {
+            const { CarDekhoScraper } = await import('./carDekhoScraper.js');
+            const carDekhoScraper = new CarDekhoScraper(storage);
+            const result = await carDekhoScraper.scrapeCarDekhoCars('Hyderabad', 3);
+            await scraperHealthMonitor.completeRun(carDekhoRunId, {
+              success: true,
+              totalFound: result.scrapedCount || 0,
+              newListingsSaved: result.savedCount || 0
+            });
+            console.log(`✅ CarDekho scraping: ${result.savedCount} new listings from ${result.scrapedCount} scraped`);
+          } catch (error) {
+            await scraperHealthMonitor.completeRun(carDekhoRunId, {
+              success: false,
+              totalFound: 0,
+              newListingsSaved: 0,
+              error: error instanceof Error ? error.message : String(error),
+              errorStack: error instanceof Error ? error.stack : undefined
+            });
+            console.error('❌ CarDekho scraping failed:', error);
+          }
+          
+          // OLX scraper (via Apify)
+          const olxRunId = await scraperHealthMonitor.startRun('OLX', 'marketplace');
+          try {
+            const { scrapeOLX } = await import('./apifyOlxScraper.js');
+            const result = await scrapeOLX(['Hyderabad'], storage);
+            await scraperHealthMonitor.completeRun(olxRunId, {
+              success: true,
+              totalFound: result.totalScraped || 0,
+              newListingsSaved: result.totalSaved || 0
+            });
+            console.log(`✅ OLX scraping: ${result.totalSaved} new listings from ${result.totalScraped} scraped`);
+          } catch (error) {
+            await scraperHealthMonitor.completeRun(olxRunId, {
+              success: false,
+              totalFound: 0,
+              newListingsSaved: 0,
+              error: error instanceof Error ? error.message : String(error),
+              errorStack: error instanceof Error ? error.stack : undefined
+            });
+            console.error('❌ OLX scraping failed:', error);
+          }
+          
+          // Facebook Marketplace scraper (via Apify)
+          const facebookRunId = await scraperHealthMonitor.startRun('Facebook Marketplace', 'marketplace');
+          try {
+            const { scrapeFacebookMarketplace } = await import('./apifyFacebookScraper.js');
+            const result = await scrapeFacebookMarketplace(['Hyderabad'], storage);
+            await scraperHealthMonitor.completeRun(facebookRunId, {
+              success: true,
+              totalFound: result.totalScraped || 0,
+              newListingsSaved: result.totalSaved || 0
+            });
+            console.log(`✅ Facebook Marketplace scraping: ${result.totalSaved} new listings from ${result.totalScraped} scraped`);
+          } catch (error) {
+            await scraperHealthMonitor.completeRun(facebookRunId, {
+              success: false,
+              totalFound: 0,
+              newListingsSaved: 0,
+              error: error instanceof Error ? error.message : String(error),
+              errorStack: error instanceof Error ? error.stack : undefined
+            });
+            console.error('❌ Facebook Marketplace scraping failed:', error);
+          }
+          
+          console.log('✅ Individual scrapers completed');
           console.log('✅ Additional scrapers completed');
         } else {
           // Fallback to legacy batch ingestion
