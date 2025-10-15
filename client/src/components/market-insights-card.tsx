@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -62,8 +62,9 @@ interface MarketInsightsCardProps {
 }
 
 export default function MarketInsightsCard({ car }: MarketInsightsCardProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const [hasGenerated, setHasGenerated] = useState(false);
+  const lastCarId = useRef<string | null>(null);
 
   const insightMutation = useMutation<MarketInsightResponse, Error, any>({
     mutationFn: async (data) => {
@@ -87,6 +88,29 @@ export default function MarketInsightsCard({ car }: MarketInsightsCardProps) {
     }
   });
 
+  useEffect(() => {
+    if (car && lastCarId.current !== car.id && !insightMutation.isPending) {
+      lastCarId.current = car.id;
+      setHasGenerated(false);
+      const carPrice = typeof car.price === 'string' ? parseFloat(car.price) : car.price;
+      
+      insightMutation.mutate({
+        query: `${car.brand} ${car.model} ${car.year} in ${car.city}`,
+        carDetails: {
+          model: `${car.brand} ${car.model}`,
+          variant: undefined,
+          year: car.year,
+          color: undefined,
+          transmission: car.transmission,
+          fuel: car.fuelType,
+          mileage: car.mileage,
+          price: carPrice,
+          location: car.city
+        }
+      });
+    }
+  }, [car, insightMutation.isPending]);
+
   const handleGenerateInsights = () => {
     if (!isOpen) {
       setIsOpen(true);
@@ -99,9 +123,9 @@ export default function MarketInsightsCard({ car }: MarketInsightsCardProps) {
         query: `${car.brand} ${car.model} ${car.year} in ${car.city}`,
         carDetails: {
           model: `${car.brand} ${car.model}`,
-          variant: undefined, // Not available in schema
+          variant: undefined,
           year: car.year,
-          color: undefined, // Not available in schema
+          color: undefined,
           transmission: car.transmission,
           fuel: car.fuelType,
           mileage: car.mileage,
