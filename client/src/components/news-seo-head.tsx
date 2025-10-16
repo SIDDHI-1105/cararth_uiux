@@ -76,9 +76,11 @@ function updateMetaTags(singlePost?: NewsPost, isDetailPage: boolean = false) {
       { property: 'article:author', content: singlePost.author || 'CarArth Community' },
       { property: 'article:section', content: singlePost.category || 'Automotive News' },
       { name: 'twitter:card', content: 'summary_large_image' },
-      { name: 'twitter:title', content: singlePost.title },
+      { name: 'twitter:title', content: `${singlePost.title} | CarArth` },
       { name: 'twitter:description', content: postDescription },
       { name: 'twitter:image', content: postImage },
+      { name: 'twitter:site', content: '@CarArth' },
+      { name: 'twitter:creator', content: '@CarArth' },
     ];
     
     metaTags.forEach(({ name, property, content }) => {

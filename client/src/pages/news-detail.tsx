@@ -201,8 +201,12 @@ export default function NewsDetail() {
             <div className="border-t border-gray-200 dark:border-gray-800 pt-6 mb-6">
               <SocialShareButtons
                 url={`https://cararth.com/news/${postData.id}`}
-                title={`${postData.title}${isExternal && attribution ? ` (via ${attribution})` : ''}`}
-                description={postData.content || `${postData.title} - Read on CarArth Throttle Talk`}
+                title={postData.category === 'Market Insights' && authorName 
+                  ? `${postData.title} - ${authorName}` 
+                  : isExternal && attribution 
+                    ? `${postData.title} (via ${attribution})` 
+                    : postData.title}
+                description={postData.content || `India's premier automotive insights and market intelligence - Powered by CarArth`}
               />
             </div>
 

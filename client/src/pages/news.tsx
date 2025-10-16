@@ -453,8 +453,12 @@ export default function ThrottleTalkPage() {
                         <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
                           <SocialShareButtons
                             url={`https://cararth.com/news/${post.id}`}
-                            title={`${post.title}${post.isExternal ? ` (via ${post.attribution})` : ''}`}
-                            description={post.content || `${post.title} - Read on CarArth Throttle Talk`}
+                            title={post.category === 'Market Insights' && post.author 
+                              ? `${post.title} - ${post.author}` 
+                              : post.isExternal 
+                                ? `${post.title} (via ${post.attribution})` 
+                                : post.title}
+                            description={post.content || `India's premier automotive insights and market intelligence - Read on CarArth`}
                           />
                         </div>
 

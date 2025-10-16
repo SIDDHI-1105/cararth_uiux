@@ -16,10 +16,23 @@ export default function SocialShareButtons({
   className = "" 
 }: SocialShareButtonsProps) {
   const shareUrl = encodeURIComponent(url);
-  const shareTitle = encodeURIComponent(title);
-  const shareText = encodeURIComponent(`${title}\n\n${description}\n\n${url}`);
+  
+  // Tastefully add CarArth branding if not already present
+  const brandedTitle = title.includes('CarArth') ? title : `${title} | CarArth`;
+  const shareTitle = encodeURIComponent(brandedTitle);
+  
+  // WhatsApp: Include title, description, and URL with CarArth branding
+  const whatsappText = description 
+    ? encodeURIComponent(`${brandedTitle}\n\n${description}\n\n📱 Read more: ${url}`)
+    : encodeURIComponent(`${brandedTitle}\n\n📱 Read more: ${url}`);
+  
+  // Twitter: Add "via @CarArth" if not already present
+  const twitterText = title.toLowerCase().includes('cararth') 
+    ? shareTitle 
+    : encodeURIComponent(`${title} via CarArth`);
 
   const handleFacebookShare = () => {
+    // Facebook uses Open Graph meta tags, so it will automatically show CarArth branding
     window.open(
       `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`,
       '_blank',
@@ -29,12 +42,13 @@ export default function SocialShareButtons({
 
   const handleWhatsAppShare = () => {
     window.open(
-      `https://wa.me/?text=${shareText}`,
+      `https://wa.me/?text=${whatsappText}`,
       '_blank'
     );
   };
 
   const handleLinkedInShare = () => {
+    // LinkedIn uses Open Graph meta tags for branding
     window.open(
       `https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}`,
       '_blank',
@@ -44,7 +58,7 @@ export default function SocialShareButtons({
 
   const handleTwitterShare = () => {
     window.open(
-      `https://twitter.com/intent/tweet?url=${shareUrl}&text=${shareTitle}`,
+      `https://twitter.com/intent/tweet?url=${shareUrl}&text=${twitterText}`,
       '_blank',
       'width=600,height=400'
     );
