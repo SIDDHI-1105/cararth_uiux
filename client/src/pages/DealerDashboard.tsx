@@ -57,7 +57,7 @@ export default function DealerDashboard() {
   });
 
   // Get dealers for selected OEM
-  const availableDealers = selectedOem && dealersData?.success && dealersData?.data?.[selectedOem] ? dealersData.data[selectedOem] : [];
+  const availableDealers = selectedOem && dealersData && 'success' in dealersData && dealersData.success && 'data' in dealersData && dealersData.data?.[selectedOem] ? dealersData.data[selectedOem] : [];
 
   // Fetch performance data (public endpoint)
   const { data: performanceData, isLoading: performanceLoading } = useQuery({
@@ -231,7 +231,7 @@ export default function DealerDashboard() {
                     <SelectValue placeholder="Select OEM brand" />
                   </SelectTrigger>
                   <SelectContent>
-                    {dealersData?.oems?.map((oem: string) => (
+                    {dealersData && 'oems' in dealersData && dealersData.oems?.map((oem: string) => (
                       <SelectItem key={oem} value={oem}>{oem}</SelectItem>
                     ))}
                   </SelectContent>
@@ -447,9 +447,9 @@ export default function DealerDashboard() {
                       <CardContent>
                         <ResponsiveContainer width="100%" height={250}>
                           <BarChart data={[
-                            { name: 'You', value: performanceData.data.vahanComparison.dealerSales },
-                            { name: 'State Avg', value: performanceData.data.vahanComparison.stateAverage },
-                            { name: 'National Avg', value: performanceData.data.vahanComparison.nationalAverage }
+                            { name: 'You', value: performanceData.data.benchmarkComparison.dealerSales },
+                            { name: 'State Avg', value: performanceData.data.benchmarkComparison.stateAverage },
+                            { name: 'National Avg', value: performanceData.data.benchmarkComparison.nationalAverage }
                           ]}>
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis dataKey="name" />
@@ -459,7 +459,7 @@ export default function DealerDashboard() {
                           </BarChart>
                         </ResponsiveContainer>
                         <div className="mt-4 text-sm">
-                          <p className="font-medium">Percentile Rank: {performanceData.data.vahanComparison.percentileRank}th</p>
+                          <p className="font-medium">Percentile Rank: {performanceData.data.benchmarkComparison.percentileRank}th</p>
                         </div>
                       </CardContent>
                     </Card>
