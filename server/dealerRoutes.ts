@@ -663,15 +663,16 @@ router.get(
       };
 
       // Telangana district performance - use real RTA city data
+      type TrendType = 'UP' | 'DOWN' | 'STABLE';
       const telanganaDistricts = telanganaStats?.popularCities.map((city, idx) => ({
         name: city.city,
         registrations: city.count,
         growth: idx === 0 ? 8.5 : idx === 1 ? 5.2 : 3.1, // Estimated growth
-        trend: (idx < 2 ? 'UP' : 'STABLE') as const
+        trend: (idx < 2 ? 'UP' : 'STABLE') as TrendType
       })) || [
-        { name: 'Hyderabad', registrations: Math.round((telanganaStats?.totalRegistrations || 630) * 0.4), growth: 8.5, trend: 'UP' as const },
-        { name: 'Rangareddy', registrations: Math.round((telanganaStats?.totalRegistrations || 630) * 0.25), growth: 5.2, trend: 'UP' as const },
-        { name: 'Medchal-Malkajgiri', registrations: Math.round((telanganaStats?.totalRegistrations || 630) * 0.18), growth: 3.1, trend: 'STABLE' as const }
+        { name: 'Hyderabad', registrations: Math.round((telanganaStats?.totalRegistrations || 630) * 0.4), growth: 8.5, trend: 'UP' as TrendType },
+        { name: 'Rangareddy', registrations: Math.round((telanganaStats?.totalRegistrations || 630) * 0.25), growth: 5.2, trend: 'UP' as TrendType },
+        { name: 'Medchal-Malkajgiri', registrations: Math.round((telanganaStats?.totalRegistrations || 630) * 0.18), growth: 3.1, trend: 'STABLE' as TrendType }
       ];
 
       // ML Forecast breakdown - varies by dealer performance

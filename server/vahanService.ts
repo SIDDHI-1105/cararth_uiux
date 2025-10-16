@@ -108,11 +108,17 @@ export async function calculateROIRegistrations(
       sql`${vehicleRegistrations.state} != 'Telangana'`
     ];
 
+    // VAHAN data is stored as brand='All' (aggregated), so we need to include it
+    // when filtering by brand. Match either the specific brand OR 'All'.
     if (brand) {
-      conditions.push(eq(vehicleRegistrations.brand, brand));
+      conditions.push(
+        sql`(${vehicleRegistrations.brand} = ${brand} OR ${vehicleRegistrations.brand} = 'All')`
+      );
     }
     if (model) {
-      conditions.push(eq(vehicleRegistrations.model, model));
+      conditions.push(
+        sql`(${vehicleRegistrations.model} = ${model} OR ${vehicleRegistrations.model} = 'All')`
+      );
     }
 
     // Get national total from vehicleRegistrations
