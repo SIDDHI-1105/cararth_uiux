@@ -523,7 +523,7 @@ router.get(
 
 /**
  * GET /api/dealers/by-oem
- * PUBLIC: Get all active dealers grouped by OEM brand for dropdown selection
+ * PUBLIC: Get all active dealers with hierarchical structure (OEM → Dealer Group → Dealer)
  * No authentication required
  */
 router.get('/by-oem', async (req: Request, res: Response) => {
@@ -532,21 +532,35 @@ router.get('/by-oem', async (req: Request, res: Response) => {
       .select({
         id: dealers.id,
         dealerName: dealers.dealerName,
+        dealerGroup: dealers.dealerGroup,
         oemBrand: dealers.oemBrand,
         city: dealers.city,
         state: dealers.state,
       })
       .from(dealers)
       .where(eq(dealers.isActive, true))
-      .orderBy(dealers.oemBrand, dealers.dealerName);
+      .orderBy(dealers.oemBrand, dealers.dealerGroup, dealers.dealerName);
 
-    // Group by OEM
-    const dealersByOem: Record<string, typeof allDealers> = {};
+    // Group by OEM → Dealer Group → Dealers (hierarchical structure)
+    const dealersByOem: Record<string, any> = {};
+    
     allDealers.forEach(dealer => {
-      if (!dealersByOem[dealer.oemBrand]) {
-        dealersByOem[dealer.oemBrand] = [];
+      const oem = dealer.oemBrand;
+      const group = dealer.dealerGroup || 'Independent';
+      
+      if (!dealersByOem[oem]) {
+        dealersByOem[oem] = {
+          groups: {},
+          totalDealers: 0
+        };
       }
-      dealersByOem[dealer.oemBrand].push(dealer);
+      
+      if (!dealersByOem[oem].groups[group]) {
+        dealersByOem[oem].groups[group] = [];
+      }
+      
+      dealersByOem[oem].groups[group].push(dealer);
+      dealersByOem[oem].totalDealers++;
     });
 
     res.json({
@@ -633,9 +647,53 @@ router.get(
         (data: any) => data.brand.toLowerCase() === selectedOem.toLowerCase()
       );
 
-      // Calculate dealer's estimated monthly sales based on real Telangana data
-      // Assumption: Dealer gets proportional share of Telangana registrations
-      const baseSales = Math.round((telanganaStats?.totalRegistrations || 630) / 15); // Approx 15 dealers in Telangana per OEM
+      // Calculate dealer's ACTUAL sales using city+brand RTA mapping
+      const { sql } = await import('drizzle-orm');
+      const { vehicleRegistrations } = await import('../shared/schema');
+      
+      // Normalize dealer city to match RTA city format
+      const normalizedCity = ['Gachibowli', 'Madhapur', 'Jubilee Hills', 'Banjara Hills', 'Erragadda', 
+                              'Bowenpally', 'Somajiguda', 'Attapur', 'Serilingampally', 'Chandrayangutta',
+                              'Begumpet', 'Tolichowki', 'Uppal', 'Sanath Nagar', 'Hi-Tech City'].includes(dealer.city)
+        ? 'Hyderabad'
+        : dealer.city;
+      
+      // Get RTA sales for this city + brand
+      const cityBrandSales = await db
+        .select({
+          total: sql<number>`COALESCE(SUM(${vehicleRegistrations.registrationsCount}), 0)::int`
+        })
+        .from(vehicleRegistrations)
+        .where(sql`
+          ${vehicleRegistrations.state} = 'Telangana'
+          AND ${vehicleRegistrations.month} = ${selectedMonthNum}
+          AND ${vehicleRegistrations.year} = ${selectedYear}
+          AND ${vehicleRegistrations.city} = ${normalizedCity}
+          AND ${vehicleRegistrations.brand} = ${selectedOem}
+        `);
+      
+      // Count dealers in this city for this brand
+      const dealersInCity = await db
+        .select({
+          count: sql<number>`COUNT(*)::int`
+        })
+        .from(dealers)
+        .where(sql`
+          ${dealers.state} = 'Telangana'
+          AND ${dealers.oemBrand} = ${selectedOem}
+          AND (
+            ${dealers.city} = ${normalizedCity}
+            OR (${normalizedCity} = 'Hyderabad' AND ${dealers.city} IN (
+              'Gachibowli', 'Madhapur', 'Jubilee Hills', 'Banjara Hills', 'Erragadda', 
+              'Bowenpally', 'Somajiguda', 'Attapur', 'Serilingampally', 'Chandrayangutta',
+              'Begumpet', 'Tolichowki', 'Uppal', 'Sanath Nagar', 'Hi-Tech City', 'Hyderabad'
+            ))
+          )
+        `);
+      
+      const cityTotal = cityBrandSales[0]?.total || 0;
+      const dealerCount = dealersInCity[0]?.count || 1;
+      const baseSales = Math.round(cityTotal / dealerCount);
       
       // Historical sales data - use seasonal pattern estimate
       const seasonalFactors = [0.93, 0.96, 0.92, 0.95, 0.98, 1.0, 1.05, 1.09];
@@ -695,11 +753,13 @@ router.get(
         }
       };
 
-      // Response structure optimized for dashboard
+      // Response structure optimized for dashboard with hierarchical info
       const performanceData = {
         dealerInfo: {
           id: dealer.id,
           name: dealer.dealerName,
+          dealerGroup: dealer.dealerGroup || 'Independent',
+          oemBrand: dealer.oemBrand,
           city: dealer.city,
           state: dealer.state,
           storeCode: dealer.storeCode

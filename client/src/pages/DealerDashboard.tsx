@@ -56,9 +56,15 @@ export default function DealerDashboard() {
     enabled: !isAuthenticated,
   });
 
-  // Get dealers for selected OEM
+  // Get dealers for selected OEM with hierarchical structure
   const dealersResponse = dealersData as any;
-  const availableDealers = selectedOem && dealersResponse?.success && dealersResponse?.data?.[selectedOem] ? dealersResponse.data[selectedOem] : [];
+  const oemData = selectedOem && dealersResponse?.success && dealersResponse?.data?.[selectedOem] ? dealersResponse.data[selectedOem] : null;
+  const dealerGroups = oemData?.groups || {};
+  
+  // Flatten dealers for selection while preserving group info
+  const availableDealers = Object.entries(dealerGroups).flatMap(([group, dealers]: [string, any]) => 
+    dealers.map((d: any) => ({ ...d, dealerGroup: group }))
+  );
 
   // Fetch performance data (public endpoint)
   const { data: performanceData, isLoading: performanceLoading } = useQuery({
@@ -247,10 +253,17 @@ export default function DealerDashboard() {
                       <SelectValue placeholder="Select your dealership" />
                     </SelectTrigger>
                     <SelectContent>
-                      {availableDealers.map((dealer: any) => (
-                        <SelectItem key={dealer.id} value={dealer.id}>
-                          {dealer.dealerName} - {dealer.city}
-                        </SelectItem>
+                      {Object.entries(dealerGroups).map(([group, dealers]: [string, any]) => (
+                        <div key={group}>
+                          <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                            {group}
+                          </div>
+                          {dealers.map((dealer: any) => (
+                            <SelectItem key={dealer.id} value={dealer.id} className="pl-6">
+                              {dealer.dealerName} - {dealer.city}
+                            </SelectItem>
+                          ))}
+                        </div>
                       ))}
                     </SelectContent>
                   </Select>
