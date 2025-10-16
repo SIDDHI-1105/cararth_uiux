@@ -249,7 +249,7 @@ export default function SellCar() {
             </TabsTrigger>
             <TabsTrigger value="bulk" className="flex items-center gap-2">
               <Package className="h-4 w-4" />
-              Bulk Upload
+              Bulk Upload / Dealer Partners
             </TabsTrigger>
           </TabsList>
 
@@ -876,11 +876,38 @@ function BulkUploadSection() {
 
   return (
     <div className="space-y-6">
+      {/* Dealer Partner Info Banner */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+        <div className="flex items-start gap-3">
+          <div className="bg-blue-600 text-white p-2 rounded-lg">
+            <Package className="h-5 w-5" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">
+              Dealer Partners - Professional Inventory Management
+            </h3>
+            <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
+              Are you a dealer with multiple vehicles? Get access to our professional inventory upload system with Google Vehicle Listing feed compliance, API integration, and VIN validation.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.location.href = '/dealer/dashboard'}
+              className="bg-white dark:bg-gray-800"
+              data-testid="button-dealer-access"
+            >
+              <Car className="h-4 w-4 mr-2" />
+              Access Dealer Portal
+            </Button>
+          </div>
+        </div>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Bulk Upload - Add Multiple Cars
+            Individual Bulk Upload - Add Multiple Cars
           </CardTitle>
           <p className="text-sm text-muted-foreground">
             Upload a CSV file with your car listings. You can also attach images/videos.
