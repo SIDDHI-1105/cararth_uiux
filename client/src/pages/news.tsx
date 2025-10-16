@@ -137,9 +137,10 @@ export default function ThrottleTalkPage() {
     replies: Math.floor(Math.random() * 50),
     views: Math.floor(Math.random() * 1000) + 100,
     lastReply: new Date(post.publishedAt).toLocaleDateString(),
-    isExternal: true,
+    isExternal: post.category !== 'Market Intelligence', // Benchmarks are internal
     sourceUrl: post.sourceUrl,
-    attribution: post.attribution
+    attribution: post.attribution,
+    content: post.content // Include HTML content for benchmarks
   })) : [];
 
   // Convert user posts data to forum post format
@@ -409,15 +410,33 @@ export default function ThrottleTalkPage() {
                           </span>
                         </div>
 
+                        {/* Dealership Benchmark Card - Special rendering for ML-powered benchmarks */}
+                        {post.id.startsWith('dealership-benchmark-') && post.content && (
+                          <div className="mt-4 -mx-6 px-6 py-4 border-t border-gray-200 dark:border-gray-800" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center gap-2 mb-3">
+                              <Badge variant="default" className="bg-blue-500 text-white">
+                                🤖 ML Forecast
+                              </Badge>
+                              <Badge variant="outline">
+                                {post.attribution?.split('with ')[1] || 'Hybrid Prediction'}
+                              </Badge>
+                            </div>
+                            <div 
+                              className="prose prose-sm dark:prose-invert max-w-none"
+                              dangerouslySetInnerHTML={{ __html: post.content }}
+                            />
+                          </div>
+                        )}
+
                         {/* McKinsey-style infographic */}
-                        {post.infographic && (
+                        {!post.id.startsWith('dealership-benchmark-') && post.infographic && (
                           <div className="mt-4 -mx-6 px-6 py-4 bg-gray-50 dark:bg-gray-900/50" onClick={(e) => e.stopPropagation()}>
                             <McKinseyInsightCard insight={{ infographic: post.infographic }} />
                           </div>
                         )}
 
                         {/* Standard market insights content (fallback) */}
-                        {!post.infographic && post.content && (
+                        {!post.id.startsWith('dealership-benchmark-') && !post.infographic && post.content && (
                           <div className="mt-3 text-sm text-gray-700 dark:text-gray-300">
                             <p>{post.content}</p>
                           </div>
