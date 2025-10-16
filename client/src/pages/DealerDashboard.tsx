@@ -52,7 +52,7 @@ export default function DealerDashboard() {
 
   // Fetch dealers grouped by OEM (public endpoint)
   const { data: dealersData } = useQuery({
-    queryKey: ['/api/dealers/by-oem'],
+    queryKey: ['/api/dealer/by-oem'],
     enabled: !isAuthenticated,
   });
 
