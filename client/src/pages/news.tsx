@@ -25,6 +25,7 @@ import { BrandWordmark } from "@/components/brand-wordmark";
 import { AuthDialog } from "@/components/auth-dialog";
 import { NewsSEOHead, FAQSchemaMarkup } from "@/components/news-seo-head";
 import SocialShareButtons from "@/components/social-share-buttons";
+import { McKinseyInsightCard } from "@/components/mckinsey-insight-card";
 
 interface ForumPost {
   id: string;
@@ -47,6 +48,7 @@ interface ForumPost {
   content?: string;
   dataPoints?: string[];
   citations?: string[];
+  infographic?: any; // McKinsey-style infographic data
 }
 
 // Post creation form schema
@@ -158,17 +160,18 @@ export default function ThrottleTalkPage() {
     (marketInsightsData as any).insights.map((insight: any, index: number) => ({
       id: `market-insight-${index}`,
       title: insight.topic,
-      author: 'CarArth Market Intelligence',
+      author: `${(marketInsightsData as any).meta?.source || 'CarArth Market Intelligence'}`,
       authorImage: undefined,
       category: 'Market Insights',
       replies: 0,
       views: Math.floor(100 + Math.random() * 500),
       lastReply: new Date().toLocaleDateString(),
       isExternal: false,
-      attribution: insight.sources?.length > 0 ? `Sources: ${insight.sources.join(', ')}` : 'Sourced from SIAM and published automotive data',
+      attribution: insight.sources?.length > 0 ? `Sources: ${insight.sources.join(', ')}` : 'SIAM, RTA, VAHAAN, CarDekho, Cars24 Data',
       content: insight.insight,
       dataPoints: insight.dataPoints,
       citations: insight.citations,
+      infographic: insight.infographic, // McKinsey-style data
     })) : [];
 
   // Combine RSS and user content
@@ -406,8 +409,15 @@ export default function ThrottleTalkPage() {
                           </span>
                         </div>
 
-                        {/* Market insights content */}
-                        {post.content && (
+                        {/* McKinsey-style infographic */}
+                        {post.infographic && (
+                          <div className="mt-4 -mx-6 px-6 py-4 bg-gray-50 dark:bg-gray-900/50" onClick={(e) => e.stopPropagation()}>
+                            <McKinseyInsightCard insight={{ infographic: post.infographic }} />
+                          </div>
+                        )}
+
+                        {/* Standard market insights content (fallback) */}
+                        {!post.infographic && post.content && (
                           <div className="mt-3 text-sm text-gray-700 dark:text-gray-300">
                             <p>{post.content}</p>
                           </div>

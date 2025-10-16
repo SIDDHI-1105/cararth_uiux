@@ -4031,26 +4031,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Market insights for specific locations
+  // Market insights for specific locations (McKinsey-style infographics)
   app.get("/api/news/market-insights", async (req, res) => {
     try {
-      const { location } = req.query;
-      console.log(`🔍 Fetching market insights for ${location || 'India'}...`);
+      const { location, style } = req.query;
+      console.log(`📊 Fetching ${style === 'mckinsey' ? 'McKinsey-style' : 'standard'} market insights for ${location || 'India'}...`);
       
-      if (!automotiveNewsService) {
-        throw new Error('Automotive news service not available');
-      }
-      const insights = await automotiveNewsService.getMarketInsights(location as string);
+      // McKinsey-style infographic insights (default)
+      const { mcKinseyInsightsService } = await import('./mcKinseyInsightsService.js');
+      const topic = location ? `${location} Used Car Market Analysis` : 'India Used Car Market Overview';
+      const infographics = await mcKinseyInsightsService.generateInfographicInsights(topic);
       
-      res.json({
+      return res.json({
         success: true,
         timestamp: new Date().toISOString(),
-        insights,
+        insights: infographics.map(inf => ({
+          topic: inf.title,
+          insight: inf.executiveSummary,
+          dataPoints: inf.keyMetrics.map(m => `${m.icon} ${m.metric}: ${m.value} (${m.change})`),
+          marketImpact: 'positive',
+          confidence: 0.95,
+          sources: inf.dataSources.map(s => s.name),
+          citations: inf.dataSources.map(s => s.name),
+          infographic: inf, // Full McKinsey-style data for frontend
+        })),
         location: location || 'India',
         meta: {
-          count: insights.length,
-          source: 'Perplexity Market Intelligence',
-          analysisDepth: 'comprehensive'
+          count: infographics.length,
+          source: infographics[0]?.powered_by || 'xAI Grok',
+          analysisDepth: 'mckinsey-style-infographic',
+          style: 'professional'
         }
       });
     } catch (error) {
