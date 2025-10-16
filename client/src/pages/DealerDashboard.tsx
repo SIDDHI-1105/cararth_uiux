@@ -57,7 +57,7 @@ export default function DealerDashboard() {
   });
 
   // Get dealers for selected OEM
-  const availableDealers = selectedOem && dealersData?.data?.[selectedOem] ? dealersData.data[selectedOem] : [];
+  const availableDealers = selectedOem && dealersData?.success && dealersData?.data?.[selectedOem] ? dealersData.data[selectedOem] : [];
 
   // Fetch performance data (public endpoint)
   const { data: performanceData, isLoading: performanceLoading } = useQuery({
@@ -70,19 +70,26 @@ export default function DealerDashboard() {
     enabled: isAuthenticated && !!dealerId
   });
 
-  // Login mutation
+  // Login mutation - now uses OEM + Dealer selection
   const loginMutation = useMutation({
     mutationFn: async () => {
-      // Store credentials
-      localStorage.setItem("dealerId", dealerId);
-      localStorage.setItem("dealerApiKey", apiKey);
-      return { success: true };
+      // Find selected dealer info
+      const dealer = availableDealers.find((d: any) => d.id === selectedDealer);
+      if (!dealer) throw new Error("Please select a dealer");
+      
+      // Store selections
+      localStorage.setItem("selectedOem", selectedOem);
+      localStorage.setItem("selectedDealer", selectedDealer);
+      localStorage.setItem("dealerId", selectedDealer);
+      setDealerId(selectedDealer);
+      setPerformanceOem(selectedOem);
+      return { success: true, dealer };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       setIsAuthenticated(true);
       toast({
-        title: "Logged in successfully",
-        description: "Welcome to your dealer dashboard",
+        title: "Dashboard loaded",
+        description: `Viewing ${data.dealer.dealerName} performance`,
       });
     },
   });
@@ -201,7 +208,7 @@ export default function DealerDashboard() {
     bulkUploadMutation.mutate();
   };
 
-  // Login screen
+  // Login screen - Public OEM → Dealer selection
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
@@ -209,44 +216,53 @@ export default function DealerDashboard() {
           <CardHeader>
             <CardTitle className="text-2xl flex items-center gap-2">
               <Car className="h-6 w-6" />
-              Cararth Dealer Portal
+              Telangana Dealer Performance Dashboard
             </CardTitle>
             <CardDescription>
-              Login with your dealer credentials to manage inventory
+              Select your OEM brand and dealership to view performance analytics
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={(e) => { e.preventDefault(); loginMutation.mutate(); }} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="dealerId">Dealer ID</Label>
-                <Input
-                  id="dealerId"
-                  data-testid="input-dealer-id"
-                  placeholder="dealer-123"
-                  value={dealerId}
-                  onChange={(e) => setDealerId(e.target.value)}
-                  required
-                />
+                <Label htmlFor="oem">OEM Brand</Label>
+                <Select value={selectedOem} onValueChange={(value) => { setSelectedOem(value); setSelectedDealer(""); }}>
+                  <SelectTrigger data-testid="select-oem-login">
+                    <SelectValue placeholder="Select OEM brand" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {dealersData?.oems?.map((oem: string) => (
+                      <SelectItem key={oem} value={oem}>{oem}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="apiKey">API Key</Label>
-                <Input
-                  id="apiKey"
-                  data-testid="input-api-key"
-                  type="password"
-                  placeholder="Enter your API key"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  required
-                />
-              </div>
+              
+              {selectedOem && (
+                <div className="space-y-2">
+                  <Label htmlFor="dealer">Dealership</Label>
+                  <Select value={selectedDealer} onValueChange={setSelectedDealer}>
+                    <SelectTrigger data-testid="select-dealer-login">
+                      <SelectValue placeholder="Select your dealership" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableDealers.map((dealer: any) => (
+                        <SelectItem key={dealer.id} value={dealer.id}>
+                          {dealer.dealerName} - {dealer.city}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
               <Button
                 type="submit"
                 data-testid="button-login"
                 className="w-full"
-                disabled={loginMutation.isPending}
+                disabled={loginMutation.isPending || !selectedOem || !selectedDealer}
               >
-                {loginMutation.isPending ? "Logging in..." : "Login"}
+                {loginMutation.isPending ? "Loading..." : "View Dashboard"}
               </Button>
             </form>
           </CardContent>
@@ -265,12 +281,16 @@ export default function DealerDashboard() {
             variant="outline"
             onClick={() => {
               localStorage.removeItem("dealerId");
-              localStorage.removeItem("dealerApiKey");
+              localStorage.removeItem("selectedOem");
+              localStorage.removeItem("selectedDealer");
               setIsAuthenticated(false);
+              setDealerId("");
+              setSelectedOem("");
+              setSelectedDealer("");
             }}
             data-testid="button-logout"
           >
-            Logout
+            Change Dealer
           </Button>
         </div>
 
