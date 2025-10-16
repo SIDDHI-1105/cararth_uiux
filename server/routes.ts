@@ -5131,123 +5131,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = priceSimulatorSchema.parse(req.body);
       const { brand, model, year, city, mileage, fuelType, transmission } = validatedData;
 
-      console.log(`🏷️ Price simulation request: ${year} ${brand} ${model} in ${city}`);
+      console.log(`🏷️ AI Price Simulation (xAI Grok + Perplexity): ${year} ${brand} ${model} in ${city}`);
 
-      // Use existing singleton services
-      const { HistoricalIntelligenceService } = await import('./historicalIntelligence.js');
-      const historicalService = new HistoricalIntelligenceService();
+      // Build comprehensive query with car details for xAI Grok
+      const query = `What is the current market price for a ${year} ${brand} ${model} in ${city}, India? 
+        Consider ${mileage || 50000} km mileage, ${fuelType || 'Petrol'} fuel, ${transmission || 'Manual'} transmission.
+        Provide price estimate in INR with confidence level and market insights.`;
 
-      const carData = {
-        brand,
-        model,
-        year: year,
-        city,
-        mileage: mileage || 50000,
-        fuelType: fuelType || 'Petrol',
-        transmission: transmission || 'Manual'
-      };
+      // Use xAI Grok as PRIMARY with authentic data sources (SIAM, Telangana RTA, Spinny, CarDekho, OLX)
+      // Falls back to Perplexity automatically if Grok exhausted
+      const grokInsight = await grokService.generateInsight({
+        query,
+        carDetails: {
+          model,
+          year,
+          transmission: transmission || 'Manual',
+          fuel: fuelType || 'Petrol',
+          mileage: mileage || 50000,
+          location: city
+        }
+      });
 
-      // Get price insights from multiple AI sources
-      const [priceInsights, historicalAnalysis] = await Promise.allSettled([
-        priceComparisonService.getPriceInsights(carData),
-        historicalService.analyzeHistoricalData({
-          ...carData,
-          price: 0, // Will be predicted
-          listingDate: new Date()
-        })
-      ]);
+      // Extract price from Grok's price comparison
+      let estimatedPrice = 0;
+      let priceRange = { min: 0, max: 0 };
+      let confidence = 0.75; // Default confidence
 
-      let simulationResult = {
-        estimatedPrice: 0,
-        priceRange: { min: 0, max: 0 },
-        confidence: 0,
-        aiInsights: [] as string[],
-        marketAnalysis: {
-          trend: 'stable' as 'rising' | 'falling' | 'stable',
-          recommendation: 'Get price analysis from multiple sources before buying.'
-        },
-        sources: ['📸 CarArth x Claude AI', '🧠 CarArth x GPT-5'],
-        timestamp: new Date()
-      };
-
-      // Process Gemini price insights
-      if (priceInsights.status === 'fulfilled' && priceInsights.value) {
-        const insights = priceInsights.value;
-        simulationResult.estimatedPrice = insights.averagePrice;
-        simulationResult.priceRange = insights.priceRange;
-        simulationResult.marketAnalysis.trend = insights.marketTrend || 'stable';
-        simulationResult.marketAnalysis.recommendation = insights.recommendation;
-        simulationResult.confidence = 0.85; // High confidence from Gemini
-      }
-
-      // Process historical analysis  
-      if (historicalAnalysis.status === 'fulfilled' && historicalAnalysis.value) {
-        const analysis = historicalAnalysis.value;
-        simulationResult.aiInsights.push(
-          `Authenticity rating: ${(analysis as any).authenticityRating}/10`,
-          `Market trend: ${(analysis as any).marketTrend}`,
-          `Average days to sell: ${(analysis as any).salesVelocity?.avgDaysToSell}`,
-          `Price confidence: ${((analysis as any).priceConfidence * 100).toFixed(0)}%`
-        );
-      }
-
-      // Fallback if no services worked - use Perplexity for market research
-      if (simulationResult.estimatedPrice === 0) {
-        try {
-          console.log('🔍 Using Perplexity fallback for price research...');
-          
-          const perplexityResponse = await fetch('https://api.perplexity.ai/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              model: 'llama-3.1-sonar-small-128k-online',
-              messages: [
-                {
-                  role: 'system',
-                  content: 'You are a car pricing expert for the Indian used car market. Provide accurate price estimates in INR.'
-                },
-                {
-                  role: 'user', 
-                  content: `What is the current market price for a ${year} ${brand} ${model} in ${city}, India? Consider ${mileage} km mileage, ${fuelType} fuel, ${transmission} transmission. Give price range in lakhs.`
-                }
-              ],
-              temperature: 0.2,
-              max_tokens: 200
-            })
-          });
-
-          if (perplexityResponse.ok) {
-            const data = await perplexityResponse.json();
-            const priceText = data.choices[0]?.message?.content || '';
-            
-            // Extract price from Perplexity response
-            const priceMatch = priceText.match(/₹\s*(\d+(?:\.\d+)?)\s*(?:lakh|lakhs?)/i);
-            if (priceMatch) {
-              const priceInLakhs = parseFloat(priceMatch[1]);
-              simulationResult.estimatedPrice = priceInLakhs * 100000; // Convert to rupees
-              simulationResult.priceRange = {
-                min: Math.round(simulationResult.estimatedPrice * 0.85),
-                max: Math.round(simulationResult.estimatedPrice * 1.15)
-              };
-              simulationResult.confidence = 0.75;
-              (simulationResult.aiInsights as string[]).push(`Market research: ${priceText.substring(0, 100)}...`);
-            }
-          }
-        } catch (perplexityError) {
-          console.error('Perplexity fallback failed:', perplexityError);
+      if (grokInsight.priceComparison) {
+        // Parse market average (e.g., "₹5.2 lakhs" or "5.2L")
+        const avgPriceMatch = grokInsight.priceComparison.marketAverage?.match(/₹?\s*(\d+(?:\.\d+)?)\s*(?:lakh|lakhs?|L)?/i);
+        if (avgPriceMatch) {
+          const priceInLakhs = parseFloat(avgPriceMatch[1]);
+          estimatedPrice = priceInLakhs * 100000; // Convert to rupees
+          priceRange = {
+            min: Math.round(estimatedPrice * 0.85),
+            max: Math.round(estimatedPrice * 1.15)
+          };
         }
       }
 
-      // Final fallback with basic estimation
-      if (simulationResult.estimatedPrice === 0) {
-        // Basic depreciation model as last resort
+      // If Grok didn't provide price comparison, extract from deal quality score
+      if (estimatedPrice === 0 && grokInsight.dealQuality?.score) {
+        // Use basic depreciation with deal quality adjustment
         const currentYear = new Date().getFullYear();
         const age = currentYear - year;
-        const basePrice = 500000; // Base price estimate
+        const basePrice = 500000; // Base estimate
         const depreciation = Math.max(0.1, 1 - (age * 0.1)); // 10% per year
+        const qualityMultiplier = (grokInsight.dealQuality.score / 100) * 1.2; // Deal quality affects price
+        
+        estimatedPrice = Math.round(basePrice * depreciation * qualityMultiplier);
+        priceRange = {
+          min: Math.round(estimatedPrice * 0.85),
+          max: Math.round(estimatedPrice * 1.15)
+        };
+      }
+
+      // Build AI insights from Grok's comprehensive analysis
+      const aiInsights: string[] = [];
+      
+      if (grokInsight.dealQuality) {
+        aiInsights.push(`${grokInsight.dealQuality.badge}: ${grokInsight.dealQuality.reason}`);
+      }
+      
+      if (grokInsight.marketTrends && grokInsight.marketTrends.length > 0) {
+        aiInsights.push(...grokInsight.marketTrends.slice(0, 2));
+      }
+
+      if (grokInsight.granularBreakdown) {
+        if (grokInsight.granularBreakdown.fuelTypeTrend) {
+          aiInsights.push(grokInsight.granularBreakdown.fuelTypeTrend);
+        }
+        if (grokInsight.granularBreakdown.transmissionTrend) {
+          aiInsights.push(grokInsight.granularBreakdown.transmissionTrend);
+        }
+      }
+
+      // Determine market trend from insights
+      let marketTrend: 'rising' | 'falling' | 'stable' = 'stable';
+      const insightText = grokInsight.insight.toLowerCase();
+      if (insightText.includes('rising') || insightText.includes('increasing') || insightText.includes('growing demand')) {
+        marketTrend = 'rising';
+      } else if (insightText.includes('falling') || insightText.includes('declining') || insightText.includes('decreasing')) {
+        marketTrend = 'falling';
+      }
+
+      const simulationResult = {
+        estimatedPrice,
+        priceRange,
+        confidence,
+        aiInsights: aiInsights.slice(0, 4), // Top 4 insights
+        marketAnalysis: {
+          trend: marketTrend,
+          recommendation: grokInsight.insight.substring(0, 150) + '...' // Summary
+        },
+        sources: grokInsight.sources.map(s => s.name),
+        timestamp: new Date(),
+        powered_by: grokInsight.powered_by // "xAI Grok" or "Perplexity AI"
+      };
+
+      // Final fallback if Grok/Perplexity both failed
+      if (simulationResult.estimatedPrice === 0) {
+        const currentYear = new Date().getFullYear();
+        const age = currentYear - year;
+        const basePrice = 500000;
+        const depreciation = Math.max(0.1, 1 - (age * 0.1));
         
         simulationResult.estimatedPrice = Math.round(basePrice * depreciation);
         simulationResult.priceRange = {
