@@ -761,7 +761,10 @@ export const communityPosts = pgTable("community_posts", {
   authorId: varchar("author_id").notNull(),
   title: text("title").notNull(),
   content: text("content").notNull(),
-  category: text("category").notNull(), // reviews, questions, market-insights, discussion
+  category: text("category").notNull(), // reviews, questions, market-insights, discussion, dealership_benchmark
+  
+  // Dealer benchmark linkage (for dealership_benchmark posts)
+  dealerId: varchar("dealer_id"), // Links to dealers table for benchmark posts
   
   // External content attribution
   isExternal: boolean("is_external").default(false),
