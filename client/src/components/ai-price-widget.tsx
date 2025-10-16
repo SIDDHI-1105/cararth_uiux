@@ -22,6 +22,7 @@ interface PriceSimulationResult {
   };
   sources: string[];
   timestamp: string;
+  powered_by?: string; // "xAI Grok" or "Perplexity AI"
 }
 
 interface AIPriceWidgetProps {
@@ -113,7 +114,7 @@ export default function AIPriceWidget({ onPriceEstimate, className = "" }: AIPri
                     </Badge>
                   </div>
                   <p className="text-sm text-gray-700 leading-relaxed">
-                    👋 Hi! I'm your AI pricing assistant. I can help you get the best market price for your car using real-time data analysis.
+                    👋 Hi! I'm your AI pricing assistant powered by <strong>xAI Grok</strong>. I can help you get the best market price for your car using real-time data from SIAM, Telangana RTA, Spinny, CarDekho & OLX.
                   </p>
                   <Button 
                     onClick={() => setIsExpanded(true)}
@@ -252,6 +253,11 @@ export default function AIPriceWidget({ onPriceEstimate, className = "" }: AIPri
                     <Badge variant="outline" className="text-xs bg-green-100 text-green-700">
                       {Math.round(simulatePriceMutation.data.confidence * 100)}% confident
                     </Badge>
+                    {simulatePriceMutation.data.powered_by && (
+                      <Badge variant="outline" className="text-xs bg-blue-100 text-blue-700">
+                        {simulatePriceMutation.data.powered_by}
+                      </Badge>
+                    )}
                   </div>
 
                   {/* Price Result */}
@@ -279,6 +285,23 @@ export default function AIPriceWidget({ onPriceEstimate, className = "" }: AIPri
                           • {insight}
                         </div>
                       ))}
+                    </div>
+                  )}
+
+                  {/* Data Sources */}
+                  {simulatePriceMutation.data.sources && simulatePriceMutation.data.sources.length > 0 && (
+                    <div className="bg-gray-50 rounded-lg p-2">
+                      <div className="text-xs text-gray-500 flex items-center gap-1 flex-wrap">
+                        <span>📊 Data from:</span>
+                        {simulatePriceMutation.data.sources.slice(0, 3).map((source, index) => (
+                          <span key={index} className="text-gray-600 font-medium">
+                            {source}{index < Math.min(2, simulatePriceMutation.data.sources.length - 1) ? ',' : ''}
+                          </span>
+                        ))}
+                        {simulatePriceMutation.data.sources.length > 3 && (
+                          <span className="text-gray-500">+{simulatePriceMutation.data.sources.length - 3} more</span>
+                        )}
+                      </div>
                     </div>
                   )}
 
