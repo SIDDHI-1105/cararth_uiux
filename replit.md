@@ -75,6 +75,20 @@ Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, an
   - **State Expansion**: "Coming Soon" placeholders for non-Telangana states to build anticipation
   - **API Endpoint**: `/api/telangana-insights/:brand/:model?city=` for real-time market data
   - **Service**: `telanganaInsightsService.ts` with comprehensive market intelligence queries
+- **Dealer Inventory Upload System** (October 2025): Production-ready dealer-facing platform for vehicle inventory management with strict validation and Google Vehicle Listing feed compliance. Features:
+  - **VIN Validation**: ISO 3779 checksum validation (position 9 check digit), 17-character format enforcement, duplicate detection across platform
+  - **Price Validation**: Outlier detection using market data percentiles (1.5x median check), prevents pricing fraud
+  - **Image Validation**: Minimum 800x600 dimensions, 5MB size limit, buffer integrity checks, supports up to 10 images per vehicle
+  - **Authentication**: API key-based auth with X-API-Key header support, monthly upload limits, rate limiting, dealer account management
+  - **Quick Add**: Single vehicle upload via POST `/api/dealer/:id/upload`, mobile-first form, live validation, instant feedback with warnings
+  - **Bulk CSV Upload**: Multi-vehicle upload via POST `/api/dealer/:id/upload/bulk`, CSV template provided, ZIP image support, batch processing
+  - **Validation Reports**: Persistent validation reports stored in database, accessible via GET `/api/dealer/:id/validation/:uploadId`, detailed error/warning tracking
+  - **Google Vehicle Feed**: Preview generator for Google Vehicle Listing feed compliance, structured data export
+  - **Dealer Dashboard**: React-based dashboard at `/dealer/dashboard`, API key login, Quick Add form, bulk upload interface, validation report viewer
+  - **Object Storage**: Google Cloud Storage integration for vehicle images, public URL generation, organized by dealer/vehicle hierarchy
+  - **Services**: `dealerService.ts` (core upload logic), `vinValidation.ts` (ISO 3779 checksum), `priceValidationService.ts` (outlier detection), `imageValidationService.ts` (dimension/size checks), `dealerAuthMiddleware.ts` (API key auth)
+  - **Database Schema**: Tables for dealers, dealer_vehicles, upload_batches, validation_reports, google_vehicle_feeds with proper relationships and indexing
+  - **Test Resources**: CSV upload template (`dealer_upload_template.csv`), shell test script (`dealer_api_test.sh`) for API testing
 
 ## External Dependencies
 
