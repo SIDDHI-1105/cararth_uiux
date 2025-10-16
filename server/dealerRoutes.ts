@@ -517,27 +517,77 @@ router.get(
 );
 
 /**
+ * GET /api/dealers/by-oem
+ * PUBLIC: Get all active dealers grouped by OEM brand for dropdown selection
+ * No authentication required
+ */
+router.get('/by-oem', async (req: Request, res: Response) => {
+  try {
+    const allDealers = await db
+      .select({
+        id: dealers.id,
+        dealerName: dealers.dealerName,
+        oemBrand: dealers.oemBrand,
+        city: dealers.city,
+        state: dealers.state,
+      })
+      .from(dealers)
+      .where(eq(dealers.isActive, true))
+      .orderBy(dealers.oemBrand, dealers.dealerName);
+
+    // Group by OEM
+    const dealersByOem: Record<string, typeof allDealers> = {};
+    allDealers.forEach(dealer => {
+      if (!dealersByOem[dealer.oemBrand]) {
+        dealersByOem[dealer.oemBrand] = [];
+      }
+      dealersByOem[dealer.oemBrand].push(dealer);
+    });
+
+    res.json({
+      success: true,
+      data: dealersByOem,
+      totalDealers: allDealers.length,
+      oems: Object.keys(dealersByOem).sort(),
+    });
+  } catch (error) {
+    console.error('Get dealers by OEM error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to retrieve dealers',
+    });
+  }
+});
+
+/**
  * GET /api/dealer/:dealerId/performance
- * Get performance metrics with time-series data for dashboard charts
+ * PUBLIC: Get performance metrics with time-series data for dashboard charts
  * Query params: month, oem
+ * No authentication required - public dashboard
  */
 router.get(
   '/:dealerId/performance',
-  authenticateDealer,
   async (req: Request, res: Response) => {
     try {
-      const dealer = req.dealer as Dealer;
       const { dealerId } = req.params;
       const { month, oem } = req.query;
 
-      // Verify authenticated dealer
-      if (dealer.id !== dealerId) {
-        res.status(403).json({
+      // Fetch dealer info
+      const dealerResult = await db
+        .select()
+        .from(dealers)
+        .where(eq(dealers.id, dealerId))
+        .limit(1);
+
+      if (!dealerResult.length) {
+        res.status(404).json({
           success: false,
-          error: 'Unauthorized access'
+          error: 'Dealer not found'
         });
         return;
       }
+
+      const dealer = dealerResult[0];
 
       // Generate filter-aware data based on dealer/month/OEM
       const selectedOem = (oem as string) || 'Hyundai';

@@ -1863,6 +1863,7 @@ export const dealers = pgTable("dealers", {
   
   // Business info
   dealerName: text("dealer_name").notNull(),
+  oemBrand: text("oem_brand").notNull(), // Hyundai, Maruti Suzuki, Tata Motors, etc. - RTA registered OEM
   storeCode: text("store_code").notNull().unique(), // For VDP slugs
   contactPerson: text("contact_person").notNull(),
   email: text("email").notNull().unique(),
@@ -1887,6 +1888,7 @@ export const dealers = pgTable("dealers", {
 }, (table) => [
   index("idx_dealers_api_key").on(table.apiKey),
   index("idx_dealers_store_code").on(table.storeCode),
+  index("idx_dealers_oem").on(table.oemBrand),
 ]);
 
 // Dealer Vehicles - Uploaded inventory with Google Vehicle Listing compliance
