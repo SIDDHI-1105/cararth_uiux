@@ -1,0 +1,32 @@
+### Single Prompt for Replit Agent: Building a Dealership Benchmarking Tool with ML Insights
+
+**Project Name:** Telangana-Dealership-Benchmarker
+
+**Instructions for Replit Agent:**
+
+Create a Python script in a new Replit project named "Telangana-Dealership-Benchmarker" to build a professional benchmarking tool for new car OEM dealerships in Telangana. The tool should fetch and compare Telangana RTA data (monthly vehicle registrations from data.telangana.gov.in, e.g., 2019-2025 CSVs) with VAHAN national data (from data.gov.in, e.g., registrations up to 2023-24, extended via SIAM reports from siam.in for ROI benchmarks). Use registrations as a sales proxy, with user input for individual dealership MTD sales. Compute MTD reports with MOM and YOY comparisons, generate trend charts using matplotlib, and integrate ML (linear regression via numpy) for sales predictions and actionable intelligence (e.g., if <10% state avg, suggest promotions). Ensure 2025 projections use 7.3% YOY growth from SIAM August 2025 data. Guardrails: Handle fetch errors, log to `data_logs.txt`, flag outdated data (>1 year), and restrict to passenger vehicles. Relate it to a co-pilot: The tool not only spots trends but forecasts and advises, like "Hyundai sales dipping—leverage Telangana's EV push."
+
+1. **Setup Environment:**
+   - Use Python 3.12+.
+   - Install libraries via Replit's package manager: `pandas` (data handling), `matplotlib` (charts), `requests` (URL fetches), `io` (CSV parsing), `numpy` (ML regression).
+
+2. **Core Functionality:**
+   - Define function `fetch_telangana_rta_data()`: Use requests.get to load latest CSV (e.g., "https://data.telangana.gov.in/sites/default/files/uploaded_resources/ts_transport_online_sales_01_10_2024to31_10_2024.csv"; update monthly). Parse with pd.read_csv(io.StringIO(response.text)); assume columns like 'Month', 'Total_Sales_Telangana', calculate 'Avg_Sales_per_Dealership_Telangana' (divide by 10 or known count). Log errors; fallback to hardcoded 2024-2025 sample if fail.
+   - Define function `fetch_vahan_roi_data()`: Load CSV from "https://www.data.gov.in/sites/default/files/resource/year_wise_number_registered_electric_vehicles_e_vahan_portal_2019_20_2023_24.csv"; subtract Telangana estimates for ROI; calculate 'Avg_Sales_per_Dealership_ROI' (divide by 100). Log errors; fallback sample.
+   - Define function `fetch_siam_data(oem)`: Load monthly sales CSV from SIAM (e.g., manual upload or "https://www.siam.in/statistics.aspx" scraped ethically; use hardcoded for demo). Filter by OEM for YOY.
+   - Define function `get_dealership_input(month)`: Prompt for OEM (e.g., "Hyundai") and MTD sales (float).
+   - Define function `calculate_comparisons(oem, dealership_sales, month, telangana_df, roi_df, siam_df)`: Compute MTD (input), MOM/YOY (% change vs. prior periods), vs Telangana/ROI avg (% diff). For ML: Use numpy.linalg.lstsq for linear regression on historical sales (X = time indices, y = sales) to predict next month; derive actionables from deviations (e.g., if pred_diff >10%, "Stock up on SUVs"). Format report with insights and YOY citation from SIAM.
+   - Define function `generate_trend_chart(month, dealership_sales, telangana_df, roi_df)`: Create line plot with 'Dealership Sales', 'Telangana Avg', 'ROI Avg', and predicted line (extend x-axis for next month). Save as 'trend_chart.png' with title, labels, grid, rotation (45° for x-ticks).
+
+3. **Guardrails & Compliance:**
+   - Error Handling: Log fetches/errors to `data_logs.txt` (e.g., `with open('data_logs.txt', 'a') as log: log.write(f"{datetime.now()}: {e}\n")`); flag if data max date < current_year -1.
+   - Data Freshness: Project missing 2025 values with 7.3% YOY growth; warn if no recent data.
+   - Limit: Restrict to passenger vehicles (filter df); add OEM filter for specificity.
+   - ML Refinement: If <3 data points, fallback to rule-based insights only.
+
+4. **Main Execution & Testing:**
+   - In `__main__`: Input month, fetch DFs (handle current MTD as partial month), get OEM/sales, compute report, generate chart, print report + "Chart saved" + sources (e.g., "Telangana RTA, VAHAN, SIAM").
+   - Test with month '2025-10', OEM 'Hyundai', sales 520—verify ML prediction, insights, and chart include forecast line.
+   - README.md: "Run main.py, input month/OEM/sales. Outputs report + PNG. Sources: Telangana RTA, VAHAN, SIAM. Customize URLs for fresh data; extend with premium APIs for precision."
+
+Deploy by October 18, 2025. Provide invite link and test with sample run! Thanks!
