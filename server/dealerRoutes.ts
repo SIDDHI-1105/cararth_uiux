@@ -579,19 +579,23 @@ router.get(
         'December 2025': 1.09  // Year-end surge
       };
       
-      const seasonalMultiplier = monthSeasonality[normalizedMonth] || 1.0;
-      const baseSales = Math.round(dealerBaseline * oemMultiplier * seasonalMultiplier);
+      // Base value for calculations (dealer + OEM, no seasonality yet)
+      const baseValue = dealerBaseline * oemMultiplier;
       
-      // Historical sales data (last 6 months) - varies by dealer/OEM
+      // Selected month's seasonal multiplier for KPIs
+      const seasonalMultiplier = monthSeasonality[normalizedMonth] || 1.0;
+      const baseSales = Math.round(baseValue * seasonalMultiplier);
+      
+      // Historical sales data - each month calculates independently from baseValue
       const historicalSales = [
-        { month: 'May 2025', sales: Math.round(baseSales * 0.93), forecast: null },
-        { month: 'Jun 2025', sales: Math.round(baseSales * 0.96), forecast: null },
-        { month: 'Jul 2025', sales: Math.round(baseSales * 0.92), forecast: null },
-        { month: 'Aug 2025', sales: Math.round(baseSales * 0.95), forecast: null },
-        { month: 'Sep 2025', sales: Math.round(baseSales * 0.98), forecast: null },
-        { month: 'Oct 2025', sales: baseSales, forecast: baseSales },
-        { month: 'Nov 2025', sales: null, forecast: Math.round(baseSales * 1.05) },
-        { month: 'Dec 2025', sales: null, forecast: Math.round(baseSales * 1.09) }
+        { month: 'May 2025', sales: Math.round(baseValue * 0.93), forecast: null },
+        { month: 'Jun 2025', sales: Math.round(baseValue * 0.96), forecast: null },
+        { month: 'Jul 2025', sales: Math.round(baseValue * 0.92), forecast: null },
+        { month: 'Aug 2025', sales: Math.round(baseValue * 0.95), forecast: null },
+        { month: 'Sep 2025', sales: Math.round(baseValue * 0.98), forecast: null },
+        { month: 'Oct 2025', sales: Math.round(baseValue * 1.0), forecast: Math.round(baseValue * 1.0) },
+        { month: 'Nov 2025', sales: null, forecast: Math.round(baseValue * 1.05) },
+        { month: 'Dec 2025', sales: null, forecast: Math.round(baseValue * 1.09) }
       ];
 
       // VAHAN ROI comparison - dealer-specific performance
