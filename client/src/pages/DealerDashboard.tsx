@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Car, Upload, FileSpreadsheet, CheckCircle, AlertCircle, Download } from "lucide-react";
+import { Car, Upload, FileSpreadsheet, CheckCircle, AlertCircle, Download, BarChart3, TrendingUp, MapPin, Target } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export default function DealerDashboard() {
   const { toast } = useToast();
@@ -42,6 +43,23 @@ export default function DealerDashboard() {
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [imageZip, setImageZip] = useState<File | null>(null);
+
+  // Performance Analytics state
+  const [selectedMonth, setSelectedMonth] = useState("October 2025");
+  const [selectedOem, setSelectedOem] = useState("Hyundai");
+
+  // Fetch performance data
+  const { data: performanceData, isLoading: performanceLoading } = useQuery({
+    queryKey: ['/api/dealer', dealerId, 'performance', selectedMonth, selectedOem],
+    queryFn: async () => {
+      const response = await fetch(`/api/dealer/${dealerId}/performance?month=${encodeURIComponent(selectedMonth)}&oem=${encodeURIComponent(selectedOem)}`, {
+        headers: { 'X-API-Key': apiKey }
+      });
+      if (!response.ok) throw new Error('Failed to fetch performance data');
+      return response.json();
+    },
+    enabled: isAuthenticated && !!dealerId && !!apiKey
+  });
 
   // Login mutation
   const loginMutation = useMutation({
@@ -247,8 +265,12 @@ export default function DealerDashboard() {
           </Button>
         </div>
 
-        <Tabs defaultValue="quick-add" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-2">
+        <Tabs defaultValue="performance" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="performance" data-testid="tab-performance">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Performance Analytics
+            </TabsTrigger>
             <TabsTrigger value="quick-add" data-testid="tab-quick-add">
               <Upload className="h-4 w-4 mr-2" />
               Quick Add
@@ -258,6 +280,221 @@ export default function DealerDashboard() {
               Bulk Upload
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="performance">
+            <div className="space-y-6">
+              {/* Filters */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="h-5 w-5" />
+                    Performance Filters
+                  </CardTitle>
+                  <CardDescription>Select month and OEM to view performance metrics</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Month</Label>
+                      <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                        <SelectTrigger data-testid="select-month">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="May 2025">May 2025</SelectItem>
+                          <SelectItem value="June 2025">June 2025</SelectItem>
+                          <SelectItem value="July 2025">July 2025</SelectItem>
+                          <SelectItem value="August 2025">August 2025</SelectItem>
+                          <SelectItem value="September 2025">September 2025</SelectItem>
+                          <SelectItem value="October 2025">October 2025</SelectItem>
+                          <SelectItem value="November 2025">November 2025</SelectItem>
+                          <SelectItem value="December 2025">December 2025</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>OEM</Label>
+                      <Select value={selectedOem} onValueChange={setSelectedOem}>
+                        <SelectTrigger data-testid="select-oem">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Hyundai">Hyundai</SelectItem>
+                          <SelectItem value="Maruti Suzuki">Maruti Suzuki</SelectItem>
+                          <SelectItem value="Tata Motors">Tata Motors</SelectItem>
+                          <SelectItem value="Mahindra">Mahindra</SelectItem>
+                          <SelectItem value="Kia">Kia</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {performanceLoading ? (
+                <div className="text-center py-8">Loading performance data...</div>
+              ) : performanceData?.success ? (
+                <>
+                  {/* KPI Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardDescription>MTD Sales</CardDescription>
+                        <CardTitle className="text-3xl" data-testid="kpi-mtd-sales">
+                          {performanceData.data.kpiMetrics.mtdSales}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-xs text-muted-foreground">Units sold this month</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardDescription>Target Achievement</CardDescription>
+                        <CardTitle className="text-3xl" data-testid="kpi-target">
+                          {performanceData.data.kpiMetrics.targetAchievement}%
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-xs text-muted-foreground">Of monthly target</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardDescription>ROI vs National</CardDescription>
+                        <CardTitle className="text-3xl" data-testid="kpi-roi">
+                          +{performanceData.data.kpiMetrics.roiVsNational}%
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-xs text-muted-foreground">Above national average</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardDescription>Regional Rank</CardDescription>
+                        <CardTitle className="text-3xl" data-testid="kpi-rank">
+                          #{performanceData.data.kpiMetrics.regionalRank}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-xs text-muted-foreground">In Telangana</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Sales Trend Chart */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <TrendingUp className="h-5 w-5" />
+                        Sales Trend & ML Forecast
+                      </CardTitle>
+                      <CardDescription>Historical sales and AI-powered forecasts</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <LineChart data={performanceData.data.timeSeriesData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="month" />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Line type="monotone" dataKey="sales" stroke="#8884d8" strokeWidth={2} name="Actual Sales" />
+                          <Line type="monotone" dataKey="forecast" stroke="#82ca9d" strokeWidth={2} strokeDasharray="5 5" name="Forecast" />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+
+                  {/* VAHAN Comparison & Telangana Districts */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* VAHAN Comparison */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>VAHAN ROI Benchmark</CardTitle>
+                        <CardDescription>National & state performance comparison</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={250}>
+                          <BarChart data={[
+                            { name: 'You', value: performanceData.data.vahanComparison.dealerSales },
+                            { name: 'State Avg', value: performanceData.data.vahanComparison.stateAverage },
+                            { name: 'National Avg', value: performanceData.data.vahanComparison.nationalAverage }
+                          ]}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip />
+                            <Bar dataKey="value" fill="#8884d8" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                        <div className="mt-4 text-sm">
+                          <p className="font-medium">Percentile Rank: {performanceData.data.vahanComparison.percentileRank}th</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Telangana Districts */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <MapPin className="h-5 w-5" />
+                          Telangana District Performance
+                        </CardTitle>
+                        <CardDescription>Regional sales distribution</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={250}>
+                          <BarChart data={performanceData.data.telanganaDistricts}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip />
+                            <Bar dataKey="registrations" fill="#82ca9d" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* ML Forecast Breakdown */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>ML Forecast Breakdown</CardTitle>
+                      <CardDescription>AI-powered forecast components for {selectedMonth}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                          <p className="text-sm text-muted-foreground">Base Trend</p>
+                          <p className="text-2xl font-bold" data-testid="forecast-base-trend">
+                            {performanceData.data.mlForecastBreakdown.baseTrend}
+                          </p>
+                        </div>
+                        <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                          <p className="text-sm text-muted-foreground">Seasonal Boost</p>
+                          <p className="text-2xl font-bold" data-testid="forecast-seasonal">
+                            +{performanceData.data.mlForecastBreakdown.seasonal}
+                          </p>
+                        </div>
+                        <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                          <p className="text-sm text-muted-foreground">Market Factors</p>
+                          <p className="text-2xl font-bold" data-testid="forecast-market">
+                            +{performanceData.data.mlForecastBreakdown.marketFactors}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  No performance data available
+                </div>
+              )}
+            </div>
+          </TabsContent>
 
           <TabsContent value="quick-add">
             <Card>
