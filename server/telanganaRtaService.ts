@@ -247,7 +247,7 @@ export async function getTelanganaVehicleStats(
         AND ${vehicleRegistrations.city} IS NOT NULL
       `)
       .groupBy(vehicleRegistrations.city)
-      .orderBy(sql`count DESC`)
+      .orderBy(sql`SUM(${vehicleRegistrations.registrationsCount}) DESC`)
       .limit(5);
 
     const popularCities = citiesResult.map(r => ({
