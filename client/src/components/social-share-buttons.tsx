@@ -73,9 +73,9 @@ export default function SocialShareButtons({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: title,
+          title: brandedTitle,
           text: description,
-          url: url,
+          url: actualUrl,
         });
       } catch (err) {
         console.log('Error sharing:', err);
