@@ -496,24 +496,14 @@ export default function DealerDashboard() {
                     </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                          <p className="text-sm text-muted-foreground">Base Trend</p>
-                          <p className="text-2xl font-bold" data-testid="forecast-base-trend">
-                            {performanceData.data.mlForecastBreakdown.baseTrend}
-                          </p>
-                        </div>
-                        <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                          <p className="text-sm text-muted-foreground">Seasonal Boost</p>
-                          <p className="text-2xl font-bold" data-testid="forecast-seasonal">
-                            +{performanceData.data.mlForecastBreakdown.seasonal}
-                          </p>
-                        </div>
-                        <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                          <p className="text-sm text-muted-foreground">Market Factors</p>
-                          <p className="text-2xl font-bold" data-testid="forecast-market">
-                            +{performanceData.data.mlForecastBreakdown.marketFactors}
-                          </p>
-                        </div>
+                        {performanceData.data.mlForecast.components.map((component: any, idx: number) => (
+                          <div key={idx} className={`p-4 rounded-lg ${idx === 0 ? 'bg-blue-50 dark:bg-blue-900/20' : idx === 1 ? 'bg-green-50 dark:bg-green-900/20' : 'bg-purple-50 dark:bg-purple-900/20'}`}>
+                            <p className="text-sm text-muted-foreground">{component.name}</p>
+                            <p className="text-2xl font-bold" data-testid={`forecast-component-${idx}`}>
+                              {idx === 0 ? component.value : `+${component.value}`}
+                            </p>
+                          </div>
+                        ))}
                       </div>
                     </CardContent>
                   </Card>
