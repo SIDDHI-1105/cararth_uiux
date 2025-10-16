@@ -6,8 +6,8 @@ import { db } from './db';
 import { dealers, dealerVehicles, validationReports, googleVehicleFeeds } from '../shared/schema';
 import type { Dealer, InsertDealer } from '../shared/schema';
 import { eq } from 'drizzle-orm';
-import { getTelanganaVehicleStats } from './telanganaRtaService';
-import { calculateROIRegistrations, getROIAverageSalesPerDealer } from './vahanService';
+import { getTelanganaVehicleStats, syncTelanganaRtaData } from './telanganaRtaService';
+import { calculateROIRegistrations, getROIAverageSalesPerDealer, syncVahanData } from './vahanService';
 import { siamDataScraperService } from './siamDataScraper';
 
 const router = Router();
@@ -745,5 +745,74 @@ router.get(
     }
   }
 );
+
+/**
+ * POST /api/dealer/admin/sync-telangana-data
+ * Trigger Telangana RTA data sync (admin only)
+ */
+router.post('/admin/sync-telangana-data', async (req: Request, res: Response) => {
+  try {
+    console.log('🔄 Triggering Telangana RTA data sync...');
+    const result = await syncTelanganaRtaData();
+    
+    res.json({
+      success: true,
+      message: 'Telangana RTA data sync completed',
+      result
+    });
+  } catch (error) {
+    console.error('Telangana RTA sync error:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Sync failed'
+    });
+  }
+});
+
+/**
+ * POST /api/dealer/admin/sync-vahan-data
+ * Trigger VAHAN national data sync (admin only)
+ */
+router.post('/admin/sync-vahan-data', async (req: Request, res: Response) => {
+  try {
+    console.log('🔄 Triggering VAHAN data sync...');
+    const result = await syncVahanData();
+    
+    res.json({
+      success: true,
+      message: 'VAHAN data sync completed',
+      result
+    });
+  } catch (error) {
+    console.error('VAHAN sync error:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Sync failed'
+    });
+  }
+});
+
+/**
+ * POST /api/dealer/admin/sync-siam-data  
+ * Trigger SIAM market intelligence sync (admin only)
+ */
+router.post('/admin/sync-siam-data', async (req: Request, res: Response) => {
+  try {
+    console.log('🔄 Triggering SIAM data sync...');
+    const intelligence = await siamDataScraperService.generateMarketIntelligence('latest');
+    
+    res.json({
+      success: true,
+      message: 'SIAM data sync completed',
+      intelligence
+    });
+  } catch (error) {
+    console.error('SIAM sync error:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Sync failed'
+    });
+  }
+});
 
 export default router;
