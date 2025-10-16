@@ -155,31 +155,37 @@ function generateSchemaMarkup(posts?: NewsPost[]) {
 
   // Add individual article schemas if posts are available
   if (posts && posts.length > 0) {
-    const articleSchemas = posts.slice(0, 5).map(post => ({
-      '@context': 'https://schema.org',
-      '@type': 'BlogPosting',
-      headline: post.title,
-      description: post.content?.substring(0, 200) || 'Automotive news and insights',
-      url: `https://cararth.com/news/${post.id}`,
-      datePublished: post.publishedAt?.toISOString() || new Date().toISOString(),
-      dateModified: post.publishedAt?.toISOString() || new Date().toISOString(),
-      author: {
-        '@type': 'Person',
-        name: post.author || 'CarArth Community',
-      },
-      publisher: {
-        '@type': 'Organization',
-        name: 'CarArth',
-        legalName: 'Aaro7 Fintech Private Limited',
-        logo: {
-          '@type': 'ImageObject',
-          url: 'https://cararth.com/cararth-logo.png',
-        }
-      },
-      image: post.coverImage || 'https://cararth.com/cararth-social-preview.png',
-      articleSection: post.category || 'Automotive News',
-      keywords: 'used cars, automotive news, car market trends, India automotive, car buying, car selling',
-    }));
+    const articleSchemas = posts.slice(0, 5).map(post => {
+      const publishDate = post.publishedAt instanceof Date && !isNaN(post.publishedAt.getTime())
+        ? post.publishedAt.toISOString()
+        : new Date().toISOString();
+      
+      return {
+        '@context': 'https://schema.org',
+        '@type': 'BlogPosting',
+        headline: post.title,
+        description: post.content?.substring(0, 200) || 'Automotive news and insights',
+        url: `https://cararth.com/news/${post.id}`,
+        datePublished: publishDate,
+        dateModified: publishDate,
+        author: {
+          '@type': 'Person',
+          name: post.author || 'CarArth Community',
+        },
+        publisher: {
+          '@type': 'Organization',
+          name: 'CarArth',
+          legalName: 'Aaro7 Fintech Private Limited',
+          logo: {
+            '@type': 'ImageObject',
+            url: 'https://cararth.com/cararth-logo.png',
+          }
+        },
+        image: post.coverImage || 'https://cararth.com/cararth-social-preview.png',
+        articleSection: post.category || 'Automotive News',
+        keywords: 'used cars, automotive news, car market trends, India automotive, car buying, car selling',
+      };
+    });
 
     return {
       '@context': 'https://schema.org',
@@ -191,14 +197,18 @@ function generateSchemaMarkup(posts?: NewsPost[]) {
 }
 
 function generateSinglePostSchema(post: NewsPost) {
+  const publishDate = post.publishedAt instanceof Date && !isNaN(post.publishedAt.getTime())
+    ? post.publishedAt.toISOString()
+    : new Date().toISOString();
+    
   return {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
     headline: post.title,
     description: post.content?.substring(0, 200) || 'Automotive news and insights',
     url: `https://cararth.com/news/${post.id}`,
-    datePublished: post.publishedAt?.toISOString() || new Date().toISOString(),
-    dateModified: post.publishedAt?.toISOString() || new Date().toISOString(),
+    datePublished: publishDate,
+    dateModified: publishDate,
     author: {
       '@type': 'Person',
       name: post.author || 'CarArth Community',
