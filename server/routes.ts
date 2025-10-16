@@ -4195,9 +4195,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { rssAggregator } = await import('./rssService');
       const posts = await rssAggregator.aggregateAutomotiveContent();
       
+      // Optionally include benchmark posts
+      const { getAllBenchmarkPosts } = await import('./benchmarkPostService');
+      const benchmarkPosts = await getAllBenchmarkPosts();
+      
+      const allPosts = [...benchmarkPosts, ...posts].sort((a, b) => 
+        b.publishedAt.getTime() - a.publishedAt.getTime()
+      );
+      
       res.json({
         success: true,
-        posts,
+        posts: allPosts,
         timestamp: new Date().toISOString(),
         attribution: 'Content aggregated from various automotive sources with proper attribution'
       });
@@ -4211,10 +4219,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create Dealership Benchmark - generates ML-powered performance report
+  app.post('/api/dealership/benchmark', isAuthenticated, async (req: any, res) => {
+    try {
+      const { oem, month, mtdSales, dealerName } = req.body;
+      const userId = req.user?.claims?.sub;
+      
+      if (!oem || !month || !mtdSales) {
+        return res.status(400).json({
+          success: false,
+          error: 'Missing required fields: oem, month, mtdSales'
+        });
+      }
+
+      const { generateBenchmarkPost } = await import('./benchmarkPostService');
+      const benchmarkPost = await generateBenchmarkPost({
+        oem,
+        month,
+        mtdSales: Number(mtdSales),
+        dealerName
+      }, userId);
+
+      res.json({
+        success: true,
+        post: benchmarkPost,
+        message: 'Benchmark generated successfully'
+      });
+    } catch (error) {
+      console.error('Benchmark generation error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to generate benchmark'
+      });
+    }
+  });
+
   // Individual news post route for SEO backlinks
   app.get('/api/community/posts/:id', async (req, res) => {
     try {
       const { id } = req.params;
+      
+      // Check if it's a dealership benchmark ID
+      if (id.startsWith('dealership-benchmark-')) {
+        // Fetch real benchmark post from database
+        const benchmarkPost = await db
+          .select()
+          .from(communityPosts)
+          .where(eq(communityPosts.id, id))
+          .limit(1);
+
+        if (benchmarkPost.length > 0) {
+          return res.json({
+            success: true,
+            post: {
+              id: benchmarkPost[0].id,
+              title: benchmarkPost[0].title,
+              content: benchmarkPost[0].content,
+              author: benchmarkPost[0].sourceName || 'CarArth x AI Grok',
+              category: benchmarkPost[0].category,
+              publishedAt: benchmarkPost[0].createdAt,
+              attribution: benchmarkPost[0].attribution
+            }
+          });
+        }
+
+        return res.status(404).json({
+          success: false,
+          error: 'Benchmark post not found'
+        });
+      }
       
       // Check if it's a market insight ID
       if (id.startsWith('market-insight-')) {
