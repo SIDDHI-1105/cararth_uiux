@@ -1,0 +1,50 @@
+Goal: Build a dealer-facing landing page and inventory upload flow for Cararth.com that is extremely simple to use by low-tech used-car dealers and enforces Google Vehicle Listing guardrails. Deliver a working frontend + minimal backend endpoints (Node/Express or Flask) and simple data persistence (SQLite/Postgres) for demo. Include validation, image upload handling, and feed preview.
+
+Requirements:
+1) UI & UX:
+   - Single-page, mobile-first dashboard for each dealer (login via dealer API key).
+   - Two primary actions:
+     a) Quick Add (mobile-friendly form) — for dealers to add one car in <60s.
+        Fields: VIN (17), Make, Model, Year, Price (INR), Mileage (km), Condition (used/certified/new), Fuel Type, Transmission, Color, Body Type, Primary Image (camera or upload), Additional Images (optional), Dealer Phone, Dealer Address, Landing Page slug (auto-generated).
+        UX: large inputs, inline help text, VIN auto-uppercase, client-side VIN regex enforcement, native file-picker that supports camera capture on mobile.
+     b) Bulk Upload CSV — support CSV template download and upload. Show clear example template and sample row. Upload should accept .csv and .zip containing images (optional).
+   - Show live validation feedback per field; disable submit if required fields fail client checks.
+   - After upload/submit, show a validation summary page listing errors and warnings (images missing, VIN format invalid, price outlier, duplicate VIN). Allow dealer to fix inline or mark for manual review.
+
+2) Backend API endpoints:
+   - POST /api/dealer/{dealer_id}/upload (multipart for Quick Add): authenticate by dealer API key header.
+   - POST /api/dealer/{dealer_id}/bulk-upload (CSV): parse CSV, store rows, fetch/validate images.
+   - GET /api/dealer/{dealer_id}/validation/{upload_id} : returns structured validation report.
+   - GET /api/feed/preview : generate a preview CSV for the dealer's live vehicles mapped to Google feed columns (not yet uploaded to Google).
+   - Admin webhook endpoints: POST /api/admin/review to accept or reject items needing human QA.
+
+3) Validation rules (must be enforced on upload & server-side):
+   - VIN: 17 chars, regex `^[A-HJ-NPR-Z0-9]{17}$`. Reject if invalid.
+   - Price: positive number; if > 1.5x median price for model/year, mark as outlier.
+   - Images: must be reachable, min 800x600 (server validates), file size cap 5 MB. If dealer uploaded images zipped, extract and match filenames.
+   - Duplicates: if VIN exists in system under another dealer, block and flag duplicate with contact support flow.
+   - Required: VIN, price, image(s >=1), landing page slug (auto if blank), dealer_phone, dealer_address.
+   - Store_code mapping: use dealer's store_code from DB; block creation if missing.
+
+4) Output & feed:
+   - Each successful vehicle creates a canonical VDP slug (https://cararth.com/used/{dealer_storecode}/{cararth_id}) and a JSON-LD snippet generated server-side inserted into the VDP.
+   - Provide a "Preview Google CSV" button that returns a downloadable CSV matching Google Vehicle Listing feed columns and highlights any rows that would be rejected (per server preflight).
+   - Store all original images in S3 (or Replit storage) and reference public URLs.
+
+5) Error handling & human ops:
+   - If any server validation fails, mark item as `on_hold` and notify ops via email + admin dashboard.
+   - Provide an "I confirm accuracy" checkbox and signed timestamp for each dealer upload to capture legal attestation.
+
+6) Security & infra notes:
+   - Accept only HTTPS; use API keys per dealer with rate limiting; log uploads and validation results.
+   - Minimal persistence: SQL schema for dealers and vehicles, with uploaded file storage reference.
+   - Provide a README with how to run locally and instructions on connecting to S3/Credentials.
+
+7) Deliverables:
+   - Working Replit project with frontend + backend (full stack example) that the ops team can demo with 3 Hyderabad dealers.
+   - Sample CSV template, sample images, a short test script (curl) showing Quick Add and bulk upload.
+   - Unit tests for VIN validation and feed generator producing the correct CSV headers & types.
+
+Please implement with accessible, minimal UI so low-tech users can add cars via phone camera; keep the code modular and comment where Google-specific validation rules are applied so we can update them later. After completion, deliver the URL + admin credentials and a short demo checklist.
+
+End of instruction.

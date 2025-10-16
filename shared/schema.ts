@@ -1848,3 +1848,239 @@ export type InsertIngestionLog = z.infer<typeof insertIngestionLogSchema>;
 export type IngestionLog = typeof ingestionLogs.$inferSelect;
 export type InsertBulkUploadJob = z.infer<typeof insertBulkUploadJobSchema>;
 export type BulkUploadJob = typeof bulkUploadJobs.$inferSelect;
+
+// ============================================================================
+// DEALER INVENTORY UPLOAD SYSTEM
+// Mobile-first dealer dashboard with Google Vehicle Listing compliance
+// ============================================================================
+
+// Dealers - API key authenticated dealer accounts
+export const dealers = pgTable("dealers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Business info
+  dealerName: text("dealer_name").notNull(),
+  storeCode: text("store_code").notNull().unique(), // For VDP slugs
+  contactPerson: text("contact_person").notNull(),
+  email: text("email").notNull().unique(),
+  phone: text("phone").notNull(),
+  address: text("address").notNull(),
+  city: text("city").notNull().default('Hyderabad'),
+  state: text("state").notNull().default('Telangana'),
+  
+  // Authentication
+  apiKey: text("api_key").notNull().unique(), // Bearer token for API access
+  
+  // Status
+  isActive: boolean("is_active").default(true),
+  
+  // Rate limiting
+  monthlyUploadLimit: integer("monthly_upload_limit").default(100),
+  currentMonthUploads: integer("current_month_uploads").default(0),
+  limitResetAt: timestamp("limit_reset_at").defaultNow(),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_dealers_api_key").on(table.apiKey),
+  index("idx_dealers_store_code").on(table.storeCode),
+]);
+
+// Dealer Vehicles - Uploaded inventory with Google Vehicle Listing compliance
+export const dealerVehicles = pgTable("dealer_vehicles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  dealerId: varchar("dealer_id").notNull(),
+  
+  // VIN (Required for Google Vehicle Listings)
+  vin: text("vin").notNull(), // 17 characters, validated
+  
+  // Basic vehicle info (Required)
+  make: text("make").notNull(), // Maruti Suzuki, Hyundai, etc.
+  model: text("model").notNull(),
+  year: integer("year").notNull(),
+  price: integer("price").notNull(), // In rupees
+  mileage: integer("mileage").notNull(), // In kilometers
+  
+  // Vehicle details (Required for Google)
+  condition: text("condition").notNull(), // 'used' | 'certified' | 'new'
+  fuelType: text("fuel_type").notNull(), // Petrol, Diesel, CNG, Electric
+  transmission: text("transmission").notNull(), // Manual, Automatic, CVT
+  color: text("color").notNull(),
+  bodyType: text("body_type").notNull(), // Sedan, SUV, Hatchback, etc.
+  
+  // Images (Required - min 1, stored in object storage)
+  primaryImage: text("primary_image").notNull(), // Object storage path
+  additionalImages: text("additional_images").array().default([]),
+  
+  // Dealer contact (Required)
+  dealerPhone: text("dealer_phone").notNull(),
+  dealerAddress: text("dealer_address").notNull(),
+  
+  // Landing page
+  slug: text("slug").notNull(), // Auto-generated: /used/{storeCode}/{id}
+  
+  // Validation status
+  validationStatus: text("validation_status").default('pending'), // pending, approved, rejected, on_hold
+  validationErrors: jsonb("validation_errors").default([]),
+  validationWarnings: jsonb("validation_warnings").default([]),
+  
+  // Price validation
+  isPriceOutlier: boolean("is_price_outlier").default(false), // > 1.5x median
+  medianPrice: integer("median_price"), // For comparison
+  
+  // Duplicate detection
+  isDuplicate: boolean("is_duplicate").default(false),
+  duplicateOfVin: text("duplicate_of_vin"),
+  
+  // Upload tracking
+  uploadBatchId: varchar("upload_batch_id"), // For bulk uploads
+  uploadMethod: text("upload_method").notNull(), // 'quick_add' | 'bulk_csv'
+  
+  // Legal attestation
+  dealerAttested: boolean("dealer_attested").default(false),
+  attestedAt: timestamp("attested_at"),
+  
+  // Google Feed status
+  includedInFeed: boolean("included_in_feed").default(false),
+  lastFeedExport: timestamp("last_feed_export"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_dealer_vehicles_dealer").on(table.dealerId),
+  index("idx_dealer_vehicles_vin").on(table.vin),
+  index("idx_dealer_vehicles_status").on(table.validationStatus),
+  index("idx_dealer_vehicles_slug").on(table.slug),
+]);
+
+// Upload Batches - Track bulk CSV uploads
+export const uploadBatches = pgTable("upload_batches", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  dealerId: varchar("dealer_id").notNull(),
+  
+  // File info
+  fileName: text("file_name").notNull(),
+  fileSize: integer("file_size").notNull(), // bytes
+  rowCount: integer("row_count").notNull(),
+  
+  // Processing status
+  status: text("status").default('processing'), // processing, completed, failed
+  
+  // Results
+  successCount: integer("success_count").default(0),
+  errorCount: integer("error_count").default(0),
+  warningCount: integer("warning_count").default(0),
+  
+  // Image handling (for .zip uploads)
+  hasImageZip: boolean("has_image_zip").default(false),
+  imageZipPath: text("image_zip_path"),
+  extractedImageCount: integer("extracted_image_count").default(0),
+  
+  // Errors
+  processingErrors: jsonb("processing_errors").default([]),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+}, (table) => [
+  index("idx_upload_batches_dealer").on(table.dealerId),
+  index("idx_upload_batches_status").on(table.status),
+]);
+
+// Validation Reports - Detailed validation results
+export const validationReports = pgTable("validation_reports", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  dealerId: varchar("dealer_id").notNull(),
+  uploadBatchId: varchar("upload_batch_id"), // For bulk uploads
+  vehicleId: varchar("vehicle_id"), // For single vehicle validations
+  
+  // Validation type
+  validationType: text("validation_type").notNull(), // 'quick_add' | 'bulk_csv'
+  
+  // Results summary
+  totalChecked: integer("total_checked").notNull(),
+  passedCount: integer("passed_count").default(0),
+  failedCount: integer("failed_count").default(0),
+  warningCount: integer("warning_count").default(0),
+  
+  // Detailed results
+  validationDetails: jsonb("validation_details").notNull(), // Array of check results
+  
+  // Review status (for items on_hold)
+  requiresReview: boolean("requires_review").default(false),
+  reviewedBy: varchar("reviewed_by"), // Admin user ID
+  reviewedAt: timestamp("reviewed_at"),
+  reviewDecision: text("review_decision"), // 'approved' | 'rejected'
+  reviewNotes: text("review_notes"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_validation_reports_dealer").on(table.dealerId),
+  index("idx_validation_reports_batch").on(table.uploadBatchId),
+  index("idx_validation_reports_review").on(table.requiresReview),
+]);
+
+// Google Vehicle Feed Cache - Pre-generated feed data
+export const googleVehicleFeeds = pgTable("google_vehicle_feeds", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  dealerId: varchar("dealer_id").notNull(),
+  
+  // Feed data (Google Vehicle Listing format)
+  feedData: jsonb("feed_data").notNull(), // Array of vehicle objects
+  vehicleCount: integer("vehicle_count").notNull(),
+  
+  // CSV export
+  csvUrl: text("csv_url"), // Object storage path for downloadable CSV
+  
+  // Feed status
+  hasErrors: boolean("has_errors").default(false),
+  errorSummary: jsonb("error_summary").default([]),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  expiresAt: timestamp("expires_at").notNull(), // Refresh every 24 hours
+}, (table) => [
+  index("idx_google_feed_dealer").on(table.dealerId),
+  index("idx_google_feed_expires").on(table.expiresAt),
+]);
+
+// Insert schemas
+export const insertDealerSchema = createInsertSchema(dealers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  currentMonthUploads: true,
+  limitResetAt: true,
+});
+
+export const insertDealerVehicleSchema = createInsertSchema(dealerVehicles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertUploadBatchSchema = createInsertSchema(uploadBatches).omit({
+  id: true,
+  createdAt: true,
+  completedAt: true,
+});
+
+export const insertValidationReportSchema = createInsertSchema(validationReports).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertGoogleVehicleFeedSchema = createInsertSchema(googleVehicleFeeds).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Type exports
+export type InsertDealer = z.infer<typeof insertDealerSchema>;
+export type Dealer = typeof dealers.$inferSelect;
+export type InsertDealerVehicle = z.infer<typeof insertDealerVehicleSchema>;
+export type DealerVehicle = typeof dealerVehicles.$inferSelect;
+export type InsertUploadBatch = z.infer<typeof insertUploadBatchSchema>;
+export type UploadBatch = typeof uploadBatches.$inferSelect;
+export type InsertValidationReport = z.infer<typeof insertValidationReportSchema>;
+export type ValidationReport = typeof validationReports.$inferSelect;
+export type InsertGoogleVehicleFeed = z.infer<typeof insertGoogleVehicleFeedSchema>;
+export type GoogleVehicleFeed = typeof googleVehicleFeeds.$inferSelect;
