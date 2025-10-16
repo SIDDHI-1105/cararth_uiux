@@ -145,6 +145,9 @@ export default function DataSourcesPolicy() {
               <p className="text-sm text-muted-foreground">
                 <strong>Last Updated:</strong> January 2025 | This policy is regularly reviewed and updated to reflect our current data practices and compliance requirements.
               </p>
+              <p className="text-xs text-muted-foreground mt-2">
+                Cararth.com is a unit of Aaro7 Fintech Private Limited
+              </p>
             </div>
           </CardContent>
         </Card>

@@ -133,6 +133,9 @@ export default function TermsOfService() {
               <p className="text-sm text-muted-foreground">
                 <strong>Legal Compliance:</strong> These terms comply with the Information Technology Act, 2000, and Indian Contract Act, 1872.
               </p>
+              <p className="text-xs text-muted-foreground mt-2">
+                Cararth.com is a unit of Aaro7 Fintech Private Limited
+              </p>
             </div>
           </CardContent>
         </Card>

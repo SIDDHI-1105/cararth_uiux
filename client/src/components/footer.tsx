@@ -120,7 +120,7 @@ export default function Footer() {
             <div className="text-sm text-muted-foreground mb-4 md:mb-0">
               © 2025 CarArth. All rights reserved. | Compliant with Indian IT Act 2000 & Copyright Act 1957
               <br />
-              <span className="text-xs">Contact: connect@cararth.com</span>
+              <span className="text-xs">Cararth.com is a unit of Aaro7 Fintech Private Limited | Contact: connect@cararth.com</span>
               <br />
               <span className="text-xs mt-1">
                 * All listings subject to verification. Prices may vary. * CarArth aggregates data from multiple sources - verify independently.

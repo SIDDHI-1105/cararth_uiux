@@ -184,6 +184,9 @@ export default function ApiCompliance() {
               <p className="text-sm text-muted-foreground">
                 <strong>Compliance Certification:</strong> This page reflects our current compliance practices as of January 2025. Our compliance framework is regularly reviewed and updated to maintain the highest standards of legal and ethical operation.
               </p>
+              <p className="text-xs text-muted-foreground mt-2">
+                Cararth.com is a unit of Aaro7 Fintech Private Limited
+              </p>
             </div>
           </CardContent>
         </Card>

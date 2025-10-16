@@ -123,6 +123,9 @@ export default function PrivacyPolicy() {
               <p className="text-sm text-muted-foreground">
                 <strong>Compliance:</strong> This policy is designed to comply with the Information Technology Act, 2000, and the Personal Data Protection Bill of India.
               </p>
+              <p className="text-xs text-muted-foreground mt-2">
+                Cararth.com is a unit of Aaro7 Fintech Private Limited
+              </p>
             </div>
           </CardContent>
         </Card>
