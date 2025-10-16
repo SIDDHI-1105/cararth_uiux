@@ -1,0 +1,29 @@
+**Project Name:** CarArth-News-Enhancer
+
+**Instructions for Replit Agent:**
+
+Create a Python script in a new Replit project named "CarArth-News-Enhancer" to automate the generation of fresh, relevant content for the "Throttle Talk" section on cararth.com/news. The script should leverage the integrated Perplexity AI API to search the internet, incorporate open source data from the Indian automotive sector, and produce SEO-optimized articles with proper citations and backlinks. Ensure the content feels fresh (e.g., tied to current trends like used car market growth to 8.3M units by FY26) and relatable (e.g., seller-focused insights on GBP pilots). Guardrails: Limit API calls to 5 per run, log all outputs for compliance, and flag any non-factual or outdated info.
+
+1. **Setup Environment:**
+   - Use Python 3.12+.
+   - Install libraries via Replit's package manager: `requests` (for API calls), `pandas` (for data handling), `python-dotenv` (for secrets).
+   - Create `.env` with `PERPLEXITY_API_KEY=your_key_here` (guide me to get one from perplexity.ai if needed via a README note: "Obtain API key from perplexity.ai under developer settings and add to .env").
+
+2. **Core Functionality:**
+   - Define function `fetch_perplexity_content(query)`: Call Perplexity API (endpoint: https://api.perplexity.ai/chat/completions) with a prompt to search the web for Indian automotive news (e.g., "Latest trends in India's used car market, including open source datasets"). Use payload: {"model": "llama-3.1-sonar-small-128k-online", "messages": [{"role": "system", "content": "Be precise and concise. Search the internet for fresh 2025 data."}, {"role": "user", "content": query + " Include citations (e.g., [Source: Web ID]) and backlinks (e.g., <a href='URL'>Link</a>)."}]}, headers: {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}. Handle 200 response with `response.json()["choices"][0]["message"]["content"]`, else log error.
+   - Define function `incorporate_open_source_data()`: Fetch open source data from Kaggle (e.g., "Indian Car Market Dataset" via CSV link: https://www.kaggle.com/datasets/ak0212/indian-car-market-dataset/download?datasetVersionNumber=1) or Data.gov.in (e.g., "Category-wise Automobile Production": https://data.gov.in/catalog/category-wise-automobile-production) using pandas. Parse and summarize (e.g., `df.groupby('Brand')['Price'].mean().to_string()`) with citation: "Kaggle Indian Car Market Dataset [Link: https://www.kaggle.com/datasets/ak0212/indian-car-market-dataset]" or "Data.gov.in Automobile Production [Link: https://data.gov.in/...>".
+   - Define function `generate_article(topic)`: Combine `fetch_perplexity_content(f"Generate a fresh, relevant article on {topic} in India's automotive space. Search internet for latest 2025 news, use open source data like Kaggle's Indian Car Market Dataset or Data.gov.in's Automobile Production. Include citations and backlinks.")` with `incorporate_open_source_data()`, formatting as Markdown: `# {topic}\n\n{datetime.now().strftime('%B %d, %Y | %I:%M %p IST')}\n\n{perplexity_content}\n\n## Open Source Insights\n{open_data}\n\n#UsedCars #CarArth`. Save to "news-article.md" and return confirmation.
+   - Main execution: Call `generate_article("Latest Trends in India's Used Car Market")` with `time.sleep(1)` for rate limiting.
+
+3. **Guardrails & Compliance:**
+   - Rate limit: Enforce `time.sleep(1)` between API calls (max 5/run).
+   - Citations: Extract/append Perplexity sources (e.g., regex for [web:id]) and ensure backlinks are valid URLs.
+   - Freshness: Query with "latest 2025 data" to avoid outdated info; flag non-2025 data in logs.
+   - Error Handling: Log API errors and rejections to `logs.txt` (e.g., `with open('logs.txt', 'a') as log: log.write(f"{datetime.now()}: {error}\n")`).
+   - Flag non-factual: Reject if Perplexity returns no web data or open source mismatch (e.g., age >2020).
+
+4. **Testing & User Guide:**
+   - Test with topic: "GBP listings for Indian dealers" to ensure GBP pilot relevance.
+   - README.md: "Run main.py, input topic via console (e.g., 'GBP listings for Indian dealers'). Output: news-article.md for cararth.com/news. Ensure PERPLEXITY_API_KEY in .env. Logs in logs.txt for audit."
+
+Deploy by October 18, 2025. Provide invite link and test with automotive news! Thanks!
