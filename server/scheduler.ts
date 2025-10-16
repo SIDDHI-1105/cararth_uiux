@@ -808,6 +808,56 @@ export class InternalScheduler {
             });
             console.error('❌ EauctionsIndia scraping failed:', error);
           }
+          
+          // MARKET INTELLIGENCE: Sync VAHAN and SIAM data once daily for dealership benchmarks
+          console.log('🔄 Syncing market intelligence data (VAHAN, SIAM)...');
+          
+          // VAHAN national registration data sync
+          const vahanRunId = await scraperHealthMonitor.startRun('VAHAN National Data', 'marketplace');
+          try {
+            const { syncVahanData } = await import('./vahanService.js');
+            const result = await syncVahanData();
+            await scraperHealthMonitor.completeRun(vahanRunId, {
+              success: result.success,
+              totalFound: result.totalRecords || 0,
+              newListingsSaved: result.newRecords || 0
+            });
+            console.log(`✅ VAHAN sync: ${result.newRecords} new records from ${result.totalRecords} found`);
+          } catch (error) {
+            await scraperHealthMonitor.completeRun(vahanRunId, {
+              success: false,
+              totalFound: 0,
+              newListingsSaved: 0,
+              error: error instanceof Error ? error.message : String(error),
+              errorStack: error instanceof Error ? error.stack : undefined
+            });
+            console.error('❌ VAHAN sync failed:', error);
+          }
+          
+          // SIAM sales data refresh (currently manual - will add auto-refresh method)
+          console.log('ℹ️ SIAM data refresh: Manual refresh via siamDataScraperService.fetchLatestSalesData()');
+          const siamRunId = await scraperHealthMonitor.startRun('SIAM Sales Data', 'marketplace');
+          try {
+            const { siamDataScraperService } = await import('./siamDataScraper.js');
+            const result = await siamDataScraperService.fetchLatestSalesData();
+            await scraperHealthMonitor.completeRun(siamRunId, {
+              success: result.success,
+              totalFound: result.oems?.length || 0,
+              newListingsSaved: result.oems?.length || 0
+            });
+            console.log(`✅ SIAM sync: ${result.oems?.length || 0} OEM records updated`);
+          } catch (error) {
+            await scraperHealthMonitor.completeRun(siamRunId, {
+              success: false,
+              totalFound: 0,
+              newListingsSaved: 0,
+              error: error instanceof Error ? error.message : String(error),
+              errorStack: error instanceof Error ? error.stack : undefined
+            });
+            console.error('❌ SIAM sync failed:', error);
+          }
+          
+          console.log('✅ Market intelligence data sync completed');
         }
         
         // Mark this hour as executed for today
