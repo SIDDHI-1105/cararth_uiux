@@ -60,10 +60,23 @@ const postSchema = z.object({
 
 type PostFormData = z.infer<typeof postSchema>;
 
+// Benchmark creation form schema
+const benchmarkSchema = z.object({
+  oem: z.enum(["Maruti Suzuki", "Hyundai", "Tata Motors", "Mahindra", "Kia", "Honda", "Toyota", "Renault", "Nissan", "Volkswagen"], {
+    required_error: "Please select an OEM"
+  }),
+  month: z.string().min(1, "Please select a month"),
+  mtdSales: z.coerce.number().int().min(1, "MTD sales must be at least 1"),
+  dealerName: z.string().optional(),
+});
+
+type BenchmarkFormData = z.infer<typeof benchmarkSchema>;
+
 // Clean, minimal community platform
 export default function ThrottleTalkPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isBenchmarkDialogOpen, setIsBenchmarkDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -105,6 +118,17 @@ export default function ThrottleTalkPage() {
     },
   });
 
+  // Benchmark creation form
+  const benchmarkForm = useForm<BenchmarkFormData>({
+    resolver: zodResolver(benchmarkSchema),
+    defaultValues: {
+      oem: undefined,
+      month: "",
+      mtdSales: undefined,
+      dealerName: "",
+    },
+  });
+
   // Create post mutation
   const createPostMutation = useMutation({
     mutationFn: async (data: PostFormData) => {
@@ -123,6 +147,29 @@ export default function ThrottleTalkPage() {
       toast({
         title: "Error",
         description: error.message || "Failed to create post",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Create benchmark mutation
+  const createBenchmarkMutation = useMutation({
+    mutationFn: async (data: BenchmarkFormData) => {
+      return await apiRequest("POST", "/api/dealership/benchmark", data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Benchmark created",
+        description: "ML forecast generated successfully. Check Market Intelligence posts.",
+      });
+      setIsBenchmarkDialogOpen(false);
+      benchmarkForm.reset();
+      queryClient.invalidateQueries({ queryKey: ['/api/community/posts'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to generate benchmark",
         variant: "destructive",
       });
     },
@@ -225,13 +272,127 @@ export default function ThrottleTalkPage() {
               </div>
             </div>
             {isAuthenticated ? (
-              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="bg-gray-900 text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100" data-testid="button-new-post">
-                    <Plus className="h-4 w-4 mr-2" />
-                    New Post
-                  </Button>
-                </DialogTrigger>
+              <div className="flex gap-2">
+                <Dialog open={isBenchmarkDialogOpen} onOpenChange={setIsBenchmarkDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" data-testid="button-new-benchmark">
+                      <TrendingUp className="h-4 w-4 mr-2" />
+                      ML Benchmark
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                      <DialogTitle>Generate Dealership Benchmark</DialogTitle>
+                      <DialogDescription>
+                        Create ML-powered performance forecast with market comparisons
+                      </DialogDescription>
+                    </DialogHeader>
+                    <Form {...benchmarkForm}>
+                      <form onSubmit={benchmarkForm.handleSubmit((data) => createBenchmarkMutation.mutate(data))} className="space-y-4">
+                        <FormField
+                          control={benchmarkForm.control}
+                          name="oem"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>OEM Brand</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                  <SelectTrigger data-testid="select-benchmark-oem">
+                                    <SelectValue placeholder="Select brand" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="Maruti Suzuki">Maruti Suzuki</SelectItem>
+                                  <SelectItem value="Hyundai">Hyundai</SelectItem>
+                                  <SelectItem value="Tata Motors">Tata Motors</SelectItem>
+                                  <SelectItem value="Mahindra">Mahindra</SelectItem>
+                                  <SelectItem value="Kia">Kia</SelectItem>
+                                  <SelectItem value="Honda">Honda</SelectItem>
+                                  <SelectItem value="Toyota">Toyota</SelectItem>
+                                  <SelectItem value="Renault">Renault</SelectItem>
+                                  <SelectItem value="Nissan">Nissan</SelectItem>
+                                  <SelectItem value="Volkswagen">Volkswagen</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={benchmarkForm.control}
+                          name="month"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Month</FormLabel>
+                              <FormControl>
+                                <Input type="month" {...field} data-testid="input-benchmark-month" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={benchmarkForm.control}
+                          name="mtdSales"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>MTD Sales (Units)</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="number" 
+                                  placeholder="Enter month-to-date sales count"
+                                  {...field}
+                                  onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                                  value={field.value ?? ''}
+                                  data-testid="input-benchmark-mtd"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={benchmarkForm.control}
+                          name="dealerName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Dealer Name (Optional)</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Your dealership name" {...field} data-testid="input-benchmark-dealer" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <div className="flex justify-end gap-3">
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            onClick={() => setIsBenchmarkDialogOpen(false)}
+                            data-testid="button-cancel-benchmark"
+                          >
+                            Cancel
+                          </Button>
+                          <Button 
+                            type="submit" 
+                            disabled={createBenchmarkMutation.isPending}
+                            data-testid="button-submit-benchmark"
+                          >
+                            {createBenchmarkMutation.isPending ? "Generating..." : "Generate Benchmark"}
+                          </Button>
+                        </div>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
+                
+                <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-gray-900 text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100" data-testid="button-new-post">
+                      <Plus className="h-4 w-4 mr-2" />
+                      New Post
+                    </Button>
+                  </DialogTrigger>
                 <DialogContent className="sm:max-w-[600px]">
                   <DialogHeader>
                     <DialogTitle>Create New Post</DialogTitle>
@@ -316,6 +477,7 @@ export default function ThrottleTalkPage() {
                   </Form>
                 </DialogContent>
               </Dialog>
+              </div>
             ) : (
               <div className="flex justify-center">
                 <AuthDialog />
