@@ -696,7 +696,7 @@ export default function SellCar() {
                     </FormControl>
                     <div className="space-y-1 leading-none">
                       <FormLabel className="text-sm font-medium leading-relaxed">
-                        I authorize CarArth to syndicate my listing to OLX, Quikr, and Facebook Marketplace, and consent to data processing as described in the{" "}
+                        I authorize CarArth to syndicate my listing to partner platforms including OLX, Quikr, and Facebook Marketplace (and other verified automotive marketplaces), and consent to data processing as described in the{" "}
                         <a 
                           href="/terms" 
                           target="_blank" 
