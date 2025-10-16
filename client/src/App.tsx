@@ -55,6 +55,7 @@ function Router() {
       <Route path="/partner/invite/:token" component={PartnerInvite} />
       <Route path="/partner/dashboard" component={PartnerDashboard} />
       <Route path="/dealer/dashboard" component={DealerDashboard} />
+      <Route path="/dealer-dashboard" component={DealerDashboard} />
       <Route path="/news/:id" component={NewsDetail} />
       <Route path="/news" component={ThrottleTalk} />
       <Route path="/community" component={Community} />
