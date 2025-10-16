@@ -1,0 +1,14 @@
+2025-10-16 06:49:30: === Starting article generation: GBP Listings for Indian Dealers - Opportunities and Best Practices ===
+2025-10-16 06:49:30: Calling Perplexity API for: Generate a fresh, relevant article on 'GBP Listing...
+2025-10-16 06:49:31: API Error: 400 Client Error: Bad Request for url: https://api.perplexity.ai/chat/completions
+2025-10-16 06:49:31: ERROR: Failed to fetch Perplexity content
+2025-10-16 06:49:57: === Starting article generation: Latest Trends in India's Used Car Market ===
+2025-10-16 06:49:57: Calling Perplexity API for: Generate a fresh, relevant article on 'Latest Tren...
+2025-10-16 06:49:57: API Error Response (400): {"error":{"message":"Invalid model 'llama-3.1-sonar-small-128k-online'. Permitted models can be found in the documentation at https://docs.perplexity.ai/getting-started/models.","type":"invalid_model"
+2025-10-16 06:49:57: API Error: 400 Client Error: Bad Request for url: https://api.perplexity.ai/chat/completions
+2025-10-16 06:49:57: ERROR: Failed to fetch Perplexity content
+2025-10-16 06:50:20: === Starting article generation: Latest Trends in India's Used Car Market ===
+2025-10-16 06:50:20: Calling Perplexity API for: Generate a fresh, relevant article on 'Latest Tren...
+2025-10-16 06:50:27: Perplexity response received (2836 chars, 6 citations)
+2025-10-16 06:50:27: Fetching open source data...
+2025-10-16 06:50:27: ✅ Article saved to: news-article-20251016-065027.md

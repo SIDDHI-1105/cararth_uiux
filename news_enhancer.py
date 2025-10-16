@@ -48,21 +48,30 @@ class CarArthNewsEnhancer:
             }
             
             payload = {
-                "model": "llama-3.1-sonar-small-128k-online",
+                "model": "sonar",
                 "messages": [
                     {
                         "role": "system",
-                        "content": "Be precise and concise. Search the internet for fresh 2025 data. Include citations with [web:id] format."
+                        "content": "Be precise and concise. Search the internet for fresh 2025 data. Include citations."
                     },
                     {
                         "role": "user",
                         "content": f"{query} Include latest 2025 data, cite sources with backlinks, focus on Indian automotive market."
                     }
-                ]
+                ],
+                "temperature": 0.2,
+                "top_p": 0.9,
+                "return_related_questions": False,
+                "search_recency_filter": "month"
             }
             
             self.log(f"Calling Perplexity API for: {query[:50]}...")
             response = requests.post(self.api_endpoint, headers=headers, json=payload, timeout=30)
+            
+            # Log response for debugging
+            if response.status_code != 200:
+                self.log(f"API Error Response ({response.status_code}): {response.text[:200]}")
+            
             response.raise_for_status()
             
             self.call_count += 1
