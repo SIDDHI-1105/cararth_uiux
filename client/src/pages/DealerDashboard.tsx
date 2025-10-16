@@ -57,7 +57,8 @@ export default function DealerDashboard() {
   });
 
   // Get dealers for selected OEM
-  const availableDealers = selectedOem && dealersData && 'success' in dealersData && dealersData.success && 'data' in dealersData && dealersData.data?.[selectedOem] ? dealersData.data[selectedOem] : [];
+  const dealersResponse = dealersData as any;
+  const availableDealers = selectedOem && dealersResponse?.success && dealersResponse?.data?.[selectedOem] ? dealersResponse.data[selectedOem] : [];
 
   // Fetch performance data (public endpoint)
   const { data: performanceData, isLoading: performanceLoading } = useQuery({
@@ -231,7 +232,7 @@ export default function DealerDashboard() {
                     <SelectValue placeholder="Select OEM brand" />
                   </SelectTrigger>
                   <SelectContent>
-                    {dealersData && 'oems' in dealersData && dealersData.oems?.map((oem: string) => (
+                    {dealersResponse?.oems?.map((oem: string) => (
                       <SelectItem key={oem} value={oem}>{oem}</SelectItem>
                     ))}
                   </SelectContent>

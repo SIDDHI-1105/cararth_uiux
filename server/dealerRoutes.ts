@@ -608,11 +608,10 @@ router.get(
       };
       const selectedMonthNum = monthMap[monthName] || 10;
 
-      // Fetch real Telangana RTA data for this OEM
+      // Fetch real Telangana RTA data for this OEM (brand-level, not specific model)
       const telanganaStats = await getTelanganaVehicleStats(
-        selectedYear,
-        selectedMonthNum,
-        selectedOem
+        selectedOem,
+        '%' // Use wildcard for all models under this OEM
       );
 
       // Fetch real VAHAN ROI (Rest of India) comparison
@@ -630,8 +629,8 @@ router.get(
 
       // Fetch real SIAM data for national benchmarks
       const siamIntelligence = await siamDataScraperService.generateMarketIntelligence('latest');
-      const siamOemData = siamIntelligence?.salesData.find(
-        (data) => data.oem.toLowerCase() === selectedOem.toLowerCase()
+      const siamOemData = siamIntelligence?.topPerformers.find(
+        (data: any) => data.brand.toLowerCase() === selectedOem.toLowerCase()
       );
 
       // Calculate dealer's estimated monthly sales based on real Telangana data
@@ -663,13 +662,16 @@ router.get(
         percentileRank: Math.min(95, Math.max(5, 50 + percentAbove)) // Convert to percentile
       };
 
-      // Telangana district performance - use real RTA district data
-      const telanganaDistricts = telanganaStats?.districtBreakdown || [
+      // Telangana district performance - use real RTA city data
+      const telanganaDistricts = telanganaStats?.popularCities.map((city, idx) => ({
+        name: city.city,
+        registrations: city.count,
+        growth: idx === 0 ? 8.5 : idx === 1 ? 5.2 : 3.1, // Estimated growth
+        trend: (idx < 2 ? 'UP' : 'STABLE') as const
+      })) || [
         { name: 'Hyderabad', registrations: Math.round((telanganaStats?.totalRegistrations || 630) * 0.4), growth: 8.5, trend: 'UP' as const },
         { name: 'Rangareddy', registrations: Math.round((telanganaStats?.totalRegistrations || 630) * 0.25), growth: 5.2, trend: 'UP' as const },
-        { name: 'Medchal-Malkajgiri', registrations: Math.round((telanganaStats?.totalRegistrations || 630) * 0.18), growth: 3.1, trend: 'STABLE' as const },
-        { name: 'Warangal', registrations: Math.round((telanganaStats?.totalRegistrations || 630) * 0.12), growth: 2.8, trend: 'STABLE' as const },
-        { name: 'Nizamabad', registrations: Math.round((telanganaStats?.totalRegistrations || 630) * 0.05), growth: 6.4, trend: 'UP' as const }
+        { name: 'Medchal-Malkajgiri', registrations: Math.round((telanganaStats?.totalRegistrations || 630) * 0.18), growth: 3.1, trend: 'STABLE' as const }
       ];
 
       // ML Forecast breakdown - varies by dealer performance
@@ -717,14 +719,14 @@ router.get(
         benchmarkComparison,
         telanganaInsights: {
           districtData: telanganaDistricts,
-          demandScore: telanganaStats?.demandScore || 'HIGH',
-          topFuelType: { type: telanganaStats?.topFuelType || 'Petrol', percentage: 67 },
-          topTransmission: { type: telanganaStats?.topTransmission || 'Automatic', percentage: 58 }
+          demandScore: telanganaStats?.totalRegistrations > 500 ? 'HIGH' : 'MEDIUM',
+          topFuelType: { type: 'Petrol', percentage: 67 }, // Would need fuel type breakdown in RTA data
+          topTransmission: { type: 'Automatic', percentage: 58 } // Would need transmission breakdown in RTA data
         },
         siamData: {
-          oemNationalSales: siamOemData?.monthlySales || 42500, // Real SIAM data or fallback
-          dealerShare: Number(((baseSales / (siamOemData?.monthlySales || 42500)) * 100).toFixed(2)),
-          industryGrowthYoY: siamOemData?.growthYoY || 3.2
+          oemNationalSales: siamOemData?.units || 42500, // Real SIAM data or fallback
+          dealerShare: Number(((baseSales / (siamOemData?.units || 42500)) * 100).toFixed(2)),
+          industryGrowthYoY: siamOemData?.growth || 3.2
         }
       };
 
