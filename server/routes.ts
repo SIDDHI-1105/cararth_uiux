@@ -4276,6 +4276,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // RSS Feed for Social Media Automation (Zapier, IFTTT, Buffer)
+  app.get('/feed/news.xml', async (req, res) => {
+    try {
+      const { newsFeedService } = await import('./newsFeedService.js');
+      const rssXml = await newsFeedService.generateRSSFeed();
+      
+      res.setHeader('Content-Type', 'application/rss+xml; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, max-age=300'); // Cache for 5 minutes
+      res.send(rssXml);
+    } catch (error) {
+      console.error('RSS feed generation error:', error);
+      res.status(500).send('<?xml version="1.0" encoding="UTF-8"?><error>RSS feed unavailable</error>');
+    }
+  });
+
   app.get('/api/community/stats', async (req, res) => {
     try {
       const { rssAggregator } = await import('./rssService');

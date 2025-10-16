@@ -23,6 +23,8 @@ import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import { AuthDialog } from "@/components/auth-dialog";
+import { NewsSEOHead, FAQSchemaMarkup } from "@/components/news-seo-head";
+import SocialShareButtons from "@/components/social-share-buttons";
 
 interface ForumPost {
   id: string;
@@ -199,6 +201,10 @@ export default function ThrottleTalkPage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950">
+      {/* SEO & Schema Markup */}
+      <NewsSEOHead posts={allPosts.map(p => ({ ...p, publishedAt: new Date(p.lastReply) }))} />
+      <FAQSchemaMarkup />
+      
       {/* Clean header */}
       <div className="border-b border-gray-200 dark:border-gray-800">
         <div className="max-w-4xl mx-auto px-4 py-6">
@@ -431,6 +437,15 @@ export default function ThrottleTalkPage() {
                             <Eye className="h-4 w-4" />
                             {post.views} views
                           </span>
+                        </div>
+
+                        {/* Social Sharing - Always link to CarArth for backlinks */}
+                        <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
+                          <SocialShareButtons
+                            url={`https://cararth.com/news/${post.id}`}
+                            title={`${post.title}${post.isExternal ? ` (via ${post.attribution})` : ''}`}
+                            description={post.content || `${post.title} - Read on CarArth Throttle Talk`}
+                          />
                         </div>
 
                         {/* Attribution and citations */}

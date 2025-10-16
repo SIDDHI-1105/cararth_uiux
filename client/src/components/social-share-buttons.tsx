@@ -1,4 +1,4 @@
-import { Facebook, Share2, Linkedin } from "lucide-react";
+import { Facebook, Share2, Linkedin, Twitter } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 
@@ -37,6 +37,14 @@ export default function SocialShareButtons({
   const handleLinkedInShare = () => {
     window.open(
       `https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}`,
+      '_blank',
+      'width=600,height=400'
+    );
+  };
+
+  const handleTwitterShare = () => {
+    window.open(
+      `https://twitter.com/intent/tweet?url=${shareUrl}&text=${shareTitle}`,
       '_blank',
       'width=600,height=400'
     );
@@ -89,6 +97,17 @@ export default function SocialShareButtons({
       >
         <Linkedin className="h-4 w-4" />
         Share on LinkedIn
+      </Button>
+
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleTwitterShare}
+        className="gap-2 text-blue-400 hover:text-blue-500 dark:text-blue-400"
+        data-testid="button-share-twitter"
+      >
+        <Twitter className="h-4 w-4" />
+        Share on Twitter
       </Button>
 
       {typeof navigator !== 'undefined' && 'share' in navigator && (

@@ -20,6 +20,7 @@ import PartnerInvite from "./pages/partner-invite";
 import PartnerDashboard from "./pages/partner-dashboard";
 import DealerDashboard from "./pages/DealerDashboard";
 import ThrottleTalk from "./pages/news";
+import NewsDetail from "./pages/news-detail";
 import Community from "./pages/community";
 import PrivacyPolicy from "./pages/privacy-policy";
 import TermsOfService from "./pages/terms-of-service";
@@ -54,6 +55,7 @@ function Router() {
       <Route path="/partner/invite/:token" component={PartnerInvite} />
       <Route path="/partner/dashboard" component={PartnerDashboard} />
       <Route path="/dealer/dashboard" component={DealerDashboard} />
+      <Route path="/news/:id" component={NewsDetail} />
       <Route path="/news" component={ThrottleTalk} />
       <Route path="/community" component={Community} />
       <Route path="/faq" component={FAQPage} />
