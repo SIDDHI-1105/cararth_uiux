@@ -15,7 +15,12 @@ export default function SocialShareButtons({
   description = "",
   className = "" 
 }: SocialShareButtonsProps) {
-  const shareUrl = encodeURIComponent(url);
+  // Use actual current domain in development, cararth.com in production
+  const actualUrl = url.startsWith('http') 
+    ? url 
+    : `${window.location.origin}${url.startsWith('/') ? url : `/${url}`}`;
+  
+  const shareUrl = encodeURIComponent(actualUrl);
   
   // Tastefully add CarArth branding if not already present
   const brandedTitle = title.includes('CarArth') ? title : `${title} | CarArth`;
@@ -23,8 +28,8 @@ export default function SocialShareButtons({
   
   // WhatsApp: Include title, description, and URL with CarArth branding
   const whatsappText = description 
-    ? encodeURIComponent(`${brandedTitle}\n\n${description}\n\n📱 Read more: ${url}`)
-    : encodeURIComponent(`${brandedTitle}\n\n📱 Read more: ${url}`);
+    ? encodeURIComponent(`${brandedTitle}\n\n${description}\n\n📱 Read more: ${actualUrl}`)
+    : encodeURIComponent(`${brandedTitle}\n\n📱 Read more: ${actualUrl}`);
   
   // Twitter: Add "via @CarArth" if not already present
   const twitterText = title.toLowerCase().includes('cararth') 

@@ -452,7 +452,7 @@ export default function ThrottleTalkPage() {
                         {/* Social Sharing - Always link to CarArth for backlinks */}
                         <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
                           <SocialShareButtons
-                            url={`https://cararth.com/news/${post.id}`}
+                            url={`/news/${post.id}`}
                             title={post.category === 'Market Insights' && post.author 
                               ? `${post.title} - ${post.author}` 
                               : post.isExternal 

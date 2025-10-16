@@ -200,7 +200,7 @@ export default function NewsDetail() {
             {/* Social Sharing */}
             <div className="border-t border-gray-200 dark:border-gray-800 pt-6 mb-6">
               <SocialShareButtons
-                url={`https://cararth.com/news/${postData.id}`}
+                url={`/news/${postData.id}`}
                 title={postData.category === 'Market Insights' && authorName 
                   ? `${postData.title} - ${authorName}` 
                   : isExternal && attribution 

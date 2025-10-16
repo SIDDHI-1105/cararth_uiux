@@ -60,9 +60,12 @@ function updateMetaTags(singlePost?: NewsPost, isDetailPage: boolean = false) {
     // Individual post meta tags
     document.title = `${singlePost.title} | CarArth Throttle Talk`;
     
-    const postUrl = `https://cararth.com/news/${singlePost.id}`;
+    // Use actual domain in dev, production URL for meta tags (for SEO)
+    const isDev = window.location.hostname.includes('replit');
+    const baseUrl = isDev ? window.location.origin : 'https://cararth.com';
+    const postUrl = `${baseUrl}/news/${singlePost.id}`;
     const postDescription = singlePost.content?.substring(0, 160) || `${singlePost.title} - Read on CarArth Throttle Talk`;
-    const postImage = singlePost.coverImage || 'https://cararth.com/cararth-social-preview.png';
+    const postImage = singlePost.coverImage || `${baseUrl}/cararth-social-preview.png`;
     
     const metaTags = [
       { name: 'description', content: postDescription },
