@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Calendar, Globe, ExternalLink, ArrowLeft } from "lucide-react";
 import SocialShareButtons from "@/components/social-share-buttons";
 import { NewsSEOHead } from "@/components/news-seo-head";
+import { McKinseyInsightCard } from "@/components/mckinsey-insight-card";
 
 export default function NewsDetail() {
   const params = useParams();
@@ -134,12 +135,52 @@ export default function NewsDetail() {
               </div>
             </div>
 
+            {/* McKinsey-style infographic for market insights */}
+            {postData.infographic && (
+              <div className="mb-6">
+                <McKinseyInsightCard insight={{ infographic: postData.infographic }} />
+              </div>
+            )}
+
             {/* Content */}
             <div className="prose dark:prose-invert max-w-none mb-6">
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
                 {postData.content}
               </p>
             </div>
+
+            {/* Data Points for Market Insights */}
+            {postData.dataPoints && postData.dataPoints.length > 0 && (
+              <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                  Key Data Points
+                </h3>
+                <ul className="space-y-2">
+                  {postData.dataPoints.map((point: string, idx: number) => (
+                    <li key={idx} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
+                      <span className="text-blue-500">•</span>
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Citations for Market Insights */}
+            {postData.citations && postData.citations.length > 0 && (
+              <div className="mb-6 p-4 border border-gray-200 dark:border-gray-800 rounded-lg">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                  Data Sources
+                </h3>
+                <ul className="space-y-1">
+                  {postData.citations.map((citation: string, idx: number) => (
+                    <li key={idx} className="text-xs text-gray-600 dark:text-gray-400">
+                      {idx + 1}. {citation}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* External Source Link */}
             {isExternal && sourceUrl && (

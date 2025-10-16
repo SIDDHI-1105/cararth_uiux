@@ -16,34 +16,67 @@ export class NewsFeedService {
   /**
    * Generate RSS 2.0 feed for Throttle Talk articles
    * Compatible with Zapier, IFTTT, Buffer, and other automation tools
+   * Includes Market Insights with proper backlinks
    */
   async generateRSSFeed(): Promise<string> {
     try {
-      const posts = await db
-        .select({
-          id: communityPosts.id,
-          title: communityPosts.title,
-          content: communityPosts.content,
-          category: communityPosts.category,
-          createdAt: communityPosts.createdAt,
-          author: users.firstName,
-        })
-        .from(communityPosts)
-        .leftJoin(users, eq(communityPosts.authorId, users.id))
-        .orderBy(desc(communityPosts.createdAt))
-        .limit(50);
+      const rssItems: RSSItem[] = [];
 
-      const rssItems: RSSItem[] = posts.map(post => ({
-        title: this.escapeXml(post.title || 'Untitled Post'),
-        description: this.escapeXml(this.truncateDescription(post.content || '')),
-        link: `https://cararth.com/news/${post.id}`,
-        pubDate: new Date(post.createdAt || Date.now()),
-        author: this.escapeXml(post.author || 'CarArth Community'),
-        category: this.escapeXml(post.category || 'General'),
-        guid: `cararth-news-${post.id}`,
-      }));
+      // Try to get community posts from database (may fail if table doesn't exist)
+      try {
+        const dbPosts = await db
+          .select({
+            id: communityPosts.id,
+            title: communityPosts.title,
+            content: communityPosts.content,
+            category: communityPosts.category,
+            createdAt: communityPosts.createdAt,
+            author: users.firstName,
+          })
+          .from(communityPosts)
+          .leftJoin(users, eq(communityPosts.authorId, users.id))
+          .orderBy(desc(communityPosts.createdAt))
+          .limit(40);
 
-      return this.buildRSSXML(rssItems);
+        dbPosts.forEach(post => {
+          rssItems.push({
+            title: this.escapeXml(post.title || 'Untitled Post'),
+            description: this.escapeXml(this.truncateDescription(post.content || '')),
+            link: `https://cararth.com/news/${post.id}`,
+            pubDate: new Date(post.createdAt || Date.now()),
+            author: this.escapeXml(post.author || 'CarArth Community'),
+            category: this.escapeXml(post.category || 'General'),
+            guid: `cararth-news-${post.id}`,
+          });
+        });
+      } catch (dbError) {
+        console.log('No community posts found, continuing with Market Insights only');
+      }
+
+      // Add Market Insights as RSS items with canonical URLs (priority content)
+      try {
+        const { mcKinseyInsightsService } = await import('./mcKinseyInsightsService.js');
+        const insights = await mcKinseyInsightsService.generateInfographicInsights('India Used Car Market Overview');
+        
+        insights.forEach((insight, idx) => {
+          rssItems.push({
+            title: this.escapeXml(insight.title),
+            description: this.escapeXml(insight.executiveSummary.replace(/\*\*/g, '')), // Remove markdown
+            link: `https://cararth.com/news/market-insight-${idx}`,
+            pubDate: new Date(insight.timestamp),
+            author: `CarArth x ${insight.powered_by}`,
+            category: 'Market Insights',
+            guid: `cararth-market-insight-${insight.id}`,
+          });
+        });
+      } catch (error) {
+        console.error('Market insights RSS error:', error);
+        // Continue without market insights if they fail
+      }
+
+      // Sort by date and limit to 50
+      rssItems.sort((a, b) => b.pubDate.getTime() - a.pubDate.getTime());
+      return this.buildRSSXML(rssItems.slice(0, 50));
     } catch (error) {
       console.error('❌ RSS feed generation error:', error);
       return this.buildEmptyRSSFeed();

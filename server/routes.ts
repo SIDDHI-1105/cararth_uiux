@@ -4286,6 +4286,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Individual news post route for SEO backlinks
+  app.get('/api/community/posts/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Check if it's a market insight ID
+      if (id.startsWith('market-insight-')) {
+        const { mcKinseyInsightsService } = await import('./mcKinseyInsightsService.js');
+        const insights = await mcKinseyInsightsService.generateInfographicInsights('India Used Car Market Overview');
+        const idx = parseInt(id.replace('market-insight-', ''));
+        const insight = insights[idx];
+        
+        if (insight) {
+          return res.json({
+            success: true,
+            post: {
+              id: id,
+              title: insight.title,
+              content: insight.executiveSummary,
+              author: insight.powered_by,
+              category: 'Market Insights',
+              publishedAt: insight.timestamp,
+              dataPoints: insight.keyMetrics.map(m => `${m.icon} ${m.metric}: ${m.value}`),
+              citations: insight.dataSources.map(s => s.name),
+              infographic: insight,
+            }
+          });
+        }
+      }
+      
+      // Otherwise fetch from database
+      const post = await db
+        .select({
+          id: communityPosts.id,
+          title: communityPosts.title,
+          content: communityPosts.content,
+          category: communityPosts.category,
+          createdAt: communityPosts.createdAt,
+          author: users.firstName,
+        })
+        .from(communityPosts)
+        .leftJoin(users, eq(communityPosts.authorId, users.id))
+        .where(eq(communityPosts.id, id))
+        .limit(1);
+
+      if (post.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: 'Post not found'
+        });
+      }
+
+      res.json({
+        success: true,
+        post: {
+          id: post[0].id,
+          title: post[0].title,
+          content: post[0].content,
+          author: post[0].author || 'CarArth Community',
+          category: post[0].category,
+          publishedAt: post[0].createdAt,
+        }
+      });
+    } catch (error) {
+      console.error('Fetch post error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch post'
+      });
+    }
+  });
+
   // RSS Feed for Social Media Automation (Zapier, IFTTT, Buffer)
   app.get('/feed/news.xml', async (req, res) => {
     try {
