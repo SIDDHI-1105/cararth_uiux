@@ -35,6 +35,7 @@ export interface ValidationResult {
   warnings: string[];
   vehicleId?: string;
   slug?: string;
+  reportId?: string;
 }
 
 /**
@@ -223,7 +224,7 @@ export async function quickAddVehicle(
       .where(eq(dealers.id, dealer.id));
 
     // 11. Create validation report
-    await db.insert(validationReports).values({
+    const [validationReport] = await db.insert(validationReports).values({
       dealerId: dealer.id,
       vehicleId: vehicleId,
       validationType: 'quick_add',
@@ -238,10 +239,11 @@ export async function quickAddVehicle(
         additionalImages: additionalImageErrors,
       },
       requiresReview: validationStatus === 'on_hold',
-    });
+    }).returning();
 
     result.vehicleId = vehicleId;
     result.slug = slug;
+    result.reportId = validationReport.id;
 
     return result;
   } catch (error) {

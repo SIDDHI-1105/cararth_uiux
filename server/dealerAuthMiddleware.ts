@@ -25,23 +25,20 @@ export async function authenticateDealer(
   next: NextFunction
 ): Promise<void> {
   try {
-    // Get API key from Authorization header
-    const authHeader = req.headers.authorization;
+    // Get API key from X-API-Key header (preferred) or Authorization header (fallback)
+    let apiKey = req.headers['x-api-key'] as string;
     
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      res.status(401).json({
-        success: false,
-        error: 'Missing or invalid Authorization header. Expected: Bearer <api_key>',
-      });
-      return;
+    if (!apiKey) {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        apiKey = authHeader.substring(7); // Remove "Bearer " prefix
+      }
     }
-
-    const apiKey = authHeader.substring(7); // Remove "Bearer " prefix
 
     if (!apiKey) {
       res.status(401).json({
         success: false,
-        error: 'API key is required',
+        error: 'Missing API key. Provide X-API-Key header or Authorization: Bearer <api_key>',
       });
       return;
     }
