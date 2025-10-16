@@ -13,88 +13,43 @@ Preferred communication style: Simple, everyday language.
 Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, and a clean REST API architecture.
 
 ### UI/UX Decisions
-- **Framework**: React 18 with TypeScript and Vite.
-- **Routing**: Wouter.
+- **Framework**: React 18 with TypeScript and Vite, using Wouter for routing.
 - **UI Components**: Radix UI primitives with shadcn/ui.
-- **Styling**: Tailwind CSS with custom design system.
-- **UI/UX**: Responsive design, dark/light mode, component composition, form validation, toast notifications, loading states.
+- **Styling**: Tailwind CSS with a custom design system, supporting responsive design and dark/light modes.
+- **General UI/UX**: Component composition, form validation, toast notifications, and loading states.
 
 ### Technical Implementations
 - **Frontend**: TanStack Query for state management, React Hook Form with Zod for forms.
-- **Backend**: Node.js with Express.js, TypeScript with ES modules, RESTful API, custom logging middleware, hot reload with Vite.
-- **Data Layer**: Drizzle ORM with PostgreSQL (Neon serverless driver), shared TypeScript schema definitions, Zod for runtime type checking, entities for Users, Cars, and Contacts.
-- **Authentication**: Session management using `connect-pg-simple`, user authentication with password handling, seller-based car listing ownership.
-- **Fast Search**: Batch ingestion, sub-second search responses with caching, cross-filter support, external cron services for ingestion.
-- **Search Result Deduplication**: Implemented portal+URL unique identifier to remove exact duplicate listings and quality filtering to remove spam listings.
+- **Backend**: Node.js with Express.js, TypeScript with ES modules, RESTful API, custom logging, and hot reload.
+- **Data Layer**: Drizzle ORM with PostgreSQL (Neon serverless driver), shared TypeScript schemas, Zod for runtime type checking, and entities for Users, Cars, and Contacts.
+- **Authentication**: Session management with `connect-pg-simple`, user authentication, and seller-based car listing ownership.
+- **Fast Search**: Batch ingestion, sub-second search responses with caching, cross-filter support, and external cron services for ingestion.
+- **Search Result Deduplication**: Utilizes portal+URL unique identifiers and quality filtering to remove duplicate and spam listings.
 - **Seller Contact & Notification System**: Uses `libphonenumber-js` for phone normalization, Twilio Business API for WhatsApp notifications, Nodemailer for email fallback, and smart retry logic.
-- **AI Search Engine Optimization**: Enhanced Schema.org structured data, AI-friendly robots.txt, comprehensive sitemap.xml, machine-readable data endpoint (`/api/ai-info`), static file serving.
-- **Scraper Monitoring**: Production-ready, self-healing system with persistent retry state, exponential backoff, and database-backed health logs for all scrapers. Includes an admin dashboard for real-time status.
-- **Trust Layer & Listing Validation Architecture** (October 2025):
-  - **Centralized Ingestion Service** (`server/listingIngestionService.ts`): ALL scrapers must route through `listingIngestionService.ingestListing()` which enforces mandatory Trust Layer validation before database save. Sets proper `verificationStatus` from Trust Layer's `finalVerificationStatus`.
-  - **Hardened Content Moderation** (`server/trustLayer.ts`): HIGH severity violations (not just critical) now REJECT listings. Spam keywords blacklisted: "finalise the loan", "loan approved", etc. Prevents spam from bypassing validation.
-  - **Strict Institutional Allowlist** (`server/trustLayer.ts`): Replaced broad keyword matching (`includes('bank')`, `includes('auction')`) with exact source matching from verified allowlist. Only institutional sources like "Maruti True Value", "Hyundai H-Promise", "EauctionsIndia - State Bank of India", "CarDekho" get special trust treatment. Note: CarDekho added to bypass broken perceptual hash algorithm (temporary workaround until proper image hashing library is implemented).
-  - **Defensive Storage Gate** (`server/dbStorage.ts`): Database layer validates Trust Layer result structure (requires `approved: boolean`, `trustScore: 0-100`, `issues: []`) and **ONLY saves approved listings**. Prevents bypass attempts and forged Trust Layer results.
-  - **All Scrapers Validated**: OLX, Facebook Marketplace, and batch ingestion updated to use centralized ingestion service. No scraper can bypass Trust Layer validation.
+- **AI Search Engine Optimization**: Enhanced Schema.org structured data, AI-friendly robots.txt, comprehensive sitemap.xml, machine-readable data endpoint (`/api/ai-info`), and static file serving.
+- **Scraper Monitoring**: Production-ready, self-healing system with persistent retry states, exponential backoff, database-backed health logs, and an admin dashboard.
+- **Trust Layer & Listing Validation**: Centralized ingestion service enforces mandatory Trust Layer validation (`listingIngestionService.ingestListing()`) before saving to the database. High severity violations lead to listing rejection. Strict institutional allowlist for trusted sources. Defensive storage gate at the database layer (`dbStorage.ts`) ensures only approved listings are saved.
+- **Scraper Implementations**: Includes a CarDekho scraper using axios + cheerio, Apify-powered scraping for OLX and Facebook Marketplace, and automated forum/marketplace scraping. All scrapers route through the centralized ingestion service.
 
 ### Feature Specifications
-- **Enterprise Partner Syndication**: Enables partners to post listings once for multi-platform distribution. Core components include partner source management, canonical listings, multi-LLM compliance pipeline (OpenAI, Gemini, Anthropic, Perplexity), and ingestion service. Supports webhook, manual batch, and Firecrawl/Crawl4AI scraping.
-- **Partner Self-Service Portal**: Intuitive dashboard for dealers to manage inventory with real-time marketplace updates. Features include shareable invite links, partner accounts with role-based access, instant cache invalidation, and a non-technical Add Listing form. Includes a Bulk Upload feature for CSV and media files with real-time progress tracking.
-- **Automated Forum & Marketplace Scraping**: Daily scraping from quality owner communities like Team-BHP Classifieds, TheAutomotiveIndia Marketplace, Quikr Cars, and Reddit r/CarsIndia.
-- **Apify-Powered Marketplace Scraping**: Automated scraping from OLX and Facebook Marketplace via Apify actors, running daily at 11:00 IST for 5 major cities (Hyderabad, Bangalore, Mumbai, Delhi, Pune). Includes health monitoring, retry logic, and admin manual trigger endpoints.
-- **CarDekho Scraper** (October 2025): Web scraping implementation using axios + cheerio to extract Hyderabad car listings. Runs twice daily (11:00 & 23:00 IST) as part of scheduler pipeline. Routes through Trust Layer validation with institutional source bypass (perceptual hash workaround). Supports manual admin triggers via `/api/admin/scrapers/marketplace/run`. Correctly converts Indian price formats (lakhs/crores) to rupees for consistent database storage.
-- **Real Market Intelligence**: SIAM sales data and Google Trends integration for price insights, showing market trends and popularity metrics for specific car models.
-- **Image-Based Quality Ranking**: Search results use image quality scoring (-15 to +18 points based on count/quality) for more relevant listings.
-- **Dynamic Hero Section**: Real-time statistics displayed on the homepage, showing total listings and platform counts, with data fetched from the database and updated frequently.
-- **Social Media Integration & Sharing**: 
-  - Active social media presence with Facebook, Instagram, and LinkedIn links in footer site-wide
-  - Car listing social sharing with Facebook, WhatsApp, LinkedIn, and native share support
-  - Server-side rendered Open Graph meta tags for optimal social previews
-  - Car-specific meta tags (title, description, image) for each listing
-  - Secure HTML escaping to prevent XSS attacks in shared content
-  - Schema.org structured data with safe JSON-LD serialization for crawlers
-- **xAI Grok Market Insights** (October 2025): AI-powered granular market intelligence engine for Hyderabad/Telangana used cars. Analyzes trends at model, variant, color, transmission, fuel type, and location level using real-time data from SIAM (wholesales), VAHAN (registrations), **Telangana Open Data Portal** (official RTA registrations), CarDekho (2,851 listings), Spinny (1,014 certified), and OLX. Features include:
-  - Deal quality scoring (0-100) with visual badges (Excellent/Good/Fair/Above Market/Premium)
-  - Price comparison against market averages with percentage difference
-  - Granular breakdown: model trends, variant analysis, color preferences, transmission/fuel patterns, Hyderabad-specific insights
-  - Source credibility with backlinks to SIAM, VAHAN, CarDekho, Spinny, OLX for SEO
-  - Fallback mode when API unavailable (uses cached market data)
-  - Accessible via `/market-insights` page with sample data button for demo
-- **Telangana RTA Data Integration** (October 2025): Official government data integration for market intelligence. Since VAHAAN doesn't adequately cover Telangana, implemented direct integration with Telangana Open Data Portal (data.telangana.gov.in) for authentic registration statistics. Features:
-  - FREE official data source from Telangana Government
-  - Monthly vehicle registration statistics by brand, model, fuel type, transmission, district
-  - Auto-sync capabilities for fresh data (no API costs)
-  - Integration with Grok AI for enhanced market analysis
-  - Admin endpoints: `/api/admin/telangana-rta/sync` (manual refresh), `/api/telangana-rta/status` (data status), `/api/telangana-rta/vehicle-stats` (specific vehicle stats)
-  - Database schema uses existing `vehicleRegistrations` table with `dataSource: 'Telangana Open Data Portal'`
-- **Telangana Market Intelligence** (October 2025): Real-time market insights for sellers and buyers using official Telangana RTA data. Zero-cost competitive advantage leveraging government data. Features:
-  - **Seller Experience**: "Get Market Insights" button on listing form shows demand score (HIGH/MEDIUM/LOW), buyer preferences (fuel/transmission), trending data, and district popularity
-  - **Buyer Experience**: Market Intelligence card on car detail pages for Telangana vehicles with registration statistics, demand trends, and authentic government data
-  - **Demand Scoring**: Intelligent scoring based on registration volume - HIGH (>100/month), MEDIUM (30-100/month), LOW (<30/month)
-  - **Trend Analysis**: Month-over-month trend calculation with visual indicators (📈 UP, 📉 DOWN, ➡️ STABLE)
-  - **Insights Generation**: AI-powered insights like "🔥 High demand! 523 registrations last month", "⛽ 67% prefer Petrol", "📍 Most popular in Hyderabad"
-  - **State Expansion**: "Coming Soon" placeholders for non-Telangana states to build anticipation
-  - **API Endpoint**: `/api/telangana-insights/:brand/:model?city=` for real-time market data
-  - **Service**: `telanganaInsightsService.ts` with comprehensive market intelligence queries
-- **Dealer Inventory Upload System** (October 2025): Production-ready dealer-facing platform for vehicle inventory management with strict validation and Google Vehicle Listing feed compliance. Features:
-  - **VIN Validation**: ISO 3779 checksum validation (position 9 check digit), 17-character format enforcement, duplicate detection across platform
-  - **Price Validation**: Outlier detection using market data percentiles (1.5x median check), prevents pricing fraud
-  - **Image Validation**: Minimum 800x600 dimensions, 5MB size limit, buffer integrity checks, supports up to 10 images per vehicle
-  - **Authentication**: API key-based auth with X-API-Key header support, monthly upload limits, rate limiting, dealer account management
-  - **Quick Add**: Single vehicle upload via POST `/api/dealer/:id/upload`, mobile-first form, live validation, instant feedback with warnings
-  - **Bulk CSV Upload**: Multi-vehicle upload via POST `/api/dealer/:id/upload/bulk`, CSV template provided, ZIP image support, batch processing
-  - **Validation Reports**: Persistent validation reports stored in database, accessible via GET `/api/dealer/:id/validation/:uploadId`, detailed error/warning tracking
-  - **Google Vehicle Feed**: Preview generator for Google Vehicle Listing feed compliance, structured data export
-  - **Dealer Dashboard**: React-based dashboard at `/dealer/dashboard`, API key login, Quick Add form, bulk upload interface, validation report viewer
-  - **Object Storage**: Google Cloud Storage integration for vehicle images, public URL generation, organized by dealer/vehicle hierarchy
-  - **Services**: `dealerService.ts` (core upload logic), `vinValidation.ts` (ISO 3779 checksum), `priceValidationService.ts` (outlier detection), `imageValidationService.ts` (dimension/size checks), `dealerAuthMiddleware.ts` (API key auth)
-  - **Database Schema**: Tables for dealers, dealer_vehicles, upload_batches, validation_reports, google_vehicle_feeds with proper relationships and indexing
-  - **Test Resources**: CSV upload template (`dealer_upload_template.csv`), shell test script (`dealer_api_test.sh`) for API testing
+- **Enterprise Partner Syndication**: Allows partners to post listings once for multi-platform distribution, including multi-LLM compliance (OpenAI, Gemini, Anthropic, Perplexity).
+- **Partner Self-Service Portal**: Dashboard for dealers to manage inventory, offering shareable invite links, role-based access, instant cache invalidation, and a non-technical Add Listing form with Bulk Upload (CSV and media files).
+- **Real Market Intelligence**: Integrates SIAM sales data and Google Trends for price insights, showing market trends and popularity.
+- **Image-Based Quality Ranking**: Search results incorporate image quality scoring for enhanced relevance.
+- **Dynamic Hero Section**: Displays real-time statistics on the homepage, such as total listings and platform counts.
+- **Social Media Integration & Sharing**: Active social media presence with footer links, car listing social sharing capabilities, and server-side rendered Open Graph meta tags for optimal social previews.
+- **xAI Grok Market Insights**: AI-powered granular market intelligence engine for Hyderabad/Telangana used cars, analyzing trends at model, variant, color, transmission, fuel type, and location levels using real-time data from SIAM, VAHAN, Telangana Open Data Portal, CarDekho, Spinny, and OLX. Provides deal quality scoring and price comparison against market averages.
+- **Telangana RTA Data Integration**: Direct integration with the Telangana Open Data Portal for authentic vehicle registration statistics, providing monthly data by brand, model, fuel type, transmission, and district.
+- **Telangana Market Intelligence**: Utilizes official Telangana RTA data to provide real-time market insights for sellers and buyers, including demand scoring, trend analysis, and AI-powered insights.
+- **Dealer Inventory Upload System**: Production-ready platform for vehicle inventory management with strict validation (VIN, price, image) and Google Vehicle Listing feed compliance. Features Quick Add, Bulk CSV Upload, validation reports, and a dealer dashboard.
+- **Dealer Performance Analytics Dashboard**: Interactive dashboard for Telangana dealers with real-time metrics, ML forecasts, and market benchmarks, including sales trend visualization, VAHAN ROI benchmark, and Telangana district analysis.
 
 ## External Dependencies
 
 ### Database & Storage
 - **Neon Database**: Serverless PostgreSQL hosting.
 - **connect-pg-simple**: PostgreSQL session store.
+- **Google Cloud Storage**: For vehicle images.
 
 ### UI & Styling
 - **Radix UI**: Accessible UI primitives for React.
@@ -115,6 +70,9 @@ Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, an
 ### Routing & Navigation
 - **Wouter**: Lightweight React router.
 
+### Data Visualization
+- **Recharts**: Composable charting library for React.
+
 ### LLM Providers
 - **OpenAI**: For ToS extraction and normalization.
 - **Google Gemini**: For PII detection.
@@ -124,10 +82,17 @@ Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, an
 
 ### Web Scraping
 - **Firecrawl**: Premium web scraping service with LLM-powered extraction.
-- **Crawl4AI**: Free, self-hosted web scraping with LLM extraction (used as backup/legacy).
-- **Apify**: Cloud-based web scraping and automation platform for OLX and Facebook Marketplace data extraction.
+- **Crawl4AI**: Free, self-hosted web scraping with LLM extraction.
+- **Apify**: Cloud-based web scraping and automation platform (for OLX and Facebook Marketplace).
+- **axios + cheerio**: For web scraping (e.g., CarDekho).
 
 ### Notification & Communication
 - **Twilio**: WhatsApp Business API for instant seller notifications.
 - **Nodemailer**: Email delivery service.
 - **libphonenumber-js**: International phone number normalization and validation.
+
+### Data Sources
+- **Telangana Open Data Portal**: Official government data for vehicle registration statistics.
+- **SIAM (Society of Indian Automobile Manufacturers)**: For sales data.
+- **Google Trends**: For market trend insights.
+- **VAHAN**: For vehicle registration data.
