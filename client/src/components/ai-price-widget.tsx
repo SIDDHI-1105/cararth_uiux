@@ -114,7 +114,7 @@ export default function AIPriceWidget({ onPriceEstimate, className = "" }: AIPri
                     </Badge>
                   </div>
                   <p className="text-sm text-gray-700 leading-relaxed">
-                    👋 Hi! I'm your AI pricing assistant powered by <strong>xAI Grok</strong>. I can help you get the best market price for your car using real-time data from SIAM, Telangana RTA, Spinny, CarDekho & OLX.
+                    👋 Hi! I'm your AI pricing assistant powered by <strong>CarArth x AI Grok</strong>. I can help you get the best market price for your car using real-time data from SIAM, Telangana RTA, Spinny, CarDekho & OLX.
                   </p>
                   <Button 
                     onClick={() => setIsExpanded(true)}

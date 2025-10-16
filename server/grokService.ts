@@ -204,6 +204,9 @@ export class GrokService {
       // Parse the AI response using the same parser as Grok
       const insight = this.parseGrokResponse(aiResponse, request);
       
+      // Override powered_by to show Perplexity branding
+      insight.powered_by = 'CarArth x Perplexity';
+      
       return insight;
     } catch (error) {
       console.error('Perplexity insight generation failed:', error);
@@ -315,7 +318,7 @@ Response format (JSON):
           } : null,
           sources: this.getSources(),
           timestamp: new Date().toISOString(),
-          powered_by: 'AI Market Intelligence'
+          powered_by: 'CarArth x AI Grok'
         };
       }
 
@@ -359,7 +362,7 @@ Response format (JSON):
       } : null,
       sources: this.getSources(),
       timestamp: new Date().toISOString(),
-      powered_by: 'AI Market Intelligence'
+      powered_by: 'CarArth x AI Grok'
     };
   }
 
@@ -420,7 +423,7 @@ Response format (JSON):
       } : null,
       sources: this.getSources(),
       timestamp: new Date().toISOString(),
-      powered_by: 'AI Market Intelligence'
+      powered_by: 'CarArth x AI Grok'
     };
   }
 
