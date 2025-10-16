@@ -20,9 +20,11 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, L
 
 export default function DealerDashboard() {
   const { toast } = useToast();
+  const [selectedOem, setSelectedOem] = useState(localStorage.getItem("selectedOem") || "");
+  const [selectedDealer, setSelectedDealer] = useState(localStorage.getItem("selectedDealer") || "");
   const [dealerId, setDealerId] = useState(localStorage.getItem("dealerId") || "");
-  const [apiKey, setApiKey] = useState(localStorage.getItem("dealerApiKey") || "");
-  const [isAuthenticated, setIsAuthenticated] = useState(!!dealerId && !!apiKey);
+  const [apiKey, setApiKey] = useState(""); // No longer needed for public dashboard
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Quick Add form state
   const [quickAddData, setQuickAddData] = useState({
@@ -46,19 +48,26 @@ export default function DealerDashboard() {
 
   // Performance Analytics state
   const [selectedMonth, setSelectedMonth] = useState("October 2025");
-  const [selectedOem, setSelectedOem] = useState("Hyundai");
+  const [performanceOem, setPerformanceOem] = useState("Hyundai");
 
-  // Fetch performance data
+  // Fetch dealers grouped by OEM (public endpoint)
+  const { data: dealersData } = useQuery({
+    queryKey: ['/api/dealers/by-oem'],
+    enabled: !isAuthenticated,
+  });
+
+  // Get dealers for selected OEM
+  const availableDealers = selectedOem && dealersData?.data?.[selectedOem] ? dealersData.data[selectedOem] : [];
+
+  // Fetch performance data (public endpoint)
   const { data: performanceData, isLoading: performanceLoading } = useQuery({
-    queryKey: ['/api/dealer', dealerId, 'performance', selectedMonth, selectedOem],
+    queryKey: ['/api/dealer', dealerId, 'performance', selectedMonth, performanceOem],
     queryFn: async () => {
-      const response = await fetch(`/api/dealer/${dealerId}/performance?month=${encodeURIComponent(selectedMonth)}&oem=${encodeURIComponent(selectedOem)}`, {
-        headers: { 'X-API-Key': apiKey }
-      });
+      const response = await fetch(`/api/dealer/${dealerId}/performance?month=${encodeURIComponent(selectedMonth)}&oem=${encodeURIComponent(performanceOem)}`);
       if (!response.ok) throw new Error('Failed to fetch performance data');
       return response.json();
     },
-    enabled: isAuthenticated && !!dealerId && !!apiKey
+    enabled: isAuthenticated && !!dealerId
   });
 
   // Login mutation

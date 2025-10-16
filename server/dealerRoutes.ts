@@ -84,7 +84,7 @@ router.post(
         year: parseInt(year),
         price: parseInt(price),
         mileage: parseInt(mileage),
-        condition: 'used', // Default to used
+        condition: 'used' as const, // Default to used
         fuelType,
         transmission,
         color,
@@ -344,6 +344,7 @@ router.post('/register', async (req: Request, res: Response) => {
   try {
     const {
       dealerName,
+      oemBrand,
       storeCode,
       contactPerson,
       email,
@@ -353,11 +354,11 @@ router.post('/register', async (req: Request, res: Response) => {
       state,
     } = req.body;
 
-    if (!dealerName || !storeCode || !contactPerson || !email || !phone || !address) {
+    if (!dealerName || !oemBrand || !storeCode || !contactPerson || !email || !phone || !address) {
       res.status(400).json({
         success: false,
         error: 'Missing required fields',
-        required: ['dealerName', 'storeCode', 'contactPerson', 'email', 'phone', 'address'],
+        required: ['dealerName', 'oemBrand', 'storeCode', 'contactPerson', 'email', 'phone', 'address'],
       });
       return;
     }
@@ -368,6 +369,7 @@ router.post('/register', async (req: Request, res: Response) => {
     // Create dealer
     const dealerData: InsertDealer = {
       dealerName,
+      oemBrand,
       storeCode,
       contactPerson,
       email,
