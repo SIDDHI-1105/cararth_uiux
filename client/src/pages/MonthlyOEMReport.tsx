@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TrendingUp, TrendingDown, Calendar, Activity, Award } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 
@@ -43,9 +45,36 @@ interface MonthlyReport {
 }
 
 export default function MonthlyOEMReport() {
+  const currentDate = new Date();
+  const [selectedMonth, setSelectedMonth] = useState(9); // Default: September (N-1)
+  const [selectedYear, setSelectedYear] = useState(2025);
+
   const { data: reportData, isLoading } = useQuery<MonthlyReport>({
-    queryKey: ['/api/dealer/analytics/monthly-report'],
+    queryKey: ['/api/dealer/analytics/monthly-report', selectedMonth, selectedYear],
+    queryFn: async () => {
+      const response = await fetch(`/api/dealer/analytics/monthly-report?month=${selectedMonth}&year=${selectedYear}`);
+      return response.json();
+    },
   });
+
+  // Generate month options
+  const months = [
+    { value: 1, label: 'January' },
+    { value: 2, label: 'February' },
+    { value: 3, label: 'March' },
+    { value: 4, label: 'April' },
+    { value: 5, label: 'May' },
+    { value: 6, label: 'June' },
+    { value: 7, label: 'July' },
+    { value: 8, label: 'August' },
+    { value: 9, label: 'September' },
+    { value: 10, label: 'October' },
+    { value: 11, label: 'November' },
+    { value: 12, label: 'December' },
+  ];
+
+  // Generate year options (last 3 years)
+  const years = [2023, 2024, 2025];
 
   if (isLoading) {
     return (
@@ -104,12 +133,40 @@ export default function MonthlyOEMReport() {
           <h1 className="text-3xl font-bold" data-testid="heading-report">OEM Monthly Performance Report</h1>
           <p className="text-muted-foreground mt-1" data-testid="text-report-period">
             <Calendar className="inline w-4 h-4 mr-1" />
-            {reportPeriod.label} (N-1 Month)
+            {reportPeriod.label}
           </p>
         </div>
-        <div className="text-right">
-          <p className="text-sm text-muted-foreground">Telangana State Total</p>
-          <p className="text-3xl font-bold" data-testid="text-state-total">{summary.stateTotal.toLocaleString()}</p>
+        <div className="flex items-center gap-4">
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Select Month</p>
+            <Select value={String(selectedMonth)} onValueChange={(val) => setSelectedMonth(Number(val))}>
+              <SelectTrigger className="w-[150px]" data-testid="select-month">
+                <SelectValue placeholder="Month" />
+              </SelectTrigger>
+              <SelectContent>
+                {months.map(m => (
+                  <SelectItem key={m.value} value={String(m.value)}>{m.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Select Year</p>
+            <Select value={String(selectedYear)} onValueChange={(val) => setSelectedYear(Number(val))}>
+              <SelectTrigger className="w-[120px]" data-testid="select-year">
+                <SelectValue placeholder="Year" />
+              </SelectTrigger>
+              <SelectContent>
+                {years.map(y => (
+                  <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="text-right">
+            <p className="text-sm text-muted-foreground">State Total</p>
+            <p className="text-2xl font-bold" data-testid="text-state-total">{summary.stateTotal.toLocaleString()}</p>
+          </div>
         </div>
       </div>
 
