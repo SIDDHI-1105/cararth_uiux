@@ -7644,6 +7644,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   }));
 
+  // Admin: Configure automated import settings
+  app.post('/api/admin/auto-import/configure', isAuthenticated, asyncHandler(async (req: any, res: any) => {
+    const user = req.user as any;
+    const userRole = user?.claims?.role || user?.role || 'user';
+
+    if (userRole !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const schema = z.object({
+      telanganaResourceId: z.string().optional(),
+    });
+
+    const { telanganaResourceId } = schema.parse(req.body);
+
+    const { dataAutoImportService } = await import('./dataAutoImportService.js');
+    
+    if (telanganaResourceId) {
+      dataAutoImportService.setTelanganaResourceId(telanganaResourceId);
+    }
+
+    res.json({
+      success: true,
+      message: 'Auto-import configuration updated',
+    });
+  }));
+
+  // Admin: Trigger automated import for latest month
+  app.post('/api/admin/auto-import/run-latest', isAuthenticated, asyncHandler(async (req: any, res: any) => {
+    const user = req.user as any;
+    const userRole = user?.claims?.role || user?.role || 'user';
+
+    if (userRole !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { dataAutoImportService } = await import('./dataAutoImportService.js');
+    const result = await dataAutoImportService.runMonthlyImport();
+
+    res.json(result);
+  }));
+
+  // Admin: Trigger automated import for specific month
+  app.post('/api/admin/auto-import/run-month', isAuthenticated, asyncHandler(async (req: any, res: any) => {
+    const user = req.user as any;
+    const userRole = user?.claims?.role || user?.role || 'user';
+
+    if (userRole !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const schema = z.object({
+      month: z.number().min(1).max(12),
+      year: z.number().min(2020).max(2030),
+    });
+
+    const { month, year } = schema.parse(req.body);
+
+    const { dataAutoImportService } = await import('./dataAutoImportService.js');
+    const result = await dataAutoImportService.importSpecificMonth(month, year);
+
+    res.json(result);
+  }));
+
+  // Admin: Start/stop scheduled imports
+  app.post('/api/admin/auto-import/schedule/:action', isAuthenticated, asyncHandler(async (req: any, res: any) => {
+    const user = req.user as any;
+    const userRole = user?.claims?.role || user?.role || 'user';
+
+    if (userRole !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const action = req.params.action;
+
+    if (action !== 'start' && action !== 'stop') {
+      return res.status(400).json({ error: 'Action must be "start" or "stop"' });
+    }
+
+    const { dataAutoImportService } = await import('./dataAutoImportService.js');
+    
+    if (action === 'start') {
+      dataAutoImportService.startScheduledImports();
+    } else {
+      dataAutoImportService.stopScheduledImports();
+    }
+
+    res.json({
+      success: true,
+      message: `Scheduled imports ${action}ed`,
+    });
+  }));
+
   const httpServer = createServer(app);
   return httpServer;
 }

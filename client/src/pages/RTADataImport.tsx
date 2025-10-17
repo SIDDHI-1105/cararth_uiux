@@ -8,6 +8,7 @@ import { Upload, FileText, CheckCircle, XCircle, AlertCircle, Download, Database
 import { apiRequest } from '@/lib/queryClient';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
+import { Zap, Calendar, Settings } from 'lucide-react';
 
 export default function RTADataImport() {
   const [file, setFile] = useState<File | null>(null);
@@ -21,6 +22,13 @@ export default function RTADataImport() {
   const [siamTotal, setSiamTotal] = useState<number>(372458);
   const [importingSiam, setImportingSiam] = useState(false);
   const [siamResult, setSiamResult] = useState<any>(null);
+  
+  // Automated import
+  const [autoImporting, setAutoImporting] = useState(false);
+  const [autoResult, setAutoResult] = useState<any>(null);
+  const [resourceId, setResourceId] = useState<string>('');
+  const [autoMonth, setAutoMonth] = useState<number>(9);
+  const [autoYear, setAutoYear] = useState<number>(2025);
   
   const { toast } = useToast();
 
@@ -147,6 +155,84 @@ KIA,Seltos,PETROL,2025-09-19,AUTOMATIC`;
     window.URL.revokeObjectURL(url);
   };
 
+  const handleAutoImportLatest = async () => {
+    setAutoImporting(true);
+    setAutoResult(null);
+
+    try {
+      const data = await apiRequest('/api/admin/auto-import/run-latest', 'POST', {});
+
+      setAutoResult(data);
+      
+      toast({
+        title: data.success ? 'Success' : 'Partial Success',
+        description: data.success ? 'Automated import completed' : `Import completed with ${data.errors?.length || 0} errors`,
+        variant: data.success ? 'default' : 'destructive',
+      });
+    } catch (error: any) {
+      const errorMessage = error.message || 'Auto-import failed';
+      setAutoResult({ success: false, errors: [errorMessage] });
+      
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: errorMessage,
+      });
+    } finally {
+      setAutoImporting(false);
+    }
+  };
+
+  const handleAutoImportMonth = async () => {
+    setAutoImporting(true);
+    setAutoResult(null);
+
+    try {
+      const data = await apiRequest('/api/admin/auto-import/run-month', 'POST', {
+        month: autoMonth,
+        year: autoYear,
+      });
+
+      setAutoResult(data);
+      
+      toast({
+        title: data.success ? 'Success' : 'Partial Success',
+        description: data.success ? `Imported ${autoMonth}/${autoYear}` : `Import completed with ${data.errors?.length || 0} errors`,
+        variant: data.success ? 'default' : 'destructive',
+      });
+    } catch (error: any) {
+      const errorMessage = error.message || 'Auto-import failed';
+      setAutoResult({ success: false, errors: [errorMessage] });
+      
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: errorMessage,
+      });
+    } finally {
+      setAutoImporting(false);
+    }
+  };
+
+  const handleConfigure = async () => {
+    try {
+      await apiRequest('/api/admin/auto-import/configure', 'POST', {
+        telanganaResourceId: resourceId,
+      });
+      
+      toast({
+        title: 'Success',
+        description: 'Auto-import configured',
+      });
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Configuration failed',
+      });
+    }
+  };
+
   return (
     <div className="container mx-auto p-6 max-w-4xl">
       <div className="mb-6">
@@ -156,11 +242,191 @@ KIA,Seltos,PETROL,2025-09-19,AUTOMATIC`;
         </p>
       </div>
 
-      <Tabs defaultValue="telangana" className="mb-6">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="telangana">Telangana RTA Data</TabsTrigger>
-          <TabsTrigger value="national">National (SIAM) Data</TabsTrigger>
+      <Tabs defaultValue="automated" className="mb-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="automated"><Zap className="w-4 h-4 mr-2" />Automated</TabsTrigger>
+          <TabsTrigger value="telangana">Manual CSV</TabsTrigger>
+          <TabsTrigger value="national">National (SIAM)</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="automated" className="space-y-6">
+          <Alert>
+            <Zap className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Fully Automated:</strong> Scrapes data directly from Telangana RTA Portal & SIAM press releases.
+              No manual CSV download required!
+            </AlertDescription>
+          </Alert>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Configuration</CardTitle>
+              <CardDescription>
+                One-time setup: Enter the Telangana RTA dataset resource ID
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="resource-id">Telangana RTA Resource ID</Label>
+                <Input
+                  id="resource-id"
+                  value={resourceId}
+                  onChange={(e) => setResourceId(e.target.value)}
+                  placeholder="e.g., cc9950ce-89aa-455b-847b-d87756db8f91"
+                  data-testid="input-resource-id"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Find this at:{' '}
+                  <a
+                    href="https://data.telangana.gov.in/dataset/regional-transport-authority-vehicle-registrations-data"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary underline"
+                  >
+                    Telangana Open Data Portal
+                  </a>
+                </p>
+              </div>
+              <Button onClick={handleConfigure} data-testid="button-configure">
+                <Settings className="w-4 h-4 mr-2" />
+                Save Configuration
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Import Latest Month</CardTitle>
+              <CardDescription>
+                Automatically fetch and import the latest available data from both sources
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button
+                onClick={handleAutoImportLatest}
+                disabled={autoImporting || !resourceId}
+                className="w-full"
+                size="lg"
+                data-testid="button-auto-import-latest"
+              >
+                {autoImporting ? (
+                  <>
+                    <Upload className="w-4 h-4 mr-2 animate-spin" />
+                    Importing...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-4 h-4 mr-2" />
+                    Run Automated Import (Latest Month)
+                  </>
+                )}
+              </Button>
+              {!resourceId && (
+                <p className="text-sm text-amber-600">
+                  Please configure Resource ID first
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Import Specific Month</CardTitle>
+              <CardDescription>
+                Import data for a specific month and year
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="auto-month">Month</Label>
+                  <Input
+                    id="auto-month"
+                    type="number"
+                    min="1"
+                    max="12"
+                    value={autoMonth}
+                    onChange={(e) => setAutoMonth(parseInt(e.target.value))}
+                    data-testid="input-auto-month"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="auto-year">Year</Label>
+                  <Input
+                    id="auto-year"
+                    type="number"
+                    min="2020"
+                    max="2030"
+                    value={autoYear}
+                    onChange={(e) => setAutoYear(parseInt(e.target.value))}
+                    data-testid="input-auto-year"
+                  />
+                </div>
+              </div>
+              <Button
+                onClick={handleAutoImportMonth}
+                disabled={autoImporting || !resourceId}
+                className="w-full"
+                data-testid="button-auto-import-month"
+              >
+                {autoImporting ? (
+                  <>
+                    <Upload className="w-4 h-4 mr-2 animate-spin" />
+                    Importing...
+                  </>
+                ) : (
+                  <>
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Import {autoMonth}/{autoYear}
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {autoResult && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  {autoResult.success ? (
+                    <CheckCircle className="text-green-500 h-5 w-5" />
+                  ) : (
+                    <XCircle className="text-red-500 h-5 w-5" />
+                  )}
+                  Import Result
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {autoResult.telanganaResult && (
+                  <div>
+                    <h4 className="font-medium">Telangana RTA:</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {autoResult.telanganaResult.message}
+                    </p>
+                  </div>
+                )}
+                {autoResult.siamResult && (
+                  <div>
+                    <h4 className="font-medium">SIAM National:</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {autoResult.siamResult.message}
+                    </p>
+                  </div>
+                )}
+                {autoResult.errors && autoResult.errors.length > 0 && (
+                  <div>
+                    <h4 className="font-medium text-red-500">Errors:</h4>
+                    <ul className="text-sm text-red-600 list-disc list-inside">
+                      {autoResult.errors.map((error: string, idx: number) => (
+                        <li key={idx}>{error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
 
         <TabsContent value="telangana" className="space-y-6">
           <Alert>
