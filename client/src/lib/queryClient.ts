@@ -51,7 +51,26 @@ export const getQueryFn: <T>(options: {
     // Get visitor ID for anonymous tracking
     const visitorId = await getVisitorId();
     
-    const res = await fetch(queryKey.join("/") as string, {
+    // Handle queryKey: build path from string/number elements, use last element as params if it's an object
+    let url: string;
+    const lastElement = queryKey[queryKey.length - 1];
+    const isLastElementParams = typeof lastElement === 'object' && lastElement !== null && !Array.isArray(lastElement);
+    
+    if (isLastElementParams) {
+      // Last element is params object, everything else is path segments
+      const pathSegments = queryKey.slice(0, -1);
+      const baseUrl = pathSegments.join('/');
+      const params = lastElement as Record<string, any>;
+      const queryString = new URLSearchParams(
+        Object.entries(params).map(([key, value]) => [key, String(value)])
+      ).toString();
+      url = queryString ? `${baseUrl}?${queryString}` : baseUrl;
+    } else {
+      // No params object, just join all elements as path
+      url = queryKey.join('/');
+    }
+    
+    const res = await fetch(url, {
       headers: {
         "X-Visitor-ID": visitorId,
       },
