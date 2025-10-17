@@ -9,12 +9,13 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { 
   MessageSquare, Eye, Calendar, Plus, 
   MessageCircle, Globe, ExternalLink, LogIn,
   Heart, Bookmark, Share2, ThumbsUp, TrendingUp,
-  Image as ImageIcon, Play
+  Image as ImageIcon, Play, BarChart3, Users
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useForm } from "react-hook-form";
@@ -26,6 +27,7 @@ import { AuthDialog } from "@/components/auth-dialog";
 import { NewsSEOHead, FAQSchemaMarkup } from "@/components/news-seo-head";
 import SocialShareButtons from "@/components/social-share-buttons";
 import { McKinseyInsightCard } from "@/components/mckinsey-insight-card";
+import MarketIntelligenceDashboard from "@/pages/MarketIntelligenceDashboard";
 
 interface ForumPost {
   id: string;
@@ -74,7 +76,8 @@ type BenchmarkFormData = z.infer<typeof benchmarkSchema>;
 
 // Clean, minimal community platform
 export default function ThrottleTalkPage() {
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [activeTab, setActiveTab] = useState('insights');
+  const [communityFilter, setCommunityFilter] = useState('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isBenchmarkDialogOpen, setIsBenchmarkDialogOpen] = useState(false);
   const { toast } = useToast();
@@ -104,7 +107,7 @@ export default function ThrottleTalkPage() {
   // Fetch market insights from Perplexity LLM
   const { data: marketInsightsData, isLoading: isMarketInsightsLoading } = useQuery({
     queryKey: ['/api/news/market-insights'],
-    enabled: selectedCategory === 'market',
+    enabled: activeTab === 'insights',
     refetchInterval: 3600000, // Refresh every hour
   });
 
@@ -204,7 +207,7 @@ export default function ThrottleTalkPage() {
   })) || [];
 
   // Convert market insights to post format for display
-  const marketInsightsPosts: ForumPost[] = selectedCategory === 'market' && (marketInsightsData as any)?.success ? 
+  const marketInsightsPosts: ForumPost[] = activeTab === 'insights' && (marketInsightsData as any)?.success ? 
     (marketInsightsData as any).insights.map((insight: any, index: number) => ({
       id: `market-insight-${index}`,
       title: insight.topic,
@@ -222,26 +225,22 @@ export default function ThrottleTalkPage() {
       infographic: insight.infographic, // McKinsey-style data
     })) : [];
 
-  // Combine RSS and user content
-  const allPosts = selectedCategory === 'market' ? 
-    marketInsightsPosts : 
-    [...userPosts, ...rssContent].slice(0, 20);
+  // Filter community posts based on selected filter
+  let communityPosts = [...userPosts, ...rssContent];
+  if (communityFilter === 'reviews') {
+    communityPosts = communityPosts.filter(p => p.category === 'Reviews');
+  } else if (communityFilter === 'questions') {
+    communityPosts = communityPosts.filter(p => p.category === 'Questions');
+  }
+  communityPosts = communityPosts.slice(0, 20);
 
-  const categories = [
-    { id: 'all', name: 'All Posts' },
-    { id: 'reviews', name: 'Reviews' },
-    { id: 'questions', name: 'Questions' },
-    { id: 'market', name: 'Market Insights' },
-    { id: 'community', name: 'Community' }
-  ];
-
-  if (isCommunityLoading || (selectedCategory === 'market' && isMarketInsightsLoading)) {
+  if (isCommunityLoading || (activeTab === 'insights' && isMarketInsightsLoading)) {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-950">
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
-            {selectedCategory === 'market' && (
+            {activeTab === 'insights' && (
               <p className="ml-3 text-gray-600 dark:text-gray-400">Analyzing market trends...</p>
             )}
           </div>
@@ -250,10 +249,13 @@ export default function ThrottleTalkPage() {
     );
   }
 
+  // Combine all posts for SEO
+  const allPostsForSEO = [...marketInsightsPosts, ...communityPosts];
+
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950">
       {/* SEO & Schema Markup */}
-      <NewsSEOHead posts={allPosts.map(p => ({ ...p, publishedAt: new Date(p.lastReply) }))} />
+      <NewsSEOHead posts={allPostsForSEO.map((p: ForumPost) => ({ ...p, publishedAt: new Date(p.lastReply) }))} />
       <FAQSchemaMarkup />
       
       {/* Clean header */}
@@ -495,48 +497,38 @@ export default function ThrottleTalkPage() {
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          
-          {/* Simple category filter */}
-          <div className="lg:col-span-1">
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-4">
-                Categories
-              </h3>
-              {categories.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className={cn(
-                    "w-full text-left px-3 py-2 text-sm rounded-md transition-colors",
-                    selectedCategory === category.id
-                      ? "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white"
-                      : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-900"
-                  )}
-                  data-testid={`button-category-${category.id}`}
-                >
-                  {category.name}
-                </button>
-              ))}
-            </div>
-          </div>
+      {/* Main content with tabs */}
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-8">
+            <TabsTrigger value="insights" className="flex items-center gap-2" data-testid="tab-insights">
+              <TrendingUp className="h-4 w-4" />
+              Market Insights
+            </TabsTrigger>
+            <TabsTrigger value="intelligence" className="flex items-center gap-2" data-testid="tab-intelligence">
+              <BarChart3 className="h-4 w-4" />
+              Market Intelligence
+            </TabsTrigger>
+            <TabsTrigger value="community" className="flex items-center gap-2" data-testid="tab-community">
+              <Users className="h-4 w-4" />
+              Community
+            </TabsTrigger>
+          </TabsList>
 
-          {/* Clean posts list */}
-          <div className="lg:col-span-3 space-y-4">
-            {allPosts.length === 0 ? (
+          {/* Market Insights Tab */}
+          <TabsContent value="insights" className="space-y-4">
+            {marketInsightsPosts.length === 0 ? (
               <div className="text-center py-12">
-                <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  No posts yet
+                  Loading market insights...
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Be the first to start a discussion
+                  AI-powered analysis of India's automotive market
                 </p>
               </div>
             ) : (
-              allPosts.map((post) => (
+              marketInsightsPosts.map((post) => (
                 <Card 
                   key={post.id} 
                   className="hover:shadow-sm transition-shadow cursor-pointer border border-gray-200 dark:border-gray-800" 
@@ -681,15 +673,137 @@ export default function ThrottleTalkPage() {
             )}
 
             {/* Simple load more */}
-            {allPosts.length > 0 && (
+            {marketInsightsPosts.length > 0 && (
               <div className="text-center pt-6">
                 <Button variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800">
-                  Load more posts
+                  Load more insights
                 </Button>
               </div>
             )}
-          </div>
-        </div>
+          </TabsContent>
+
+          {/* Market Intelligence Tab */}
+          <TabsContent value="intelligence">
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-6">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Updated monthly with OEM performance data and dealer analytics
+              </p>
+              <MarketIntelligenceDashboard />
+            </div>
+          </TabsContent>
+
+          {/* Community Tab */}
+          <TabsContent value="community" className="space-y-6">
+            {/* Filter for Reviews and Questions */}
+            <div className="flex gap-2 border-b border-gray-200 dark:border-gray-800">
+              <button
+                onClick={() => setCommunityFilter('all')}
+                className={cn(
+                  "px-4 py-2 text-sm font-medium transition-colors border-b-2",
+                  communityFilter === 'all'
+                    ? "border-gray-900 text-gray-900 dark:border-white dark:text-white"
+                    : "border-transparent text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                )}
+                data-testid="filter-all"
+              >
+                All
+              </button>
+              <button
+                onClick={() => setCommunityFilter('reviews')}
+                className={cn(
+                  "px-4 py-2 text-sm font-medium transition-colors border-b-2",
+                  communityFilter === 'reviews'
+                    ? "border-gray-900 text-gray-900 dark:border-white dark:text-white"
+                    : "border-transparent text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                )}
+                data-testid="filter-reviews"
+              >
+                Reviews
+              </button>
+              <button
+                onClick={() => setCommunityFilter('questions')}
+                className={cn(
+                  "px-4 py-2 text-sm font-medium transition-colors border-b-2",
+                  communityFilter === 'questions'
+                    ? "border-gray-900 text-gray-900 dark:border-white dark:text-white"
+                    : "border-transparent text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                )}
+                data-testid="filter-questions"
+              >
+                Questions
+              </button>
+            </div>
+
+            {/* Community Posts */}
+            <div className="space-y-4">
+              {communityPosts.length === 0 ? (
+                <div className="text-center py-12">
+                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                    No posts yet
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Be the first to start a discussion
+                  </p>
+                </div>
+              ) : (
+                communityPosts.map((post) => (
+                  <Card 
+                    key={post.id} 
+                    className="hover:shadow-sm transition-shadow cursor-pointer border border-gray-200 dark:border-gray-800" 
+                    data-testid={`card-post-${post.id}`}
+                    onClick={() => {
+                      if (post.isExternal && post.sourceUrl) {
+                        window.open(post.sourceUrl, '_blank');
+                      }
+                    }}
+                  >
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-4">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={post.authorImage} />
+                          <AvatarFallback className="bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                            {post.author.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-4 mb-2">
+                            <h3 className="font-medium text-gray-900 dark:text-white leading-tight">
+                              {post.title}
+                            </h3>
+                            {post.isExternal && (
+                              <ExternalLink className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                            )}
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-3">
+                            <span>by {post.author}</span>
+                            <Badge variant="outline" className="text-xs">
+                              {post.category}
+                            </Badge>
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {post.lastReply}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-6 text-sm text-gray-500 dark:text-gray-400">
+                            <span className="flex items-center gap-1">
+                              <MessageCircle className="h-4 w-4" />
+                              {post.replies} replies
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Eye className="h-4 w-4" />
+                              {post.views} views
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
