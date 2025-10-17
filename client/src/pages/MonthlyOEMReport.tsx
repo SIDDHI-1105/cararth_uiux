@@ -104,8 +104,14 @@ export default function MonthlyOEMReport() {
     'National': oem.nationalOEMCount,
   }));
 
-  // Prepare TG vs National market share trend chart
-  const uniqueMonths = Array.from(new Set(monthlyComparison.map(t => t.monthLabel))).sort();
+  // Prepare TG vs National market share trend chart - chronological order
+  const uniqueMonths = Array.from(new Set(monthlyComparison.map(t => t.monthLabel))).sort((a, b) => {
+    const [monthA, yearA] = a.split(' ');
+    const [monthB, yearB] = b.split(' ');
+    const dateA = new Date(`${monthA} 1, ${yearA}`);
+    const dateB = new Date(`${monthB} 1, ${yearB}`);
+    return dateA.getTime() - dateB.getTime();
+  });
   const marketShareTrendData = uniqueMonths.map(monthLabel => {
     const dataPoint: any = { month: monthLabel };
     performance.slice(0, 3).forEach(oem => {
@@ -118,14 +124,14 @@ export default function MonthlyOEMReport() {
     return dataPoint;
   });
 
-  // Prepare extended forecast chart (actual + predictions)
+  // Prepare extended forecast chart (last 6 months actual + next 3 months predictions)
   const extendedForecastData = (() => {
     if (predictions.length === 0) return [];
     
     // Get last 6 months of actual data
     const last6Months = uniqueMonths.slice(-6);
     const actualData = last6Months.map(monthLabel => {
-      const dataPoint: any = { month: monthLabel, type: 'Actual' };
+      const dataPoint: any = { month: monthLabel };
       performance.slice(0, 3).forEach(oem => {
         const tgData = monthlyComparison.find(t => t.brand === oem.brand && t.monthLabel === monthLabel);
         if (tgData) {
@@ -135,15 +141,15 @@ export default function MonthlyOEMReport() {
       return dataPoint;
     });
 
-    // Add predictions as extension
+    // Add next 3 months predictions: Oct, Nov, Dec 2025
     const predictionData = predictions[0].forecasts.map((f, idx) => {
       const monthNum = parseInt(f.month.substring(5, 7));
       const yearNum = parseInt(f.month.substring(0, 4));
       const monthLabel = `${new Date(yearNum, monthNum - 1).toLocaleString('default', { month: 'short' })} ${yearNum}`;
-      const dataPoint: any = { month: monthLabel, type: 'Forecast' };
+      const dataPoint: any = { month: monthLabel };
       predictions.forEach(p => {
         if (p.forecasts[idx]) {
-          dataPoint[p.brand] = p.forecasts[idx].predicted;
+          dataPoint[`${p.brand} (Forecast)`] = p.forecasts[idx].predicted;
         }
       });
       return dataPoint;
@@ -352,36 +358,29 @@ export default function MonthlyOEMReport() {
                 <YAxis label={{ value: 'Registrations', angle: -90, position: 'insideLeft' }} />
                 <Tooltip />
                 <Legend />
-                {performance.slice(0, 3).map((oem, idx) => {
-                  const actualLine = extendedForecastData.filter(d => d.type === 'Actual');
-                  const forecastLine = extendedForecastData.filter(d => d.type === 'Forecast');
-                  
-                  return (
-                    <React.Fragment key={oem.brand}>
-                      <Line 
-                        type="monotone" 
-                        dataKey={oem.brand} 
-                        data={actualLine}
-                        stroke={['#0088FE', '#00C49F', '#FFBB28'][idx]}
-                        strokeWidth={2}
-                        dot={{ fill: ['#0088FE', '#00C49F', '#FFBB28'][idx], r: 4 }}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey={oem.brand}
-                        data={forecastLine}
-                        stroke={['#0088FE', '#00C49F', '#FFBB28'][idx]}
-                        strokeWidth={2}
-                        strokeDasharray="5 5"
-                        dot={{ fill: ['#0088FE', '#00C49F', '#FFBB28'][idx], r: 4 }}
-                      />
-                    </React.Fragment>
-                  );
-                })}
+                {performance.slice(0, 3).map((oem, idx) => (
+                  <React.Fragment key={oem.brand}>
+                    <Line 
+                      type="monotone" 
+                      dataKey={oem.brand} 
+                      stroke={['#0088FE', '#00C49F', '#FFBB28'][idx]}
+                      strokeWidth={2}
+                      dot={{ fill: ['#0088FE', '#00C49F', '#FFBB28'][idx], r: 4 }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey={`${oem.brand} (Forecast)`}
+                      stroke={['#0088FE', '#00C49F', '#FFBB28'][idx]}
+                      strokeWidth={2}
+                      strokeDasharray="5 5"
+                      dot={{ fill: ['#0088FE', '#00C49F', '#FFBB28'][idx], r: 4 }}
+                    />
+                  </React.Fragment>
+                ))}
               </LineChart>
             </ResponsiveContainer>
             <p className="text-xs text-muted-foreground mt-2">
-              Solid lines: Historical data | Dashed lines: ML forecasts (SARIMA + Prophet hybrid model)
+              Last 6 months actual data → Next 3 months forecast (Oct, Nov, Dec 2025)
             </p>
           </CardContent>
         </Card>
