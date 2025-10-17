@@ -35,6 +35,7 @@ import ScraperStatus from "./pages/scraper-status";
 import SpinnyDeals from "./pages/spinny-deals";
 import FAQPage from "./pages/faq";
 import RTADataImport from "./pages/RTADataImport";
+import MarketIntelligenceDashboard from "./pages/MarketIntelligenceDashboard";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -76,6 +77,7 @@ function Router() {
       <Route path="/financing" component={FinancingPage} />
       <Route path="/admin/scraper-status" component={ScraperStatus} />
       <Route path="/admin/rta-import" component={RTADataImport} />
+      <Route path="/analytics/market-intelligence" component={MarketIntelligenceDashboard} />
       <Route path="/spinny-deals-hyderabad" component={SpinnyDeals} />
       <Route component={NotFound} />
     </Switch>

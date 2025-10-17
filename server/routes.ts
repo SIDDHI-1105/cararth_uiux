@@ -7737,6 +7737,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   }));
 
+  // =========================================================
+  // MARKET ANALYTICS & INTELLIGENCE ENDPOINTS
+  // =========================================================
+
+  // OEM Market Intelligence (SIAM National Data)
+  app.get('/api/analytics/oem-market', asyncHandler(async (req: any, res: any) => {
+    const { marketAnalyticsService } = await import('./marketAnalyticsService.js');
+    
+    const options = {
+      year: req.query.year ? parseInt(req.query.year) : undefined,
+      month: req.query.month ? parseInt(req.query.month) : undefined,
+      brand: req.query.brand,
+      forecast: req.query.forecast === 'true'
+    };
+    
+    const result = await marketAnalyticsService.getOEMMarketIntelligence(options);
+    res.json(result);
+  }));
+
+  // Telangana RTA Market Intelligence
+  app.get('/api/analytics/telangana-market', asyncHandler(async (req: any, res: any) => {
+    const { marketAnalyticsService } = await import('./marketAnalyticsService.js');
+    
+    const options = {
+      year: req.query.year ? parseInt(req.query.year) : undefined,
+      month: req.query.month ? parseInt(req.query.month) : undefined,
+      brand: req.query.brand,
+      city: req.query.city,
+      forecast: req.query.forecast === 'true'
+    };
+    
+    const result = await marketAnalyticsService.getTelanganaMarketIntelligence(options);
+    res.json(result);
+  }));
+
+  // Get All Dealers (for dropdown)
+  app.get('/api/analytics/dealers', asyncHandler(async (req: any, res: any) => {
+    const { marketAnalyticsService } = await import('./marketAnalyticsService.js');
+    const result = await marketAnalyticsService.getAllDealers();
+    res.json(result);
+  }));
+
+  // Dealer Performance Analytics (with market comparison)
+  app.get('/api/analytics/dealer-performance/:dealerId', asyncHandler(async (req: any, res: any) => {
+    const { marketAnalyticsService } = await import('./marketAnalyticsService.js');
+    const dealerId = req.params.dealerId;
+    
+    const options = {
+      compareToMarket: req.query.compareToMarket === 'true',
+      forecast: req.query.forecast === 'true'
+    };
+    
+    const result = await marketAnalyticsService.getDealerPerformance(dealerId, options);
+    res.json(result);
+  }));
+
   const httpServer = createServer(app);
   return httpServer;
 }

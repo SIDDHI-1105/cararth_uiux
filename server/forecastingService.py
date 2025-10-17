@@ -19,13 +19,22 @@ def prepare_data(records):
     df = pd.DataFrame(records)
     df['date'] = pd.to_datetime(df['year'].astype(str) + '-' + df['month'].astype(str) + '-01')
     df = df.sort_values('date')
+    
+    # Handle both SIAM data (units_sold) and RTA data (registrations_count)
+    if 'units_sold' in df.columns:
+        df['value'] = df['units_sold']
+    elif 'registrations_count' in df.columns:
+        df['value'] = df['registrations_count']
+    else:
+        raise ValueError("Data must contain either 'units_sold' or 'registrations_count' column")
+    
     return df
 
 def sarima_forecast(df, periods=6):
     """SARIMA forecasting with seasonal patterns (monthly seasonality)"""
     try:
         # Aggregate to monthly totals
-        monthly = df.groupby('date')['registrations_count'].sum().reset_index()
+        monthly = df.groupby('date')['value'].sum().reset_index()
         monthly.columns = ['date', 'value']
         
         # SARIMA(1,1,1)(1,1,1,12) - seasonal period of 12 months
@@ -66,7 +75,7 @@ def prophet_forecast(df, periods=6):
     """Prophet forecasting with automatic seasonality detection"""
     try:
         # Prepare data for Prophet
-        monthly = df.groupby('date')['registrations_count'].sum().reset_index()
+        monthly = df.groupby('date')['value'].sum().reset_index()
         monthly.columns = ['ds', 'y']
         
         # Initialize Prophet with Indian holidays
