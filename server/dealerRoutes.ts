@@ -677,7 +677,7 @@ router.get(
             percentileRank: 50
           },
           telanganaDistricts: [],
-          mlForecastBreakdown: {
+          mlForecast: {
             total: Math.round(baseSales * 1.1),
             components: [
               { name: 'Current Inventory', value: baseSales, percentage: 90.9 },
