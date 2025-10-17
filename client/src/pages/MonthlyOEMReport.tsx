@@ -51,6 +51,7 @@ export default function MonthlyOEMReport() {
   const currentDate = new Date();
   const [selectedMonth, setSelectedMonth] = useState(9); // Default: September (N-1)
   const [selectedYear, setSelectedYear] = useState(2025);
+  const [selectedOEM, setSelectedOEM] = useState<string>('all'); // Default show all
 
   const { data: reportData, isLoading } = useQuery<MonthlyReport>({
     queryKey: ['/api/dealer/analytics/monthly-report', selectedMonth, selectedYear],
@@ -127,26 +128,31 @@ export default function MonthlyOEMReport() {
   // Get brands that have predictions
   const predictedBrands = predictions.map(p => p.brand);
   
+  // Filter predictions based on selected OEM
+  const filteredPredictions = selectedOEM === 'all' 
+    ? predictions 
+    : predictions.filter(p => p.brand === selectedOEM);
+  
   // Prepare extended forecast chart (last 6 months actual + next 3 months predictions)
   const extendedForecastData = (() => {
-    if (predictions.length === 0) return [];
+    if (filteredPredictions.length === 0) return [];
     
-    // Get last 6 months of actual data for brands with predictions
+    // Get last 6 months of actual data for selected brands
     const last6Months = uniqueMonths.slice(-6);
     const actualData = last6Months.map(monthLabel => {
       const dataPoint: any = { month: monthLabel };
-      predictedBrands.forEach(brand => {
-        const tgData = monthlyComparison.find(t => t.brand === brand && t.monthLabel === monthLabel);
+      filteredPredictions.forEach(pred => {
+        const tgData = monthlyComparison.find(t => t.brand === pred.brand && t.monthLabel === monthLabel);
         if (tgData) {
-          dataPoint[`${brand} (TG)`] = tgData.tgRegistrations;
-          dataPoint[`${brand} (India)`] = tgData.nationalRegistrations;
+          dataPoint[`${pred.brand} (TG)`] = tgData.tgRegistrations;
+          dataPoint[`${pred.brand} (India)`] = tgData.nationalRegistrations;
         }
       });
       return dataPoint;
     });
 
     // Add next 3 months predictions: Oct, Nov, Dec 2025
-    const firstPrediction = predictions[0];
+    const firstPrediction = filteredPredictions[0];
     if (!firstPrediction.telangana) {
       return []; // Skip if old format or no data
     }
@@ -156,7 +162,7 @@ export default function MonthlyOEMReport() {
       const yearNum = parseInt(f.month.substring(0, 4));
       const monthLabel = `${new Date(yearNum, monthNum - 1).toLocaleString('default', { month: 'short' })} ${yearNum}`;
       const dataPoint: any = { month: monthLabel };
-      predictions.forEach((p: any) => {
+      filteredPredictions.forEach((p: any) => {
         if (p.telangana && p.telangana[idx]) {
           dataPoint[`${p.brand} (TG Forecast)`] = p.telangana[idx].predicted;
         }
@@ -182,6 +188,20 @@ export default function MonthlyOEMReport() {
           </p>
         </div>
         <div className="flex items-center gap-4">
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Select OEM</p>
+            <Select value={selectedOEM} onValueChange={setSelectedOEM}>
+              <SelectTrigger className="w-[180px]" data-testid="select-oem">
+                <SelectValue placeholder="OEM Brand" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Brands</SelectItem>
+                {performance.map(oem => (
+                  <SelectItem key={oem.brand} value={oem.brand}>{oem.brand}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div>
             <p className="text-xs text-muted-foreground mb-1">Select Month</p>
             <Select value={String(selectedMonth)} onValueChange={(val) => setSelectedMonth(Number(val))}>
@@ -370,7 +390,7 @@ export default function MonthlyOEMReport() {
                 <YAxis label={{ value: 'Registrations', angle: -90, position: 'insideLeft' }} />
                 <Tooltip />
                 <Legend />
-                {predictions.map((pred, idx) => {
+                {filteredPredictions.map((pred, idx) => {
                   const colors = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82ca9d', '#ffc658', '#ff7c7c'];
                   const color = colors[idx % colors.length];
                   return (
