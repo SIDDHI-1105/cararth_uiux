@@ -1,0 +1,4 @@
+VIN,Make,Model,Year,Price,Mileage,Fuel Type,Transmission,Owner Count,City,Description
+MA3EYEB1S00612345,Maruti Suzuki,Swift,2020,550000,25000,Petrol,Manual,1,Hyderabad,Well maintained Swift with full service history
+,Hyundai,i20,2019,600000,30000,Diesel,Manual,1,Secunderabad,Single owner i20 in excellent condition
+,Tata,Nexon,2021,900000,15000,Petrol,Automatic,1,Hyderabad,Low mileage Nexon with all features

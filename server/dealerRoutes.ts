@@ -32,6 +32,27 @@ const upload = multer({
   },
 });
 
+// Configure multer for CSV bulk uploads
+const csvUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB for CSV
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept various CSV MIME types (Excel, text, etc.) and case-insensitive extensions
+    const isCSV = file.mimetype === 'text/csv' || 
+                  file.mimetype === 'application/vnd.ms-excel' ||
+                  file.mimetype === 'application/csv' ||
+                  file.originalname.toLowerCase().endsWith('.csv');
+    
+    if (isCSV) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only CSV files are allowed'));
+    }
+  },
+});
+
 /**
  * POST /api/dealer/:id/upload
  * Upload single vehicle with images (mobile-first Quick Add)
@@ -138,51 +159,129 @@ router.post(
 
 /**
  * POST /api/dealer/:id/upload/bulk
- * Bulk CSV upload with optional image ZIP
+ * Bulk CSV upload - Simple format for dealer inventory
  * Requires: X-API-Key header
+ * CSV Format: VIN,Make,Model,Year,Price,Mileage,Fuel Type,Transmission,Owner Count,City,Description
  */
 router.post(
   '/:id/upload/bulk',
   authenticateDealer,
-  upload.fields([
-    { name: 'csvFile', maxCount: 1 },
-    { name: 'imageZip', maxCount: 1 },
-  ]),
+  csvUpload.single('csvFile'),
   async (req: Request, res: Response) => {
     try {
       const dealer = req.dealer as Dealer;
-      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const csvFile = req.file;
 
       // Validate CSV file
-      if (!files.csvFile || files.csvFile.length === 0) {
+      if (!csvFile) {
         res.status(400).json({
           success: false,
-          error: 'CSV file is required',
+          message: 'CSV file is required',
         });
         return;
       }
 
-      const csvFile = files.csvFile[0];
-      const imageZip = files.imageZip?.[0];
+      // Parse CSV file
+      const { parse } = await import('csv-parse/sync');
+      const csvContent = csvFile.buffer.toString('utf-8');
+      
+      const records = parse(csvContent, {
+        columns: true,
+        skip_empty_lines: true,
+        trim: true,
+      });
 
-      // TODO: Implement CSV parsing and bulk vehicle upload
-      // For now, return a placeholder response
-      res.status(201).json({
-        success: true,
-        batchId: `batch_${Date.now()}`,
+      // Process each vehicle
+      const results = {
+        total: records.length,
+        successCount: 0,
+        errorCount: 0,
+        warningCount: 0,
+        errors: [] as any[],
+        warnings: [] as any[],
+      };
+
+      for (let i = 0; i < records.length; i++) {
+        const record = records[i] as any; // CSV record with dynamic columns
+        try {
+          // Validate required fields
+          const requiredFields = ['Make', 'Model', 'Year', 'Price', 'Mileage', 'Fuel Type', 'Transmission', 'City', 'Description'];
+          const missingFields = requiredFields.filter(field => !record[field] || record[field].trim() === '');
+          
+          if (missingFields.length > 0) {
+            results.errorCount++;
+            results.errors.push({
+              row: i + 2, // +2 because row 1 is headers and arrays are 0-indexed
+              error: `Missing required fields: ${missingFields.join(', ')}`,
+              data: record,
+            });
+            continue;
+          }
+
+          // Validate numeric fields
+          const year = parseInt(record.Year);
+          const price = parseInt(record.Price);
+          const mileage = parseInt(record.Mileage);
+          
+          if (isNaN(year) || year < 1900 || year > new Date().getFullYear() + 1) {
+            results.errorCount++;
+            results.errors.push({
+              row: i + 2,
+              error: `Invalid Year: ${record.Year}. Must be a number between 1900 and ${new Date().getFullYear() + 1}`,
+              data: record,
+            });
+            continue;
+          }
+
+          if (isNaN(price) || price <= 0) {
+            results.errorCount++;
+            results.errors.push({
+              row: i + 2,
+              error: `Invalid Price: ${record.Price}. Must be a positive number`,
+              data: record,
+            });
+            continue;
+          }
+
+          if (isNaN(mileage) || mileage < 0) {
+            results.errorCount++;
+            results.errors.push({
+              row: i + 2,
+              error: `Invalid Mileage: ${record.Mileage}. Must be a non-negative number`,
+              data: record,
+            });
+            continue;
+          }
+
+          // Data is valid - count as success
+          results.successCount++;
+        } catch (error: any) {
+          results.errorCount++;
+          results.errors.push({
+            row: i + 2,
+            error: error.message || 'Unknown error processing row',
+            data: record,
+          });
+        }
+      }
+
+      res.status(200).json({
+        success: results.errorCount === 0,
         summary: {
-          total: 0,
-          successCount: 0,
-          errorCount: 0,
-          warningCount: 0,
+          total: results.total,
+          validated: results.successCount,
+          errors: results.errorCount,
         },
-        message: 'Bulk upload feature coming soon. Currently processing CSV format validation.',
+        errors: results.errors,
+        message: results.errorCount === 0 
+          ? `✅ Successfully validated ${results.successCount} vehicle${results.successCount > 1 ? 's' : ''}. All data is correct!`
+          : `❌ Found ${results.errorCount} error${results.errorCount > 1 ? 's' : ''} in ${results.total} rows. Please fix the errors and re-upload.`,
       });
     } catch (error) {
       console.error('Bulk upload error:', error);
       res.status(500).json({
         success: false,
-        error: 'Failed to process bulk upload',
+        message: error instanceof Error ? error.message : 'Failed to process bulk upload',
       });
     }
   }

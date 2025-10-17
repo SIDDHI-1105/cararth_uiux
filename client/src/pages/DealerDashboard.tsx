@@ -44,7 +44,7 @@ export default function DealerDashboard() {
 
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [csvFile, setCsvFile] = useState<File | null>(null);
-  const [imageZip, setImageZip] = useState<File | null>(null);
+  const [validationResult, setValidationResult] = useState<any>(null);
 
   // Performance Analytics state
   const [selectedMonth, setSelectedMonth] = useState("October 2025");
@@ -170,9 +170,6 @@ export default function DealerDashboard() {
 
       const formData = new FormData();
       formData.append("csvFile", csvFile);
-      if (imageZip) {
-        formData.append("imageZip", imageZip);
-      }
 
       const response = await fetch(`/api/dealer/${dealerId}/upload/bulk`, {
         method: "POST",
@@ -182,25 +179,33 @@ export default function DealerDashboard() {
         body: formData,
       });
 
+      const result = await response.json();
+      
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Bulk upload failed");
+        throw new Error(result.message || "Validation failed");
       }
 
-      return response.json();
+      return result;
     },
     onSuccess: (data) => {
-      toast({
-        title: "Bulk upload successful",
-        description: `Batch ID: ${data.batchId}. ${data.summary.successCount} vehicles uploaded.`,
-      });
-      setCsvFile(null);
-      setImageZip(null);
-      queryClient.invalidateQueries({ queryKey: ["/api/dealer", dealerId, "vehicles"] });
+      setValidationResult(data);
+      if (data.success) {
+        toast({
+          title: "✅ CSV Validated",
+          description: data.message,
+        });
+        setCsvFile(null);
+      } else {
+        toast({
+          title: "❌ Validation Errors",
+          description: data.message,
+          variant: "destructive",
+        });
+      }
     },
     onError: (error: Error) => {
       toast({
-        title: "Bulk upload failed",
+        title: "Upload failed",
         description: error.message,
         variant: "destructive",
       });
@@ -767,7 +772,7 @@ export default function DealerDashboard() {
               <CardHeader>
                 <CardTitle>Bulk CSV Upload</CardTitle>
                 <CardDescription>
-                  Upload multiple vehicles at once using our CSV template
+                  Upload multiple vehicles at once using our simple CSV format
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -779,7 +784,7 @@ export default function DealerDashboard() {
                         Download CSV Template
                       </p>
                       <p className="text-sm text-blue-700 dark:text-blue-300">
-                        Use this template to format your vehicle data
+                        Simple format: VIN, Make, Model, Year, Price, Mileage, Fuel Type, Transmission, Owner Count, City, Description
                       </p>
                     </div>
                     <Button
@@ -787,8 +792,8 @@ export default function DealerDashboard() {
                       data-testid="button-download-template"
                       onClick={() => {
                         const link = document.createElement("a");
-                        link.href = "/dealer_upload_template.csv";
-                        link.download = "cararth_dealer_template.csv";
+                        link.href = "/bulk-upload-template.csv";
+                        link.download = "cararth_bulk_upload.csv";
                         link.click();
                       }}
                     >
@@ -798,29 +803,18 @@ export default function DealerDashboard() {
 
                   <form onSubmit={handleBulkUpload} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="csvFile">CSV File</Label>
+                      <Label htmlFor="csvFile">Upload CSV File</Label>
                       <Input
                         id="csvFile"
                         data-testid="input-csv-file"
                         type="file"
                         accept=".csv"
-                        onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
+                        onChange={(e) => {
+                          setCsvFile(e.target.files?.[0] || null);
+                          setValidationResult(null);
+                        }}
                         required
                       />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="imageZip">Images ZIP (Optional)</Label>
-                      <Input
-                        id="imageZip"
-                        data-testid="input-image-zip"
-                        type="file"
-                        accept=".zip"
-                        onChange={(e) => setImageZip(e.target.files?.[0] || null)}
-                      />
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Upload a ZIP file containing vehicle images. Name images to match VIN.
-                      </p>
                     </div>
 
                     <Button
@@ -829,9 +823,41 @@ export default function DealerDashboard() {
                       className="w-full"
                       disabled={bulkUploadMutation.isPending}
                     >
-                      {bulkUploadMutation.isPending ? "Uploading..." : "Upload CSV"}
+                      {bulkUploadMutation.isPending ? "Validating..." : "Validate CSV"}
                     </Button>
                   </form>
+
+                  {validationResult && (
+                    <div className={`p-4 rounded-lg ${validationResult.success ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'}`}>
+                      <div className="flex items-start gap-2">
+                        {validationResult.success ? (
+                          <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5" />
+                        ) : (
+                          <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
+                        )}
+                        <div className="flex-1">
+                          <p className={`font-medium ${validationResult.success ? 'text-green-900 dark:text-green-100' : 'text-red-900 dark:text-red-100'}`}>
+                            {validationResult.message}
+                          </p>
+                          <div className="mt-2 text-sm">
+                            <p className={validationResult.success ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'}>
+                              Total rows: {validationResult.summary.total} | Validated: {validationResult.summary.validated} | Errors: {validationResult.summary.errors}
+                            </p>
+                          </div>
+                          {validationResult.errors && validationResult.errors.length > 0 && (
+                            <div className="mt-3 space-y-1">
+                              <p className="text-sm font-medium text-red-800 dark:text-red-200">Errors found:</p>
+                              {validationResult.errors.map((err: any, idx: number) => (
+                                <p key={idx} className="text-sm text-red-700 dark:text-red-300">
+                                  Row {err.row}: {err.error}
+                                </p>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
