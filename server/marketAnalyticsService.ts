@@ -1,7 +1,12 @@
 import { spawn } from 'child_process';
-import { db } from './dbStorage.js';
+import { drizzle } from 'drizzle-orm/neon-http';
+import { neon } from '@neondatabase/serverless';
 import { siamSalesData, vehicleRegistrations, dealers, dealerVehicles } from '../shared/schema.js';
 import { eq, and, gte, lte, desc, sql } from 'drizzle-orm';
+
+// Initialize database connection
+const sqlConnection = neon(process.env.DATABASE_URL!);
+const db = drizzle(sqlConnection);
 
 /**
  * Market Analytics Service

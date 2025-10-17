@@ -14,6 +14,12 @@ from statsmodels.tsa.statespace.sarimax import SARIMAX
 import warnings
 warnings.filterwarnings('ignore')
 
+def sanitize_nan(value):
+    """Convert NaN to None for JSON serialization"""
+    if pd.isna(value) or (isinstance(value, float) and np.isnan(value)):
+        return None
+    return value
+
 def prepare_data(records):
     """Convert JSON records to time series dataframe"""
     df = pd.DataFrame(records)
@@ -65,8 +71,8 @@ def sarima_forecast(df, periods=6):
                 }
                 for i, (date, val) in enumerate(zip(forecast_dates, forecast))
             ],
-            'aic': float(fitted.aic),
-            'bic': float(fitted.bic)
+            'aic': sanitize_nan(fitted.aic),
+            'bic': sanitize_nan(fitted.bic)
         }
     except Exception as e:
         return {'error': f'SARIMA failed: {str(e)}'}
