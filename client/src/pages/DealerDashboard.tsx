@@ -44,6 +44,8 @@ export default function DealerDashboard() {
 
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [bulkImages, setBulkImages] = useState<File[]>([]);
+  const [bulkDocuments, setBulkDocuments] = useState<File[]>([]);
   const [validationResult, setValidationResult] = useState<any>(null);
 
   // Performance Analytics state
@@ -170,6 +172,16 @@ export default function DealerDashboard() {
 
       const formData = new FormData();
       formData.append("csvFile", csvFile);
+      
+      // Add all images
+      bulkImages.forEach((img) => {
+        formData.append("images", img);
+      });
+      
+      // Add all documents (RC and Insurance PDFs)
+      bulkDocuments.forEach((doc) => {
+        formData.append("documents", doc);
+      });
 
       const response = await fetch(`/api/dealer/${dealerId}/upload/bulk`, {
         method: "POST",
@@ -191,10 +203,12 @@ export default function DealerDashboard() {
       setValidationResult(data);
       if (data.success) {
         toast({
-          title: "✅ CSV Validated",
+          title: "✅ Files Validated",
           description: data.message,
         });
         setCsvFile(null);
+        setBulkImages([]);
+        setBulkDocuments([]);
       } else {
         toast({
           title: "❌ Validation Errors",
@@ -770,9 +784,9 @@ export default function DealerDashboard() {
           <TabsContent value="bulk-upload">
             <Card>
               <CardHeader>
-                <CardTitle>Bulk CSV Upload</CardTitle>
+                <CardTitle>Bulk Vehicle Upload</CardTitle>
                 <CardDescription>
-                  Upload multiple vehicles at once using our simple CSV format
+                  Upload multiple vehicles with images, RC, and insurance documents
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -784,7 +798,7 @@ export default function DealerDashboard() {
                         Download CSV Template
                       </p>
                       <p className="text-sm text-blue-700 dark:text-blue-300">
-                        Simple format: VIN, Make, Model, Year, Price, Mileage, Fuel Type, Transmission, Owner Count, City, Description
+                        Format: VIN, Make, Model, Year, Price, Mileage, Fuel Type, Transmission, Owner Count, City, Description
                       </p>
                     </div>
                     <Button
@@ -801,9 +815,20 @@ export default function DealerDashboard() {
                     </Button>
                   </div>
 
+                  <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                    <p className="text-sm font-medium text-amber-900 dark:text-amber-100 mb-2">
+                      📋 File Naming Convention:
+                    </p>
+                    <ul className="text-sm text-amber-800 dark:text-amber-200 space-y-1 list-disc list-inside">
+                      <li>Images: <code className="bg-amber-100 dark:bg-amber-900 px-1 rounded">{"{VIN}_1.jpg, {VIN}_2.jpg, {VIN}_3.jpg"}</code> (at least 3)</li>
+                      <li>RC: <code className="bg-amber-100 dark:bg-amber-900 px-1 rounded">{"{VIN}_RC.pdf"}</code> or <code className="bg-amber-100 dark:bg-amber-900 px-1 rounded">{"{VIN}_registration.pdf"}</code></li>
+                      <li>Insurance: <code className="bg-amber-100 dark:bg-amber-900 px-1 rounded">{"{VIN}_insurance.pdf"}</code> or <code className="bg-amber-100 dark:bg-amber-900 px-1 rounded">{"{VIN}_policy.pdf"}</code></li>
+                    </ul>
+                  </div>
+
                   <form onSubmit={handleBulkUpload} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="csvFile">Upload CSV File</Label>
+                      <Label htmlFor="csvFile">1. CSV File (Required)</Label>
                       <Input
                         id="csvFile"
                         data-testid="input-csv-file"
@@ -815,6 +840,45 @@ export default function DealerDashboard() {
                         }}
                         required
                       />
+                      {csvFile && (
+                        <p className="text-sm text-green-600 dark:text-green-400">
+                          ✓ {csvFile.name}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="bulkImages">2. Vehicle Images</Label>
+                      <Input
+                        id="bulkImages"
+                        data-testid="input-bulk-images"
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={(e) => setBulkImages(Array.from(e.target.files || []))}
+                      />
+                      {bulkImages.length > 0 && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {bulkImages.length} image(s) selected
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="bulkDocuments">3. RC & Insurance Documents (PDF)</Label>
+                      <Input
+                        id="bulkDocuments"
+                        data-testid="input-bulk-documents"
+                        type="file"
+                        accept=".pdf"
+                        multiple
+                        onChange={(e) => setBulkDocuments(Array.from(e.target.files || []))}
+                      />
+                      {bulkDocuments.length > 0 && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {bulkDocuments.length} document(s) selected
+                        </p>
+                      )}
                     </div>
 
                     <Button
@@ -823,37 +887,59 @@ export default function DealerDashboard() {
                       className="w-full"
                       disabled={bulkUploadMutation.isPending}
                     >
-                      {bulkUploadMutation.isPending ? "Validating..." : "Validate CSV"}
+                      {bulkUploadMutation.isPending ? "Validating..." : "Validate Upload"}
                     </Button>
                   </form>
 
                   {validationResult && (
-                    <div className={`p-4 rounded-lg ${validationResult.success ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'}`}>
-                      <div className="flex items-start gap-2">
-                        {validationResult.success ? (
-                          <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5" />
-                        ) : (
-                          <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
-                        )}
-                        <div className="flex-1">
-                          <p className={`font-medium ${validationResult.success ? 'text-green-900 dark:text-green-100' : 'text-red-900 dark:text-red-100'}`}>
-                            {validationResult.message}
-                          </p>
-                          <div className="mt-2 text-sm">
-                            <p className={validationResult.success ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'}>
-                              Total rows: {validationResult.summary.total} | Validated: {validationResult.summary.validated} | Errors: {validationResult.summary.errors}
-                            </p>
-                          </div>
-                          {validationResult.errors && validationResult.errors.length > 0 && (
-                            <div className="mt-3 space-y-1">
-                              <p className="text-sm font-medium text-red-800 dark:text-red-200">Errors found:</p>
-                              {validationResult.errors.map((err: any, idx: number) => (
-                                <p key={idx} className="text-sm text-red-700 dark:text-red-300">
-                                  Row {err.row}: {err.error}
-                                </p>
-                              ))}
-                            </div>
+                    <div className="space-y-3">
+                      <div className={`p-4 rounded-lg ${validationResult.success ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'}`}>
+                        <div className="flex items-start gap-2">
+                          {validationResult.success ? (
+                            <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5" />
+                          ) : (
+                            <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
                           )}
+                          <div className="flex-1">
+                            <p className={`font-medium ${validationResult.success ? 'text-green-900 dark:text-green-100' : 'text-red-900 dark:text-red-100'}`}>
+                              {validationResult.message}
+                            </p>
+                            <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                              <div className={validationResult.success ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'}>
+                                <p>Total: {validationResult.summary.total} vehicles</p>
+                                <p>Validated: {validationResult.summary.validated}</p>
+                                <p>Errors: {validationResult.summary.errors}</p>
+                                <p>Warnings: {validationResult.summary.warnings || 0}</p>
+                              </div>
+                              {validationResult.summary.filesUploaded && (
+                                <div className={validationResult.success ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'}>
+                                  <p>Images: {validationResult.summary.filesUploaded.images}</p>
+                                  <p>RC Docs: {validationResult.summary.filesUploaded.rc}</p>
+                                  <p>Insurance: {validationResult.summary.filesUploaded.insurance}</p>
+                                </div>
+                              )}
+                            </div>
+                            {validationResult.errors && validationResult.errors.length > 0 && (
+                              <div className="mt-3 space-y-1">
+                                <p className="text-sm font-medium text-red-800 dark:text-red-200">❌ Errors:</p>
+                                {validationResult.errors.map((err: any, idx: number) => (
+                                  <p key={idx} className="text-sm text-red-700 dark:text-red-300">
+                                    Row {err.row} {err.vin && `(${err.vin})`}: {err.error}
+                                  </p>
+                                ))}
+                              </div>
+                            )}
+                            {validationResult.warnings && validationResult.warnings.length > 0 && (
+                              <div className="mt-3 space-y-1">
+                                <p className="text-sm font-medium text-amber-800 dark:text-amber-200">⚠️ Warnings:</p>
+                                {validationResult.warnings.map((warn: any, idx: number) => (
+                                  <p key={idx} className="text-sm text-amber-700 dark:text-amber-300">
+                                    Row {warn.row} ({warn.vin}): {warn.warning}
+                                  </p>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>

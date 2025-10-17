@@ -41,8 +41,17 @@ Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, an
 - **xAI Grok Market Insights**: AI-powered granular market intelligence engine for Hyderabad/Telangana used cars, analyzing trends at model, variant, color, transmission, fuel type, and location levels using real-time data from SIAM, VAHAN, Telangana Open Data Portal, CarDekho, Spinny, and OLX. Provides deal quality scoring and price comparison against market averages.
 - **Telangana RTA Data Integration**: Direct integration with the Telangana Open Data Portal for authentic vehicle registration statistics, providing monthly data by brand, model, fuel type, transmission, and district.
 - **Telangana Market Intelligence**: Utilizes official Telangana RTA data to provide real-time market insights for sellers and buyers, including demand scoring, trend analysis, and AI-powered insights.
-- **Dealer Inventory Upload System**: Production-ready platform for vehicle inventory management with strict validation (VIN, price, image) and Google Vehicle Listing feed compliance. Features Quick Add, Bulk CSV Upload with intelligent validation, validation reports, and a dealer dashboard.
-  - **CSV Bulk Upload**: Simple CSV format for dealers to upload multiple vehicles at once. Accepts Excel-generated CSVs (text/csv, application/vnd.ms-excel). Validates required fields (Make, Model, Year, Price, Mileage, Fuel Type, Transmission, City, Description), numeric ranges (Year: 1900-current+1, Price: >0, Mileage: >=0), and returns detailed error reports with row numbers. VIN is optional (auto-generated if missing). Template available at `/public/bulk-upload-template.csv`.
+- **Dealer Inventory Upload System**: Production-ready platform for vehicle inventory management with strict validation (VIN, price, image) and Google Vehicle Listing feed compliance. Features Quick Add, Bulk Upload with images and documents, validation reports, and a dealer dashboard.
+  - **Bulk Upload with Documents**: Comprehensive bulk upload system supporting CSV data + vehicle images + RC/Insurance documents. Dealers upload:
+    - CSV file: VIN, Make, Model, Year, Price, Mileage, Fuel Type, Transmission, Owner Count, City, Description
+    - Vehicle images: Named as `{VIN}_1.jpg, {VIN}_2.jpg, {VIN}_3.jpg` (minimum 3 per vehicle)
+    - RC documents: Named as `{VIN}_RC.pdf` or `{VIN}_registration.pdf`
+    - Insurance documents: Named as `{VIN}_insurance.pdf` or `{VIN}_policy.pdf`
+  - Accepts Excel-generated CSVs (text/csv, application/vnd.ms-excel, application/csv)
+  - Validates required fields, numeric ranges (Year: 1900-current+1, Price: >0, Mileage: >=0)
+  - File validation: Checks for minimum 3 images, RC, and insurance per vehicle
+  - Returns detailed validation report with errors and warnings by row/VIN
+  - Template available at `/public/bulk-upload-template.csv`
 - **Dealer Performance Analytics Dashboard**: Interactive dashboard for Telangana dealers with real-time metrics, ML forecasts, and market benchmarks, including sales trend visualization, VAHAN ROI benchmark, and Telangana district analysis.
 
 ## External Dependencies

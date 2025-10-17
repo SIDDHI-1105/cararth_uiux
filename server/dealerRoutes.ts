@@ -32,23 +32,31 @@ const upload = multer({
   },
 });
 
-// Configure multer for CSV bulk uploads
-const csvUpload = multer({
+// Configure multer for bulk uploads (CSV + images + documents)
+const bulkUpload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB for CSV
+    fileSize: 10 * 1024 * 1024, // 10MB per file
+    files: 100, // Allow many files for bulk upload
   },
   fileFilter: (req, file, cb) => {
-    // Accept various CSV MIME types (Excel, text, etc.) and case-insensitive extensions
+    // Accept CSV files
     const isCSV = file.mimetype === 'text/csv' || 
                   file.mimetype === 'application/vnd.ms-excel' ||
                   file.mimetype === 'application/csv' ||
                   file.originalname.toLowerCase().endsWith('.csv');
     
-    if (isCSV) {
+    // Accept images
+    const isImage = file.mimetype.startsWith('image/');
+    
+    // Accept PDF documents (for RC and Insurance)
+    const isPDF = file.mimetype === 'application/pdf' || 
+                  file.originalname.toLowerCase().endsWith('.pdf');
+    
+    if (isCSV || isImage || isPDF) {
       cb(null, true);
     } else {
-      cb(new Error('Only CSV files are allowed'));
+      cb(new Error('Only CSV, image, and PDF files are allowed'));
     }
   },
 });
@@ -159,27 +167,51 @@ router.post(
 
 /**
  * POST /api/dealer/:id/upload/bulk
- * Bulk CSV upload - Simple format for dealer inventory
+ * Bulk upload with CSV, images, RC, and insurance documents
  * Requires: X-API-Key header
- * CSV Format: VIN,Make,Model,Year,Price,Mileage,Fuel Type,Transmission,Owner Count,City,Description
+ * 
+ * File naming convention:
+ * - CSV: vehicles.csv (VIN,Make,Model,Year,Price,Mileage,Fuel Type,Transmission,Owner Count,City,Description)
+ * - Images: {VIN}_1.jpg, {VIN}_2.jpg, etc. (at least 3 per vehicle)
+ * - RC: {VIN}_RC.pdf or {VIN}_registration.pdf
+ * - Insurance: {VIN}_insurance.pdf or {VIN}_policy.pdf
  */
 router.post(
   '/:id/upload/bulk',
   authenticateDealer,
-  csvUpload.single('csvFile'),
+  bulkUpload.any(),
   async (req: Request, res: Response) => {
     try {
       const dealer = req.dealer as Dealer;
-      const csvFile = req.file;
+      const files = req.files as Express.Multer.File[];
+
+      // Separate files by type
+      const csvFiles = files.filter(f => 
+        f.mimetype.includes('csv') || f.originalname.toLowerCase().endsWith('.csv')
+      );
+      const imageFiles = files.filter(f => f.mimetype.startsWith('image/'));
+      const pdfFiles = files.filter(f => 
+        f.mimetype === 'application/pdf' || f.originalname.toLowerCase().endsWith('.pdf')
+      );
 
       // Validate CSV file
-      if (!csvFile) {
+      if (csvFiles.length === 0) {
         res.status(400).json({
           success: false,
-          message: 'CSV file is required',
+          message: 'CSV file is required. Please upload a CSV file with vehicle data.',
         });
         return;
       }
+
+      if (csvFiles.length > 1) {
+        res.status(400).json({
+          success: false,
+          message: 'Please upload only one CSV file.',
+        });
+        return;
+      }
+
+      const csvFile = csvFiles[0];
 
       // Parse CSV file
       const { parse } = await import('csv-parse/sync');
@@ -189,6 +221,44 @@ router.post(
         columns: true,
         skip_empty_lines: true,
         trim: true,
+      });
+
+      // Group files by VIN for validation
+      const filesByVIN = new Map<string, {
+        images: Express.Multer.File[],
+        rc: Express.Multer.File | null,
+        insurance: Express.Multer.File | null,
+      }>();
+
+      // Organize image files by VIN (format: VIN_1.jpg, VIN_2.jpg, etc.)
+      imageFiles.forEach(file => {
+        const filename = file.originalname.toLowerCase();
+        const vinMatch = filename.match(/^([^_]+)_/);
+        if (vinMatch) {
+          const vin = vinMatch[1].toUpperCase();
+          if (!filesByVIN.has(vin)) {
+            filesByVIN.set(vin, { images: [], rc: null, insurance: null });
+          }
+          filesByVIN.get(vin)!.images.push(file);
+        }
+      });
+
+      // Organize PDF files by VIN (RC: VIN_RC.pdf, Insurance: VIN_insurance.pdf)
+      pdfFiles.forEach(file => {
+        const filename = file.originalname.toLowerCase();
+        const vinMatch = filename.match(/^([^_]+)_/);
+        if (vinMatch) {
+          const vin = vinMatch[1].toUpperCase();
+          if (!filesByVIN.has(vin)) {
+            filesByVIN.set(vin, { images: [], rc: null, insurance: null });
+          }
+          
+          if (filename.includes('rc') || filename.includes('registration')) {
+            filesByVIN.get(vin)!.rc = file;
+          } else if (filename.includes('insurance') || filename.includes('policy')) {
+            filesByVIN.get(vin)!.insurance = file;
+          }
+        }
       });
 
       // Process each vehicle
@@ -253,6 +323,49 @@ router.post(
             continue;
           }
 
+          // Check for associated files if VIN is provided
+          const vin = record.VIN ? record.VIN.toUpperCase() : null;
+          if (vin && filesByVIN.has(vin)) {
+            const vehicleFiles = filesByVIN.get(vin)!;
+            
+            // Validate images (at least 3 required)
+            if (vehicleFiles.images.length < 3) {
+              results.warningCount++;
+              results.warnings.push({
+                row: i + 2,
+                vin: vin,
+                warning: `Only ${vehicleFiles.images.length} image(s) found. At least 3 required. Name files: ${vin}_1.jpg, ${vin}_2.jpg, etc.`,
+              });
+            }
+            
+            // Check for RC document
+            if (!vehicleFiles.rc) {
+              results.warningCount++;
+              results.warnings.push({
+                row: i + 2,
+                vin: vin,
+                warning: `RC document missing. Upload file named: ${vin}_RC.pdf or ${vin}_registration.pdf`,
+              });
+            }
+            
+            // Check for insurance document
+            if (!vehicleFiles.insurance) {
+              results.warningCount++;
+              results.warnings.push({
+                row: i + 2,
+                vin: vin,
+                warning: `Insurance document missing. Upload file named: ${vin}_insurance.pdf or ${vin}_policy.pdf`,
+              });
+            }
+          } else if (vin) {
+            results.warningCount++;
+            results.warnings.push({
+              row: i + 2,
+              vin: vin,
+              warning: `No files found for VIN ${vin}. Upload images (${vin}_1.jpg), RC (${vin}_RC.pdf), and insurance (${vin}_insurance.pdf)`,
+            });
+          }
+
           // Data is valid - count as success
           results.successCount++;
         } catch (error: any) {
@@ -271,10 +384,19 @@ router.post(
           total: results.total,
           validated: results.successCount,
           errors: results.errorCount,
+          warnings: results.warningCount,
+          filesUploaded: {
+            images: imageFiles.length,
+            rc: pdfFiles.filter(f => f.originalname.toLowerCase().includes('rc') || f.originalname.toLowerCase().includes('registration')).length,
+            insurance: pdfFiles.filter(f => f.originalname.toLowerCase().includes('insurance') || f.originalname.toLowerCase().includes('policy')).length,
+          },
         },
         errors: results.errors,
+        warnings: results.warnings,
         message: results.errorCount === 0 
-          ? `✅ Successfully validated ${results.successCount} vehicle${results.successCount > 1 ? 's' : ''}. All data is correct!`
+          ? results.warningCount > 0
+            ? `✅ CSV validated with ${results.warningCount} warning${results.warningCount > 1 ? 's' : ''}. Review warnings below.`
+            : `✅ Successfully validated ${results.successCount} vehicle${results.successCount > 1 ? 's' : ''}. All data and files are correct!`
           : `❌ Found ${results.errorCount} error${results.errorCount > 1 ? 's' : ''} in ${results.total} rows. Please fix the errors and re-upload.`,
       });
     } catch (error) {
