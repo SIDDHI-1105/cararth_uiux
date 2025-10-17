@@ -20,6 +20,7 @@ import PartnerInvite from "./pages/partner-invite";
 import PartnerDashboard from "./pages/partner-dashboard";
 import DealerDashboard from "./pages/DealerDashboard";
 import OemAnalyticsDashboard from "./pages/OemAnalyticsDashboard";
+import MonthlyOEMReport from "./pages/MonthlyOEMReport";
 import ThrottleTalk from "./pages/news";
 import NewsDetail from "./pages/news-detail";
 import Community from "./pages/community";
@@ -57,6 +58,8 @@ function Router() {
       <Route path="/partner/dashboard" component={PartnerDashboard} />
       <Route path="/dealer/dashboard" component={DealerDashboard} />
       <Route path="/dealer-dashboard" component={DealerDashboard} />
+      <Route path="/news/oem-report" component={MonthlyOEMReport} />
+      <Route path="/news/monthly-report" component={MonthlyOEMReport} />
       <Route path="/news/oem-analytics" component={OemAnalyticsDashboard} />
       <Route path="/news/analytics" component={OemAnalyticsDashboard} />
       <Route path="/news/:id" component={NewsDetail} />

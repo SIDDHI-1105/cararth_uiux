@@ -980,6 +980,118 @@ router.get('/analytics/forecast/test', async (req: Request, res: Response) => {
 });
 
 /**
+ * GET /api/dealer/analytics/monthly-report
+ * Monthly OEM performance report with State & National benchmarks
+ */
+router.get('/analytics/monthly-report', async (req: Request, res: Response) => {
+  try {
+    const reportMonth = parseInt(req.query.month as string) || 9; // Default Sep 2025 (N-1)
+    const reportYear = parseInt(req.query.year as string) || 2025;
+
+    // Get OEM-level performance for the month
+    const oemPerformance = await db
+      .select({
+        brand: vehicleRegistrations.brand,
+        registrationsCount: drizzleSql<number>`SUM(${vehicleRegistrations.registrationsCount})`,
+      })
+      .from(vehicleRegistrations)
+      .where(drizzleSql`${vehicleRegistrations.state} = 'Telangana' AND ${vehicleRegistrations.year} = ${reportYear} AND ${vehicleRegistrations.month} = ${reportMonth}`)
+      .groupBy(vehicleRegistrations.brand);
+
+    // Get Telangana state total for the month
+    const stateTotal = oemPerformance.reduce((sum, oem) => sum + Number(oem.registrationsCount), 0);
+
+    // Get National benchmarks (India-wide)
+    const nationalData = await db
+      .select({
+        brand: vehicleRegistrations.brand,
+        registrationsCount: drizzleSql<number>`SUM(${vehicleRegistrations.registrationsCount})`,
+      })
+      .from(vehicleRegistrations)
+      .where(drizzleSql`${vehicleRegistrations.state} = 'India' AND ${vehicleRegistrations.year} = ${reportYear} AND ${vehicleRegistrations.month} = ${reportMonth}`)
+      .groupBy(vehicleRegistrations.brand);
+
+    const nationalTotal = nationalData.reduce((sum, oem) => sum + Number(oem.registrationsCount), 0);
+
+    // Calculate state average per OEM
+    const stateAvgPerOEM = stateTotal / oemPerformance.length;
+
+    // Build comparison report
+    const performanceReport = oemPerformance.map(oem => {
+      const nationalOEM = nationalData.find(n => n.brand === oem.brand);
+      const nationalOEMCount = nationalOEM ? Number(nationalOEM.registrationsCount) : 0;
+      const nationalAvgPerOEM = nationalTotal / nationalData.length;
+
+      const vsState = stateTotal > 0 ? ((Number(oem.registrationsCount) / stateAvgPerOEM - 1) * 100) : 0;
+      const vsNational = nationalAvgPerOEM > 0 ? ((Number(oem.registrationsCount) / nationalAvgPerOEM - 1) * 100) : 0;
+
+      return {
+        brand: oem.brand,
+        actual: Number(oem.registrationsCount),
+        stateBenchmark: Math.round(stateAvgPerOEM),
+        nationalBenchmark: Math.round(nationalAvgPerOEM),
+        vsState: parseFloat(vsState.toFixed(2)),
+        vsNational: parseFloat(vsNational.toFixed(2)),
+        stateShare: stateTotal > 0 ? parseFloat(((Number(oem.registrationsCount) / stateTotal) * 100).toFixed(2)) : 0,
+      };
+    });
+
+    // Sort by actual performance
+    performanceReport.sort((a, b) => b.actual - a.actual);
+
+    // Generate predictions for N+1, N+2, N+3 months
+    const predictions: any[] = [];
+    for (const oem of oemPerformance.slice(0, 5)) { // Top 5 OEMs
+      try {
+        const historicalData = await db
+          .select({
+            brand: vehicleRegistrations.brand,
+            year: vehicleRegistrations.year,
+            month: vehicleRegistrations.month,
+            registrations_count: vehicleRegistrations.registrationsCount
+          })
+          .from(vehicleRegistrations)
+          .where(drizzleSql`${vehicleRegistrations.brand} = ${oem.brand} AND ${vehicleRegistrations.state} = 'Telangana'`);
+
+        const forecast = await forecastBrand(historicalData, oem.brand, 3);
+        predictions.push({
+          brand: oem.brand,
+          forecasts: forecast.sarima.predictions.map(p => ({
+            month: p.date,
+            predicted: Math.round(p.value),
+          }))
+        });
+      } catch (error) {
+        console.error(`Forecast failed for ${oem.brand}:`, error);
+      }
+    }
+
+    res.json({
+      success: true,
+      reportPeriod: {
+        month: reportMonth,
+        year: reportYear,
+        label: `${new Date(reportYear, reportMonth - 1).toLocaleString('default', { month: 'long' })} ${reportYear}`,
+      },
+      summary: {
+        totalOEMs: oemPerformance.length,
+        stateTotal,
+        nationalTotal,
+        stateAvgPerOEM: Math.round(stateAvgPerOEM),
+      },
+      performance: performanceReport,
+      predictions,
+    });
+  } catch (error) {
+    console.error('Monthly report error:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to generate monthly report'
+    });
+  }
+});
+
+/**
  * GET /api/dealer/analytics/oem-dashboard
  * Get comprehensive OEM-level market intelligence with historical data
  */
