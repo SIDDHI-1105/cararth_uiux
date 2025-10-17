@@ -1864,7 +1864,7 @@ export const dealers = pgTable("dealers", {
   // Business info
   dealerName: text("dealer_name").notNull(),
   dealerGroup: text("dealer_group"), // KUN Group, Saboo Group, etc.
-  oemBrand: text("oem_brand").notNull(), // Hyundai, Maruti Suzuki, Tata Motors, etc. - RTA registered OEM
+  oemBrand: text("oem_brand"), // Hyundai, Maruti Suzuki, Tata Motors, etc. - RTA registered OEM (optional for Non-OEM dealers)
   storeCode: text("store_code").notNull().unique(), // For VDP slugs
   contactPerson: text("contact_person").notNull(),
   email: text("email").notNull().unique(),

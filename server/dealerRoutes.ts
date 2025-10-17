@@ -360,11 +360,12 @@ router.post('/register', async (req: Request, res: Response) => {
       state,
     } = req.body;
 
-    if (!dealerName || !oemBrand || !storeCode || !contactPerson || !email || !phone || !address) {
+    if (!dealerName || !storeCode || !contactPerson || !email || !phone || !address) {
       res.status(400).json({
         success: false,
         error: 'Missing required fields',
-        required: ['dealerName', 'oemBrand', 'storeCode', 'contactPerson', 'email', 'phone', 'address'],
+        required: ['dealerName', 'storeCode', 'contactPerson', 'email', 'phone', 'address'],
+        optional: ['oemBrand (for OEM dealers only)'],
       });
       return;
     }
