@@ -107,7 +107,7 @@ export default function MarketIntelligenceDashboard() {
 
   // Dealer Performance Query
   const { data: dealerData, isLoading: dealerLoading } = useQuery<DealerPerformance>({
-    queryKey: [`/api/analytics/dealer-performance/${selectedDealer}`, { compareToMarket: true }],
+    queryKey: ['/api/analytics/dealer-performance', selectedDealer, { compareToMarket: true }],
     enabled: !!selectedDealer,
   });
 

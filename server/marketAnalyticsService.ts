@@ -149,12 +149,25 @@ export class MarketAnalyticsService {
         );
       }
       
+      // Calculate market share
+      const currentMonthData = salesData.filter(d => d.year === latestData.year && d.month === latestData.month);
+      const marketShare = this.calculateMarketShare(currentMonthData);
+      
+      // Calculate segment-wise analysis
+      const segmentAnalysis = this.calculateSegmentAnalysis(currentMonthData, previousMonthData);
+      
+      // Calculate growth velocity
+      const growthVelocity = this.calculateGrowthVelocity(salesData);
+      
+      // Generate actionable insights
+      const insights = this.generateInsights(currentMonthData, previousMonthData, marketShare, segmentAnalysis, growthVelocity);
+      
       return {
         success: true,
         currentMonth: {
           year: latestData.year,
           month: latestData.month,
-          data: salesData.filter(d => d.year === latestData.year && d.month === latestData.month)
+          data: currentMonthData
         },
         previousMonth: {
           year: latestData.month === 1 ? latestData.year - 1 : latestData.year,
@@ -163,7 +176,11 @@ export class MarketAnalyticsService {
         },
         trends,
         forecast,
-        historicalData: salesData
+        historicalData: salesData,
+        marketShare,
+        segmentAnalysis,
+        growthVelocity,
+        insights
       };
     } catch (error) {
       throw new Error(`OEM market intelligence failed: ${error instanceof Error ? error.message : String(error)}`);
@@ -399,6 +416,161 @@ export class MarketAnalyticsService {
       acc[key] = (acc[key] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
+  }
+  
+  /**
+   * Helper: Calculate market share percentages
+   */
+  private calculateMarketShare(data: any[]) {
+    const totalSales = data.reduce((sum, d) => sum + d.unitsSold, 0);
+    
+    const brandShares = data.reduce((acc, d) => {
+      if (!acc[d.brand]) {
+        acc[d.brand] = 0;
+      }
+      acc[d.brand] += d.unitsSold;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    return Object.entries(brandShares)
+      .map(([brand, units]: [string, number]) => ({
+        brand,
+        units,
+        sharePercent: totalSales > 0 ? (units / totalSales) * 100 : 0
+      }))
+      .sort((a, b) => b.sharePercent - a.sharePercent);
+  }
+  
+  /**
+   * Helper: Calculate segment-wise analysis
+   */
+  private calculateSegmentAnalysis(currentData: any[], previousData: any[]) {
+    const currentBySegment = currentData.reduce((acc, d) => {
+      if (!acc[d.segment]) {
+        acc[d.segment] = 0;
+      }
+      acc[d.segment] += d.unitsSold;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    const previousBySegment = previousData.reduce((acc, d) => {
+      if (!acc[d.segment]) {
+        acc[d.segment] = 0;
+      }
+      acc[d.segment] += d.unitsSold;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    return Object.entries(currentBySegment).map(([segment, current]: [string, number]) => {
+      const previous = previousBySegment[segment] || 0;
+      const growth = previous > 0 ? ((current - previous) / previous) * 100 : 0;
+      
+      return {
+        segment,
+        currentUnits: current,
+        previousUnits: previous,
+        growthPercent: growth,
+        direction: growth > 0 ? 'up' : growth < 0 ? 'down' : 'stable' as 'up' | 'down' | 'stable'
+      };
+    }).sort((a, b) => (b.currentUnits as number) - (a.currentUnits as number));
+  }
+  
+  /**
+   * Helper: Calculate growth velocity (acceleration/deceleration)
+   */
+  private calculateGrowthVelocity(data: any[]) {
+    if (data.length < 3) return null;
+    
+    // Group by month
+    const monthlyTotals: { [key: string]: number } = {};
+    data.forEach(d => {
+      const key = `${d.year}-${String(d.month).padStart(2, '0')}`;
+      monthlyTotals[key] = (monthlyTotals[key] || 0) + d.unitsSold;
+    });
+    
+    const sorted = Object.entries(monthlyTotals).sort((a, b) => a[0].localeCompare(b[0])).slice(-3);
+    
+    if (sorted.length < 3) return null;
+    
+    const [m1, m2, m3] = sorted.map(([_, total]) => total);
+    const growth1 = ((m2 - m1) / m1) * 100;
+    const growth2 = ((m3 - m2) / m2) * 100;
+    const acceleration = growth2 - growth1;
+    
+    return {
+      latestGrowth: growth2,
+      previousGrowth: growth1,
+      acceleration,
+      momentum: acceleration > 0 ? 'accelerating' : acceleration < 0 ? 'decelerating' : 'stable'
+    };
+  }
+  
+  /**
+   * Helper: Generate actionable insights
+   */
+  private generateInsights(currentData: any[], previousData: any[], marketShare: any[], segmentAnalysis: any[], growthVelocity: any) {
+    const insights: string[] = [];
+    
+    // Market leader insight
+    if (marketShare.length > 0) {
+      const leader = marketShare[0];
+      const change = previousData.length > 0 ? 
+        this.calculateBrandChange(leader.brand, currentData, previousData) : 0;
+      
+      insights.push(
+        `${leader.brand} leads the market with ${leader.sharePercent.toFixed(1)}% share (${leader.units.toLocaleString()} units)${
+          change !== 0 ? `, ${change > 0 ? 'up' : 'down'} ${Math.abs(change).toFixed(1)}% MoM` : ''
+        }`
+      );
+    }
+    
+    // Segment performance insight
+    if (segmentAnalysis.length > 0) {
+      const topSegment = segmentAnalysis[0];
+      insights.push(
+        `${topSegment.segment} segment dominates with ${topSegment.currentUnits.toLocaleString()} units${
+          topSegment.growthPercent !== 0 ? `, ${topSegment.direction === 'up' ? 'growing' : 'declining'} ${Math.abs(topSegment.growthPercent).toFixed(1)}%` : ''
+        }`
+      );
+    }
+    
+    // Growth velocity insight
+    if (growthVelocity) {
+      insights.push(
+        `Market momentum is ${growthVelocity.momentum} with ${Math.abs(growthVelocity.acceleration).toFixed(1)}% ${
+          growthVelocity.acceleration > 0 ? 'positive' : 'negative'
+        } acceleration`
+      );
+    }
+    
+    // Top gainers
+    const brandGrowth = currentData.map(d => {
+      const prev = previousData.find(p => p.brand === d.brand);
+      if (!prev) return null;
+      const growth = ((d.unitsSold - prev.unitsSold) / prev.unitsSold) * 100;
+      return { brand: d.brand, growth };
+    }).filter(Boolean).sort((a: any, b: any) => b.growth - a.growth);
+    
+    if (brandGrowth.length > 0 && brandGrowth[0]) {
+      const topGainer = brandGrowth[0] as { brand: string; growth: number };
+      if (topGainer.growth > 5) {
+        insights.push(`${topGainer.brand} shows strongest momentum with ${topGainer.growth.toFixed(1)}% MoM growth`);
+      }
+    }
+    
+    return insights;
+  }
+  
+  /**
+   * Helper: Calculate brand change MoM
+   */
+  private calculateBrandChange(brand: string, currentData: any[], previousData: any[]): number {
+    const currentBrand = currentData.find(d => d.brand === brand);
+    const previousBrand = previousData.find(d => d.brand === brand);
+    
+    if (!currentBrand || !previousBrand) return 0;
+    
+    return ((currentBrand.unitsSold - previousBrand.unitsSold) / previousBrand.unitsSold) * 100;
   }
 }
 
