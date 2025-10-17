@@ -116,16 +116,17 @@ export default function RTADataImport() {
     setSiamResult(null);
 
     try {
-      const response = await apiRequest('/api/admin/import-siam-data', 'POST', {
+      const response = await apiRequest('POST', '/api/admin/import-siam-data', {
         month: siamMonth,
         year: siamYear,
         totalPV: siamTotal,
       });
+      const data = await response.json();
 
-      setSiamResult(response);
+      setSiamResult(data);
       toast({
         title: 'Import Successful',
-        description: response.message,
+        description: data.message,
       });
     } catch (error) {
       toast({
@@ -160,7 +161,8 @@ KIA,Seltos,PETROL,2025-09-19,AUTOMATIC`;
     setAutoResult(null);
 
     try {
-      const data = await apiRequest('/api/admin/auto-import/run-latest', 'POST', {});
+      const response = await apiRequest('POST', '/api/admin/auto-import/run-latest', {});
+      const data = await response.json();
 
       setAutoResult(data);
       
@@ -188,10 +190,11 @@ KIA,Seltos,PETROL,2025-09-19,AUTOMATIC`;
     setAutoResult(null);
 
     try {
-      const data = await apiRequest('/api/admin/auto-import/run-month', 'POST', {
+      const response = await apiRequest('POST', '/api/admin/auto-import/run-month', {
         month: autoMonth,
         year: autoYear,
       });
+      const data = await response.json();
 
       setAutoResult(data);
       
@@ -216,9 +219,10 @@ KIA,Seltos,PETROL,2025-09-19,AUTOMATIC`;
 
   const handleConfigure = async () => {
     try {
-      await apiRequest('/api/admin/auto-import/configure', 'POST', {
+      const response = await apiRequest('POST', '/api/admin/auto-import/configure', {
         telanganaResourceId: resourceId,
       });
+      await response.json();
       
       toast({
         title: 'Success',
