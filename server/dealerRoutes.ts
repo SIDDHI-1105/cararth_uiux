@@ -988,28 +988,48 @@ router.get('/analytics/monthly-report', async (req: Request, res: Response) => {
     const reportMonth = parseInt(req.query.month as string) || 9; // Default Sep 2025 (N-1)
     const reportYear = parseInt(req.query.year as string) || 2025;
 
-    // Get OEM-level performance for the month
+    // Get OEM-level performance for the month (combine Maruti Nexa + Arena)
     const oemPerformance = await db
       .select({
-        brand: vehicleRegistrations.brand,
+        brand: drizzleSql<string>`
+          CASE 
+            WHEN ${vehicleRegistrations.brand} IN ('Maruti Suzuki Nexa', 'Maruti Suzuki Arena') THEN 'Maruti Suzuki'
+            ELSE ${vehicleRegistrations.brand}
+          END
+        `,
         registrationsCount: drizzleSql<number>`SUM(${vehicleRegistrations.registrationsCount})`,
       })
       .from(vehicleRegistrations)
       .where(drizzleSql`${vehicleRegistrations.state} = 'Telangana' AND ${vehicleRegistrations.year} = ${reportYear} AND ${vehicleRegistrations.month} = ${reportMonth}`)
-      .groupBy(vehicleRegistrations.brand);
+      .groupBy(drizzleSql`
+        CASE 
+          WHEN ${vehicleRegistrations.brand} IN ('Maruti Suzuki Nexa', 'Maruti Suzuki Arena') THEN 'Maruti Suzuki'
+          ELSE ${vehicleRegistrations.brand}
+        END
+      `);
 
     // Get Telangana state total for the month
     const stateTotal = oemPerformance.reduce((sum, oem) => sum + Number(oem.registrationsCount), 0);
 
-    // Get National benchmarks (India-wide)
+    // Get National benchmarks (India-wide, combine Maruti Nexa + Arena)
     const nationalData = await db
       .select({
-        brand: vehicleRegistrations.brand,
+        brand: drizzleSql<string>`
+          CASE 
+            WHEN ${vehicleRegistrations.brand} IN ('Maruti Suzuki Nexa', 'Maruti Suzuki Arena') THEN 'Maruti Suzuki'
+            ELSE ${vehicleRegistrations.brand}
+          END
+        `,
         registrationsCount: drizzleSql<number>`SUM(${vehicleRegistrations.registrationsCount})`,
       })
       .from(vehicleRegistrations)
       .where(drizzleSql`${vehicleRegistrations.state} = 'India' AND ${vehicleRegistrations.year} = ${reportYear} AND ${vehicleRegistrations.month} = ${reportMonth}`)
-      .groupBy(vehicleRegistrations.brand);
+      .groupBy(drizzleSql`
+        CASE 
+          WHEN ${vehicleRegistrations.brand} IN ('Maruti Suzuki Nexa', 'Maruti Suzuki Arena') THEN 'Maruti Suzuki'
+          ELSE ${vehicleRegistrations.brand}
+        END
+      `);
 
     const nationalTotal = nationalData.reduce((sum, oem) => sum + Number(oem.registrationsCount), 0);
 
@@ -1040,30 +1060,50 @@ router.get('/analytics/monthly-report', async (req: Request, res: Response) => {
     // Sort by actual performance
     performanceReport.sort((a, b) => b.actual - a.actual);
 
-    // Get last 12 months trend for Telangana
+    // Get last 12 months trend for Telangana (combine Maruti Nexa + Arena)
     const telanganaMonthlyTrends = await db
       .select({
-        brand: vehicleRegistrations.brand,
+        brand: drizzleSql<string>`
+          CASE 
+            WHEN ${vehicleRegistrations.brand} IN ('Maruti Suzuki Nexa', 'Maruti Suzuki Arena') THEN 'Maruti Suzuki'
+            ELSE ${vehicleRegistrations.brand}
+          END
+        `,
         year: vehicleRegistrations.year,
         month: vehicleRegistrations.month,
         registrationsCount: drizzleSql<number>`SUM(${vehicleRegistrations.registrationsCount})`,
       })
       .from(vehicleRegistrations)
       .where(drizzleSql`${vehicleRegistrations.state} = 'Telangana' AND ${vehicleRegistrations.year} >= ${reportYear - 1}`)
-      .groupBy(vehicleRegistrations.brand, vehicleRegistrations.year, vehicleRegistrations.month)
+      .groupBy(drizzleSql`
+        CASE 
+          WHEN ${vehicleRegistrations.brand} IN ('Maruti Suzuki Nexa', 'Maruti Suzuki Arena') THEN 'Maruti Suzuki'
+          ELSE ${vehicleRegistrations.brand}
+        END
+      `, vehicleRegistrations.year, vehicleRegistrations.month)
       .orderBy(vehicleRegistrations.year, vehicleRegistrations.month);
 
-    // Get last 12 months trend for National (India)
+    // Get last 12 months trend for National (India, combine Maruti Nexa + Arena)
     const nationalMonthlyTrends = await db
       .select({
-        brand: vehicleRegistrations.brand,
+        brand: drizzleSql<string>`
+          CASE 
+            WHEN ${vehicleRegistrations.brand} IN ('Maruti Suzuki Nexa', 'Maruti Suzuki Arena') THEN 'Maruti Suzuki'
+            ELSE ${vehicleRegistrations.brand}
+          END
+        `,
         year: vehicleRegistrations.year,
         month: vehicleRegistrations.month,
         registrationsCount: drizzleSql<number>`SUM(${vehicleRegistrations.registrationsCount})`,
       })
       .from(vehicleRegistrations)
       .where(drizzleSql`${vehicleRegistrations.state} = 'India' AND ${vehicleRegistrations.year} >= ${reportYear - 1}`)
-      .groupBy(vehicleRegistrations.brand, vehicleRegistrations.year, vehicleRegistrations.month)
+      .groupBy(drizzleSql`
+        CASE 
+          WHEN ${vehicleRegistrations.brand} IN ('Maruti Suzuki Nexa', 'Maruti Suzuki Arena') THEN 'Maruti Suzuki'
+          ELSE ${vehicleRegistrations.brand}
+        END
+      `, vehicleRegistrations.year, vehicleRegistrations.month)
       .orderBy(vehicleRegistrations.year, vehicleRegistrations.month);
 
     // Calculate TIV and market share trends
@@ -1096,15 +1136,22 @@ router.get('/analytics/monthly-report', async (req: Request, res: Response) => {
     const predictions: any[] = [];
     for (const oem of oemPerformance.slice(0, 5)) { // Top 5 OEMs
       try {
+        // Get historical data (combine Maruti Nexa + Arena for forecast)
+        const brandCondition = oem.brand === 'Maruti Suzuki' 
+          ? drizzleSql`${vehicleRegistrations.brand} IN ('Maruti Suzuki', 'Maruti Suzuki Nexa', 'Maruti Suzuki Arena')`
+          : drizzleSql`${vehicleRegistrations.brand} = ${oem.brand}`;
+        
         const historicalData = await db
           .select({
-            brand: vehicleRegistrations.brand,
+            brand: drizzleSql<string>`'${oem.brand}'`,
             year: vehicleRegistrations.year,
             month: vehicleRegistrations.month,
-            registrations_count: vehicleRegistrations.registrationsCount
+            registrations_count: drizzleSql<number>`SUM(${vehicleRegistrations.registrationsCount})`
           })
           .from(vehicleRegistrations)
-          .where(drizzleSql`${vehicleRegistrations.brand} = ${oem.brand} AND ${vehicleRegistrations.state} = 'Telangana'`);
+          .where(drizzleSql`${brandCondition} AND ${vehicleRegistrations.state} = 'Telangana'`)
+          .groupBy(vehicleRegistrations.year, vehicleRegistrations.month)
+          .orderBy(vehicleRegistrations.year, vehicleRegistrations.month);
 
         const forecast = await forecastBrand(historicalData, oem.brand, 3);
         predictions.push({
