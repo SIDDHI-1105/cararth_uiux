@@ -366,6 +366,9 @@ export class MarketAnalyticsService {
     const latest = data[0];
     const previous = data[1];
     
+    // Guard against division by zero
+    if (previous.unitsSold === 0) return null;
+    
     const momChange = ((latest.unitsSold - previous.unitsSold) / previous.unitsSold) * 100;
     
     return {
@@ -493,6 +496,10 @@ export class MarketAnalyticsService {
     if (sorted.length < 3) return null;
     
     const [m1, m2, m3] = sorted.map(([_, total]) => total);
+    
+    // Guard against division by zero
+    if (m1 === 0 || m2 === 0) return null;
+    
     const growth1 = ((m2 - m1) / m1) * 100;
     const growth2 = ((m3 - m2) / m2) * 100;
     const acceleration = growth2 - growth1;
@@ -547,6 +554,10 @@ export class MarketAnalyticsService {
     const brandGrowth = currentData.map(d => {
       const prev = previousData.find(p => p.brand === d.brand);
       if (!prev) return null;
+      
+      // Guard against division by zero
+      if (prev.unitsSold === 0) return null;
+      
       const growth = ((d.unitsSold - prev.unitsSold) / prev.unitsSold) * 100;
       return { brand: d.brand, growth };
     }).filter(Boolean).sort((a: any, b: any) => b.growth - a.growth);
@@ -569,6 +580,9 @@ export class MarketAnalyticsService {
     const previousBrand = previousData.find(d => d.brand === brand);
     
     if (!currentBrand || !previousBrand) return 0;
+    
+    // Guard against division by zero
+    if (previousBrand.unitsSold === 0) return 0;
     
     return ((currentBrand.unitsSold - previousBrand.unitsSold) / previousBrand.unitsSold) * 100;
   }

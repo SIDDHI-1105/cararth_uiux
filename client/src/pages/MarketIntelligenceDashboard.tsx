@@ -26,6 +26,27 @@ interface Forecast {
   }>;
 }
 
+interface MarketShare {
+  brand: string;
+  units: number;
+  sharePercent: number;
+}
+
+interface SegmentAnalysis {
+  segment: string;
+  currentUnits: number;
+  previousUnits: number;
+  growthPercent: number;
+  direction: 'up' | 'down' | 'stable';
+}
+
+interface GrowthVelocity {
+  latestGrowth: number;
+  previousGrowth: number;
+  acceleration: number;
+  momentum: 'accelerating' | 'decelerating' | 'stable';
+}
+
 interface OEMMarketData {
   success: boolean;
   currentMonth: {
@@ -49,6 +70,10 @@ interface OEMMarketData {
     prophet?: Forecast;
   } | null;
   historicalData: SiamData[];
+  marketShare?: MarketShare[];
+  segmentAnalysis?: SegmentAnalysis[];
+  growthVelocity?: GrowthVelocity;
+  insights?: string[];
 }
 
 interface Dealer {
@@ -140,12 +165,13 @@ export default function MarketIntelligenceDashboard() {
   }, [] as Array<{ brand: string; current: number; previous: number }>);
 
   // Prepare forecast chart data
-  const forecastData = oemData?.forecast?.prophet?.predictions.map(p => ({
+  const predictions = oemData?.forecast?.prophet?.predictions;
+  const forecastData = Array.isArray(predictions) ? predictions.map(p => ({
     date: p.date.substring(0, 7),
     forecast: Math.round(p.value),
     lower: Math.round(p.lower),
     upper: Math.round(p.upper),
-  })) || [];
+  })) : [];
 
   // Calculate dealer metrics charts
   const dealerInventoryByFuel = dealerData?.metrics.byFuelType 
@@ -215,7 +241,7 @@ export default function MarketIntelligenceDashboard() {
                     <TrendingDown className="w-5 h-5 text-red-500" data-testid="icon-trending-down" />
                   ) : null}
                   <span className="text-2xl font-bold" data-testid="text-mom-change">
-                    {oemData?.trends?.monthOverMonthChange.toFixed(1)}%
+                    {oemData?.trends?.monthOverMonthChange?.toFixed(1) ?? 'N/A'}%
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground">
@@ -235,11 +261,121 @@ export default function MarketIntelligenceDashboard() {
                   {brandComparisonData[0]?.brand || 'N/A'}
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {brandComparisonData[0]?.current.toLocaleString()} units sold
+                  {brandComparisonData[0]?.current?.toLocaleString() ?? 'N/A'} units sold
                 </p>
               </CardContent>
             </Card>
           </div>
+
+          {/* AI-Generated Insights Panel */}
+          {oemData?.insights && oemData.insights.length > 0 && (
+            <Card data-testid="card-insights" className="border-blue-200 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-950/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="w-5 h-5" />
+                  Market Intelligence Insights
+                </CardTitle>
+                <CardDescription>AI-powered actionable insights from SIAM data</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {oemData.insights.map((insight, idx) => (
+                    <li key={idx} className="flex items-start gap-2" data-testid={`insight-${idx}`}>
+                      <span className="text-blue-600 dark:text-blue-400 mt-1">•</span>
+                      <span className="text-sm">{insight}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Market Share Chart */}
+          {oemData?.marketShare && oemData.marketShare.length > 0 && (
+            <Card data-testid="card-market-share">
+              <CardHeader>
+                <CardTitle>Market Share Distribution</CardTitle>
+                <CardDescription>
+                  Brand dominance by percentage share
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={oemData.marketShare}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="brand" />
+                    <YAxis />
+                    <Tooltip formatter={(value: number) => `${value.toFixed(1)}%`} />
+                    <Legend />
+                    <Bar dataKey="sharePercent" fill="#8884d8" name="Market Share %" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Segment Analysis Chart */}
+          {oemData?.segmentAnalysis && oemData.segmentAnalysis.length > 0 && (
+            <Card data-testid="card-segment-analysis">
+              <CardHeader>
+                <CardTitle>Segment-wise Performance</CardTitle>
+                <CardDescription>
+                  SUV / Sedan / Hatchback growth analysis
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={oemData.segmentAnalysis}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="segment" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="currentUnits" fill="#0088FE" name="Current Month" />
+                    <Bar dataKey="previousUnits" fill="#00C49F" name="Previous Month" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Growth Velocity Indicator */}
+          {oemData?.growthVelocity && (
+            <Card data-testid="card-growth-velocity">
+              <CardHeader>
+                <CardTitle>Market Momentum Indicator</CardTitle>
+                <CardDescription>
+                  Growth acceleration/deceleration analysis
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Latest Growth</p>
+                    <p className="text-2xl font-bold" data-testid="text-latest-growth">
+                      {oemData.growthVelocity.latestGrowth.toFixed(1)}%
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Acceleration</p>
+                    <p className="text-2xl font-bold" data-testid="text-acceleration">
+                      {oemData.growthVelocity.acceleration > 0 ? '+' : ''}{oemData.growthVelocity.acceleration.toFixed(1)}%
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Momentum</p>
+                    <Badge 
+                      className="mt-1" 
+                      variant={oemData.growthVelocity.momentum === 'accelerating' ? 'default' : oemData.growthVelocity.momentum === 'decelerating' ? 'destructive' : 'secondary'}
+                      data-testid="badge-momentum"
+                    >
+                      {oemData.growthVelocity.momentum}
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Brand Comparison Chart */}
           <Card data-testid="card-brand-comparison">
