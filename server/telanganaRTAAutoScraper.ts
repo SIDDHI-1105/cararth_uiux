@@ -52,7 +52,7 @@ export class TelanganaRTAAutoScraper {
             limit,
             offset,
           },
-          timeout: 30000, // 30 second timeout
+          timeout: 90000, // 90 second timeout (Telangana API can be slow)
         });
 
         if (!response.data.success || !response.data.result) {
