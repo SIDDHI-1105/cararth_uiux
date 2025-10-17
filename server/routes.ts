@@ -7616,6 +7616,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   }));
 
+  // Admin: Import SIAM national data manually
+  app.post('/api/admin/import-siam-data', isAuthenticated, asyncHandler(async (req: any, res: any) => {
+    const user = req.user as any;
+    const userRole = user?.claims?.role || user?.role || 'user';
+
+    if (userRole !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const schema = z.object({
+      month: z.number().min(1).max(12),
+      year: z.number().min(2020).max(2030),
+      totalPV: z.number().min(1),
+    });
+
+    const { month, year, totalPV } = schema.parse(req.body);
+
+    const { siamDataService } = await import('./siamDataService.js');
+    await siamDataService.importManualNationalData(month, year, totalPV);
+
+    res.json({
+      success: true,
+      message: `Imported national data for ${month}/${year} with ${totalPV.toLocaleString()} total PV sales`,
+    });
+  }));
+
   const httpServer = createServer(app);
   return httpServer;
 }

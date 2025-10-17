@@ -4,13 +4,23 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, FileText, CheckCircle, XCircle, AlertCircle, Download } from 'lucide-react';
+import { Upload, FileText, CheckCircle, XCircle, AlertCircle, Download, Database } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Label } from '@/components/ui/label';
 
 export default function RTADataImport() {
   const [file, setFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<any>(null);
+  
+  // National data import
+  const [siamMonth, setSiamMonth] = useState<number>(9);
+  const [siamYear, setSiamYear] = useState<number>(2025);
+  const [siamTotal, setSiamTotal] = useState<number>(372458);
+  const [importingSiam, setImportingSiam] = useState(false);
+  const [siamResult, setSiamResult] = useState<any>(null);
+  
   const { toast } = useToast();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,6 +92,42 @@ export default function RTADataImport() {
     }
   };
 
+  const handleSiamImport = async () => {
+    if (!siamTotal || siamTotal < 1) {
+      toast({
+        title: 'Invalid Input',
+        description: 'Please enter a valid total PV sales number',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setImportingSiam(true);
+    setSiamResult(null);
+
+    try {
+      const response = await apiRequest('/api/admin/import-siam-data', 'POST', {
+        month: siamMonth,
+        year: siamYear,
+        totalPV: siamTotal,
+      });
+
+      setSiamResult(response);
+      toast({
+        title: 'Import Successful',
+        description: response.message,
+      });
+    } catch (error) {
+      toast({
+        title: 'Import Error',
+        description: error instanceof Error ? error.message : 'Unknown error occurred',
+        variant: 'destructive',
+      });
+    } finally {
+      setImportingSiam(false);
+    }
+  };
+
   const downloadTemplate = () => {
     const csvContent = `Manufacturer_Name,Model_Desc,Fuel,Apprved_Dt,Transmission
 TATA MOTORS,Nexon,ELECTRIC,2025-09-15,AUTOMATIC
@@ -108,23 +154,30 @@ KIA,Seltos,PETROL,2025-09-19,AUTOMATIC`;
         </p>
       </div>
 
-      <Alert className="mb-6">
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          <strong>Data Source:</strong> Download CSV from{' '}
-          <a
-            href="https://data.telangana.gov.in/dataset/regional-transport-authority-vehicle-registrations-data"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary underline"
-          >
-            Telangana Open Data Portal
-          </a>
-          . The system will automatically aggregate by brand, model, and month.
-        </AlertDescription>
-      </Alert>
+      <Tabs defaultValue="telangana" className="mb-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="telangana">Telangana RTA Data</TabsTrigger>
+          <TabsTrigger value="national">National (SIAM) Data</TabsTrigger>
+        </TabsList>
 
-      <Card className="mb-6">
+        <TabsContent value="telangana" className="space-y-6">
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Data Source:</strong> Download CSV from{' '}
+              <a
+                href="https://data.telangana.gov.in/dataset/regional-transport-authority-vehicle-registrations-data"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary underline"
+              >
+                Telangana Open Data Portal
+              </a>
+              . The system will automatically aggregate by brand, model, and month.
+            </AlertDescription>
+          </Alert>
+
+          <Card>
         <CardHeader>
           <CardTitle>Upload RTA CSV File</CardTitle>
           <CardDescription>
@@ -242,10 +295,10 @@ KIA,Seltos,PETROL,2025-09-19,AUTOMATIC`;
         </Card>
       )}
 
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>CSV Format Guide</CardTitle>
-        </CardHeader>
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>CSV Format Guide</CardTitle>
+            </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div>
@@ -290,6 +343,144 @@ KIA,Seltos,PETROL,2025-09-19,AUTOMATIC`;
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="national" className="space-y-6">
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Data Source:</strong> SIAM (Society of Indian Automobile Manufacturers) press releases.
+              Get monthly PV sales from{' '}
+              <a
+                href="https://www.siam.in/press-release.aspx?mpgid=48&pgidtrail=50"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary underline"
+              >
+                SIAM Press Releases
+              </a>
+              . The system will distribute across OEMs using market share estimates.
+            </AlertDescription>
+          </Alert>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Import National Sales Data</CardTitle>
+              <CardDescription>
+                Enter the total Passenger Vehicle sales for a month from SIAM press releases. The system
+                will distribute sales across OEMs based on market share.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="siam-month">Month</Label>
+                  <Input
+                    id="siam-month"
+                    type="number"
+                    min="1"
+                    max="12"
+                    value={siamMonth}
+                    onChange={(e) => setSiamMonth(parseInt(e.target.value))}
+                    data-testid="input-siam-month"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="siam-year">Year</Label>
+                  <Input
+                    id="siam-year"
+                    type="number"
+                    min="2020"
+                    max="2030"
+                    value={siamYear}
+                    onChange={(e) => setSiamYear(parseInt(e.target.value))}
+                    data-testid="input-siam-year"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="siam-total">Total PV Sales (National)</Label>
+                <Input
+                  id="siam-total"
+                  type="number"
+                  min="1"
+                  value={siamTotal}
+                  onChange={(e) => setSiamTotal(parseInt(e.target.value))}
+                  placeholder="e.g., 372458"
+                  data-testid="input-siam-total"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Example: September 2025 = 372,458 units (from SIAM press release)
+                </p>
+              </div>
+
+              <Button
+                onClick={handleSiamImport}
+                disabled={importingSiam}
+                className="w-full"
+                data-testid="button-import-siam"
+              >
+                <Database className="w-4 h-4 mr-2" />
+                {importingSiam ? 'Importing...' : 'Import National Data'}
+              </Button>
+
+              {siamResult && (
+                <Alert>
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <AlertDescription>{siamResult.message}</AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>OEM Market Share Distribution</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="flex justify-between">
+                  <span>Maruti Suzuki:</span>
+                  <span className="font-semibold">41%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Hyundai:</span>
+                  <span className="font-semibold">15%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Tata Motors:</span>
+                  <span className="font-semibold">14%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Mahindra:</span>
+                  <span className="font-semibold">9%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Kia:</span>
+                  <span className="font-semibold">7%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Toyota:</span>
+                  <span className="font-semibold">5%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Honda:</span>
+                  <span className="font-semibold">4%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>MG Motor:</span>
+                  <span className="font-semibold">3%</span>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-4">
+                Based on 2024-2025 market share estimates. Sales are distributed proportionally across
+                OEMs.
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
