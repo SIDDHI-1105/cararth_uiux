@@ -1096,21 +1096,36 @@ router.get('/analytics/monthly-report', async (req: Request, res: Response) => {
     const predictions: any[] = [];
     for (const oem of oemPerformance.slice(0, 5)) { // Top 5 OEMs
       try {
-        // Get historical data for forecasting
+        // Get aggregated historical data for forecasting up to report month (sum by month)
         const historicalData = await db
           .select({
             brand: vehicleRegistrations.brand,
             year: vehicleRegistrations.year,
             month: vehicleRegistrations.month,
-            registrations_count: vehicleRegistrations.registrationsCount
+            registrations_count: drizzleSql<number>`SUM(${vehicleRegistrations.registrationsCount})`
           })
           .from(vehicleRegistrations)
-          .where(drizzleSql`${vehicleRegistrations.brand} = ${oem.brand} AND ${vehicleRegistrations.state} = 'Telangana'`);
+          .where(drizzleSql`${vehicleRegistrations.brand} = ${oem.brand} AND ${vehicleRegistrations.state} = 'Telangana' AND (${vehicleRegistrations.year} < ${reportYear} OR (${vehicleRegistrations.year} = ${reportYear} AND ${vehicleRegistrations.month} <= ${reportMonth}))`)
+          .groupBy(vehicleRegistrations.brand, vehicleRegistrations.year, vehicleRegistrations.month)
+          .orderBy(vehicleRegistrations.year, vehicleRegistrations.month);
 
         const forecast = await forecastBrand(historicalData, oem.brand, 3);
+        
+        // Check if forecast was successful
+        if (forecast.error) {
+          console.error(`Forecast error for ${oem.brand}:`, forecast.error);
+          continue;
+        }
+        
+        // Use Prophet predictions (more reliable than SARIMA with our data)
+        if (!forecast.prophet || !forecast.prophet.predictions) {
+          console.error(`Invalid forecast structure for ${oem.brand}:`, JSON.stringify(forecast).substring(0, 200));
+          continue;
+        }
+        
         predictions.push({
           brand: oem.brand,
-          forecasts: forecast.sarima.predictions.map(p => ({
+          forecasts: forecast.prophet.predictions.map(p => ({
             month: p.date,
             predicted: Math.round(p.value),
           }))
