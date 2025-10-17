@@ -124,32 +124,44 @@ export default function MonthlyOEMReport() {
     return dataPoint;
   });
 
+  // Get brands that have predictions
+  const predictedBrands = predictions.map(p => p.brand);
+  
   // Prepare extended forecast chart (last 6 months actual + next 3 months predictions)
   const extendedForecastData = (() => {
     if (predictions.length === 0) return [];
     
-    // Get last 6 months of actual data
+    // Get last 6 months of actual data for brands with predictions
     const last6Months = uniqueMonths.slice(-6);
     const actualData = last6Months.map(monthLabel => {
       const dataPoint: any = { month: monthLabel };
-      performance.slice(0, 3).forEach(oem => {
-        const tgData = monthlyComparison.find(t => t.brand === oem.brand && t.monthLabel === monthLabel);
+      predictedBrands.forEach(brand => {
+        const tgData = monthlyComparison.find(t => t.brand === brand && t.monthLabel === monthLabel);
         if (tgData) {
-          dataPoint[oem.brand] = tgData.tgRegistrations;
+          dataPoint[`${brand} (TG)`] = tgData.tgRegistrations;
+          dataPoint[`${brand} (India)`] = tgData.nationalRegistrations;
         }
       });
       return dataPoint;
     });
 
     // Add next 3 months predictions: Oct, Nov, Dec 2025
-    const predictionData = predictions[0].forecasts.map((f, idx) => {
+    const firstPrediction = predictions[0];
+    if (!firstPrediction.telangana) {
+      return []; // Skip if old format or no data
+    }
+    
+    const predictionData = firstPrediction.telangana.map((f: any, idx: number) => {
       const monthNum = parseInt(f.month.substring(5, 7));
       const yearNum = parseInt(f.month.substring(0, 4));
       const monthLabel = `${new Date(yearNum, monthNum - 1).toLocaleString('default', { month: 'short' })} ${yearNum}`;
       const dataPoint: any = { month: monthLabel };
-      predictions.forEach(p => {
-        if (p.forecasts[idx]) {
-          dataPoint[`${p.brand} (Forecast)`] = p.forecasts[idx].predicted;
+      predictions.forEach((p: any) => {
+        if (p.telangana && p.telangana[idx]) {
+          dataPoint[`${p.brand} (TG Forecast)`] = p.telangana[idx].predicted;
+        }
+        if (p.india && p.india[idx]) {
+          dataPoint[`${p.brand} (India Forecast)`] = p.india[idx].predicted;
         }
       });
       return dataPoint;
@@ -358,29 +370,53 @@ export default function MonthlyOEMReport() {
                 <YAxis label={{ value: 'Registrations', angle: -90, position: 'insideLeft' }} />
                 <Tooltip />
                 <Legend />
-                {performance.slice(0, 3).map((oem, idx) => (
-                  <React.Fragment key={oem.brand}>
-                    <Line 
-                      type="monotone" 
-                      dataKey={oem.brand} 
-                      stroke={['#0088FE', '#00C49F', '#FFBB28'][idx]}
-                      strokeWidth={2}
-                      dot={{ fill: ['#0088FE', '#00C49F', '#FFBB28'][idx], r: 4 }}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey={`${oem.brand} (Forecast)`}
-                      stroke={['#0088FE', '#00C49F', '#FFBB28'][idx]}
-                      strokeWidth={2}
-                      strokeDasharray="5 5"
-                      dot={{ fill: ['#0088FE', '#00C49F', '#FFBB28'][idx], r: 4 }}
-                    />
-                  </React.Fragment>
-                ))}
+                {predictions.map((pred, idx) => {
+                  const colors = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82ca9d', '#ffc658', '#ff7c7c'];
+                  const color = colors[idx % colors.length];
+                  return (
+                    <React.Fragment key={pred.brand}>
+                      <Line 
+                        type="monotone" 
+                        dataKey={`${pred.brand} (TG)`} 
+                        stroke={color}
+                        strokeWidth={2}
+                        dot={{ fill: color, r: 4 }}
+                        name={`${pred.brand} TG`}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey={`${pred.brand} (India)`}
+                        stroke={color}
+                        strokeWidth={2}
+                        strokeDasharray="3 3"
+                        dot={{ fill: color, r: 4 }}
+                        name={`${pred.brand} India`}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey={`${pred.brand} (TG Forecast)`}
+                        stroke={color}
+                        strokeWidth={2}
+                        strokeDasharray="5 5"
+                        dot={{ fill: color, r: 6 }}
+                        name={`${pred.brand} TG Forecast`}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey={`${pred.brand} (India Forecast)`}
+                        stroke={color}
+                        strokeWidth={2}
+                        strokeDasharray="8 4"
+                        dot={{ fill: color, r: 6 }}
+                        name={`${pred.brand} India Forecast`}
+                      />
+                    </React.Fragment>
+                  );
+                })}
               </LineChart>
             </ResponsiveContainer>
             <p className="text-xs text-muted-foreground mt-2">
-              Last 6 months actual data → Next 3 months forecast (Oct, Nov, Dec 2025)
+              Last 6 months actual data (solid/short dash) → Next 3 months forecast (medium/long dash). Telangana vs Pan-India predictions for all brands.
             </p>
           </CardContent>
         </Card>

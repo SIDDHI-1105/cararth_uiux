@@ -1092,12 +1092,12 @@ router.get('/analytics/monthly-report', async (req: Request, res: Response) => {
       };
     });
 
-    // Generate predictions for N+1, N+2, N+3 months
+    // Generate predictions for ALL OEMs (both Telangana and Pan-India)
     const predictions: any[] = [];
-    for (const oem of oemPerformance.slice(0, 5)) { // Top 5 OEMs
+    for (const oem of oemPerformance) { // All OEMs
       try {
-        // Get aggregated historical data for forecasting up to report month (sum by month)
-        const historicalData = await db
+        // Get Telangana historical data
+        const tgHistoricalData = await db
           .select({
             brand: vehicleRegistrations.brand,
             year: vehicleRegistrations.year,
@@ -1109,23 +1109,43 @@ router.get('/analytics/monthly-report', async (req: Request, res: Response) => {
           .groupBy(vehicleRegistrations.brand, vehicleRegistrations.year, vehicleRegistrations.month)
           .orderBy(vehicleRegistrations.year, vehicleRegistrations.month);
 
-        const forecast = await forecastBrand(historicalData, oem.brand, 3);
+        // Get Pan-India historical data
+        const indiaHistoricalData = await db
+          .select({
+            brand: vehicleRegistrations.brand,
+            year: vehicleRegistrations.year,
+            month: vehicleRegistrations.month,
+            registrations_count: drizzleSql<number>`SUM(${vehicleRegistrations.registrationsCount})`
+          })
+          .from(vehicleRegistrations)
+          .where(drizzleSql`${vehicleRegistrations.brand} = ${oem.brand} AND ${vehicleRegistrations.state} = 'India' AND (${vehicleRegistrations.year} < ${reportYear} OR (${vehicleRegistrations.year} = ${reportYear} AND ${vehicleRegistrations.month} <= ${reportMonth}))`)
+          .groupBy(vehicleRegistrations.brand, vehicleRegistrations.year, vehicleRegistrations.month)
+          .orderBy(vehicleRegistrations.year, vehicleRegistrations.month);
+
+        // Generate Telangana forecast
+        const tgForecast = await forecastBrand(tgHistoricalData, oem.brand, 3);
         
-        // Check if forecast was successful
-        if (forecast.error) {
-          console.error(`Forecast error for ${oem.brand}:`, forecast.error);
+        // Generate India forecast
+        const indiaForecast = await forecastBrand(indiaHistoricalData, oem.brand, 3);
+        
+        // Check if forecasts were successful
+        if (tgForecast.error || !tgForecast.prophet || !tgForecast.prophet.predictions) {
+          console.error(`TG forecast error for ${oem.brand}:`, tgForecast.error || 'Invalid structure');
           continue;
         }
         
-        // Use Prophet predictions (more reliable than SARIMA with our data)
-        if (!forecast.prophet || !forecast.prophet.predictions) {
-          console.error(`Invalid forecast structure for ${oem.brand}:`, JSON.stringify(forecast).substring(0, 200));
+        if (indiaForecast.error || !indiaForecast.prophet || !indiaForecast.prophet.predictions) {
+          console.error(`India forecast error for ${oem.brand}:`, indiaForecast.error || 'Invalid structure');
           continue;
         }
         
         predictions.push({
           brand: oem.brand,
-          forecasts: forecast.prophet.predictions.map(p => ({
+          telangana: tgForecast.prophet.predictions.map(p => ({
+            month: p.date,
+            predicted: Math.round(p.value),
+          })),
+          india: indiaForecast.prophet.predictions.map(p => ({
             month: p.date,
             predicted: Math.round(p.value),
           }))
