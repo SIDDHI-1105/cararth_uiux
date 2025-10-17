@@ -341,7 +341,6 @@ export default function MonthlyOEMReport() {
                 <TableHead>OEM Brand</TableHead>
                 <TableHead className="text-right">Telangana</TableHead>
                 <TableHead className="text-right">All India</TableHead>
-                <TableHead className="text-right">TG vs National</TableHead>
                 <TableHead className="text-right">TG Share %</TableHead>
                 <TableHead className="text-right">National Share %</TableHead>
               </TableRow>
@@ -352,12 +351,6 @@ export default function MonthlyOEMReport() {
                   <TableCell className="font-medium">{oem.brand}</TableCell>
                   <TableCell className="text-right font-semibold">{oem.actual.toLocaleString()}</TableCell>
                   <TableCell className="text-right font-semibold">{oem.nationalOEMCount.toLocaleString()}</TableCell>
-                  <TableCell className="text-right">
-                    <div className={`flex items-center justify-end gap-1 ${oem.vsNational >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {oem.vsNational >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                      <span className="font-medium">{oem.vsNational > 0 ? '+' : ''}{oem.vsNational}%</span>
-                    </div>
-                  </TableCell>
                   <TableCell className="text-right">
                     <Badge variant={oem.stateShare > 15 ? 'default' : 'secondary'}>
                       {oem.stateShare}%
