@@ -48,7 +48,11 @@ export default function DealerDashboard() {
 
   // Performance Analytics state
   const [selectedMonth, setSelectedMonth] = useState("October 2025");
-  const [performanceOem, setPerformanceOem] = useState("Hyundai");
+  const [performanceOem, setPerformanceOem] = useState(() => {
+    // Initialize based on stored OEM selection
+    const storedOem = localStorage.getItem("selectedOem");
+    return storedOem === "Others" ? "Others" : storedOem || "Hyundai";
+  });
 
   // Fetch dealers grouped by OEM (public endpoint)
   const { data: dealersData } = useQuery({
@@ -77,6 +81,9 @@ export default function DealerDashboard() {
     enabled: isAuthenticated && !!dealerId
   });
 
+  // Check if dealer is from "Others" category
+  const isOthersDealer = selectedOem === "Others";
+
   // Login mutation - now uses OEM + Dealer selection
   const loginMutation = useMutation({
     mutationFn: async () => {
@@ -89,7 +96,12 @@ export default function DealerDashboard() {
       localStorage.setItem("selectedDealer", selectedDealer);
       localStorage.setItem("dealerId", selectedDealer);
       setDealerId(selectedDealer);
-      setPerformanceOem(selectedOem);
+      // Set performanceOem based on dealer type
+      if (selectedOem === "Others") {
+        setPerformanceOem("Others"); // Use "Others" for non-OEM dealers
+      } else {
+        setPerformanceOem(selectedOem); // Use actual OEM for OEM dealers
+      }
       return { success: true, dealer };
     },
     onSuccess: (data) => {
@@ -333,10 +345,16 @@ export default function DealerDashboard() {
                     <Target className="h-5 w-5" />
                     Performance Filters
                   </CardTitle>
-                  <CardDescription>Select month and OEM to view performance metrics</CardDescription>
+                  <CardDescription>
+                    {isOthersDealer 
+                      ? "Select month to view your performance metrics"
+                      : "Select month and OEM to view performance metrics"
+                    }
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {isOthersDealer ? (
+                    // For "Others" dealers - only show month selector
                     <div className="space-y-2">
                       <Label>Month</Label>
                       <Select value={selectedMonth} onValueChange={setSelectedMonth}>
@@ -355,22 +373,44 @@ export default function DealerDashboard() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="space-y-2">
-                      <Label>OEM</Label>
-                      <Select value={selectedOem} onValueChange={setSelectedOem}>
-                        <SelectTrigger data-testid="select-oem">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Hyundai">Hyundai</SelectItem>
-                          <SelectItem value="Maruti Suzuki">Maruti Suzuki</SelectItem>
-                          <SelectItem value="Tata Motors">Tata Motors</SelectItem>
-                          <SelectItem value="Mahindra">Mahindra</SelectItem>
-                          <SelectItem value="Kia">Kia</SelectItem>
-                        </SelectContent>
-                      </Select>
+                  ) : (
+                    // For OEM dealers - show both month and OEM selectors
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Month</Label>
+                        <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                          <SelectTrigger data-testid="select-month">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="May 2025">May 2025</SelectItem>
+                            <SelectItem value="June 2025">June 2025</SelectItem>
+                            <SelectItem value="July 2025">July 2025</SelectItem>
+                            <SelectItem value="August 2025">August 2025</SelectItem>
+                            <SelectItem value="September 2025">September 2025</SelectItem>
+                            <SelectItem value="October 2025">October 2025</SelectItem>
+                            <SelectItem value="November 2025">November 2025</SelectItem>
+                            <SelectItem value="December 2025">December 2025</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>OEM</Label>
+                        <Select value={performanceOem} onValueChange={setPerformanceOem}>
+                          <SelectTrigger data-testid="select-oem">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Hyundai">Hyundai</SelectItem>
+                            <SelectItem value="Maruti Suzuki">Maruti Suzuki</SelectItem>
+                            <SelectItem value="Tata Motors">Tata Motors</SelectItem>
+                            <SelectItem value="Mahindra">Mahindra</SelectItem>
+                            <SelectItem value="Kia">Kia</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
 
