@@ -549,7 +549,7 @@ router.get('/by-oem', async (req: Request, res: Response) => {
     const dealersByOem: Record<string, any> = {};
     
     allDealers.forEach(dealer => {
-      const oem = dealer.oemBrand;
+      const oem = dealer.oemBrand || 'Non-OEM Dealers'; // Group Non-OEM dealers together
       const group = dealer.dealerGroup || 'Independent';
       
       if (!dealersByOem[oem]) {

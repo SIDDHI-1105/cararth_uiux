@@ -887,7 +887,7 @@ function BulkUploadSection() {
               Dealer Partners - Professional Inventory Management
             </h3>
             <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
-              Are you a dealer with multiple vehicles? Get access to our professional inventory upload system with Google Vehicle Listing feed compliance, API integration, and VIN validation.
+              Are you a dealer (OEM or Non-OEM) with multiple vehicles? Register once and get access to our professional inventory upload system with Google Vehicle Listing feed compliance, API integration, and VIN validation.
             </p>
             <Button
               variant="outline"
