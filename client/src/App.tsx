@@ -78,6 +78,7 @@ function Router() {
       <Route path="/admin/scraper-status" component={ScraperStatus} />
       <Route path="/admin/rta-import" component={RTADataImport} />
       <Route path="/analytics/market-intelligence" component={MarketIntelligenceDashboard} />
+      <Route path="/market-intelligence" component={MarketIntelligenceDashboard} />
       <Route path="/spinny-deals-hyderabad" component={SpinnyDeals} />
       <Route component={NotFound} />
     </Switch>
