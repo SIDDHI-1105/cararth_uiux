@@ -143,11 +143,13 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
+  // Local login (email/password) doesn't have expires_at - allow it through
   if (!user.expires_at) {
-    console.log('🔒 Authentication failed: No expiration time');
-    return res.status(401).json({ message: "Unauthorized" });
+    console.log('✅ Local authentication (no expiration check)');
+    return next();
   }
 
+  // OAuth login - check token expiration and refresh if needed
   const now = Math.floor(Date.now() / 1000);
   if (now <= user.expires_at) {
     return next();
