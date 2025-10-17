@@ -7568,6 +7568,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   }));
 
+  // Admin: Import Telangana RTA CSV data
+  app.post('/api/admin/import-rta-csv', isAuthenticated, upload.single('csv'), asyncHandler(async (req: any, res: any) => {
+    const user = req.user as any;
+    const userRole = user?.claims?.role || user?.role || 'user';
+
+    // Require admin role
+    if (userRole !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({ error: 'CSV file is required' });
+    }
+
+    const csvContent = file.buffer.toString('utf-8');
+    const { rtaImportService } = await import('./rtaImportService.js');
+    
+    const result = await rtaImportService.importTelanganaRTACSV(csvContent);
+    
+    res.json(result);
+  }));
+
+  // Admin: Clear Telangana data for re-import
+  app.delete('/api/admin/rta-data/:year/:month', isAuthenticated, asyncHandler(async (req: any, res: any) => {
+    const user = req.user as any;
+    const userRole = user?.claims?.role || user?.role || 'user';
+
+    if (userRole !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const year = parseInt(req.params.year);
+    const month = parseInt(req.params.month);
+
+    if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
+      return res.status(400).json({ error: 'Invalid year or month' });
+    }
+
+    const { rtaImportService } = await import('./rtaImportService.js');
+    await rtaImportService.clearTelanganaData(year, month);
+
+    res.json({ 
+      success: true, 
+      message: `Cleared Telangana data for ${month}/${year}` 
+    });
+  }));
+
   const httpServer = createServer(app);
   return httpServer;
 }
