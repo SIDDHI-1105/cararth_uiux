@@ -1040,8 +1040,8 @@ router.get('/analytics/monthly-report', async (req: Request, res: Response) => {
     // Sort by actual performance
     performanceReport.sort((a, b) => b.actual - a.actual);
 
-    // Get last 12 months trend for each OEM
-    const monthlyTrends = await db
+    // Get last 12 months trend for Telangana
+    const telanganaMonthlyTrends = await db
       .select({
         brand: vehicleRegistrations.brand,
         year: vehicleRegistrations.year,
@@ -1052,6 +1052,45 @@ router.get('/analytics/monthly-report', async (req: Request, res: Response) => {
       .where(drizzleSql`${vehicleRegistrations.state} = 'Telangana' AND ${vehicleRegistrations.year} >= ${reportYear - 1}`)
       .groupBy(vehicleRegistrations.brand, vehicleRegistrations.year, vehicleRegistrations.month)
       .orderBy(vehicleRegistrations.year, vehicleRegistrations.month);
+
+    // Get last 12 months trend for National (India)
+    const nationalMonthlyTrends = await db
+      .select({
+        brand: vehicleRegistrations.brand,
+        year: vehicleRegistrations.year,
+        month: vehicleRegistrations.month,
+        registrationsCount: drizzleSql<number>`SUM(${vehicleRegistrations.registrationsCount})`,
+      })
+      .from(vehicleRegistrations)
+      .where(drizzleSql`${vehicleRegistrations.state} = 'India' AND ${vehicleRegistrations.year} >= ${reportYear - 1}`)
+      .groupBy(vehicleRegistrations.brand, vehicleRegistrations.year, vehicleRegistrations.month)
+      .orderBy(vehicleRegistrations.year, vehicleRegistrations.month);
+
+    // Calculate TIV and market share trends
+    const monthlyComparison = telanganaMonthlyTrends.map(tgTrend => {
+      const nationalTrend = nationalMonthlyTrends.find(
+        nt => nt.brand === tgTrend.brand && nt.year === tgTrend.year && nt.month === tgTrend.month
+      );
+      
+      const tgTotal = telanganaMonthlyTrends
+        .filter(t => t.year === tgTrend.year && t.month === tgTrend.month)
+        .reduce((sum, t) => sum + Number(t.registrationsCount), 0);
+      
+      const nationalTotal = nationalMonthlyTrends
+        .filter(t => t.year === tgTrend.year && t.month === tgTrend.month)
+        .reduce((sum, t) => sum + Number(t.registrationsCount), 0);
+
+      return {
+        brand: tgTrend.brand,
+        year: tgTrend.year,
+        month: tgTrend.month,
+        tgRegistrations: Number(tgTrend.registrationsCount),
+        nationalRegistrations: nationalTrend ? Number(nationalTrend.registrationsCount) : 0,
+        tgMarketShare: tgTotal > 0 ? parseFloat(((Number(tgTrend.registrationsCount) / tgTotal) * 100).toFixed(2)) : 0,
+        nationalMarketShare: nationalTotal > 0 && nationalTrend ? parseFloat(((Number(nationalTrend.registrationsCount) / nationalTotal) * 100).toFixed(2)) : 0,
+        monthLabel: `${new Date(tgTrend.year, tgTrend.month - 1).toLocaleString('default', { month: 'short' })} ${tgTrend.year}`,
+      };
+    });
 
     // Generate predictions for N+1, N+2, N+3 months
     const predictions: any[] = [];
@@ -1093,13 +1132,7 @@ router.get('/analytics/monthly-report', async (req: Request, res: Response) => {
         nationalTotal,
       },
       performance: performanceReport,
-      monthlyTrends: monthlyTrends.map(t => ({
-        brand: t.brand,
-        year: t.year,
-        month: t.month,
-        registrations: Number(t.registrationsCount),
-        monthLabel: `${new Date(t.year, t.month - 1).toLocaleString('default', { month: 'short' })} ${t.year}`,
-      })),
+      monthlyComparison,
       predictions,
     });
   } catch (error) {

@@ -31,11 +31,14 @@ interface MonthlyReport {
     nationalTotal: number;
   };
   performance: OEMPerformance[];
-  monthlyTrends: Array<{
+  monthlyComparison: Array<{
     brand: string;
     year: number;
     month: number;
-    registrations: number;
+    tgRegistrations: number;
+    nationalRegistrations: number;
+    tgMarketShare: number;
+    nationalMarketShare: number;
     monthLabel: string;
   }>;
   predictions: Array<{
@@ -92,7 +95,7 @@ export default function MonthlyOEMReport() {
     );
   }
 
-  const { reportPeriod, summary, performance, monthlyTrends, predictions } = reportData;
+  const { reportPeriod, summary, performance, monthlyComparison, predictions } = reportData;
 
   // Prepare benchmark comparison chart data
   const chartData = performance.map(oem => ({
@@ -101,14 +104,15 @@ export default function MonthlyOEMReport() {
     'National': oem.nationalOEMCount,
   }));
 
-  // Prepare month-wise trend chart data
-  const uniqueMonths = [...new Set(monthlyTrends.map(t => t.monthLabel))].sort();
-  const trendChartData = uniqueMonths.map(monthLabel => {
+  // Prepare TG vs National market share trend chart
+  const uniqueMonths = [...new Set(monthlyComparison.map(t => t.monthLabel))].sort();
+  const marketShareTrendData = uniqueMonths.map(monthLabel => {
     const dataPoint: any = { month: monthLabel };
-    performance.slice(0, 5).forEach(oem => {
-      const trend = monthlyTrends.find(t => t.brand === oem.brand && t.monthLabel === monthLabel);
-      if (trend) {
-        dataPoint[oem.brand] = trend.registrations;
+    performance.slice(0, 3).forEach(oem => {
+      const tgData = monthlyComparison.find(t => t.brand === oem.brand && t.monthLabel === monthLabel);
+      if (tgData) {
+        dataPoint[`${oem.brand} (TG)`] = tgData.tgMarketShare;
+        dataPoint[`${oem.brand} (National)`] = tgData.nationalMarketShare;
       }
     });
     return dataPoint;
@@ -203,31 +207,44 @@ export default function MonthlyOEMReport() {
         </Card>
       </div>
 
-      {/* Month-wise Trend Chart */}
+      {/* TG vs National Market Share Trend */}
       <Card>
         <CardHeader>
-          <CardTitle>Month-wise OEM Performance Trends</CardTitle>
-          <CardDescription>Last 12+ months registration trends for top OEMs</CardDescription>
+          <CardTitle>Telangana vs National Market Share Trends</CardTitle>
+          <CardDescription>Market share comparison over last 12+ months (Top 3 OEMs)</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={400}>
-            <LineChart data={trendChartData}>
+            <LineChart data={marketShareTrendData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" angle={-45} textAnchor="end" height={100} />
-              <YAxis />
-              <Tooltip />
+              <YAxis label={{ value: 'Market Share (%)', angle: -90, position: 'insideLeft' }} />
+              <Tooltip formatter={(value: any) => `${value}%`} />
               <Legend />
-              {performance.slice(0, 5).map((oem, idx) => (
-                <Line 
-                  key={oem.brand} 
-                  type="monotone" 
-                  dataKey={oem.brand} 
-                  stroke={['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'][idx]}
-                  strokeWidth={2}
-                />
+              {performance.slice(0, 3).map((oem, idx) => (
+                <>
+                  <Line 
+                    key={`${oem.brand}-tg`}
+                    type="monotone" 
+                    dataKey={`${oem.brand} (TG)`}
+                    stroke={['#0088FE', '#00C49F', '#FFBB28'][idx]}
+                    strokeWidth={2}
+                  />
+                  <Line 
+                    key={`${oem.brand}-national`}
+                    type="monotone" 
+                    dataKey={`${oem.brand} (National)`}
+                    stroke={['#0088FE', '#00C49F', '#FFBB28'][idx]}
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                  />
+                </>
               ))}
             </LineChart>
           </ResponsiveContainer>
+          <p className="text-xs text-muted-foreground mt-2">
+            Solid lines: Telangana market share | Dashed lines: National market share
+          </p>
         </CardContent>
       </Card>
 
