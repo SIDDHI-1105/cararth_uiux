@@ -1040,6 +1040,19 @@ router.get('/analytics/monthly-report', async (req: Request, res: Response) => {
     // Sort by actual performance
     performanceReport.sort((a, b) => b.actual - a.actual);
 
+    // Get last 12 months trend for each OEM
+    const monthlyTrends = await db
+      .select({
+        brand: vehicleRegistrations.brand,
+        year: vehicleRegistrations.year,
+        month: vehicleRegistrations.month,
+        registrationsCount: drizzleSql<number>`SUM(${vehicleRegistrations.registrationsCount})`,
+      })
+      .from(vehicleRegistrations)
+      .where(drizzleSql`${vehicleRegistrations.state} = 'Telangana' AND ${vehicleRegistrations.year} >= ${reportYear - 1}`)
+      .groupBy(vehicleRegistrations.brand, vehicleRegistrations.year, vehicleRegistrations.month)
+      .orderBy(vehicleRegistrations.year, vehicleRegistrations.month);
+
     // Generate predictions for N+1, N+2, N+3 months
     const predictions: any[] = [];
     for (const oem of oemPerformance.slice(0, 5)) { // Top 5 OEMs
@@ -1080,6 +1093,13 @@ router.get('/analytics/monthly-report', async (req: Request, res: Response) => {
         nationalTotal,
       },
       performance: performanceReport,
+      monthlyTrends: monthlyTrends.map(t => ({
+        brand: t.brand,
+        year: t.year,
+        month: t.month,
+        registrations: Number(t.registrationsCount),
+        monthLabel: `${new Date(t.year, t.month - 1).toLocaleString('default', { month: 'short' })} ${t.year}`,
+      })),
       predictions,
     });
   } catch (error) {

@@ -29,6 +29,13 @@ interface MonthlyReport {
     nationalTotal: number;
   };
   performance: OEMPerformance[];
+  monthlyTrends: Array<{
+    brand: string;
+    year: number;
+    month: number;
+    registrations: number;
+    monthLabel: string;
+  }>;
   predictions: Array<{
     brand: string;
     forecasts: Array<{ month: string; predicted: number }>;
@@ -56,7 +63,7 @@ export default function MonthlyOEMReport() {
     );
   }
 
-  const { reportPeriod, summary, performance, predictions } = reportData;
+  const { reportPeriod, summary, performance, monthlyTrends, predictions } = reportData;
 
   // Prepare benchmark comparison chart data
   const chartData = performance.map(oem => ({
@@ -64,6 +71,19 @@ export default function MonthlyOEMReport() {
     'Telangana': oem.actual,
     'National': oem.nationalOEMCount,
   }));
+
+  // Prepare month-wise trend chart data
+  const uniqueMonths = [...new Set(monthlyTrends.map(t => t.monthLabel))].sort();
+  const trendChartData = uniqueMonths.map(monthLabel => {
+    const dataPoint: any = { month: monthLabel };
+    performance.slice(0, 5).forEach(oem => {
+      const trend = monthlyTrends.find(t => t.brand === oem.brand && t.monthLabel === monthLabel);
+      if (trend) {
+        dataPoint[oem.brand] = trend.registrations;
+      }
+    });
+    return dataPoint;
+  });
 
   // Prepare prediction chart data
   const predictionChartData = predictions.length > 0 ? predictions[0].forecasts.map((f, idx) => {
@@ -126,11 +146,39 @@ export default function MonthlyOEMReport() {
         </Card>
       </div>
 
+      {/* Month-wise Trend Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Month-wise OEM Performance Trends</CardTitle>
+          <CardDescription>Last 12+ months registration trends for top OEMs</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={400}>
+            <LineChart data={trendChartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" angle={-45} textAnchor="end" height={100} />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              {performance.slice(0, 5).map((oem, idx) => (
+                <Line 
+                  key={oem.brand} 
+                  type="monotone" 
+                  dataKey={oem.brand} 
+                  stroke={['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'][idx]}
+                  strokeWidth={2}
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
       {/* Benchmark Comparison Chart */}
       <Card>
         <CardHeader>
-          <CardTitle>Telangana vs National Performance Comparison</CardTitle>
-          <CardDescription>OEM registrations: Telangana state vs All India</CardDescription>
+          <CardTitle>Telangana vs National Performance ({reportPeriod.label})</CardTitle>
+          <CardDescription>Current month comparison: Telangana state vs All India</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={400}>
