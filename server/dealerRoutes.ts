@@ -1137,21 +1137,30 @@ router.get('/analytics/monthly-report', async (req: Request, res: Response) => {
     for (const oem of oemPerformance.slice(0, 5)) { // Top 5 OEMs
       try {
         // Get historical data (combine Maruti Nexa + Arena for forecast)
-        const brandCondition = oem.brand === 'Maruti Suzuki' 
-          ? drizzleSql`${vehicleRegistrations.brand} IN ('Maruti Suzuki', 'Maruti Suzuki Nexa', 'Maruti Suzuki Arena')`
-          : drizzleSql`${vehicleRegistrations.brand} = ${oem.brand}`;
-        
-        const historicalData = await db
-          .select({
-            brand: drizzleSql<string>`'${oem.brand}'`,
-            year: vehicleRegistrations.year,
-            month: vehicleRegistrations.month,
-            registrations_count: drizzleSql<number>`SUM(${vehicleRegistrations.registrationsCount})`
-          })
-          .from(vehicleRegistrations)
-          .where(drizzleSql`${brandCondition} AND ${vehicleRegistrations.state} = 'Telangana'`)
-          .groupBy(vehicleRegistrations.year, vehicleRegistrations.month)
-          .orderBy(vehicleRegistrations.year, vehicleRegistrations.month);
+        let historicalData;
+        if (oem.brand === 'Maruti Suzuki') {
+          historicalData = await db
+            .select({
+              brand: drizzleSql<string>`'Maruti Suzuki'`,
+              year: vehicleRegistrations.year,
+              month: vehicleRegistrations.month,
+              registrations_count: drizzleSql<number>`SUM(${vehicleRegistrations.registrationsCount})`
+            })
+            .from(vehicleRegistrations)
+            .where(drizzleSql`${vehicleRegistrations.brand} IN ('Maruti Suzuki', 'Maruti Suzuki Nexa', 'Maruti Suzuki Arena') AND ${vehicleRegistrations.state} = 'Telangana'`)
+            .groupBy(vehicleRegistrations.year, vehicleRegistrations.month)
+            .orderBy(vehicleRegistrations.year, vehicleRegistrations.month);
+        } else {
+          historicalData = await db
+            .select({
+              brand: vehicleRegistrations.brand,
+              year: vehicleRegistrations.year,
+              month: vehicleRegistrations.month,
+              registrations_count: vehicleRegistrations.registrationsCount
+            })
+            .from(vehicleRegistrations)
+            .where(drizzleSql`${vehicleRegistrations.brand} = ${oem.brand} AND ${vehicleRegistrations.state} = 'Telangana'`);
+        }
 
         const forecast = await forecastBrand(historicalData, oem.brand, 3);
         predictions.push({
