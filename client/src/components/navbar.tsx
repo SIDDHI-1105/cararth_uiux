@@ -60,17 +60,33 @@ export default function Navbar() {
               >
                 💰 Sell
               </Link>
-              <Link 
-                href="/news" 
-                className={`px-4 py-2 rounded-lg text-base md:text-lg font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 hover:shadow-lg ${
-                  location === "/news" 
-                    ? "text-white bg-gradient-to-r from-blue-500 to-indigo-600 shadow-md" 
-                    : "text-foreground hover:text-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-600 hover:shadow-md border-2 border-blue-500/20 hover:border-blue-500"
-                }`}
-                data-testid="link-throttle-talk"
-              >
-                🚗 Throttle Talk
-              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className={`px-4 py-2 rounded-lg text-base md:text-lg font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 hover:shadow-lg ${
+                      location === "/news" || location === "/market-intelligence"
+                        ? "text-white bg-gradient-to-r from-blue-500 to-indigo-600 shadow-md" 
+                        : "text-foreground hover:text-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-600 hover:shadow-md border-2 border-blue-500/20 hover:border-blue-500"
+                    }`}
+                    data-testid="link-throttle-talk"
+                  >
+                    🚗 Throttle Talk
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  <DropdownMenuItem asChild>
+                    <Link href="/news" className="flex items-center cursor-pointer">
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Automotive News
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/market-intelligence" className="flex items-center cursor-pointer">
+                      📊 <span className="ml-2">Market Intelligence</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <button
                 onClick={() => {
                   const faqSection = document.getElementById('faq');
@@ -197,18 +213,42 @@ export default function Navbar() {
               >
                 💰 Sell
               </Link>
-              <Link 
-                href="/news" 
-                className={`block px-4 py-4 rounded-lg text-lg font-semibold transition-all duration-300 min-h-[44px] flex items-center transform active:scale-95 ${
-                  location === "/news" 
+              <div className="space-y-1">
+                <div className={`px-4 py-3 rounded-lg text-lg font-semibold ${
+                  location === "/news" || location === "/market-intelligence"
                     ? "text-white bg-gradient-to-r from-blue-500 to-indigo-600 shadow-md" 
-                    : "text-foreground hover:text-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-600 hover:shadow-md border-2 border-blue-500/20"
-                }`}
-                data-testid="mobile-link-throttle-talk"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                🚗 Throttle Talk
-              </Link>
+                    : "text-foreground border-2 border-blue-500/20"
+                }`}>
+                  🚗 Throttle Talk
+                </div>
+                <div className="pl-4 space-y-1">
+                  <Link 
+                    href="/news" 
+                    className={`block px-4 py-3 rounded-lg text-base transition-all duration-300 min-h-[44px] flex items-center ${
+                      location === "/news" 
+                        ? "text-accent-foreground bg-accent" 
+                        : "text-muted-foreground hover:text-accent hover:bg-accent/10"
+                    }`}
+                    data-testid="mobile-link-news"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Automotive News
+                  </Link>
+                  <Link 
+                    href="/market-intelligence" 
+                    className={`block px-4 py-3 rounded-lg text-base transition-all duration-300 min-h-[44px] flex items-center ${
+                      location === "/market-intelligence" 
+                        ? "text-accent-foreground bg-accent" 
+                        : "text-muted-foreground hover:text-accent hover:bg-accent/10"
+                    }`}
+                    data-testid="mobile-link-market-intelligence"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    📊 Market Intelligence
+                  </Link>
+                </div>
+              </div>
               <button
                 onClick={() => {
                   setIsMobileMenuOpen(false);
