@@ -9,6 +9,9 @@ import { eq } from 'drizzle-orm';
 import { getTelanganaVehicleStats, syncTelanganaRtaData } from './telanganaRtaService';
 import { calculateROIRegistrations, getROIAverageSalesPerDealer, syncVahanData } from './vahanService';
 import { siamDataScraperService } from './siamDataScraper';
+import { forecastBrand, forecastMarket, testForecastingService } from './forecastingWrapper';
+import { vehicleRegistrations } from '../shared/schema';
+import { sql as drizzleSql } from 'drizzle-orm';
 
 const router = Router();
 
@@ -871,6 +874,107 @@ router.post('/admin/sync-siam-data', async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Sync failed'
+    });
+  }
+});
+
+/**
+ * GET /api/dealer/analytics/forecast/brand/:brand
+ * Get SARIMA + Prophet forecast for specific OEM/brand
+ */
+router.get('/analytics/forecast/brand/:brand', async (req: Request, res: Response) => {
+  try {
+    const { brand } = req.params;
+    const periods = parseInt(req.query.periods as string) || 6;
+
+    // Fetch historical data for the brand
+    const records = await db
+      .select({
+        brand: vehicleRegistrations.brand,
+        year: vehicleRegistrations.year,
+        month: vehicleRegistrations.month,
+        registrations_count: vehicleRegistrations.registrationsCount
+      })
+      .from(vehicleRegistrations)
+      .where(drizzleSql`${vehicleRegistrations.brand} = ${brand} AND ${vehicleRegistrations.state} = 'Telangana'`);
+
+    if (records.length < 24) {
+      res.status(400).json({
+        success: false,
+        error: `Insufficient data for ${brand}. Need 24+ months, got ${records.length} months`
+      });
+      return;
+    }
+
+    const forecast = await forecastBrand(records, brand, periods);
+
+    res.json({
+      success: true,
+      forecast
+    });
+  } catch (error) {
+    console.error('Brand forecast error:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Forecast failed'
+    });
+  }
+});
+
+/**
+ * GET /api/dealer/analytics/forecast/market
+ * Get SARIMA + Prophet forecast for overall Telangana market
+ */
+router.get('/analytics/forecast/market', async (req: Request, res: Response) => {
+  try {
+    const periods = parseInt(req.query.periods as string) || 6;
+
+    // Fetch all Telangana market data
+    const records = await db
+      .select({
+        brand: vehicleRegistrations.brand,
+        year: vehicleRegistrations.year,
+        month: vehicleRegistrations.month,
+        registrations_count: vehicleRegistrations.registrationsCount
+      })
+      .from(vehicleRegistrations)
+      .where(drizzleSql`${vehicleRegistrations.state} = 'Telangana'`);
+
+    if (records.length < 24) {
+      res.status(400).json({
+        success: false,
+        error: `Insufficient market data. Need 24+ months, got ${records.length} months`
+      });
+      return;
+    }
+
+    const forecast = await forecastMarket(records, periods);
+
+    res.json({
+      success: true,
+      forecast
+    });
+  } catch (error) {
+    console.error('Market forecast error:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Forecast failed'
+    });
+  }
+});
+
+/**
+ * GET /api/dealer/analytics/forecast/test
+ * Test forecasting service availability
+ */
+router.get('/analytics/forecast/test', async (req: Request, res: Response) => {
+  try {
+    const result = await testForecastingService();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: error instanceof Error ? error.message : 'Service unavailable'
     });
   }
 });
