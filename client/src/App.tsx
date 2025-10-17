@@ -57,8 +57,8 @@ function Router() {
       <Route path="/partner/dashboard" component={PartnerDashboard} />
       <Route path="/dealer/dashboard" component={DealerDashboard} />
       <Route path="/dealer-dashboard" component={DealerDashboard} />
-      <Route path="/oem-analytics" component={OemAnalyticsDashboard} />
-      <Route path="/analytics/oem" component={OemAnalyticsDashboard} />
+      <Route path="/news/oem-analytics" component={OemAnalyticsDashboard} />
+      <Route path="/news/analytics" component={OemAnalyticsDashboard} />
       <Route path="/news/:id" component={NewsDetail} />
       <Route path="/news" component={ThrottleTalk} />
       <Route path="/community" component={Community} />

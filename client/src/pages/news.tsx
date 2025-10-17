@@ -273,6 +273,14 @@ export default function ThrottleTalkPage() {
             </div>
             {isAuthenticated ? (
               <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => window.location.href = '/news/oem-analytics'}
+                  data-testid="button-oem-analytics"
+                >
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  OEM Analytics
+                </Button>
                 <Dialog open={isBenchmarkDialogOpen} onOpenChange={setIsBenchmarkDialogOpen}>
                   <DialogTrigger asChild>
                     <Button variant="outline" data-testid="button-new-benchmark">
