@@ -8,11 +8,12 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 interface OEMPerformance {
   brand: string;
   actual: number;
-  stateBenchmark: number;
-  nationalBenchmark: number;
-  vsState: number;
-  vsNational: number;
+  stateTotal: number;
+  nationalTotal: number;
+  nationalOEMCount: number;
   stateShare: number;
+  nationalShare: number;
+  vsNational: number;
 }
 
 interface MonthlyReport {
@@ -26,7 +27,6 @@ interface MonthlyReport {
     totalOEMs: number;
     stateTotal: number;
     nationalTotal: number;
-    stateAvgPerOEM: number;
   };
   performance: OEMPerformance[];
   predictions: Array<{
@@ -61,9 +61,8 @@ export default function MonthlyOEMReport() {
   // Prepare benchmark comparison chart data
   const chartData = performance.map(oem => ({
     brand: oem.brand,
-    Actual: oem.actual,
-    'State Avg': oem.stateBenchmark,
-    'National Avg': oem.nationalBenchmark,
+    'Telangana': oem.actual,
+    'National': oem.nationalOEMCount,
   }));
 
   // Prepare prediction chart data
@@ -106,23 +105,6 @@ export default function MonthlyOEMReport() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">State Average</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{summary.stateAvgPerOEM.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">per OEM</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">National Total</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{summary.nationalTotal.toLocaleString()}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Top Performer</CardTitle>
           </CardHeader>
           <CardContent>
@@ -133,13 +115,22 @@ export default function MonthlyOEMReport() {
             <p className="text-xs text-muted-foreground">{performance[0]?.stateShare}% market share</p>
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">National Total</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{summary.nationalTotal.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">All India registrations</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Benchmark Comparison Chart */}
       <Card>
         <CardHeader>
-          <CardTitle>OEM Performance vs State & National Benchmarks</CardTitle>
-          <CardDescription>Actual registrations compared to state and national averages</CardDescription>
+          <CardTitle>Telangana vs National Performance Comparison</CardTitle>
+          <CardDescription>OEM registrations: Telangana state vs All India</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={400}>
@@ -149,9 +140,8 @@ export default function MonthlyOEMReport() {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar dataKey="Actual" fill="#0088FE" />
-              <Bar dataKey="State Avg" fill="#00C49F" />
-              <Bar dataKey="National Avg" fill="#FFBB28" />
+              <Bar dataKey="Telangana" fill="#0088FE" />
+              <Bar dataKey="National" fill="#FFBB28" />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -168,12 +158,11 @@ export default function MonthlyOEMReport() {
             <TableHeader>
               <TableRow>
                 <TableHead>OEM Brand</TableHead>
-                <TableHead className="text-right">Actual</TableHead>
-                <TableHead className="text-right">State Avg</TableHead>
-                <TableHead className="text-right">vs State</TableHead>
-                <TableHead className="text-right">National Avg</TableHead>
-                <TableHead className="text-right">vs National</TableHead>
-                <TableHead className="text-right">State Share</TableHead>
+                <TableHead className="text-right">Telangana</TableHead>
+                <TableHead className="text-right">All India</TableHead>
+                <TableHead className="text-right">TG vs National</TableHead>
+                <TableHead className="text-right">TG Share %</TableHead>
+                <TableHead className="text-right">National Share %</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -181,14 +170,7 @@ export default function MonthlyOEMReport() {
                 <TableRow key={oem.brand} data-testid={`row-oem-${oem.brand}`}>
                   <TableCell className="font-medium">{oem.brand}</TableCell>
                   <TableCell className="text-right font-semibold">{oem.actual.toLocaleString()}</TableCell>
-                  <TableCell className="text-right">{oem.stateBenchmark.toLocaleString()}</TableCell>
-                  <TableCell className="text-right">
-                    <div className={`flex items-center justify-end gap-1 ${oem.vsState >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {oem.vsState >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                      <span className="font-medium">{oem.vsState > 0 ? '+' : ''}{oem.vsState}%</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">{oem.nationalBenchmark.toLocaleString()}</TableCell>
+                  <TableCell className="text-right font-semibold">{oem.nationalOEMCount.toLocaleString()}</TableCell>
                   <TableCell className="text-right">
                     <div className={`flex items-center justify-end gap-1 ${oem.vsNational >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {oem.vsNational >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
@@ -198,6 +180,11 @@ export default function MonthlyOEMReport() {
                   <TableCell className="text-right">
                     <Badge variant={oem.stateShare > 15 ? 'default' : 'secondary'}>
                       {oem.stateShare}%
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Badge variant="outline">
+                      {oem.nationalShare}%
                     </Badge>
                   </TableCell>
                 </TableRow>

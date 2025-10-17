@@ -1013,26 +1013,27 @@ router.get('/analytics/monthly-report', async (req: Request, res: Response) => {
 
     const nationalTotal = nationalData.reduce((sum, oem) => sum + Number(oem.registrationsCount), 0);
 
-    // Calculate state average per OEM
-    const stateAvgPerOEM = stateTotal / oemPerformance.length;
-
     // Build comparison report
     const performanceReport = oemPerformance.map(oem => {
       const nationalOEM = nationalData.find(n => n.brand === oem.brand);
       const nationalOEMCount = nationalOEM ? Number(nationalOEM.registrationsCount) : 0;
-      const nationalAvgPerOEM = nationalTotal / nationalData.length;
 
-      const vsState = stateTotal > 0 ? ((Number(oem.registrationsCount) / stateAvgPerOEM - 1) * 100) : 0;
-      const vsNational = nationalAvgPerOEM > 0 ? ((Number(oem.registrationsCount) / nationalAvgPerOEM - 1) * 100) : 0;
+      // Calculate market shares
+      const stateShare = stateTotal > 0 ? parseFloat(((Number(oem.registrationsCount) / stateTotal) * 100).toFixed(2)) : 0;
+      const nationalShare = nationalTotal > 0 ? parseFloat((nationalOEMCount / nationalTotal * 100).toFixed(2)) : 0;
+
+      // Growth comparison: OEM's Telangana performance vs National performance
+      const vsNationalPerformance = nationalOEMCount > 0 ? parseFloat(((Number(oem.registrationsCount) / nationalOEMCount - 1) * 100).toFixed(2)) : 0;
 
       return {
         brand: oem.brand,
         actual: Number(oem.registrationsCount),
-        stateBenchmark: Math.round(stateAvgPerOEM),
-        nationalBenchmark: Math.round(nationalAvgPerOEM),
-        vsState: parseFloat(vsState.toFixed(2)),
-        vsNational: parseFloat(vsNational.toFixed(2)),
-        stateShare: stateTotal > 0 ? parseFloat(((Number(oem.registrationsCount) / stateTotal) * 100).toFixed(2)) : 0,
+        stateTotal,  // Reference: total state market
+        nationalTotal, // Reference: total national market
+        nationalOEMCount, // This OEM's national performance
+        stateShare,
+        nationalShare,
+        vsNational: vsNationalPerformance, // Telangana vs National for this OEM
       };
     });
 
@@ -1077,7 +1078,6 @@ router.get('/analytics/monthly-report', async (req: Request, res: Response) => {
         totalOEMs: oemPerformance.length,
         stateTotal,
         nationalTotal,
-        stateAvgPerOEM: Math.round(stateAvgPerOEM),
       },
       performance: performanceReport,
       predictions,
