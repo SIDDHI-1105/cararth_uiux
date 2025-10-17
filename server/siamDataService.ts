@@ -13,6 +13,7 @@ interface SIAMMonthlyData {
 }
 
 // OEM market share estimates based on industry data (2024-2025)
+// Total should equal 1.0 (100%)
 const OEM_MARKET_SHARE: Record<string, number> = {
   'Maruti Suzuki': 0.41,  // ~41% market share
   'Hyundai': 0.15,        // ~15%
@@ -22,7 +23,7 @@ const OEM_MARKET_SHARE: Record<string, number> = {
   'Toyota': 0.05,         // ~5%
   'Honda': 0.04,          // ~4%
   'MG Motor': 0.03,       // ~3%
-  'Others': 0.02,         // ~2%
+  'Others': 0.02,         // ~2% (Renault, Nissan, Skoda, VW, etc.)
 };
 
 export class SIAMDataService {
@@ -96,11 +97,28 @@ export class SIAMDataService {
         throw new Error('No national PV data available');
       }
 
+      // Track total to ensure it matches input
+      let distributedTotal = 0;
+      const oemDataToInsert: Array<{brand: string, sales: number}> = [];
+
       // Generate OEM-level data using market share
       for (const [brand, share] of Object.entries(OEM_MARKET_SHARE)) {
-        if (brand === 'Others') continue; // Skip 'Others' category
-        
         const oemSales = Math.round(nationalTotal * share);
+        distributedTotal += oemSales;
+        oemDataToInsert.push({ brand, sales: oemSales });
+      }
+
+      // Adjust for rounding errors - add/subtract difference to largest OEM (Maruti Suzuki)
+      const difference = nationalTotal - distributedTotal;
+      if (difference !== 0 && oemDataToInsert.length > 0) {
+        const marutiIndex = oemDataToInsert.findIndex(d => d.brand === 'Maruti Suzuki');
+        if (marutiIndex >= 0) {
+          oemDataToInsert[marutiIndex].sales += difference;
+        }
+      }
+
+      // Insert all OEM data
+      for (const { brand, sales: oemSales } of oemDataToInsert) {
         
         // Insert/update national data for each OEM
         const existing = await db
@@ -139,7 +157,7 @@ export class SIAMDataService {
         }
       }
 
-      console.log(`Generated national OEM data for ${month}/${year} - Total: ${nationalTotal}`);
+      console.log(`Generated national OEM data for ${month}/${year} - Total: ${nationalTotal} (distributed: ${oemDataToInsert.reduce((sum, d) => sum + d.sales, 0)})`);
     } catch (error) {
       console.error('National OEM data generation error:', error);
       throw error;

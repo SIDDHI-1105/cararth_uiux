@@ -7583,10 +7583,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json({ error: 'CSV file is required' });
     }
 
+    const clearExisting = req.body.clearExisting === 'true' || req.body.clearExisting === true;
+
     const csvContent = file.buffer.toString('utf-8');
     const { rtaImportService } = await import('./rtaImportService.js');
     
-    const result = await rtaImportService.importTelanganaRTACSV(csvContent);
+    const result = await rtaImportService.importTelanganaRTACSV(csvContent, clearExisting);
     
     res.json(result);
   }));

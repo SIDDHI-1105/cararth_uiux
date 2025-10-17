@@ -29,26 +29,54 @@ interface AggregatedRegistration {
 // Brand normalization - combines sub-brands into parent brands
 const BRAND_MAPPING: Record<string, string> = {
   'TATA MOTORS': 'Tata Motors',
+  'TATA MOTORS LTD': 'Tata Motors',
+  'TATA MOTORS LIMITED': 'Tata Motors',
   'TATA': 'Tata Motors',
   'TATA SOLANIS': 'Tata Motors', // EV sub-brand
   'TATA PASSENGER ELECTRIC MOBILITY': 'Tata Motors',
+  'TATA PASSENGER ELECTRIC MOBILITY LTD': 'Tata Motors',
+  'TATA PASSENGER ELECTRIC MOBILITY LIMITED': 'Tata Motors',
   'MAHINDRA': 'Mahindra',
   'MAHINDRA ELECTRIC': 'Mahindra', // EV sub-brand
   'MAHINDRA & MAHINDRA': 'Mahindra',
+  'MAHINDRA & MAHINDRA LTD': 'Mahindra',
+  'MAHINDRA & MAHINDRA LIMITED': 'Mahindra',
+  'MAHINDRA AND MAHINDRA': 'Mahindra',
+  'M&M': 'Mahindra',
   'MARUTI SUZUKI': 'Maruti Suzuki',
+  'MARUTI SUZUKI INDIA': 'Maruti Suzuki',
+  'MARUTI SUZUKI INDIA LTD': 'Maruti Suzuki',
+  'MARUTI SUZUKI INDIA LIMITED': 'Maruti Suzuki',
   'MARUTI': 'Maruti Suzuki',
   'HYUNDAI': 'Hyundai',
+  'HYUNDAI MOTOR': 'Hyundai',
+  'HYUNDAI MOTOR INDIA': 'Hyundai',
+  'HYUNDAI MOTOR INDIA LTD': 'Hyundai',
+  'HYUNDAI MOTOR INDIA LIMITED': 'Hyundai',
   'KIA': 'Kia',
+  'KIA MOTORS': 'Kia',
+  'KIA INDIA': 'Kia',
   'TOYOTA': 'Toyota',
+  'TOYOTA KIRLOSKAR': 'Toyota',
+  'TOYOTA KIRLOSKAR MOTOR': 'Toyota',
   'HONDA': 'Honda',
+  'HONDA CARS': 'Honda',
+  'HONDA CARS INDIA': 'Honda',
+  'HONDA CARS INDIA LTD': 'Honda',
   'MG MOTOR': 'MG Motor',
   'MG': 'MG Motor',
+  'MG MOTOR INDIA': 'MG Motor',
   'RENAULT': 'Renault',
+  'RENAULT INDIA': 'Renault',
   'NISSAN': 'Nissan',
+  'NISSAN MOTOR': 'Nissan',
+  'NISSAN MOTOR INDIA': 'Nissan',
   'VOLKSWAGEN': 'Volkswagen',
   'VW': 'Volkswagen',
   'SKODA': 'Skoda',
+  'SKODA AUTO': 'Skoda',
   'FORD': 'Ford',
+  'FORD INDIA': 'Ford',
   'CITROEN': 'Citroen',
   'JEEP': 'Jeep',
   'BYD': 'BYD',
@@ -77,8 +105,9 @@ export class RTAImportService {
   
   /**
    * Parse Telangana RTA CSV and import into database
+   * @param clearExisting - If true, clears existing data for detected months before import
    */
-  async importTelanganaRTACSV(csvContent: string): Promise<{
+  async importTelanganaRTACSV(csvContent: string, clearExisting: boolean = false): Promise<{
     success: boolean;
     message: string;
     stats: {
@@ -86,6 +115,7 @@ export class RTAImportService {
       imported: number;
       skipped: number;
       errors: string[];
+      monthsDetected: string[];
     };
   }> {
     try {
@@ -101,7 +131,11 @@ export class RTAImportService {
         imported: 0,
         skipped: 0,
         errors: [] as string[],
+        monthsDetected: [] as string[],
       };
+
+      // Track unique months in CSV for validation
+      const monthsInCSV = new Set<string>();
 
       // Aggregate by brand/model/month/year
       const aggregationMap = new Map<string, AggregatedRegistration>();
@@ -115,8 +149,18 @@ export class RTAImportService {
             continue;
           }
 
-          // Normalize brand
-          const rawBrand = (row.Manufacturer_Name || '').trim().toUpperCase();
+          // Normalize brand - iteratively remove ALL common suffixes
+          let rawBrand = (row.Manufacturer_Name || '').trim().toUpperCase();
+          
+          // Remove common company suffixes iteratively until no more matches
+          let previousBrand = '';
+          while (rawBrand !== previousBrand) {
+            previousBrand = rawBrand;
+            rawBrand = rawBrand
+              .replace(/\s+(PVT\.?|PRIVATE|LTD\.?|LIMITED|LLP|INDIA|MOTORS?|AUTOMOBILE|AUTO)\.?\s*$/i, '')
+              .trim();
+          }
+          
           const brand = BRAND_MAPPING[rawBrand] || this.titleCase(rawBrand);
           
           if (!brand || brand.length < 2) {
@@ -135,6 +179,9 @@ export class RTAImportService {
           // Model and variant
           const model = this.titleCase((row.Model_Desc || 'Unknown').trim());
           const variant = 'Standard'; // RTA data doesn't have variant info
+
+          // Track months for validation
+          monthsInCSV.add(`${date.year}-${date.month}`);
 
           // Create aggregation key
           const key = `${brand}|${model}|${variant}|${fuelType}|${transmission}|${date.year}|${date.month}`;
@@ -160,7 +207,16 @@ export class RTAImportService {
         }
       }
 
-      // Insert aggregated data into database
+      // Clear existing data if requested (safe for re-imports)
+      if (clearExisting) {
+        for (const monthKey of monthsInCSV) {
+          const [yearStr, monthStr] = monthKey.split('-');
+          await this.clearTelanganaData(parseInt(yearStr), parseInt(monthStr));
+        }
+        stats.monthsDetected = Array.from(monthsInCSV);
+      }
+
+      // Insert aggregated data into database (upsert pattern - overwrite for idempotency)
       for (const [_, record] of Array.from(aggregationMap.entries())) {
         try {
           // Check if record already exists
@@ -182,7 +238,8 @@ export class RTAImportService {
             .limit(1);
 
           if (existing.length > 0) {
-            // Update existing record
+            // Update existing record (overwrite - assumes CSV contains complete month data)
+            // NOTE: If importing partial data, clear the month first using clearTelanganaData()
             await db
               .update(vehicleRegistrations)
               .set({
@@ -212,10 +269,16 @@ export class RTAImportService {
         }
       }
 
+      const monthsList = Array.from(monthsInCSV).join(', ');
+      const clearMsg = clearExisting ? ' (cleared existing data first)' : '';
+      
       return {
         success: true,
-        message: `Successfully imported ${stats.imported} aggregated records from ${stats.totalRows} raw rows`,
-        stats,
+        message: `Successfully imported ${stats.imported} aggregated records from ${stats.totalRows} raw rows for months: ${monthsList}${clearMsg}`,
+        stats: {
+          ...stats,
+          monthsDetected: Array.from(monthsInCSV),
+        },
       };
     } catch (error) {
       return {

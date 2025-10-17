@@ -13,6 +13,7 @@ export default function RTADataImport() {
   const [file, setFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [clearExisting, setClearExisting] = useState<boolean>(true); // Default to safe mode
   
   // National data import
   const [siamMonth, setSiamMonth] = useState<number>(9);
@@ -55,6 +56,7 @@ export default function RTADataImport() {
     try {
       const formData = new FormData();
       formData.append('csv', file);
+      formData.append('clearExisting', clearExisting.toString());
 
       const response = await fetch('/api/admin/import-rta-csv', {
         method: 'POST',
@@ -203,6 +205,20 @@ KIA,Seltos,PETROL,2025-09-19,AUTOMATIC`;
               <Download className="w-4 h-4 mr-2" />
               Template
             </Button>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="clear-existing"
+              checked={clearExisting}
+              onChange={(e) => setClearExisting(e.target.checked)}
+              className="h-4 w-4"
+              data-testid="checkbox-clear-existing"
+            />
+            <Label htmlFor="clear-existing" className="text-sm">
+              Clear existing data for detected months before import (recommended to prevent data loss)
+            </Label>
           </div>
 
           {file && (
