@@ -979,4 +979,99 @@ router.get('/analytics/forecast/test', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * GET /api/dealer/analytics/oem-dashboard
+ * Get comprehensive OEM-level market intelligence with historical data
+ */
+router.get('/analytics/oem-dashboard', async (req: Request, res: Response) => {
+  try {
+    // Get all OEM performance data with historical trends
+    const oemData = await db
+      .select({
+        brand: vehicleRegistrations.brand,
+        year: vehicleRegistrations.year,
+        month: vehicleRegistrations.month,
+        registrationsCount: vehicleRegistrations.registrationsCount
+      })
+      .from(vehicleRegistrations)
+      .where(drizzleSql`${vehicleRegistrations.state} = 'Telangana'`)
+      .orderBy(vehicleRegistrations.year, vehicleRegistrations.month);
+
+    // Aggregate by OEM
+    const oemMap = new Map<string, {
+      brand: string;
+      monthlyData: Array<{ year: number; month: number; count: number }>;
+      totalRegistrations: number;
+      dataMonths: number;
+    }>();
+
+    oemData.forEach(record => {
+      if (!oemMap.has(record.brand)) {
+        oemMap.set(record.brand, {
+          brand: record.brand,
+          monthlyData: [],
+          totalRegistrations: 0,
+          dataMonths: 0
+        });
+      }
+      
+      const oem = oemMap.get(record.brand)!;
+      oem.monthlyData.push({
+        year: record.year,
+        month: record.month,
+        count: record.registrationsCount
+      });
+      oem.totalRegistrations += record.registrationsCount;
+      oem.dataMonths++;
+    });
+
+    // Calculate market share and trends
+    const totalMarket = Array.from(oemMap.values()).reduce((sum, oem) => sum + oem.totalRegistrations, 0);
+    
+    const oemAnalytics = Array.from(oemMap.values()).map(oem => {
+      const marketShare = (oem.totalRegistrations / totalMarket) * 100;
+      const avgMonthly = oem.totalRegistrations / oem.dataMonths;
+      
+      // Calculate YoY growth (last 12 months vs previous 12)
+      const recentMonths = oem.monthlyData.slice(-12);
+      const previousMonths = oem.monthlyData.slice(-24, -12);
+      const recentTotal = recentMonths.reduce((sum, m) => sum + m.count, 0);
+      const previousTotal = previousMonths.reduce((sum, m) => sum + m.count, 0);
+      const yoyGrowth = previousTotal > 0 ? ((recentTotal - previousTotal) / previousTotal) * 100 : 0;
+
+      return {
+        brand: oem.brand,
+        totalRegistrations: oem.totalRegistrations,
+        marketShare: parseFloat(marketShare.toFixed(2)),
+        avgMonthlyRegistrations: Math.round(avgMonthly),
+        yoyGrowth: parseFloat(yoyGrowth.toFixed(2)),
+        monthlyData: oem.monthlyData,
+        dataMonths: oem.dataMonths
+      };
+    });
+
+    // Sort by market share
+    oemAnalytics.sort((a, b) => b.marketShare - a.marketShare);
+
+    res.json({
+      success: true,
+      data: {
+        oems: oemAnalytics,
+        totalMarket,
+        dataRange: {
+          from: `${oemData[0]?.year}-${String(oemData[0]?.month).padStart(2, '0')}-01`,
+          to: `${oemData[oemData.length - 1]?.year}-${String(oemData[oemData.length - 1]?.month).padStart(2, '0')}-01`,
+          months: oemData.length > 0 ? oemAnalytics[0].dataMonths : 0
+        }
+      }
+    });
+  } catch (error) {
+    console.error('OEM dashboard error:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch OEM analytics'
+    });
+  }
+});
+
 export default router;

@@ -19,6 +19,7 @@ import AdminSyndication from "./pages/admin-syndication";
 import PartnerInvite from "./pages/partner-invite";
 import PartnerDashboard from "./pages/partner-dashboard";
 import DealerDashboard from "./pages/DealerDashboard";
+import OemAnalyticsDashboard from "./pages/OemAnalyticsDashboard";
 import ThrottleTalk from "./pages/news";
 import NewsDetail from "./pages/news-detail";
 import Community from "./pages/community";
@@ -56,6 +57,8 @@ function Router() {
       <Route path="/partner/dashboard" component={PartnerDashboard} />
       <Route path="/dealer/dashboard" component={DealerDashboard} />
       <Route path="/dealer-dashboard" component={DealerDashboard} />
+      <Route path="/oem-analytics" component={OemAnalyticsDashboard} />
+      <Route path="/analytics/oem" component={OemAnalyticsDashboard} />
       <Route path="/news/:id" component={NewsDetail} />
       <Route path="/news" component={ThrottleTalk} />
       <Route path="/community" component={Community} />
