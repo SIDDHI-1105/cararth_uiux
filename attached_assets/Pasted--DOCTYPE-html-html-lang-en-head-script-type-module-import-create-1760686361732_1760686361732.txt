@@ -1,0 +1,372 @@
+<!DOCTYPE html>				
+<html lang="en">				
+  <head>				
+    <script type="module">				
+import { createHotContext } from "/@vite/client";				
+const hot = createHotContext("/__dummy__runtime-error-plugin");				
+				
+function sendError(error) {				
+  if (!(error instanceof Error)) {				
+    error = new Error("(unknown runtime error)");				
+  }				
+  const serialized = {				
+    message: error.message				
+    stack: error.stack				
+  };				
+  hot.send("runtime-error-plugin:error"	 serialized);			
+}				
+				
+window.addEventListener("error"	 (evt) => {			
+  sendError(evt.error);				
+});				
+				
+window.addEventListener("unhandledrejection"	 (evt) => {			
+  sendError(evt.reason);				
+});				
+</script>				
+				
+    <script type="module">				
+import RefreshRuntime from "/@react-refresh"				
+RefreshRuntime.injectIntoGlobalHook(window)				
+window.$RefreshReg$ = () => {}				
+window.$RefreshSig$ = () => (type) => type				
+window.__vite_plugin_react_preamble_installed__ = true				
+</script>				
+				
+    <script type="module" src="/@vite/client"></script>				
+				
+    <!-- Theme initialization - Runs before page load to prevent flash -->				
+    <script>				
+      (function() {				
+        // Priority: User's explicit choice > Default to light mode				
+        const savedTheme = localStorage.getItem('theme');				
+        if (savedTheme === 'dark') {				
+          document.documentElement.classList.add('dark');				
+          document.documentElement.setAttribute('data-theme'	 'dark');			
+        } else {				
+          // Default to light mode on mobile	 even if system prefers dark			
+          document.documentElement.classList.remove('dark');				
+          document.documentElement.setAttribute('data-theme'	 'light');			
+          if (!savedTheme) {				
+            localStorage.setItem('theme'	 'light');			
+          }				
+        }				
+      })();				
+    </script>				
+    				
+    <!-- Google tag (gtag.js) -->				
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-B5GJ9X3GXZ"></script>				
+    <script>				
+      window.dataLayer = window.dataLayer || [];				
+      function gtag(){dataLayer.push(arguments);}				
+      gtag('js'	 new Date());			
+      gtag('config'	 'G-B5GJ9X3GXZ');			
+    </script>				
+    				
+    <meta charset="UTF-8" />				
+    <meta name="viewport" content="width=device-width	 initial-scale=1.0	 maximum-scale=1" />		
+    <title>CarArth - India's Very Own Used Car Search Engine</title>				
+    <meta name="description" content="India's very own used car search engine. Compare cars across platforms	 discover true value with AI intelligence. Buy & sell with confidence on CarArth.">			
+    				
+    <!-- Open Graph / Facebook -->				
+    <meta property="og:type" content="website">				
+    <meta property="og:url" content="https://cararth.com/">				
+    <meta property="og:title" content="CarArth - India's Very Own Used Car Search Engine">				
+    <meta property="og:description" content="Discover cars from across platforms	 compare smarter	 and buy or sell with confidence. More than a marketplace — your trusted car partner.">		
+    <meta property="og:site_name" content="CarArth">				
+    				
+    <!-- Twitter -->				
+    <meta property="twitter:card" content="summary_large_image">				
+    <meta property="twitter:url" content="https://cararth.com/">				
+    <meta property="twitter:title" content="CarArth - India's Very Own Used Car Search Engine">				
+    <meta property="twitter:description" content="India's very own cross-platform used car search engine. Compare cars from CarDekho	 OLX	 Cars24 & more with AI intelligence.">		
+    				
+    <!-- SEO Keywords -->				
+    <meta name="keywords" content="used cars India	 car search engine	 compare cars	 authentic car listings	 AI car recommendations
+    				
+    <!-- Canonical Link -->				
+    <link rel="canonical" href="https://cararth.com/">				
+    				
+    <!-- Social Media Images -->				
+    <meta property="og:image" content="https://cararth.com/og-image.png">				
+    <meta property="twitter:image" content="https://cararth.com/twitter-image.png">				
+    				
+    <!-- Contact Information -->				
+    <meta name="contact" content="connect@cararth.com">				
+    <meta name="author" content="CarArth">				
+    				
+    <!-- Enhanced Structured Data for AI Search Engines -->				
+    <script type="application/ld+json">				
+    {				
+      "@context": "https://schema.org"				
+      "@graph": [				
+        {				
+          "@type": "Organization"				
+          "@id": "https://cararth.com/#organization"				
+          "name": "CarArth"				
+          "legalName": "CarArth - India's Used Car Search Engine"				
+          "url": "https://cararth.com"				
+          "logo": "https://cararth.com/logo.png"				
+          "email": "connect@cararth.com"				
+          "description": "India's very own used car search engine powered by AI. Compare authentic listings from CarDekho	 OLX	 Cars24	 CarWale	 and more. Multi-LLM compliance checks ensure quality."
+          "foundingDate": "2024"				
+          "areaServed": {				
+            "@type": "Country"				
+            "name": "India"				
+          }				
+          "sameAs": [				
+            "https://www.facebook.com/cararth"				
+            "https://twitter.com/cararth"				
+            "https://www.linkedin.com/company/cararth"				
+          ]				
+          "contactPoint": {				
+            "@type": "ContactPoint"				
+            "email": "connect@cararth.com"				
+            "contactType": "Customer Service"				
+            "areaServed": "IN"				
+          }				
+        }				
+        {				
+          "@type": "WebSite"				
+          "@id": "https://cararth.com/#website"				
+          "url": "https://cararth.com"				
+          "name": "CarArth"				
+          "description": "India's Very Own Used Car Search Engine"				
+          "publisher": {				
+            "@id": "https://cararth.com/#organization"				
+          }				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
