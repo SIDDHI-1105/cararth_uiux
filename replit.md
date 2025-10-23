@@ -54,6 +54,29 @@ Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, an
   - Template available at `/public/bulk-upload-template.csv`
 - **Dealer Performance Analytics Dashboard**: Interactive dashboard for Telangana dealers with real-time metrics, ML forecasts, and market benchmarks, including sales trend visualization, VAHAN ROI benchmark, and Telangana district analysis.
 
+## AI/ML Capabilities
+
+### Llama 3.1 Fine-Tuning Feasibility
+- **Purpose**: Test feasibility of fine-tuning Llama 3.1 8B on Replit for car-specific Q&A
+- **Script**: `llama_fine_tuning_feasibility.py` - Comprehensive feasibility test with QLoRA
+- **Features**:
+  - 4-bit quantization (BitsAndBytes NF4) for memory efficiency
+  - QLoRA configuration (rank 16, alpha 32) for parameter-efficient training
+  - Auto-generates 100 sample Indian car listings for testing
+  - Monitors RAM/GPU memory at each stage
+  - Trains for 200 steps with batch size 2, gradient accumulation 4
+  - Outputs feasibility report, memory profile, and recommendations
+- **Requirements**: 
+  - Hugging Face authentication (HF_TOKEN secret)
+  - Llama 3.1 license acceptance at https://huggingface.co/meta-llama/Meta-Llama-3.1-8B-Instruct
+  - Minimum 16GB RAM recommended
+- **Output Files**:
+  - `feasibility_report.json` - Detailed feasibility analysis with next steps
+  - `memory_profile.csv` - Memory usage timeline
+  - `sample_dataset.csv` - Generated car listing dataset
+- **Usage**: Run `./run_llama_test.sh` or `python llama_fine_tuning_feasibility.py`
+- **Guide**: See `LLAMA_FINETUNING_GUIDE.md` for complete documentation
+
 ## External Dependencies
 
 ### Database & Storage
