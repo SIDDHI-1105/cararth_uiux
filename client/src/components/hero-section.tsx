@@ -2,10 +2,11 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search } from "lucide-react";
+import { Search, Sparkles, ShieldCheck, User } from "lucide-react";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import { TooltipWrapper } from "@/components/tooltip-wrapper";
 import { HapticButton } from "@/components/haptic-feedback";
+import { Card } from "@/components/ui/card";
 
 interface HeroSearchProps {
   onSearch: (filters: {
@@ -26,6 +27,11 @@ interface HeroStats {
     name: string;
     count: number;
   }>;
+  sourceBreakdown: {
+    ethicalAi: number;
+    exclusiveDealer: number;
+    userDirect: number;
+  };
   lastUpdated: string;
 }
 
@@ -94,6 +100,47 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
                 <span className="text-muted-foreground">Live Platforms</span>
               </div>
             </div>
+
+            {/* Source Breakdown - New */}
+            {!statsLoading && heroStats?.sourceBreakdown && (
+              <div className="mb-8 max-w-4xl mx-auto">
+                <p className="text-sm text-muted-foreground mb-4">Powered By Our Multi-Source Network:</p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <Card className="p-4 bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800" data-testid="card-ethical-ai">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      <span className="text-xs font-medium text-blue-700 dark:text-blue-300">Cararth×Ethical AI</span>
+                    </div>
+                    <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                      {heroStats.sourceBreakdown.ethicalAi}
+                    </div>
+                    <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">AI-verified listings</div>
+                  </Card>
+                  
+                  <Card className="p-4 bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800" data-testid="card-exclusive-dealer">
+                    <div className="flex items-center gap-2 mb-2">
+                      <ShieldCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
+                      <span className="text-xs font-medium text-green-700 dark:text-green-300">Cararth×Exclusive Dealer</span>
+                    </div>
+                    <div className="text-2xl font-bold text-green-900 dark:text-green-100">
+                      {heroStats.sourceBreakdown.exclusiveDealer}
+                    </div>
+                    <div className="text-xs text-green-600 dark:text-green-400 mt-1">Dealer partners</div>
+                  </Card>
+                  
+                  <Card className="p-4 bg-purple-50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-800" data-testid="card-user-direct">
+                    <div className="flex items-center gap-2 mb-2">
+                      <User className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                      <span className="text-xs font-medium text-purple-700 dark:text-purple-300">Cararth×User</span>
+                    </div>
+                    <div className="text-2xl font-bold text-purple-900 dark:text-purple-100">
+                      {heroStats.sourceBreakdown.userDirect}
+                    </div>
+                    <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">Direct sellers</div>
+                  </Card>
+                </div>
+              </div>
+            )}
             
             {/* Connected Platforms Display - Dynamic real-time data */}
             <div className="mb-8">
