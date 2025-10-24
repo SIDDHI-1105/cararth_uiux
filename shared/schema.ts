@@ -81,6 +81,7 @@ export const cars = pgTable("cars", {
   features: text("features").array().default([]),
   images: text("images").array().default([]),
   source: text("source"), // Legal data source: Google Places, GMB Dealer, etc.
+  listingSource: text("listing_source").notNull().default('user_direct'), // 'ethical_ai' | 'exclusive_dealer' | 'user_direct'
   isVerified: boolean("is_verified").default(false),
   isSold: boolean("is_sold").default(false),
   isFeatured: boolean("is_featured").default(false),
@@ -949,6 +950,9 @@ export const cachedPortalListings = pgTable(
     partnerUserId: varchar("partner_user_id"), // User who created (for partner origin)
     partnerVerificationStatus: text("partner_verification_status").default('pending'), // 'pending' | 'verified' | 'rejected'
     
+    // Listing source branding
+    listingSource: text("listing_source").notNull().default('ethical_ai'), // 'ethical_ai' | 'exclusive_dealer' | 'user_direct'
+    
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
@@ -968,6 +972,46 @@ export const insertCachedPortalListingSchema = createInsertSchema(cachedPortalLi
 
 export type InsertCachedPortalListing = z.infer<typeof insertCachedPortalListingSchema>;
 export type CachedPortalListing = typeof cachedPortalListings.$inferSelect;
+
+// Daily listing metrics for tracking growth trends
+export const listingMetrics = pgTable("listing_metrics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  date: timestamp("date").notNull(), // Snapshot date (midnight IST)
+  
+  // Overall counts
+  totalListings: integer("total_listings").notNull().default(0),
+  activeListings: integer("active_listings").notNull().default(0),
+  
+  // Breakdown by listing source
+  ethicalAiCount: integer("ethical_ai_count").notNull().default(0),
+  exclusiveDealerCount: integer("exclusive_dealer_count").notNull().default(0),
+  userDirectCount: integer("user_direct_count").notNull().default(0),
+  
+  // Daily changes
+  newAdditions: integer("new_additions").notNull().default(0),
+  removals: integer("removals").notNull().default(0),
+  netChange: integer("net_change").notNull().default(0),
+  
+  // Portal breakdown for ethical AI
+  carDekhoCount: integer("car_dekho_count").default(0),
+  olxCount: integer("olx_count").default(0),
+  cars24Count: integer("cars24_count").default(0),
+  carWaleCount: integer("car_wale_count").default(0),
+  teamBhpCount: integer("team_bhp_count").default(0),
+  otherPortalsCount: integer("other_portals_count").default(0),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_listing_metrics_date").on(table.date),
+]);
+
+export const insertListingMetricsSchema = createInsertSchema(listingMetrics).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertListingMetrics = z.infer<typeof insertListingMetricsSchema>;
+export type ListingMetrics = typeof listingMetrics.$inferSelect;
 
 // AI model response cache for cost optimization
 export const aiModelCache = pgTable("ai_model_cache", {
