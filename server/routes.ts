@@ -1406,8 +1406,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      // Handle both OAuth (claims.sub) and local auth (id)
+      const userId = req.user.claims?.sub || req.user.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Invalid user session" });
+      }
+      
       const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
       res.json(user);
     } catch (error) {
       logError(createAppError('User fetch operation failed', 500, ErrorCategory.DATABASE), 'User lookup operation');
