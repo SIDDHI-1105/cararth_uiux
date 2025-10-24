@@ -302,70 +302,50 @@ Action Required: Manual intervention needed to fix ${scraperName} scraper.
 
     const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-    // Get all unique scrapers
-    const scraperNames = await storage.db
-      .selectDistinct({ scraperName: scraperHealthLogs.scraperName })
-      .from(scraperHealthLogs);
+    // Optimized: Get all logs in one query
+    const allLogs = await storage.db
+      .select()
+      .from(scraperHealthLogs)
+      .orderBy(desc(scraperHealthLogs.startedAt));
 
-    const scraperStats = await Promise.all(
-      scraperNames.map(async ({ scraperName }) => {
-        // Get last run
-        const lastRunResult = await storage.db
-          .select()
-          .from(scraperHealthLogs)
-          .where(eq(scraperHealthLogs.scraperName, scraperName))
-          .orderBy(desc(scraperHealthLogs.startedAt))
-          .limit(1);
+    // Group by scraper name and calculate stats in memory (much faster than multiple DB queries)
+    const scraperMap = new Map<string, any[]>();
+    for (const log of allLogs) {
+      if (!scraperMap.has(log.scraperName)) {
+        scraperMap.set(log.scraperName, []);
+      }
+      scraperMap.get(log.scraperName)!.push(log);
+    }
 
-        const lastRun = lastRunResult[0];
+    const scraperStats = Array.from(scraperMap.entries()).map(([scraperName, logs]) => {
+      // Get last run (logs are already sorted by startedAt desc)
+      const lastRun = logs[0];
 
-        // Get last successful run
-        const lastSuccessResult = await storage.db
-          .select()
-          .from(scraperHealthLogs)
-          .where(
-            and(
-              eq(scraperHealthLogs.scraperName, scraperName),
-              eq(scraperHealthLogs.status, 'success')
-            )
-          )
-          .orderBy(desc(scraperHealthLogs.startedAt))
-          .limit(1);
+      // Get last successful run
+      const lastSuccess = logs.find(l => l.status === 'success');
 
-        const lastSuccess = lastSuccessResult[0];
+      // Calculate 24h success rate
+      const last24hRuns = logs.filter(l => l.startedAt >= last24h);
+      const successfulRuns = last24hRuns.filter(r => r.status === 'success').length;
+      const totalRuns = last24hRuns.length;
+      const successRate24h = totalRuns > 0 ? (successfulRuns / totalRuns) * 100 : 0;
 
-        // Calculate 24h success rate
-        const last24hRuns = await storage.db
-          .select()
-          .from(scraperHealthLogs)
-          .where(
-            and(
-              eq(scraperHealthLogs.scraperName, scraperName),
-              gte(scraperHealthLogs.startedAt, last24h)
-            )
-          );
+      // Calculate average duration
+      const completedRuns = last24hRuns.filter((r: any) => r.durationMs !== null);
+      const averageDurationMs = completedRuns.length > 0
+        ? completedRuns.reduce((sum: number, r: any) => sum + (r.durationMs || 0), 0) / completedRuns.length
+        : undefined;
 
-        const successfulRuns = last24hRuns.filter(r => r.status === 'success').length;
-        const totalRuns = last24hRuns.length;
-        const successRate24h = totalRuns > 0 ? (successfulRuns / totalRuns) * 100 : 0;
-
-        // Calculate average duration
-        const completedRuns = last24hRuns.filter((r: any) => r.durationMs !== null);
-        const averageDurationMs = completedRuns.length > 0
-          ? completedRuns.reduce((sum: number, r: any) => sum + (r.durationMs || 0), 0) / completedRuns.length
-          : undefined;
-
-        return {
-          name: scraperName,
-          type: lastRun?.scraperType || 'unknown',
-          status: lastRun?.status || 'unknown',
-          lastRun: lastRun?.startedAt,
-          lastSuccess: lastSuccess?.startedAt,
-          successRate24h: Math.round(successRate24h),
-          averageDurationMs: averageDurationMs ? Math.round(averageDurationMs) : undefined
-        };
-      })
-    );
+      return {
+        name: scraperName,
+        type: lastRun?.scraperType || 'unknown',
+        status: lastRun?.status || 'unknown',
+        lastRun: lastRun?.startedAt,
+        lastSuccess: lastSuccess?.startedAt,
+        successRate24h: Math.round(successRate24h),
+        averageDurationMs: averageDurationMs ? Math.round(averageDurationMs) : undefined
+      };
+    });
 
     // Determine overall health
     const failing = scraperStats.filter(s => s.successRate24h < 50).length;
