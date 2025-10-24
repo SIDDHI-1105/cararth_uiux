@@ -1,9 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { AlertCircle, CheckCircle, XCircle, TrendingUp, Database, Activity } from "lucide-react";
+import { AlertCircle, CheckCircle, XCircle, TrendingUp, Database, Activity, LogIn } from "lucide-react";
+import { AuthDialog } from "@/components/auth-dialog";
 
 export default function AdminDiagnostics() {
 
@@ -51,8 +53,20 @@ export default function AdminDiagnostics() {
           <CardHeader>
             <CardTitle className="text-center" data-testid="text-auth-required">Authentication Required</CardTitle>
           </CardHeader>
-          <CardContent className="text-center text-muted-foreground">
-            Please sign in to access the admin dashboard.
+          <CardContent className="space-y-4">
+            <p className="text-center text-muted-foreground">
+              Please sign in to access the admin dashboard.
+            </p>
+            <div className="flex justify-center">
+              <AuthDialog
+                trigger={
+                  <Button size="lg" className="w-full max-w-xs" data-testid="button-login">
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Sign In
+                  </Button>
+                }
+              />
+            </div>
           </CardContent>
         </Card>
       </div>
