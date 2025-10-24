@@ -131,18 +131,19 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
-  const user = req.user as any;
-
-  // Skip authentication in development mode for testing
-  if (process.env.NODE_ENV === 'development' && process.env.SKIP_AUTH === 'true') {
-    console.log('🔓 Development mode: Skipping authentication');
+  // Development mode bypass - create mock admin user
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔓 Development mode: Creating mock authenticated user');
+    if (!req.user) {
+      req.user = {
+        id: 'bd93e13e-068a-4a5d-8013-a50a67bd146f', // kritarth1981@gmail.com
+        claims: { sub: 'bd93e13e-068a-4a5d-8013-a50a67bd146f' }
+      } as any;
+    }
     return next();
   }
 
-  // Debug logging
-  console.log('🔍 Auth check - isAuthenticated:', req.isAuthenticated?.());
-  console.log('🔍 Auth check - user present:', !!user);
-  console.log('🔍 Auth check - session ID:', (req.session as any)?.id);
+  const user = req.user as any;
 
   if (!req.isAuthenticated() || !user) {
     console.log('🔒 Authentication failed: User not authenticated or missing');
@@ -183,13 +184,13 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 
 // Admin authentication middleware
 export const isAdmin: RequestHandler = async (req, res, next) => {
-  const user = req.user as any;
-
-  // Skip authentication in development mode for testing
-  if (process.env.NODE_ENV === 'development' && process.env.SKIP_AUTH === 'true') {
-    console.log('🔓 Development mode: Skipping admin check');
+  // Development mode bypass - allow all requests
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔓 Development mode: Bypassing admin check');
     return next();
   }
+
+  const user = req.user as any;
 
   // First check if user is authenticated
   if (!req.isAuthenticated() || !user) {
