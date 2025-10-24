@@ -26,7 +26,9 @@ export function ListingSourceBadge({ source, className = '', size = 'md' }: List
     },
   };
 
-  const config = configs[source];
+  // Handle invalid/missing source - default to ethical_ai
+  const validSource = source && configs[source] ? source : 'ethical_ai';
+  const config = configs[validSource];
   const Icon = config.icon;
 
   const sizeClasses = {
@@ -45,14 +47,14 @@ export function ListingSourceBadge({ source, className = '', size = 'md' }: List
     <Badge
       variant="outline"
       className={`${config.className} ${sizeClasses[size]} ${className} font-medium inline-flex items-center gap-1`}
-      data-testid={`badge-source-${source}`}
+      data-testid={`badge-source-${validSource}`}
     >
       <Icon className={iconSizes[size]} />
       <span className="hidden sm:inline">{config.label}</span>
       <span className="sm:hidden">
-        {source === 'ethical_ai' && 'AI'}
-        {source === 'exclusive_dealer' && 'Dealer'}
-        {source === 'user_direct' && 'User'}
+        {validSource === 'ethical_ai' && 'AI'}
+        {validSource === 'exclusive_dealer' && 'Dealer'}
+        {validSource === 'user_direct' && 'User'}
       </span>
     </Badge>
   );
