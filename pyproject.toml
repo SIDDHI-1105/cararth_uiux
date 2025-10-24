@@ -6,7 +6,7 @@ requires-python = ">=3.11,<3.13"
 dependencies = [
     "anthropic>=0.67.0",
     "beautifulsoup4>=4.14.2",
-    "crawl4ai>=0.7.4",
+    "crawl4ai>=0.4.0,<0.7.0",
     "firecrawl-py>=4.3.6",
     "google-generativeai>=0.8.5",
     "lxml>=5.4.0",
