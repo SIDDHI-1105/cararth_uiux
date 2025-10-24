@@ -11,7 +11,7 @@ export default function AdminDiagnostics() {
 
   const { data: user, isLoading: userLoading, error: userError } = useQuery({ queryKey: ['/api/auth/user'] });
 
-  const isAdmin = user && (user as any).isAdmin;
+  const isAdmin = user && ((user as any).isAdmin || (user as any).role === 'admin');
 
   const { data: diagnostics, isLoading: diagnosticsLoading, error: diagnosticsError } = useQuery({
     queryKey: ['/api/admin/diagnostics'],
