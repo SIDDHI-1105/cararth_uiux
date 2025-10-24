@@ -15,6 +15,7 @@ import { Link } from "wouter";
 import { type Car, type User as UserType } from "@shared/schema";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import { FALLBACK_CAR_IMAGE_URL } from '@/lib/constants';
+import { ListingSourceBadge } from "@/components/ui/listing-source-badge";
 
 export default function CarDetail() {
   const { id } = useParams<{ id: string }>();
@@ -116,14 +117,17 @@ export default function CarDetail() {
           </Button>
         </Link>
 
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-start mb-4">
           <h1 className="text-3xl font-bold" data-testid="text-car-title">{car.title}</h1>
-          {car.isVerified && (
-            <Badge className="bg-green-100 text-green-800" data-testid="badge-verified">
-              <Check className="w-4 h-4 mr-1" />
-              Verified
-            </Badge>
-          )}
+          <div className="flex flex-col gap-2 items-end">
+            <ListingSourceBadge source={car.listingSource as any} size="lg" />
+            {car.isVerified && (
+              <Badge className="bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300" data-testid="badge-verified">
+                <Check className="w-4 h-4 mr-1" />
+                Verified
+              </Badge>
+            )}
+          </div>
         </div>
 
         {/* Social Share Buttons */}

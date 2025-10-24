@@ -10,6 +10,7 @@ import { FALLBACK_CAR_IMAGE_URL } from '@/lib/constants';
 import { useHapticFeedback, HapticButton } from "@/components/haptic-feedback";
 import { getCarSource, getSourceBadgeColor } from "@/lib/car-utils";
 import { cn } from "@/lib/utils";
+import { ListingSourceBadge } from "@/components/ui/listing-source-badge";
 
 interface MinimalCarCardProps {
   car: CarListing;
@@ -219,9 +220,14 @@ export default function MinimalCarCard({
         </div>
 
         {/* Title */}
-        <h3 className="text-sm sm:text-base md:text-lg font-semibold text-foreground mb-2 sm:mb-3 line-clamp-2 leading-snug" data-testid={`text-title-${car.id}`}>
+        <h3 className="text-sm sm:text-base md:text-lg font-semibold text-foreground mb-2 line-clamp-2 leading-snug" data-testid={`text-title-${car.id}`}>
           {car.title}
         </h3>
+        
+        {/* Listing Source Badge */}
+        <div className="mb-2 sm:mb-3">
+          <ListingSourceBadge source={car.listingSource as any} size="sm" />
+        </div>
 
         {/* Meta Information - Responsive Grid */}
         <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:flex-wrap text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
