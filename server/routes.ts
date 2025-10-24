@@ -684,7 +684,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         timestamp: new Date().toISOString(),
         scrapersHealth: healthStatus,
-        listingCounts,
+        listings: listingCounts, // Frontend expects 'listings', not 'listingCounts'
         recentLogs,
         systemStatus: {
           database: 'operational',
