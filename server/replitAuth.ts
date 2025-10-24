@@ -41,6 +41,7 @@ export function getSession() {
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: sessionTtl,
     },
   });
@@ -137,6 +138,11 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     console.log('🔓 Development mode: Skipping authentication');
     return next();
   }
+
+  // Debug logging
+  console.log('🔍 Auth check - isAuthenticated:', req.isAuthenticated?.());
+  console.log('🔍 Auth check - user present:', !!user);
+  console.log('🔍 Auth check - session ID:', (req.session as any)?.id);
 
   if (!req.isAuthenticated() || !user) {
     console.log('🔒 Authentication failed: User not authenticated or missing');
