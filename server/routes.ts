@@ -615,6 +615,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalListings: stats.totalListings,
         totalPlatforms: stats.totalPlatforms,
         platforms: stats.platforms,
+        sourceBreakdown: stats.sourceBreakdown,
         lastUpdated: new Date().toISOString()
       });
     } catch (error) {
@@ -624,7 +625,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: 'Failed to fetch hero stats',
         totalListings: 0,
         totalPlatforms: 0,
-        platforms: []
+        platforms: [],
+        sourceBreakdown: {
+          ethicalAi: 0,
+          exclusiveDealer: 0,
+          userDirect: 0
+        }
       });
     }
   });

@@ -2819,6 +2819,11 @@ export class DatabaseStorage implements IStorage {
     totalListings: number;
     totalPlatforms: number;
     platforms: Array<{ name: string; count: number }>;
+    sourceBreakdown: {
+      ethicalAi: number;
+      exclusiveDealer: number;
+      userDirect: number;
+    };
   }> {
     try {
       // Get portal-wise listing counts
@@ -2831,6 +2836,15 @@ export class DatabaseStorage implements IStorage {
         .groupBy(cachedPortalListings.portal)
         .orderBy(desc(sql`count(*)`));
 
+      // Get source breakdown
+      const sourceCounts = await this.db
+        .select({
+          listingSource: cachedPortalListings.listingSource,
+          count: sql<number>`count(*)::int`
+        })
+        .from(cachedPortalListings)
+        .groupBy(cachedPortalListings.listingSource);
+
       // Get total listing count
       const totalResult = await this.db
         .select({ count: sql<number>`count(*)::int` })
@@ -2839,20 +2853,43 @@ export class DatabaseStorage implements IStorage {
       const totalListings = totalResult[0]?.count || 0;
       const totalPlatforms = portalCounts.length;
 
+      // Build source breakdown
+      const sourceBreakdown = {
+        ethicalAi: 0,
+        exclusiveDealer: 0,
+        userDirect: 0
+      };
+
+      for (const source of sourceCounts) {
+        if (source.listingSource === 'ethical_ai') {
+          sourceBreakdown.ethicalAi = source.count;
+        } else if (source.listingSource === 'exclusive_dealer') {
+          sourceBreakdown.exclusiveDealer = source.count;
+        } else if (source.listingSource === 'user_direct') {
+          sourceBreakdown.userDirect = source.count;
+        }
+      }
+
       return {
         totalListings,
         totalPlatforms,
         platforms: portalCounts.map((p: { portal: string; count: number }) => ({
           name: p.portal,
           count: p.count
-        }))
+        })),
+        sourceBreakdown
       };
     } catch (error) {
       logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getHeroStats operation');
       return {
         totalListings: 0,
         totalPlatforms: 0,
-        platforms: []
+        platforms: [],
+        sourceBreakdown: {
+          ethicalAi: 0,
+          exclusiveDealer: 0,
+          userDirect: 0
+        }
       };
     }
   }

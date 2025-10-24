@@ -228,6 +228,11 @@ export interface IStorage {
     totalListings: number;
     totalPlatforms: number;
     platforms: Array<{ name: string; count: number }>;
+    sourceBreakdown: {
+      ethicalAi: number;
+      exclusiveDealer: number;
+      userDirect: number;
+    };
   }>;
   
   // ============================================================================
@@ -1480,6 +1485,11 @@ export class MemStorage implements IStorage {
     totalListings: number;
     totalPlatforms: number;
     platforms: Array<{ name: string; count: number }>;
+    sourceBreakdown: {
+      ethicalAi: number;
+      exclusiveDealer: number;
+      userDirect: number;
+    };
   }> {
     // Return mock data for in-memory storage
     return {
@@ -1487,7 +1497,12 @@ export class MemStorage implements IStorage {
       totalPlatforms: 1,
       platforms: [
         { name: 'In-Memory Storage', count: this.cars.size }
-      ]
+      ],
+      sourceBreakdown: {
+        ethicalAi: 0,
+        exclusiveDealer: 0,
+        userDirect: this.cars.size
+      }
     };
   }
 
