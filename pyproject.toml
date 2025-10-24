@@ -6,7 +6,6 @@ requires-python = ">=3.11,<3.13"
 dependencies = [
     "anthropic>=0.67.0",
     "beautifulsoup4>=4.14.2",
-    "crawl4ai>=0.4.0,<0.7.0",
     "firecrawl-py>=4.3.6",
     "google-generativeai>=0.8.5",
     "lxml>=5.4.0",
@@ -41,7 +40,6 @@ CityLearn = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
 CoCa-pytorch = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
 CoLT5-attention = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
 ComfyUI-EasyNodes = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
-Crawl4AI = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
 DALL-E = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
 DI-toolkit = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
 DatasetRising = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
