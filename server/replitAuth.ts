@@ -174,3 +174,50 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     return;
   }
 };
+
+// Admin authentication middleware
+export const isAdmin: RequestHandler = async (req, res, next) => {
+  const user = req.user as any;
+
+  // Skip authentication in development mode for testing
+  if (process.env.NODE_ENV === 'development' && process.env.SKIP_AUTH === 'true') {
+    console.log('🔓 Development mode: Skipping admin check');
+    return next();
+  }
+
+  // First check if user is authenticated
+  if (!req.isAuthenticated() || !user) {
+    console.log('🔒 Admin check failed: User not authenticated');
+    return res.status(401).json({ message: "Unauthorized - Authentication required" });
+  }
+
+  // Get user from database to check role
+  try {
+    const { storage } = await import('./storage.js');
+    const userId = user.claims?.sub || user.id;
+    
+    if (!userId) {
+      console.log('🔒 Admin check failed: No user ID found');
+      return res.status(401).json({ message: "Unauthorized - Invalid user session" });
+    }
+
+    const dbUser = await storage.getUser(userId);
+    
+    if (!dbUser) {
+      console.log('🔒 Admin check failed: User not found in database');
+      return res.status(401).json({ message: "Unauthorized - User not found" });
+    }
+
+    // Check if user has admin role
+    if (dbUser.role !== 'admin') {
+      console.log(`🔒 Admin check failed: User ${userId} has role '${dbUser.role}', requires 'admin'`);
+      return res.status(403).json({ message: "Forbidden - Admin access required" });
+    }
+
+    console.log(`✅ Admin authenticated: ${userId}`);
+    return next();
+  } catch (error) {
+    console.error('🔒 Admin check error:', error);
+    return res.status(500).json({ message: "Internal server error during admin check" });
+  }
+};
