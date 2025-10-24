@@ -274,6 +274,17 @@ export interface IStorage {
   // Cached portal listings (Apify scrapers)
   createCachedPortalListing(listing: any): Promise<any>;
   searchCachedPortalListings(filters: any): Promise<any[]>;
+  
+  // Admin monitoring methods
+  getListingCountsBySource(): Promise<{
+    total: number;
+    ethicalAi: number;
+    exclusiveDealer: number;
+    userDirect: number;
+    byPortal: Record<string, number>;
+  }>;
+  getListingMetricsTrend(days: number): Promise<any[]>;
+  getRecentScraperLogs(limit: number): Promise<any[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -1538,6 +1549,30 @@ export class MemStorage implements IStorage {
 
   async getBulkUploadJob(jobId: string, userId: string): Promise<any | undefined> {
     return undefined;
+  }
+  
+  async getListingCountsBySource(): Promise<{
+    total: number;
+    ethicalAi: number;
+    exclusiveDealer: number;
+    userDirect: number;
+    byPortal: Record<string, number>;
+  }> {
+    return {
+      total: this.cars.size,
+      ethicalAi: 0,
+      exclusiveDealer: 0,
+      userDirect: 0,
+      byPortal: {}
+    };
+  }
+  
+  async getListingMetricsTrend(days: number): Promise<any[]> {
+    return [];
+  }
+  
+  async getRecentScraperLogs(limit: number): Promise<any[]> {
+    return [];
   }
 }
 

@@ -28,6 +28,8 @@ import {
   deduplicationResults,
   syndicationExecutionLog,
   externalApiAuditLog,
+  listingMetrics,
+  scraperHealthLogs,
   type User, 
   type InsertUser, 
   type UpsertUser,
@@ -2852,6 +2854,127 @@ export class DatabaseStorage implements IStorage {
         totalPlatforms: 0,
         platforms: []
       };
+    }
+  }
+
+  // ============================================================================
+  // ADMIN DIAGNOSTICS & MONITORING
+  // ============================================================================
+
+  // Get listing counts broken down by source type
+  async getListingCountsBySource(): Promise<{
+    total: number;
+    ethicalAi: number;
+    exclusiveDealer: number;
+    userDirect: number;
+    byPortal: Record<string, number>;
+  }> {
+    try {
+      // Count by listing source
+      const sourceCounts = await this.db
+        .select({
+          listingSource: cachedPortalListings.listingSource,
+          count: sql<number>`count(*)::int`
+        })
+        .from(cachedPortalListings)
+        .groupBy(cachedPortalListings.listingSource);
+
+      // Count by portal for ethical AI
+      const portalCounts = await this.db
+        .select({
+          portal: cachedPortalListings.portal,
+          count: sql<number>`count(*)::int`
+        })
+        .from(cachedPortalListings)
+        .where(eq(cachedPortalListings.listingSource, 'ethical_ai'))
+        .groupBy(cachedPortalListings.portal);
+
+      const result = {
+        total: 0,
+        ethicalAi: 0,
+        exclusiveDealer: 0,
+        userDirect: 0,
+        byPortal: {} as Record<string, number>
+      };
+
+      sourceCounts.forEach(({ listingSource, count }) => {
+        result.total += count;
+        if (listingSource === 'ethical_ai') result.ethicalAi = count;
+        if (listingSource === 'exclusive_dealer') result.exclusiveDealer = count;
+        if (listingSource === 'user_direct') result.userDirect = count;
+      });
+
+      portalCounts.forEach(({ portal, count }) => {
+        result.byPortal[portal] = count;
+      });
+
+      return result;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getListingCountsBySource operation');
+      return {
+        total: 0,
+        ethicalAi: 0,
+        exclusiveDealer: 0,
+        userDirect: 0,
+        byPortal: {}
+      };
+    }
+  }
+
+  // Get listing metrics trend for last N days
+  async getListingMetricsTrend(days: number): Promise<any[]> {
+    try {
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+
+      const metrics = await this.db
+        .select()
+        .from(listingMetrics)
+        .where(gte(listingMetrics.date, startDate))
+        .orderBy(asc(listingMetrics.date));
+
+      return metrics;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getListingMetricsTrend operation');
+      return [];
+    }
+  }
+
+  // Get recent scraper logs
+  async getRecentScraperLogs(limit: number): Promise<any[]> {
+    try {
+      const logs = await this.db
+        .select()
+        .from(scraperHealthLogs)
+        .orderBy(desc(scraperHealthLogs.startedAt))
+        .limit(limit);
+
+      return logs;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getRecentScraperLogs operation');
+      return [];
+    }
+  }
+
+  // Get filtered scraper logs
+  async getScraperLogs(options: { limit?: number; scraperName?: string }): Promise<any[]> {
+    try {
+      let query = this.db.select().from(scraperHealthLogs);
+
+      if (options.scraperName) {
+        query = query.where(eq(scraperHealthLogs.scraperName, options.scraperName)) as any;
+      }
+
+      query = query.orderBy(desc(scraperHealthLogs.startedAt)) as any;
+
+      if (options.limit) {
+        query = query.limit(options.limit) as any;
+      }
+
+      return await query;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getScraperLogs operation');
+      return [];
     }
   }
 

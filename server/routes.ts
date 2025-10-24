@@ -42,7 +42,7 @@ import { priceComparisonService } from "./priceComparison";
 import { marketplaceAggregator, initializeMarketplaceAggregator } from "./marketplaceAggregator";
 import { AutomotiveNewsService } from "./automotiveNews";
 import { z } from "zod";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated, isAdmin } from "./replitAuth";
 import { setupSocialAuth } from "./socialAuth";
 import { setupLocalAuth } from "./localAuth";
 import { 
@@ -648,6 +648,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
         overall: 'critical',
         scrapers: [],
         summary: { total: 0, healthy: 0, failing: 0, lastCheck: new Date() }
+      });
+    }
+  });
+
+  // ============================================================================
+  // ADMIN ENDPOINTS - Protected by isAdmin middleware
+  // ============================================================================
+
+  // Admin diagnostics - comprehensive system health dashboard
+  app.get('/api/admin/diagnostics', isAdmin, async (req, res) => {
+    try {
+      const { scraperHealthMonitor } = await import('./scraperHealthMonitor.js');
+      const healthStatus = await scraperHealthMonitor.getHealthStatus();
+      
+      // Get listing counts by source
+      const listingCounts = await storage.getListingCountsBySource?.() || {
+        total: 0,
+        ethicalAi: 0,
+        exclusiveDealer: 0,
+        userDirect: 0,
+        byPortal: {}
+      };
+      
+      // Get recent scraper logs
+      const recentLogs = await storage.getRecentScraperLogs?.(20) || [];
+      
+      res.json({
+        success: true,
+        timestamp: new Date().toISOString(),
+        scrapersHealth: healthStatus,
+        listingCounts,
+        recentLogs,
+        systemStatus: {
+          database: 'operational',
+          cache: 'operational',
+          scheduler: 'running'
+        }
+      });
+    } catch (error) {
+      console.error('Admin diagnostics endpoint error:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to fetch admin diagnostics'
+      });
+    }
+  });
+
+  // Admin listing metrics - 30-day trend data
+  app.get('/api/admin/listing-metrics', isAdmin, async (req, res) => {
+    try {
+      const days = parseInt(req.query.days as string) || 30;
+      const metrics = await storage.getListingMetricsTrend?.(days) || [];
+      
+      res.json({
+        success: true,
+        timestamp: new Date().toISOString(),
+        days,
+        metrics
+      });
+    } catch (error) {
+      console.error('Admin listing metrics endpoint error:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to fetch listing metrics'
+      });
+    }
+  });
+
+  // Admin scraper logs - detailed error logs for debugging
+  app.get('/api/admin/scraper-logs', isAdmin, async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 50;
+      const scraperName = req.query.scraper as string;
+      
+      const logs = await storage.getScraperLogs?.({ limit, scraperName }) || [];
+      
+      res.json({
+        success: true,
+        timestamp: new Date().toISOString(),
+        logs
+      });
+    } catch (error) {
+      console.error('Admin scraper logs endpoint error:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to fetch scraper logs'
       });
     }
   });
@@ -5539,65 +5625,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   }));
-
-  // =============================================================================
-  // ADMIN MIDDLEWARE DEFINITION (Must be defined before use)
-  // =============================================================================
-
-  // Admin guard middleware - requires authentication AND admin role
-  const isAdmin: RequestHandler = async (req, res, next) => {
-    try {
-      // First check if user is authenticated
-      if (!req.isAuthenticated() || !req.user) {
-        return res.status(401).json({
-          error: 'Unauthorized',
-          message: 'Authentication required'
-        });
-      }
-
-      const userId = (req.user as any).claims?.sub;
-      if (!userId) {
-        return res.status(401).json({
-          error: 'Unauthorized', 
-          message: 'Invalid user session'
-        });
-      }
-
-      // Check if user has admin role
-      const isUserAdmin = await storage.isAdmin(userId);
-      if (!isUserAdmin) {
-        console.log(`🔒 Admin access denied for user ${userId}`);
-        
-        // Log the admin access attempt
-        await storage.logAdminAction({
-          actorUserId: userId,
-          action: 'admin_access_denied',
-          targetType: 'admin_endpoint',
-          targetId: req.path,
-          metadata: {
-            ip: req.ip,
-            userAgent: req.get('User-Agent'),
-            timestamp: new Date().toISOString()
-          }
-        });
-
-        return res.status(403).json({
-          error: 'Forbidden',
-          message: 'Admin privileges required',
-          note: 'This action requires administrator permissions'
-        });
-      }
-
-      console.log(`✅ Admin access granted for user ${userId}`);
-      next();
-    } catch (error) {
-      console.error('Admin guard error:', error);
-      return res.status(500).json({
-        error: 'Internal server error',
-        message: 'Failed to verify admin privileges'
-      });
-    }
-  };
 
   // SECURED Test route for SARFAESI government auction scraper - ADMIN ONLY
   app.get('/api/sarfaesi/test', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {

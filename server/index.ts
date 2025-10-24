@@ -8,6 +8,7 @@ import {
   createHealthCheckHandler
 } from "./errorHandling.js";
 import { setGlobalLogger } from "../shared/logging";
+import { initializeMetricsService } from "./listingMetricsService.js";
 
 const app = express();
 
@@ -69,6 +70,20 @@ app.use((req, res, next) => {
     try {
       server = await registerRoutes(app);
       console.log('✅ Routes registered successfully');
+      
+      // Initialize daily listing metrics service (runs at midnight IST)
+      try {
+        const { storage } = await import('./storage.js');
+        if ('db' in storage) {
+          initializeMetricsService(storage);
+          console.log('✅ Daily metrics service started');
+        } else {
+          console.log('⏭️ Daily metrics service skipped (requires database storage)');
+        }
+      } catch (metricsError) {
+        console.error('❌ Failed to start metrics service:', metricsError);
+        console.error('Continuing without metrics tracking...');
+      }
     } catch (error) {
       console.error('❌ Failed to register routes:', error);
       console.error('Server cannot start without routes. Exiting.');
