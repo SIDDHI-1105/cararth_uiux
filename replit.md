@@ -31,7 +31,8 @@ The frontend uses React 18 with TypeScript and Vite, Wouter for routing, Radix U
 - **Image-Based Quality Ranking**: Search results incorporate image quality scoring.
 - **Dealer Inventory Upload System**: Production-ready platform for vehicle inventory management with strict validation (VIN, price, image), Google Vehicle Listing feed compliance, Quick Add, and comprehensive Bulk Upload supporting CSV data, vehicle images, and RC/Insurance documents, with detailed validation reports.
 - **Dealer Performance Analytics Dashboard**: Interactive dashboard for Telangana dealers with real-time metrics, ML forecasts, and market benchmarks.
-- **Throttle Talk - Automated Content Generation**: Production-ready content pipeline for the /news section, generating SEO-optimized articles twice daily using Perplexity and xAI Grok, with admin controls and logging.
+- **Throttle Talk - Automated Content Generation**: Production-ready content pipeline for the /news section, generating SEO-optimized articles twice daily using Perplexity and xAI Grok, with admin controls and logging. Includes newsletter subscription, interactive polls, Disqus comments, and GA4 analytics tracking.
+- **Throttle Talk Navigation Enhancements**: Mega-dropdown menu component with hover activation showing categorized content (Market Intelligence, Community, OEM Analytics, Road Tales) and featured articles. Related articles carousel on detail pages with fully responsive design (1/2/3 items per breakpoint), dot pagination, and smooth transitions.
 - **User-Generated Content (UGC) System**: Production-ready story submission platform with AI moderation (xAI Grok) for car owner experiences, featuring quality scoring, safety checks, and a "Road Tales" carousel.
 - **Enhanced SEO Infrastructure**: Dynamic sitemap.xml generator, NewsSEOHead component with auto-generated meta tags, Schema.org markup, and a machine-readable data endpoint (`/api/ai-info`) for LLM agents.
 
