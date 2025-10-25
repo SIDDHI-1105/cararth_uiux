@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { BarChart3, CheckCircle } from "lucide-react";
+import { GA4Events } from "@/hooks/use-ga4";
 
 interface PollOption {
   id: string;
@@ -54,7 +55,7 @@ export function PollWidget() {
   });
 
   const voteMutation = useMutation({
-    mutationFn: async ({ pollId, optionId }: { pollId: string; optionId: string }) => {
+    mutationFn: async ({ pollId, optionId, question }: { pollId: string; optionId: string; question?: string }) => {
       const visitorId = getVisitorId();
       return await apiRequest("POST", `/api/polls/${pollId}/vote`, { optionId, visitorId });
     },
@@ -62,6 +63,12 @@ export function PollWidget() {
       markPollAsVoted(variables.pollId);
       setVotedPolls(getVotedPolls());
       queryClient.invalidateQueries({ queryKey: ['/api/polls'] });
+      
+      // Track poll vote
+      if (variables.question) {
+        GA4Events.pollVote(variables.pollId, variables.optionId, variables.question);
+      }
+      
       toast({
         title: "Vote Recorded!",
         description: "Thank you for participating in our poll.",
@@ -154,7 +161,11 @@ export function PollWidget() {
                 key={option.id}
                 variant="outline"
                 className="w-full justify-start text-left h-auto py-3 hover:bg-blue-50 dark:hover:bg-blue-950"
-                onClick={() => voteMutation.mutate({ pollId: featuredPoll.id, optionId: option.id })}
+                onClick={() => voteMutation.mutate({ 
+                  pollId: featuredPoll.id, 
+                  optionId: option.id,
+                  question: featuredPoll.question 
+                })}
                 disabled={voteMutation.isPending}
                 data-testid={`button-poll-option-${option.id}`}
               >

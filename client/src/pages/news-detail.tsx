@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,16 +9,41 @@ import { Calendar, Globe, ExternalLink, ArrowLeft } from "lucide-react";
 import SocialShareButtons from "@/components/social-share-buttons";
 import { NewsSEOHead } from "@/components/news-seo-head";
 import { McKinseyInsightCard } from "@/components/mckinsey-insight-card";
+import { DisqusComments } from "@/components/disqus-comments";
+import { GA4Events } from "@/hooks/use-ga4";
+import { useTimeOnPage, useScrollTracking } from "@/hooks/use-ga4";
 
 export default function NewsDetail() {
   const params = useParams();
   const id = params.id;
+  const trackedArticleIdRef = useRef<string | null>(null);
 
   const { data: post, isLoading, error } = useQuery({
     queryKey: [`/api/community/posts/${id}`],
     enabled: Boolean(id),
     retry: 1,
   });
+
+  // Track page engagement
+  useTimeOnPage(`/news/${id}`);
+  useScrollTracking();
+
+  // Track article view (only once per article)
+  useEffect(() => {
+    if (post) {
+      const postData = (post as any).post || post;
+      
+      // Only track if this is a new article (not a refetch of the same article)
+      if (postData.id && trackedArticleIdRef.current !== postData.id) {
+        GA4Events.articleView(
+          postData.id, 
+          postData.category || 'article',
+          postData.attribution || 'cararth'
+        );
+        trackedArticleIdRef.current = postData.id;
+      }
+    }
+  }, [post]);
 
   if (!id || isLoading) {
     return (
@@ -228,6 +254,13 @@ export default function NewsDetail() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Disqus Comments */}
+        <DisqusComments
+          articleId={postData.id}
+          articleTitle={postData.title}
+          articleUrl={`https://cararth.com/news/${postData.id}`}
+        />
       </div>
     </div>
   );

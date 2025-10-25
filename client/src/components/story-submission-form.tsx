@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Loader2, Sparkles } from "lucide-react";
+import { GA4Events } from "@/hooks/use-ga4";
 
 const storySchema = z.object({
   title: z.string().min(10, "Title must be at least 10 characters").max(100, "Title too long"),
@@ -58,6 +59,9 @@ export function StorySubmissionForm({ open, onOpenChange }: StorySubmissionFormP
     },
     onSuccess: (response: any) => {
       setModerationResult(response.moderation);
+      
+      // Track story submission
+      GA4Events.storySubmission(response.moderation.status);
       
       toast({
         title: response.moderation.status === 'approved' ? "Story Published!" : "Story Submitted",

@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Mail, Sparkles } from "lucide-react";
+import { GA4Events } from "@/hooks/use-ga4";
 
 const newsletterSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -38,8 +39,12 @@ export function NewsletterSignup() {
     mutationFn: async (data: NewsletterFormData) => {
       return await apiRequest("POST", "/api/newsletter/subscribe", data);
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       setIsSubscribed(true);
+      
+      // Track newsletter signup
+      GA4Events.newsletterSignup(variables.frequency || 'weekly', variables.topics || []);
+      
       toast({
         title: "🎉 Subscribed!",
         description: "You'll receive our automotive insights in your inbox.",
