@@ -4346,6 +4346,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin Analytics - Throttle Talk metrics
+  app.get("/api/admin/throttle-analytics", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { db } = await import('./db.js');
+      const { newsletterSubscribers, polls, pollVotes, userStories, contentGenerationLogs } = await import('../shared/schema');
+      const { eq, desc, count, sql } = await import('drizzle-orm');
+      
+      // Newsletter stats
+      const totalSubscribers = await db.select({ count: count() })
+        .from(newsletterSubscribers)
+        .where(eq(newsletterSubscribers.status, 'active'));
+      
+      const subscribersByFrequency = await db.select({
+        frequency: newsletterSubscribers.frequency,
+        count: count()
+      })
+        .from(newsletterSubscribers)
+        .where(eq(newsletterSubscribers.status, 'active'))
+        .groupBy(newsletterSubscribers.frequency);
+      
+      // Poll stats
+      const totalPolls = await db.select({ count: count() }).from(polls);
+      const totalVotes = await db.select({ count: count() }).from(pollVotes);
+      const activePolls = await db.select({ count: count() })
+        .from(polls)
+        .where(eq(polls.active, true));
+      
+      // Story stats
+      const totalStories = await db.select({ count: count() }).from(userStories);
+      const approvedStories = await db.select({ count: count() })
+        .from(userStories)
+        .where(eq(userStories.moderationStatus, 'approved'));
+      const flaggedStories = await db.select({ count: count() })
+        .from(userStories)
+        .where(eq(userStories.moderationStatus, 'flagged'));
+      const rejectedStories = await db.select({ count: count() })
+        .from(userStories)
+        .where(eq(userStories.moderationStatus, 'rejected'));
+      
+      const featuredStories = await db.select({ count: count() })
+        .from(userStories)
+        .where(eq(userStories.featured, true));
+      
+      // Content generation stats
+      const recentGenerations = await db.select()
+        .from(contentGenerationLogs)
+        .orderBy(desc(contentGenerationLogs.createdAt))
+        .limit(10);
+      
+      const successfulGenerations = await db.select({ count: count() })
+        .from(contentGenerationLogs)
+        .where(eq(contentGenerationLogs.status, 'success'));
+      
+      // Format content generation logs for frontend
+      const formattedGenerations = recentGenerations.map(log => ({
+        id: log.id,
+        status: log.status,
+        articlesGenerated: log.articlesGenerated || 0,
+        provider: log.provider || 'unknown',
+        error: log.error || null,
+        createdAt: log.createdAt,
+      }));
+
+      res.json({
+        success: true,
+        newsletter: {
+          totalActive: Number(totalSubscribers[0]?.count) || 0,
+          byFrequency: subscribersByFrequency.reduce((acc, item) => {
+            acc[item.frequency] = Number(item.count) || 0;
+            return acc;
+          }, {} as Record<string, number>),
+        },
+        polls: {
+          total: Number(totalPolls[0]?.count) || 0,
+          active: Number(activePolls[0]?.count) || 0,
+          totalVotes: Number(totalVotes[0]?.count) || 0,
+        },
+        stories: {
+          total: Number(totalStories[0]?.count) || 0,
+          approved: Number(approvedStories[0]?.count) || 0,
+          flagged: Number(flaggedStories[0]?.count) || 0,
+          rejected: Number(rejectedStories[0]?.count) || 0,
+          featured: Number(featuredStories[0]?.count) || 0,
+        },
+        contentGeneration: {
+          recentGenerations: formattedGenerations,
+          successCount: Number(successfulGenerations[0]?.count) || 0,
+        },
+      });
+    } catch (error: any) {
+      console.error('Failed to fetch Throttle Talk analytics:', error);
+      res.status(500).json({
+        error: 'Failed to fetch analytics',
+        message: error.message
+      });
+    }
+  });
+
   // Polls API - Get active polls
   app.get("/api/polls", async (req, res) => {
     try {
