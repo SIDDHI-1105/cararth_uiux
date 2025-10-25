@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Heart, MessageCircle, Share2, Users, Camera, Calendar, MapPin, Star, TrendingUp, Award } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SEOHead } from "@/components/seo-head";
 
 // SEO-friendly image paths (dynamically referenced) - Enhanced with real automotive photography
 const sportsCarImage = '/attached_assets/generated_images/Dynamic_sports_car_mountain_road_5267e5a6.png';
@@ -53,6 +54,20 @@ interface CarSpotlight {
 
 export default function CommunityPage() {
   const [activeTab, setActiveTab] = useState('feed');
+
+  // SEO structured data for Community page
+  const structuredData = useMemo(() => ({
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Throttle Talk - CarArth Community",
+    "description": "Join India's most passionate car enthusiasts community. Share experiences, discover amazing rides, and connect with fellow automotive lovers.",
+    "url": "https://cararth.com/community",
+    "publisher": {
+      "@type": "Organization",
+      "name": "CarArth",
+      "url": "https://cararth.com"
+    }
+  }), []);
 
   // Fetch real RSS content from Throttle Talk
   const { data: rssData, isLoading: rssLoading, error: rssError } = useQuery({
@@ -180,16 +195,15 @@ export default function CommunityPage() {
 
   return (
     <>
-      {/* SEO Meta Tags */}
-      <div style={{ display: 'none' }}>
-        <meta name="description" content="Join India's most passionate car enthusiasts community. Share experiences, discover amazing rides, and connect with fellow automotive lovers across the country." />
-        <meta name="keywords" content="car enthusiasts, automotive community India, car lovers, vehicle enthusiasts, car meets, automotive passion" />
-        <meta property="og:title" content="Throttle Talk - The Mobility Hub" />
-        <meta property="og:description" content="Connect with India's most passionate car community. Share rides, experiences, and automotive knowledge." />
-        <meta property="og:image" content={communityImage} />
-        <meta property="og:type" content="website" />
-        <link rel="canonical" href={`${window.location.origin}/community`} />
-      </div>
+      <SEOHead 
+        title="Throttle Talk - Car Enthusiasts Community | CarArth"
+        description="Join India's most passionate car enthusiasts community. Share experiences, discover amazing rides, and connect with fellow automotive lovers across the country. 25K+ members, 1.2K posts this week."
+        keywords="car enthusiasts India, automotive community, car lovers, vehicle enthusiasts, car meets, automotive passion, Indian car community, throttle talk"
+        ogImage={communityImage}
+        ogType="website"
+        structuredData={structuredData}
+        canonical="https://cararth.com/community"
+      />
 
       <div className="container mx-auto px-4 py-8" data-testid="community-page">
         {/* Header */}

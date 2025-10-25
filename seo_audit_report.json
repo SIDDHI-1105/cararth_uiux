@@ -1,0 +1,244 @@
+{
+  "timestamp": "2025-10-25T09:08:51.610685",
+  "base_url": "https://cararth.com",
+  "pages": {
+    "Homepage": {
+      "meta": {
+        "title": "CarArth - India's Very Own Used Car Search Engine",
+        "description": "India's very own used car search engine. Compare cars across platforms, discover true value with AI intelligence. Buy & sell with confidence on CarArth.",
+        "viewport": "width=device-width, initial-scale=1.0, maximum-scale=1",
+        "open_graph": {
+          "og:type": "website",
+          "og:url": "https://cararth.com/",
+          "og:title": "CarArth - India's Very Own Used Car Search Engine",
+          "og:description": "Discover cars from across platforms, compare smarter, and buy or sell with confidence. More than a marketplace \u2014 your trusted car partner.",
+          "og:site_name": "CarArth",
+          "og:image": "https://cararth.com/og-image.png"
+        },
+        "twitter_card": null,
+        "canonical": "https://cararth.com/"
+      },
+      "schemas": [
+        "Unknown"
+      ],
+      "headers": {
+        "h1": [],
+        "h2": [],
+        "h3": [],
+        "h4": [],
+        "h5": [],
+        "h6": []
+      },
+      "images": {
+        "total": 0,
+        "missing_alt": 0,
+        "empty_alt": 0,
+        "lazy_loaded": 0
+      },
+      "content": {
+        "word_count": 9,
+        "keyword_density": {
+          "used car": 1,
+          "india": 1,
+          "buy": 0,
+          "sell": 0,
+          "price": 0,
+          "cararth": 1
+        },
+        "lists": 0,
+        "tables": 0
+      },
+      "links": {
+        "total": 0,
+        "internal": 0,
+        "external": 0
+      },
+      "all_issues": [
+        {
+          "severity": "info",
+          "message": "Missing Twitter Card tags"
+        },
+        {
+          "severity": "critical",
+          "message": "Missing H1 tag"
+        },
+        {
+          "severity": "warning",
+          "message": "Low word count (9 words, recommend 300+)"
+        },
+        {
+          "severity": "info",
+          "message": "Limited internal linking (0 links)"
+        }
+      ],
+      "status_code": 200
+    },
+    "Sell Your Car": {
+      "meta": {
+        "title": "CarArth - India's Very Own Used Car Search Engine",
+        "description": "India's very own used car search engine. Compare cars across platforms, discover true value with AI intelligence. Buy & sell with confidence on CarArth.",
+        "viewport": "width=device-width, initial-scale=1.0, maximum-scale=1",
+        "open_graph": {
+          "og:type": "website",
+          "og:url": "https://cararth.com/",
+          "og:title": "CarArth - India's Very Own Used Car Search Engine",
+          "og:description": "Discover cars from across platforms, compare smarter, and buy or sell with confidence. More than a marketplace \u2014 your trusted car partner.",
+          "og:site_name": "CarArth",
+          "og:image": "https://cararth.com/og-image.png"
+        },
+        "twitter_card": null,
+        "canonical": "https://cararth.com/"
+      },
+      "schemas": [
+        "Unknown"
+      ],
+      "headers": {
+        "h1": [],
+        "h2": [],
+        "h3": [],
+        "h4": [],
+        "h5": [],
+        "h6": []
+      },
+      "images": {
+        "total": 0,
+        "missing_alt": 0,
+        "empty_alt": 0,
+        "lazy_loaded": 0
+      },
+      "content": {
+        "word_count": 9,
+        "keyword_density": {
+          "used car": 1,
+          "india": 1,
+          "buy": 0,
+          "sell": 0,
+          "price": 0,
+          "cararth": 1
+        },
+        "lists": 0,
+        "tables": 0
+      },
+      "links": {
+        "total": 0,
+        "internal": 0,
+        "external": 0
+      },
+      "all_issues": [
+        {
+          "severity": "info",
+          "message": "Missing Twitter Card tags"
+        },
+        {
+          "severity": "critical",
+          "message": "Missing H1 tag"
+        },
+        {
+          "severity": "warning",
+          "message": "Low word count (9 words, recommend 300+)"
+        },
+        {
+          "severity": "info",
+          "message": "Limited internal linking (0 links)"
+        }
+      ],
+      "status_code": 200
+    },
+    "Community": {
+      "meta": {
+        "title": "CarArth - India's Very Own Used Car Search Engine",
+        "description": "India's very own used car search engine. Compare cars across platforms, discover true value with AI intelligence. Buy & sell with confidence on CarArth.",
+        "viewport": "width=device-width, initial-scale=1.0, maximum-scale=1",
+        "open_graph": {
+          "og:type": "website",
+          "og:url": "https://cararth.com/",
+          "og:title": "CarArth - India's Very Own Used Car Search Engine",
+          "og:description": "Discover cars from across platforms, compare smarter, and buy or sell with confidence. More than a marketplace \u2014 your trusted car partner.",
+          "og:site_name": "CarArth",
+          "og:image": "https://cararth.com/og-image.png"
+        },
+        "twitter_card": null,
+        "canonical": "https://cararth.com/"
+      },
+      "schemas": [
+        "Unknown"
+      ],
+      "headers": {
+        "h1": [],
+        "h2": [],
+        "h3": [],
+        "h4": [],
+        "h5": [],
+        "h6": []
+      },
+      "images": {
+        "total": 0,
+        "missing_alt": 0,
+        "empty_alt": 0,
+        "lazy_loaded": 0
+      },
+      "content": {
+        "word_count": 9,
+        "keyword_density": {
+          "used car": 1,
+          "india": 1,
+          "buy": 0,
+          "sell": 0,
+          "price": 0,
+          "cararth": 1
+        },
+        "lists": 0,
+        "tables": 0
+      },
+      "links": {
+        "total": 0,
+        "internal": 0,
+        "external": 0
+      },
+      "all_issues": [
+        {
+          "severity": "info",
+          "message": "Missing Twitter Card tags"
+        },
+        {
+          "severity": "critical",
+          "message": "Missing H1 tag"
+        },
+        {
+          "severity": "warning",
+          "message": "Low word count (9 words, recommend 300+)"
+        },
+        {
+          "severity": "info",
+          "message": "Limited internal linking (0 links)"
+        }
+      ],
+      "status_code": 200
+    }
+  },
+  "summary": {
+    "total_issues": 6,
+    "critical_issues": [
+      "Homepage: Missing H1 tag",
+      "Sell Your Car: Missing H1 tag",
+      "Community: Missing H1 tag"
+    ],
+    "warnings": [
+      "Homepage: Low word count (9 words, recommend 300+)",
+      "Sell Your Car: Low word count (9 words, recommend 300+)",
+      "Community: Low word count (9 words, recommend 300+)"
+    ],
+    "recommendations": [
+      "Add comprehensive meta tags (title, description) to all pages",
+      "Implement Schema.org JSON-LD for Vehicle, AutoDealer, and FAQ",
+      "Create dynamic sitemap.xml with all car listings",
+      "Update robots.txt to allow LLM crawlers (GPTBot, Claude-Web, etc.)",
+      "Add /api/ai-info endpoint for machine-readable data",
+      "Optimize image alt texts with car details",
+      "Add internal linking between related listings",
+      "Create FAQ section with conversational content",
+      "Add canonical URLs to prevent duplicate content",
+      "Implement Open Graph and Twitter Card tags for social sharing"
+    ]
+  }
+}

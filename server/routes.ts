@@ -7837,6 +7837,179 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(result);
   }));
 
+  // =========================================================
+  // SEO & LLM OPTIMIZATION ENDPOINTS
+  // =========================================================
+
+  // Machine-readable AI/LLM info endpoint
+  app.get('/api/ai-info', asyncHandler(async (req: any, res: any) => {
+    // Get platform statistics
+    const stats = await storage.getStats();
+    const cars = await storage.getAllCars();
+    
+    // Count by source
+    const sourceCounts: Record<string, number> = {};
+    cars.forEach((car: any) => {
+      const source = car.source || 'Unknown';
+      sourceCounts[source] = (sourceCounts[source] || 0) + 1;
+    });
+
+    // Get top brands
+    const brandCounts: Record<string, number> = {};
+    cars.forEach((car: any) => {
+      if (car.brand) {
+        brandCounts[car.brand] = (brandCounts[car.brand] || 0) + 1;
+      }
+    });
+    const topBrands = Object.entries(brandCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([brand, count]) => ({ brand, count }));
+
+    // Machine-readable platform data for LLMs
+    const aiInfo = {
+      platform: {
+        name: "CarArth",
+        tagline: "India's Very Own Used Car Search Engine",
+        description: "CarArth is India's comprehensive used car search engine, aggregating listings from multiple portals (CarDekho, OLX, Cars24, CarWale, AutoTrader) to provide intelligent pricing, authentic verification, and AI-powered market analytics.",
+        url: "https://cararth.com",
+        established: "2024",
+        coverage: "India (All major cities)"
+      },
+      statistics: {
+        total_listings: stats.totalListings || 0,
+        total_platforms_aggregated: stats.platformCounts || 0,
+        sources: sourceCounts,
+        top_brands: topBrands,
+        last_updated: new Date().toISOString()
+      },
+      capabilities: [
+        "Cross-platform car search across 10+ automotive portals",
+        "AI-powered price intelligence and market analytics",
+        "Multi-LLM compliance and quality scoring (OpenAI, Gemini, Anthropic, Perplexity)",
+        "Real-time listing aggregation from CarDekho, OLX, Cars24, CarWale",
+        "Enterprise partner syndication system",
+        "Hyderabad/Telangana market intelligence with official RTA data",
+        "Authentic listing verification and trust layer",
+        "Seller contact & WhatsApp notification system"
+      ],
+      features: {
+        for_buyers: [
+          "Multi-platform search and comparison",
+          "AI-powered pricing insights",
+          "Authentic listing verification",
+          "Market trend analysis",
+          "Loan calculator and financing options",
+          "WhatsApp seller contact"
+        ],
+        for_sellers: [
+          "One-upload multi-platform syndication",
+          "AI-powered price recommendations",
+          "Telangana market intelligence",
+          "Dealer inventory management",
+          "Bulk upload with CSV + images",
+          "Performance analytics dashboard"
+        ]
+      },
+      faq: [
+        {
+          question: "What is CarArth?",
+          answer: "CarArth is India's very own used car search engine that aggregates listings from multiple platforms including CarDekho, OLX, Cars24, CarWale, and AutoTrader. We use AI-powered intelligence to help you discover authentic car listings, compare prices, and make informed buying decisions."
+        },
+        {
+          question: "How does CarArth verify car listings?",
+          answer: "CarArth uses a multi-LLM compliance system powered by OpenAI, Google Gemini, Anthropic Claude, and Perplexity to validate listings. We check for PII compliance, copyright issues, data authenticity, and quality scoring to ensure you see only genuine, high-quality car listings."
+        },
+        {
+          question: "Which cities does CarArth cover?",
+          answer: "CarArth covers all major Indian cities with specialized market intelligence for Hyderabad. We aggregate used car listings from across India, providing comprehensive coverage of the Indian used car market."
+        },
+        {
+          question: "Is CarArth free to use?",
+          answer: "Yes, CarArth is completely free for car buyers. Our platform helps you search across multiple automotive portals simultaneously, compare prices, and discover the best deals without any charges."
+        },
+        {
+          question: "How can I sell my car on CarArth?",
+          answer: "List your car once on CarArth and we'll syndicate it across multiple platforms including OLX, Cars24, CarDekho, and Facebook Marketplace for maximum visibility. Use our AI-powered price widget for smart pricing recommendations and get real-time market insights for Telangana vehicles."
+        }
+      ],
+      contact: {
+        email: "connect@cararth.com",
+        website: "https://cararth.com"
+      },
+      api_version: "1.0",
+      generated_at: new Date().toISOString()
+    };
+
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.json(aiInfo);
+  }));
+
+  // Dynamic sitemap.xml generator
+  app.get('/sitemap.xml', asyncHandler(async (req: any, res: any) => {
+    const cars = await storage.getAllCars();
+    const baseUrl = 'https://cararth.com';
+    const today = new Date().toISOString().split('T')[0];
+    
+    let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+
+  <!-- Main Pages -->
+  <url>
+    <loc>${baseUrl}/</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <url>
+    <loc>${baseUrl}/sell-your-car</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>${baseUrl}/community</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- AI-Friendly Machine-Readable Data Endpoint -->
+  <url>
+    <loc>${baseUrl}/api/ai-info</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+  </url>
+
+  <!-- Car Listings (Dynamic) -->
+`;
+
+    // Add all car listings
+    cars.forEach((car: any) => {
+      const carUrl = `${baseUrl}/car/${car.id}`;
+      sitemap += `  <url>
+    <loc>${carUrl}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+`;
+    });
+
+    sitemap += `</urlset>`;
+
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+    res.send(sitemap);
+  }));
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { SEOHead } from "@/components/seo-head";
 import { 
   Car, FileText, Camera, Eye, Globe, TrendingUp, 
   CheckCircle2, Upload, MapPin, Package, AlertCircle, CheckCircle, Loader2,
@@ -75,6 +76,28 @@ export default function SellCar() {
     interiorPhoto: false,
   });
   const [marketInsights, setMarketInsights] = useState<any>(null);
+
+  // SEO structured data
+  const structuredData = useMemo(() => ({
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "Sell Your Car on CarArth",
+    "description": "List your car once and syndicate across multiple platforms including OLX, Cars24, CarDekho, and Facebook Marketplace. Maximum visibility, authentic verification.",
+    "provider": {
+      "@type": "Organization",
+      "name": "CarArth",
+      "url": "https://cararth.com"
+    },
+    "areaServed": {
+      "@type": "Country",
+      "name": "India"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "INR"
+    }
+  }), []);
 
   const form = useForm<z.infer<typeof simplifiedSellCarSchema>>({
     resolver: zodResolver(simplifiedSellCarSchema),
@@ -204,6 +227,14 @@ export default function SellCar() {
 
   return (
     <Layout containerSize="lg">
+      <SEOHead 
+        title="Sell Your Car Online | Post Once, Reach Everywhere | CarArth"
+        description="Sell your car on CarArth and reach buyers across OLX, Cars24, CarDekho, and Facebook Marketplace. One upload, multiple platforms, maximum visibility. AI-powered pricing, authentic verification."
+        keywords="sell car online India, car selling platform, list car for sale, OLX car posting, Cars24 dealer, CarDekho listing, sell used car, car syndication India"
+        ogType="website"
+        structuredData={structuredData}
+        canonical="https://cararth.com/sell-your-car"
+      />
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         
         {/* Hero Section with Cross-Platform Messaging */}
