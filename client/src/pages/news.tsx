@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -386,15 +386,30 @@ export default function ThrottleTalkPage() {
                         <FormField
                           control={benchmarkForm.control}
                           name="month"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Month</FormLabel>
-                              <FormControl>
-                                <Input type="month" {...field} data-testid="input-benchmark-month" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
+                          render={({ field }) => {
+                            // Calculate max month (3 months ago from today)
+                            const today = new Date();
+                            const maxDate = new Date(today.getFullYear(), today.getMonth() - 3, 1);
+                            const maxMonth = `${maxDate.getFullYear()}-${String(maxDate.getMonth() + 1).padStart(2, '0')}`;
+                            
+                            return (
+                              <FormItem>
+                                <FormLabel>Month</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="month" 
+                                    {...field} 
+                                    max={maxMonth}
+                                    data-testid="input-benchmark-month"
+                                  />
+                                </FormControl>
+                                <FormDescription className="text-xs">
+                                  Select a month at least 3 months in the past (RTA data availability delay)
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            );
+                          }}
                         />
                         <FormField
                           control={benchmarkForm.control}

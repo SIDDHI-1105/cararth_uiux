@@ -4868,6 +4868,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Validate month is not in the future and has enough historical data
+      const selectedDate = new Date(month + '-01');
+      const currentDate = new Date();
+      const threeMonthsAgo = new Date();
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+      if (selectedDate > currentDate) {
+        return res.status(400).json({
+          success: false,
+          error: `Selected month (${month}) is in the future. Please select a past month with available RTA data.`
+        });
+      }
+
+      if (selectedDate > threeMonthsAgo) {
+        return res.status(400).json({
+          success: false,
+          error: `Selected month (${month}) is too recent. RTA data is typically available 2-3 months after the period ends. Please select a month at least 3 months in the past.`
+        });
+      }
+
       const { generateBenchmarkPost } = await import('./benchmarkPostService');
       const benchmarkPost = await generateBenchmarkPost({
         oem,
@@ -4885,7 +4905,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Benchmark generation error:', error);
       res.status(500).json({
         success: false,
-        error: 'Failed to generate benchmark'
+        error: error instanceof Error ? error.message : 'Failed to generate benchmark'
       });
     }
   });
