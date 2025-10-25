@@ -13,10 +13,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AuthDialog } from "@/components/auth-dialog";
+import { ThrottleTalkMegaMenu } from "@/components/throttle-talk-mega-menu";
 
 export default function Navbar() {
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
   const { user, isLoading, isAuthenticated } = useAuth();
 
   return (
@@ -60,17 +62,27 @@ export default function Navbar() {
               >
                 💰 Sell
               </Link>
-              <Link 
-                href="/news" 
-                className={`px-4 py-2 rounded-lg text-base md:text-lg font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 hover:shadow-lg ${
-                  location === "/news"
-                    ? "text-white bg-gradient-to-r from-blue-500 to-indigo-600 shadow-md" 
-                    : "text-foreground hover:text-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-600 hover:shadow-md border-2 border-blue-500/20 hover:border-blue-500"
-                }`}
-                data-testid="link-throttle-talk"
+              <div 
+                className="relative"
+                onMouseEnter={() => setIsMegaMenuOpen(true)}
+                onMouseLeave={() => setIsMegaMenuOpen(false)}
               >
-                🚗 Throttle Talk
-              </Link>
+                <Link 
+                  href="/news" 
+                  className={`px-4 py-2 rounded-lg text-base md:text-lg font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 hover:shadow-lg inline-block ${
+                    location === "/news"
+                      ? "text-white bg-gradient-to-r from-blue-500 to-indigo-600 shadow-md" 
+                      : "text-foreground hover:text-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-600 hover:shadow-md border-2 border-blue-500/20 hover:border-blue-500"
+                  }`}
+                  data-testid="link-throttle-talk"
+                >
+                  🚗 Throttle Talk
+                </Link>
+                <ThrottleTalkMegaMenu 
+                  isOpen={isMegaMenuOpen} 
+                  onClose={() => setIsMegaMenuOpen(false)} 
+                />
+              </div>
               <button
                 onClick={() => {
                   const faqSection = document.getElementById('faq');

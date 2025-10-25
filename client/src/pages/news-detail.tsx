@@ -10,6 +10,7 @@ import SocialShareButtons from "@/components/social-share-buttons";
 import { NewsSEOHead } from "@/components/news-seo-head";
 import { McKinseyInsightCard } from "@/components/mckinsey-insight-card";
 import { DisqusComments } from "@/components/disqus-comments";
+import { RelatedArticlesCarousel } from "@/components/related-articles-carousel";
 import { GA4Events } from "@/hooks/use-ga4";
 import { useTimeOnPage, useScrollTracking } from "@/hooks/use-ga4";
 
@@ -260,6 +261,12 @@ export default function NewsDetail() {
           articleId={postData.id}
           articleTitle={postData.title}
           articleUrl={`https://cararth.com/news/${postData.id}`}
+        />
+
+        {/* Related Articles Carousel */}
+        <RelatedArticlesCarousel 
+          currentArticleId={postData.id}
+          category={postData.category}
         />
       </div>
     </div>
