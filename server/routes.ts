@@ -8164,6 +8164,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Dynamic sitemap.xml generator
   app.get('/sitemap.xml', asyncHandler(async (req: any, res: any) => {
+    const { db } = await import('./db.js');
+    const { communityPosts, userStories } = await import('../shared/schema');
+    const { eq, desc } = await import('drizzle-orm');
+    
     // Get all cached portal listings (the 329 listings from various portals)
     const cars = await storage.searchCachedPortalListings({
       sortBy: 'datePosted',
@@ -8171,6 +8175,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       limit: 1000, // Get all listings for sitemap
       offset: 0
     });
+    
+    // Get published news articles
+    const newsArticles = await db.select()
+      .from(communityPosts)
+      .orderBy(desc(communityPosts.createdAt))
+      .limit(500);
+    
+    // Get approved user stories
+    const stories = await db.select()
+      .from(userStories)
+      .where(eq(userStories.moderationStatus, 'approved'))
+      .orderBy(desc(userStories.createdAt))
+      .limit(200);
     
     const baseUrl = 'https://cararth.com';
     const today = new Date().toISOString().split('T')[0];
@@ -8205,6 +8222,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <priority>0.8</priority>
   </url>
 
+  <url>
+    <loc>${baseUrl}/news</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>${baseUrl}/news/oem-report</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
   <!-- AI-Friendly Machine-Readable Data Endpoint -->
   <url>
     <loc>${baseUrl}/api/ai-info</loc>
@@ -8224,6 +8255,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+  </url>
+`;
+    });
+
+    // Add news articles
+    newsArticles.forEach((article: any) => {
+      const articleUrl = `${baseUrl}/news/${article.id}`;
+      const lastMod = article.createdAt ? new Date(article.createdAt).toISOString().split('T')[0] : today;
+      sitemap += `  <url>
+    <loc>${articleUrl}</loc>
+    <lastmod>${lastMod}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+`;
+    });
+
+    // Add approved user stories
+    stories.forEach((story: any) => {
+      const storyUrl = `${baseUrl}/stories/${story.id}`;
+      const lastMod = story.createdAt ? new Date(story.createdAt).toISOString().split('T')[0] : today;
+      sitemap += `  <url>
+    <loc>${storyUrl}</loc>
+    <lastmod>${lastMod}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
 `;
     });

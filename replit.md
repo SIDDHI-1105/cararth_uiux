@@ -54,6 +54,18 @@ Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, an
   - Template available at `/public/bulk-upload-template.csv`
 - **Dealer Performance Analytics Dashboard**: Interactive dashboard for Telangana dealers with real-time metrics, ML forecasts, and market benchmarks, including sales trend visualization, VAHAN ROI benchmark, and Telangana district analysis.
 - **Throttle Talk - Automated Content Generation**: Production-ready content pipeline for /news section featuring automated article generation twice daily (9 AM & 9 PM IST). Perplexity API scans latest Indian automotive news, xAI Grok compiles 1200-1800 word SEO-optimized articles, and auto-publishes to database with full logging. Includes admin-only manual trigger endpoint (POST /api/throttle/generate) and generation logs viewer (GET /api/throttle/generation-logs). Unified "Market Intelligence" tab combines AI-powered insights with OEM analytics dashboard. Enhanced with proper API key guards to prevent noisy scheduler failures when credentials are missing.
+- **User-Generated Content (UGC) System**: Production-ready story submission platform with AI moderation for car owner experiences. Features include:
+  - Real-time AI moderation using xAI Grok API with quality scoring, safety checks, and CarArth link suggestions
+  - Road Tales carousel on Community tab showcasing featured stories with views/likes metrics
+  - StorySubmissionForm with Zod validation, state management for edit/resubmit flows
+  - Database schema with moderation status tracking (approved/flagged/rejected)
+  - Integration with /news page for authenticated users
+- **Enhanced SEO Infrastructure**: Comprehensive SEO optimization for Google and LLM discoverability:
+  - Dynamic sitemap.xml generator at GET /sitemap.xml including car listings, news articles, and user stories
+  - NewsSEOHead component with auto-generated meta tags, Open Graph tags, and Twitter Cards
+  - Schema.org markup for articles, FAQ pages, and organizations
+  - Robots.txt for crawler guidance
+  - Machine-readable data endpoint at /api/ai-info for LLM agents
 
 ## Recent Changes (October 2025)
 
@@ -63,6 +75,15 @@ Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, an
   - ✅ Implemented automated content generation scheduler for Throttle Talk using Perplexity + xAI Grok
   - ✅ Added API key guards to prevent scheduler failures when credentials are missing
   - ✅ Created admin-only endpoints for manual content generation triggers and log viewing
+  - ✅ Built UGC submission system with AI moderation for car owner stories on /news
+    - Real-time AI moderation using xAI Grok API with quality scoring
+    - Road Tales carousel displaying featured stories on Community tab
+    - StorySubmissionForm with proper Zod validation and error handling
+    - State management allows edit & resubmit for flagged/rejected stories
+  - ✅ Enhanced SEO with comprehensive dynamic sitemap.xml
+    - Includes all car listings, news articles, and approved user stories
+    - Auto-updates with new content for optimal Google/LLM discovery
+    - Meta tags and Schema.org markup already in place via NewsSEOHead component
 
 ## AI/ML Capabilities
 
