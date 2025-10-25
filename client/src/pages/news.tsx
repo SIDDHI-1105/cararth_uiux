@@ -10,12 +10,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { 
   MessageSquare, Eye, Calendar, Plus, 
   MessageCircle, Globe, ExternalLink, LogIn,
   Heart, Bookmark, Share2, ThumbsUp, TrendingUp,
-  Image as ImageIcon, Play, BarChart3, Users
+  Image as ImageIcon, Play, BarChart3, Users, Info, HelpCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useForm } from "react-hook-form";
@@ -342,108 +343,180 @@ export default function ThrottleTalkPage() {
                   <DialogTrigger asChild>
                     <Button variant="outline" data-testid="button-new-benchmark" className="flex-1 sm:flex-none text-xs sm:text-sm min-h-[44px]">
                       <TrendingUp className="h-4 w-4 sm:mr-2" />
-                      <span className="hidden sm:inline">ML Benchmark</span>
+                      <span className="hidden sm:inline">Machine Learning Benchmarking</span>
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[500px]">
+                  <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                      <DialogTitle>Generate Dealership Benchmark</DialogTitle>
+                      <DialogTitle>Machine Learning Benchmarking</DialogTitle>
                       <DialogDescription>
                         Create ML-powered performance forecast with market comparisons
                       </DialogDescription>
                     </DialogHeader>
+                    
+                    {/* Info Banner */}
+                    <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 flex gap-2">
+                      <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                      <p className="text-xs text-blue-700 dark:text-blue-300">
+                        We're working on integrating real-time data feeds. Current data has a 2-3 month lag due to RTA reporting schedules.
+                      </p>
+                    </div>
+                    
+                    {/* Data Sources Badge */}
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <BarChart3 className="h-3.5 w-3.5" />
+                      <span className="font-medium">Data Sources:</span>
+                      <Badge variant="outline" className="text-xs">Telangana RTA</Badge>
+                      <Badge variant="outline" className="text-xs">VAHAN</Badge>
+                      <Badge variant="outline" className="text-xs">SIAM</Badge>
+                    </div>
                     <Form {...benchmarkForm}>
                       <form onSubmit={benchmarkForm.handleSubmit((data) => createBenchmarkMutation.mutate(data))} className="space-y-4">
-                        <FormField
-                          control={benchmarkForm.control}
-                          name="oem"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>OEM Brand</FormLabel>
-                              <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                  <SelectTrigger data-testid="select-benchmark-oem">
-                                    <SelectValue placeholder="Select brand" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="Maruti Suzuki">Maruti Suzuki</SelectItem>
-                                  <SelectItem value="Hyundai">Hyundai</SelectItem>
-                                  <SelectItem value="Tata Motors">Tata Motors</SelectItem>
-                                  <SelectItem value="Mahindra">Mahindra</SelectItem>
-                                  <SelectItem value="Kia">Kia</SelectItem>
-                                  <SelectItem value="Honda">Honda</SelectItem>
-                                  <SelectItem value="Toyota">Toyota</SelectItem>
-                                  <SelectItem value="Renault">Renault</SelectItem>
-                                  <SelectItem value="Nissan">Nissan</SelectItem>
-                                  <SelectItem value="Volkswagen">Volkswagen</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={benchmarkForm.control}
-                          name="month"
-                          render={({ field }) => {
-                            // Calculate max month (3 months ago from today)
-                            const today = new Date();
-                            const maxDate = new Date(today.getFullYear(), today.getMonth() - 3, 1);
-                            const maxMonth = `${maxDate.getFullYear()}-${String(maxDate.getMonth() + 1).padStart(2, '0')}`;
-                            
-                            return (
-                              <FormItem>
-                                <FormLabel>Month</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    type="month" 
-                                    {...field} 
-                                    max={maxMonth}
-                                    data-testid="input-benchmark-month"
-                                  />
-                                </FormControl>
-                                <FormDescription className="text-xs">
-                                  Select a month at least 3 months in the past (RTA data availability delay)
-                                </FormDescription>
-                                <FormMessage />
-                              </FormItem>
-                            );
-                          }}
-                        />
-                        <FormField
-                          control={benchmarkForm.control}
-                          name="mtdSales"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>MTD Sales (Units)</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  type="number" 
-                                  placeholder="Enter month-to-date sales count"
-                                  {...field}
-                                  onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                                  value={field.value ?? ''}
-                                  data-testid="input-benchmark-mtd"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={benchmarkForm.control}
-                          name="dealerName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Dealer Name (Optional)</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Your dealership name" {...field} data-testid="input-benchmark-dealer" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        <TooltipProvider>
+                          <div className="space-y-4">
+                            <FormField
+                              control={benchmarkForm.control}
+                              name="oem"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <div className="flex items-center gap-2">
+                                    <FormLabel>OEM Brand</FormLabel>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                                      </TooltipTrigger>
+                                      <TooltipContent className="max-w-xs">
+                                        <p className="text-xs">Select the car manufacturer to benchmark against regional market data from RTA and VAHAN databases.</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </div>
+                                  <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger data-testid="select-benchmark-oem">
+                                        <SelectValue placeholder="Select brand" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="Maruti Suzuki">Maruti Suzuki</SelectItem>
+                                      <SelectItem value="Hyundai">Hyundai</SelectItem>
+                                      <SelectItem value="Tata Motors">Tata Motors</SelectItem>
+                                      <SelectItem value="Mahindra">Mahindra</SelectItem>
+                                      <SelectItem value="Kia">Kia</SelectItem>
+                                      <SelectItem value="Honda">Honda</SelectItem>
+                                      <SelectItem value="Toyota">Toyota</SelectItem>
+                                      <SelectItem value="Renault">Renault</SelectItem>
+                                      <SelectItem value="Nissan">Nissan</SelectItem>
+                                      <SelectItem value="Volkswagen">Volkswagen</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={benchmarkForm.control}
+                              name="month"
+                              render={({ field }) => {
+                                // Generate last 24 months, starting from 3 months ago
+                                const today = new Date();
+                                const months = [];
+                                const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                                                  'July', 'August', 'September', 'October', 'November', 'December'];
+                                
+                                for (let i = 3; i < 27; i++) {
+                                  const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                                  const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                                  const label = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+                                  months.push({ value, label });
+                                }
+                                
+                                return (
+                                  <FormItem>
+                                    <div className="flex items-center gap-2">
+                                      <FormLabel>Month</FormLabel>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                                        </TooltipTrigger>
+                                        <TooltipContent className="max-w-xs">
+                                          <p className="text-xs">Choose a historical month with available RTA registration data. Data is available 3 months after the period ends.</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </div>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <FormControl>
+                                        <SelectTrigger data-testid="select-benchmark-month">
+                                          <SelectValue placeholder="Select month" />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        {months.map(month => (
+                                          <SelectItem key={month.value} value={month.value}>
+                                            {month.label}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                  </FormItem>
+                                );
+                              }}
+                            />
+                            <FormField
+                              control={benchmarkForm.control}
+                              name="mtdSales"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <div className="flex items-center gap-2">
+                                    <FormLabel>MTD Sales (Units)</FormLabel>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                                      </TooltipTrigger>
+                                      <TooltipContent className="max-w-xs">
+                                        <p className="text-xs">Enter your dealership's total unit sales for the selected month. This will be compared against regional and national averages.</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </div>
+                                  <FormControl>
+                                    <Input 
+                                      type="number" 
+                                      placeholder="e.g., 130"
+                                      {...field}
+                                      onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                                      value={field.value ?? ''}
+                                      data-testid="input-benchmark-mtd"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={benchmarkForm.control}
+                              name="dealerName"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <div className="flex items-center gap-2">
+                                    <FormLabel>Dealer Name (Optional)</FormLabel>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                                      </TooltipTrigger>
+                                      <TooltipContent className="max-w-xs">
+                                        <p className="text-xs">Add your dealership name to personalize the generated benchmark report.</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </div>
+                                  <FormControl>
+                                    <Input placeholder="Your dealership name" {...field} data-testid="input-benchmark-dealer" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </TooltipProvider>
                         <div className="flex justify-end gap-3">
                           <Button 
                             type="button" 
