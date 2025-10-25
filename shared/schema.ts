@@ -898,6 +898,135 @@ export type UserReputation = typeof userReputation.$inferSelect;
 export type InsertAnonymousSearchActivity = z.infer<typeof insertAnonymousSearchActivitySchema>;
 export type AnonymousSearchActivity = typeof anonymousSearchActivity.$inferSelect;
 
+// User-generated car stories for "Road Tales" feature
+export const userStories = pgTable("user_stories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id"),
+  
+  // Story content
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  carBrand: text("car_brand"),
+  carModel: text("car_model"),
+  city: text("city"),
+  
+  // Media
+  images: text("images").array().default([]),
+  
+  // AI moderation
+  moderationStatus: text("moderation_status").default('pending'), // pending, approved, rejected, flagged
+  moderatedAt: timestamp("moderated_at"),
+  aiModerationNotes: text("ai_moderation_notes"),
+  cararthLinks: jsonb("cararth_links").default([]), // AI-suggested CarArth listing links
+  
+  // Engagement
+  featured: boolean("featured").default(false),
+  featuredUntil: timestamp("featured_until"),
+  views: integer("views").default(0),
+  likes: integer("likes").default(0),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Newsletter subscriptions
+export const newsletterSubscribers = pgTable("newsletter_subscribers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: text("email").notNull().unique(),
+  name: text("name"),
+  
+  // Preferences
+  frequency: text("frequency").default('weekly'), // daily, weekly, monthly
+  topics: text("topics").array().default([]), // market-insights, new-articles, ugc-highlights
+  
+  // Status
+  status: text("status").default('active'), // active, unsubscribed, bounced
+  unsubscribedAt: timestamp("unsubscribed_at"),
+  unsubscribeReason: text("unsubscribe_reason"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Polls for user engagement
+export const polls = pgTable("polls", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  question: text("question").notNull(),
+  options: jsonb("options").notNull(), // [{ id, text, votes }]
+  
+  // Metadata
+  category: text("category"), // used-ev, maintenance, market-trends
+  active: boolean("active").default(true),
+  featured: boolean("featured").default(false),
+  
+  // Stats
+  totalVotes: integer("total_votes").default(0),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  expiresAt: timestamp("expires_at"),
+});
+
+// Poll votes tracking
+export const pollVotes = pgTable("poll_votes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  pollId: varchar("poll_id").notNull(),
+  optionId: varchar("option_id").notNull(),
+  userId: varchar("user_id"),
+  visitorId: varchar("visitor_id"), // For anonymous votes
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Article analytics for tracking engagement
+export const articleAnalytics = pgTable("article_analytics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  articleId: varchar("article_id").notNull(), // Links to community_posts
+  
+  // Engagement metrics
+  views: integer("views").default(0),
+  uniqueViews: integer("unique_views").default(0),
+  shares: integer("shares").default(0),
+  avgReadTime: integer("avg_read_time").default(0), // in seconds
+  scrollDepth: jsonb("scroll_depth").default({}), // { 25: count, 50: count, 75: count, 100: count }
+  
+  // Traffic sources
+  trafficSources: jsonb("traffic_sources").default({}), // { organic: count, social: count, direct: count }
+  
+  // Social shares breakdown
+  socialShares: jsonb("social_shares").default({}), // { whatsapp: count, twitter: count, facebook: count }
+  
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Content generation logs for automated articles
+export const contentGenerationLogs = pgTable("content_generation_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Generation metadata
+  trigger: text("trigger").notNull(), // cron, manual, api
+  status: text("status").notNull(), // success, failed, partial
+  
+  // API usage
+  perplexityQuery: text("perplexity_query"),
+  perplexityCitations: jsonb("perplexity_citations").default([]),
+  grokPrompt: text("grok_prompt"),
+  
+  // Generated content
+  articleId: varchar("article_id"), // Links to community_posts if published
+  articleTitle: text("article_title"),
+  wordCount: integer("word_count"),
+  backlinksCount: integer("backlinks_count"),
+  
+  // Performance metrics
+  generationTimeMs: integer("generation_time_ms"),
+  perplexityTokens: integer("perplexity_tokens"),
+  grokTokens: integer("grok_tokens"),
+  
+  // Error tracking
+  errorMessage: text("error_message"),
+  errorDetails: jsonb("error_details"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Cached portal listings for 24-hour data storage
 export const cachedPortalListings = pgTable(
   "cached_portal_listings",
@@ -1012,6 +1141,57 @@ export const insertListingMetricsSchema = createInsertSchema(listingMetrics).omi
 
 export type InsertListingMetrics = z.infer<typeof insertListingMetricsSchema>;
 export type ListingMetrics = typeof listingMetrics.$inferSelect;
+
+// Insert schemas and types for Throttle Talk enhanced features
+export const insertUserStorySchema = createInsertSchema(userStories).omit({
+  id: true,
+  views: true,
+  likes: true,
+  moderatedAt: true,
+  aiModerationNotes: true,
+  cararthLinks: true,
+  createdAt: true,
+});
+
+export const insertNewsletterSubscriberSchema = createInsertSchema(newsletterSubscribers).omit({
+  id: true,
+  createdAt: true,
+  unsubscribedAt: true,
+});
+
+export const insertPollSchema = createInsertSchema(polls).omit({
+  id: true,
+  totalVotes: true,
+  createdAt: true,
+});
+
+export const insertPollVoteSchema = createInsertSchema(pollVotes).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertArticleAnalyticsSchema = createInsertSchema(articleAnalytics).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export const insertContentGenerationLogSchema = createInsertSchema(contentGenerationLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertUserStory = z.infer<typeof insertUserStorySchema>;
+export type UserStory = typeof userStories.$inferSelect;
+export type InsertNewsletterSubscriber = z.infer<typeof insertNewsletterSubscriberSchema>;
+export type NewsletterSubscriber = typeof newsletterSubscribers.$inferSelect;
+export type InsertPoll = z.infer<typeof insertPollSchema>;
+export type Poll = typeof polls.$inferSelect;
+export type InsertPollVote = z.infer<typeof insertPollVoteSchema>;
+export type PollVote = typeof pollVotes.$inferSelect;
+export type InsertArticleAnalytics = z.infer<typeof insertArticleAnalyticsSchema>;
+export type ArticleAnalytics = typeof articleAnalytics.$inferSelect;
+export type InsertContentGenerationLog = z.infer<typeof insertContentGenerationLogSchema>;
+export type ContentGenerationLog = typeof contentGenerationLogs.$inferSelect;
 
 // AI model response cache for cost optimization
 export const aiModelCache = pgTable("ai_model_cache", {

@@ -1,0 +1,37 @@
+Build and deploy an enhanced full-stack application on Replit for the Throttle Talk section at https://www.cararth.com/news, using Node.js/Express backend, React/Next.js frontend, and PostgreSQL (via Neon) for storage. Leverage the existing Perplexity.ai and xAI (Grok 4) API integrations for dynamic content. The goal is to create a high-traction news hub that drives user engagement (e.g., shares, comments, returns), boosts SEO (via schema, keywords, speed) and LLM discoverability (semantic clusters, structured data for SGE/Perplexity), and automates Indian automobile-focused articles with UGC integration. Ensure mobile-first design, <2s load times, and Core Web Vitals compliance. Use environment variables for all API keys.
+
+Core Features:
+
+1. **Dynamic Content Automation (Perplexity + xAI Pipeline):**
+   - Set up a cron job (every 6-12 hours via node-cron) to trigger Perplexity for real-time Indian auto news scanning: Prompt it with "Search latest articles/snippets on Indian used car trends (e.g., EV subsidies, monsoon maintenance for Maruti/Tata models, resale values in Delhi/Mumbai) from sources like Autocar India, SIAM reports, Team-BHP forums, ZigWheels—return top 5-10 snippets with URLs, dates, key stats."
+   - Feed results to xAI (Grok 4) for compilation: Prompt: "As an ARAI-certified auto expert, synthesize these [Perplexity snippets] into a 1,200-1,800 word engaging article for Throttle Talk. Title: Catchy, keyword-rich (e.g., '2025 Diwali Used SUV Deals Under ₹10L: Mumbai Edition'). Structure: H1 intro, H2 sections (e.g., 'Market Trends', 'Buyer Tips', 'UGC Spotlight'), H3 subheads; embed 4-6 natural backlinks (diverse anchors: 60% branded like 'SIAM data', 40% keyword like 'used EV battery life'); include 2-3 internal links to cararth.com inventory (e.g., 'Check similar models here'); add FAQ section for voice/LLM queries; end with CTA for UGC submissions."
+   - Generate 2-3 articles/day, storing in DB with metadata (title, slug, publish_date, seo_keywords). Auto-populate RSS feed (XML via rss lib) for Google News syndication, including geo-tags for Indian queries.
+
+2. **UGC Integration with CarArth Tie-Ins:**
+   - Add a submission form (React Hook Form) for users: Fields for "Your Used Car Story" (text, optional image upload via Cloudinary), city/model tags. On submit, use xAI to moderate/summarize: Prompt: "Review this UGC for relevance to Indian autos; flag spam, enhance with 1-2 CarArth links if fitting (e.g., 'Similar listings at CarArth')."
+   - Feature approved UGC in a "Road Tales" carousel: 3-5 rotating snippets with user quotes, photos, and "Inspired? Browse Inventory" buttons linking to personalized searches. Aim for 10% of articles to weave in 1-2 UGC elements, fostering community (e.g., "Reader Raj from Bangalore shares his Innova flood hack").
+
+3. **SEO & LLM Search Optimization:**
+   - On-page: Auto-generate meta titles/descriptions (60 chars, keyword-frontloaded), Open Graph/Twitter cards for shares. Implement Article/FAQ/LocalBusiness schema (JSON-LD) via react-helmet—e.g., ratings from UGC, geo for "used cars Delhi news."
+   - LLM-friendly: Use semantic clusters (e.g., LSI like "pre-owned Hyundai Creta AC issues") in prompts; structure content with bullet lists, numbered steps for easy extraction in SGE/Perplexity answers. Add alt text to images (e.g., "Monsoon-damaged used Ford EcoSport repair guide").
+   - Sitemap: Auto-generate /news-sitemap.xml with article URLs; submit to Google Search Console via cron.
+
+4. **User Traction & Engagement Engine:**
+   - Hero banner: Rotating LLM-teasers (e.g., "Hot: Post-Festive Used Bike Bargains") with parallax scroll for visual pop.
+   - Article grid: 3-column responsive cards (thumbnail from Unsplash API or UGC, excerpt, read-time, category filter: EVs, Maintenance, Trends). Infinite scroll with lazy loading.
+   - Sidebar: Newsletter signup (Mailchimp embed), poll widget (e.g., "Best Used EV Under ₹5L?" via simple state), share buttons (X, WhatsApp—India-priority).
+   - Interactions: Disqus for threaded comments; exit-intent modal: "Subscribe for Weekly Auto Alerts?" Track with GA4 events (e.g., gtag('event', 'article_scroll', {value: 1})).
+   - A/B Testing: Use a simple flag in DB to test variants (e.g., headline styles: Sensational vs. Informative) via Optimizely-lite (local state).
+
+5. **Navigation & Layout Enhancements:**
+   - Global nav: Inject "News" mega-dropdown in site header (categories: Latest, Trends, UGC) with direct links.
+   - Page flow: Breadcrumb (Home > News > [Article]); footer carousel of related CarArth listings (e.g., "Fuel Your Read with Real Rides").
+   - Accessibility: ARIA labels, high-contrast mode toggle, keyboard nav.
+
+Additional Improvements:
+- Analytics Dashboard: Simple admin route (/admin/throttle) with charts (Chart.js) for metrics: Views, shares, UGC subs—pull from GA4/DB.
+- Monetization Nudge: Subtle affiliate CTAs (e.g., "Get Quote on This Model") linking to CarArth bookings.
+- Error Resilience: Fallback to 3 static seed articles if APIs fail; log errors to console/Sentry.
+- Deployment: Auto-deploy on Replit push; set up webhook for live sync to cararth.com/news. Test for 100% mobile pass (Lighthouse score 90+).
+
+Output: Full codebase in Replit (README.md with setup/run instructions), live preview URL, and a post-deploy checklist. Prioritize traction: Ensure viral loops (e.g., "Share & Win a Free Inspection Voucher").
