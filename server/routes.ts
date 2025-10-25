@@ -4888,17 +4888,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const { generateBenchmarkPost } = await import('./benchmarkPostService');
-      const benchmarkPost = await generateBenchmarkPost({
+      const { generateDealershipBenchmark } = await import('./dealershipBenchmarkService');
+      const benchmark = await generateDealershipBenchmark({
         oem,
         month,
-        mtdSales: Number(mtdSales),
-        dealerName
-      }, userId);
+        mtdSales: Number(mtdSales)
+      });
 
       res.json({
         success: true,
-        post: benchmarkPost,
+        benchmark: {
+          ...benchmark,
+          dealerName: dealerName || 'Your Dealership',
+          oem,
+          month
+        },
         message: 'Benchmark generated successfully'
       });
     } catch (error) {
