@@ -76,7 +76,7 @@ type BenchmarkFormData = z.infer<typeof benchmarkSchema>;
 
 // Clean, minimal community platform
 export default function ThrottleTalkPage() {
-  const [activeTab, setActiveTab] = useState('insights');
+  const [activeTab, setActiveTab] = useState('intelligence');
   const [communityFilter, setCommunityFilter] = useState('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isBenchmarkDialogOpen, setIsBenchmarkDialogOpen] = useState(false);
@@ -104,10 +104,10 @@ export default function ThrottleTalkPage() {
     enabled: isAuthenticated,
   });
 
-  // Fetch market insights from Perplexity LLM
+  // Fetch market insights from Perplexity LLM (always load for unified tab)
   const { data: marketInsightsData, isLoading: isMarketInsightsLoading } = useQuery({
     queryKey: ['/api/news/market-insights'],
-    enabled: activeTab === 'insights',
+    enabled: activeTab === 'intelligence',
     refetchInterval: 3600000, // Refresh every hour
   });
 
@@ -207,7 +207,7 @@ export default function ThrottleTalkPage() {
   })) || [];
 
   // Convert market insights to post format for display
-  const marketInsightsPosts: ForumPost[] = activeTab === 'insights' && (marketInsightsData as any)?.success ? 
+  const marketInsightsPosts: ForumPost[] = activeTab === 'intelligence' && (marketInsightsData as any)?.success ? 
     (marketInsightsData as any).insights.map((insight: any, index: number) => ({
       id: `market-insight-${index}`,
       title: insight.topic,
@@ -500,11 +500,7 @@ export default function ThrottleTalkPage() {
       {/* Main content with tabs */}
       <div className="max-w-6xl mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
-            <TabsTrigger value="insights" className="flex items-center gap-2" data-testid="tab-insights">
-              <TrendingUp className="h-4 w-4" />
-              Market Insights
-            </TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 mb-8">
             <TabsTrigger value="intelligence" className="flex items-center gap-2" data-testid="tab-intelligence">
               <BarChart3 className="h-4 w-4" />
               Market Intelligence
@@ -515,20 +511,29 @@ export default function ThrottleTalkPage() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Market Insights Tab */}
-          <TabsContent value="insights" className="space-y-4">
-            {marketInsightsPosts.length === 0 ? (
-              <div className="text-center py-12">
-                <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  Loading market insights...
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  AI-powered analysis of India's automotive market
-                </p>
+          {/* Unified Market Intelligence Tab - Combines Insights & Analytics */}
+          <TabsContent value="intelligence" className="space-y-6">
+            {/* Market Insights Section - AI-Powered Analysis */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <TrendingUp className="h-5 w-5 text-blue-600" />
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  AI-Powered Market Insights
+                </h2>
               </div>
-            ) : (
-              marketInsightsPosts.map((post) => (
+              
+              {marketInsightsPosts.length === 0 ? (
+                <div className="text-center py-8 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                  <TrendingUp className="h-10 w-10 text-gray-400 mx-auto mb-3" />
+                  <h3 className="text-base font-medium text-gray-900 dark:text-white mb-1">
+                    Loading market insights...
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    AI-powered analysis of India's automotive market
+                  </p>
+                </div>
+              ) : (
+                marketInsightsPosts.map((post) => (
                 <Card 
                   key={post.id} 
                   className="hover:shadow-sm transition-shadow cursor-pointer border border-gray-200 dark:border-gray-800" 
@@ -671,24 +676,23 @@ export default function ThrottleTalkPage() {
                 </Card>
               ))
             )}
+            </div>
 
-            {/* Simple load more */}
-            {marketInsightsPosts.length > 0 && (
-              <div className="text-center pt-6">
-                <Button variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800">
-                  Load more insights
-                </Button>
+            {/* Market Analytics Dashboard - OEM Performance Data */}
+            <div className="space-y-4 mt-8">
+              <div className="flex items-center gap-2 mb-4">
+                <BarChart3 className="h-5 w-5 text-blue-600" />
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Market Analytics Dashboard
+                </h2>
               </div>
-            )}
-          </TabsContent>
-
-          {/* Market Intelligence Tab */}
-          <TabsContent value="intelligence">
-            <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-6">
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Updated monthly with OEM performance data and dealer analytics
-              </p>
-              <MarketIntelligenceDashboard />
+              
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-6">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Updated monthly with OEM performance data and dealer analytics
+                </p>
+                <MarketIntelligenceDashboard />
+              </div>
             </div>
           </TabsContent>
 

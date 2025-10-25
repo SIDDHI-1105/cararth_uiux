@@ -53,6 +53,16 @@ Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, an
   - Returns detailed validation report with errors and warnings by row/VIN
   - Template available at `/public/bulk-upload-template.csv`
 - **Dealer Performance Analytics Dashboard**: Interactive dashboard for Telangana dealers with real-time metrics, ML forecasts, and market benchmarks, including sales trend visualization, VAHAN ROI benchmark, and Telangana district analysis.
+- **Throttle Talk - Automated Content Generation**: Production-ready content pipeline for /news section featuring automated article generation twice daily (9 AM & 9 PM IST). Perplexity API scans latest Indian automotive news, xAI Grok compiles 1200-1800 word SEO-optimized articles, and auto-publishes to database with full logging. Includes admin-only manual trigger endpoint (POST /api/throttle/generate) and generation logs viewer (GET /api/throttle/generation-logs). Unified "Market Intelligence" tab combines AI-powered insights with OEM analytics dashboard. Enhanced with proper API key guards to prevent noisy scheduler failures when credentials are missing.
+
+## Recent Changes (October 2025)
+
+- **October 25, 2025**: 
+  - ✅ Removed RVAN Ventures dealership benchmark articles from database
+  - ✅ Merged "Market Insights" and "Market Intelligence" tabs into unified "Market Intelligence" section on /news page
+  - ✅ Implemented automated content generation scheduler for Throttle Talk using Perplexity + xAI Grok
+  - ✅ Added API key guards to prevent scheduler failures when credentials are missing
+  - ✅ Created admin-only endpoints for manual content generation triggers and log viewing
 
 ## AI/ML Capabilities
 
@@ -110,8 +120,8 @@ Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, an
 - **OpenAI**: For ToS extraction and normalization.
 - **Google Gemini**: For PII detection.
 - **Anthropic Claude**: For copyright analysis.
-- **Perplexity**: For future market intelligence.
-- **xAI Grok**: For granular market insights and AI-powered used car analysis.
+- **Perplexity**: Scans Indian automotive news for Throttle Talk content generation.
+- **xAI Grok**: Compiles SEO-optimized articles for Throttle Talk and provides granular market insights.
 
 ### Web Scraping
 - **Firecrawl**: Premium web scraping service with LLM-powered extraction.
