@@ -4,7 +4,7 @@
  */
 
 import { useEffect } from 'react';
-import cararthLogo from "@assets/cararth-logo.png";
+import cararthLogoFull from "@assets/cararth-logo-full.png";
 
 interface SEOHeadProps {
   title?: string;
@@ -21,7 +21,7 @@ export function SEOHead({
   title = "CarArth - India's Very Own Used Car Search Engine",
   description = "India's very own used car search engine. Compare cars across platforms, discover true value with AI intelligence. Buy & sell with confidence on CarArth.",
   keywords = "used cars India, car search engine, compare cars, authentic car listings, AI car recommendations, cross-platform car search, car marketplace India, used car price comparison",
-  ogImage = cararthLogo,
+  ogImage = cararthLogoFull,
   ogType = "website",
   structuredData,
   canonical,
@@ -159,7 +159,7 @@ export const createWebsiteSchema = () => ({
     "name": "CarArth",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://cararth.com/logo.png"
+      "url": "https://cararth.com/cararth-logo-full.png"
     }
   }
 });
@@ -170,7 +170,7 @@ export const createOrganizationSchema = () => ({
   "name": "CarArth",
   "description": "India's very own used car search engine. Compare cars across platforms with AI intelligence.",
   "url": "https://cararth.com",
-  "logo": "https://cararth.com/logo.png",
+  "logo": "https://cararth.com/cararth-logo-full.png",
   "email": "connect@cararth.com",
   "areaServed": {
     "@type": "Country",

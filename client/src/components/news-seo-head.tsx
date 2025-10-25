@@ -140,7 +140,7 @@ function generateSchemaMarkup(posts?: NewsPost[]) {
       url: 'https://cararth.com',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://cararth.com/cararth-logo.png',
+        url: 'https://cararth.com/cararth-logo-full.png',
       },
       sameAs: [
         'https://www.facebook.com/cararth',
