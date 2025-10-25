@@ -84,6 +84,16 @@ Cararth is built as a monorepo using TypeScript, Drizzle ORM with PostgreSQL, an
     - Includes all car listings, news articles, and approved user stories
     - Auto-updates with new content for optimal Google/LLM discovery
     - Meta tags and Schema.org markup already in place via NewsSEOHead component
+  - ✅ User engagement features: Newsletter signup, polls widget, and enhanced sharing
+    - Newsletter subscription with frequency/topic preferences and duplicate prevention
+    - Interactive polls system with visitor-based vote tracking and real-time results
+    - Both integrated into Community tab with responsive layout
+  - ✅ Disqus comments and GA4 analytics integration
+    - Disqus comments on all article detail pages with proper reset handling
+    - GA4 tracking for page views, article views, newsletter signups, poll votes, and story submissions
+    - Engagement metrics: time on page and scroll depth tracking
+    - Article view deduplication using refs to prevent double-counting on refetches
+    - Clean production logs (development-only console logging)
 
 ## AI/ML Capabilities
 
