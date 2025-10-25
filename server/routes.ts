@@ -4104,6 +4104,178 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // UGC Story Submission - Submit new car story with AI moderation
+  app.post("/api/stories", isAuthenticated, async (req: any, res) => {
+    try {
+      const { db } = await import('./db.js');
+      const { userStories, insertUserStorySchema } = await import('../shared/schema');
+      const { ugcModerationService } = await import('./ugcModerationService');
+      
+      // Validate request body with Zod schema
+      const validationResult = insertUserStorySchema.omit({ 
+        userId: true, 
+        moderationStatus: true, 
+        aiModerationNotes: true,
+        cararthLinks: true,
+        views: true,
+        likes: true,
+        createdAt: true 
+      }).safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: 'Invalid input',
+          details: validationResult.error.errors 
+        });
+      }
+      
+      const { title, content, carBrand, carModel, city, images } = validationResult.data;
+      
+      // AI Moderation
+      console.log('🤖 Running AI moderation for story:', title);
+      const moderation = await ugcModerationService.moderateStory({
+        title,
+        content,
+        carBrand,
+        carModel,
+        city
+      });
+      
+      // Create story with moderation results and default metrics
+      const [story] = await db.insert(userStories).values({
+        userId: req.user?.sub || 'anonymous',
+        title,
+        content,
+        carBrand: carBrand || null,
+        carModel: carModel || null,
+        city: city || null,
+        images: images || [],
+        moderationStatus: moderation.status,
+        aiModerationNotes: moderation.notes,
+        cararthLinks: moderation.suggestedCararthLinks as any,
+        views: 0,
+        likes: 0,
+        createdAt: new Date()
+      }).returning();
+      
+      console.log(`✅ Story created: ${story.id} (${moderation.status})`);
+      
+      res.status(201).json({
+        success: true,
+        story,
+        moderation: {
+          status: moderation.status,
+          qualityScore: moderation.qualityScore,
+          message: moderation.status === 'approved' 
+            ? '🎉 Your story has been published!' 
+            : moderation.status === 'flagged'
+            ? '⏳ Your story is under review and will be published soon.'
+            : '❌ Your story could not be published. Please review our guidelines.'
+        }
+      });
+      
+    } catch (error: any) {
+      console.error('Failed to create story:', error);
+      res.status(500).json({
+        error: 'Failed to submit story',
+        message: error.message
+      });
+    }
+  });
+  
+  // Get featured stories for Road Tales carousel
+  app.get("/api/stories/featured", async (req, res) => {
+    try {
+      const { db } = await import('./db.js');
+      const { userStories } = await import('../shared/schema');
+      const { eq, and, desc, gt, sql } = await import('drizzle-orm');
+      
+      const stories = await db.select()
+        .from(userStories)
+        .where(
+          and(
+            eq(userStories.moderationStatus, 'approved'),
+            eq(userStories.featured, true),
+            gt(userStories.featuredUntil, new Date())
+          )
+        )
+        .orderBy(desc(userStories.createdAt))
+        .limit(10);
+      
+      res.json({ success: true, stories });
+      
+    } catch (error: any) {
+      console.error('Failed to fetch featured stories:', error);
+      res.status(500).json({
+        error: 'Failed to fetch stories',
+        message: error.message
+      });
+    }
+  });
+  
+  // Get all approved stories (public)
+  app.get("/api/stories", async (req, res) => {
+    try {
+      const { db } = await import('./db.js');
+      const { userStories } = await import('../shared/schema');
+      const { eq, desc } = await import('drizzle-orm');
+      
+      const limit = parseInt(req.query.limit as string) || 20;
+      const offset = parseInt(req.query.offset as string) || 0;
+      
+      const stories = await db.select()
+        .from(userStories)
+        .where(eq(userStories.moderationStatus, 'approved'))
+        .orderBy(desc(userStories.createdAt))
+        .limit(limit)
+        .offset(offset);
+      
+      res.json({ success: true, stories });
+      
+    } catch (error: any) {
+      console.error('Failed to fetch stories:', error);
+      res.status(500).json({
+        error: 'Failed to fetch stories',
+        message: error.message
+      });
+    }
+  });
+  
+  // Admin: Moderate story
+  app.patch("/api/stories/:id/moderate", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { db } = await import('./db.js');
+      const { userStories } = await import('../shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const { id } = req.params;
+      const { status, featured, featuredUntil } = req.body;
+      
+      if (!['approved', 'rejected', 'flagged'].includes(status)) {
+        return res.status(400).json({ error: 'Invalid status' });
+      }
+      
+      const [updated] = await db.update(userStories)
+        .set({
+          moderationStatus: status,
+          moderatedAt: new Date(),
+          featured: featured || false,
+          featuredUntil: featuredUntil ? new Date(featuredUntil) : null
+        })
+        .where(eq(userStories.id, id))
+        .returning();
+      
+      res.json({ success: true, story: updated });
+      
+    } catch (error: any) {
+      console.error('Failed to moderate story:', error);
+      res.status(500).json({
+        error: 'Failed to moderate story',
+        message: error.message
+      });
+    }
+  });
+
   // Market insights for specific locations (McKinsey-style infographics)
   app.get("/api/news/market-insights", async (req, res) => {
     try {

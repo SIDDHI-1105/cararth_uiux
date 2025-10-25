@@ -28,6 +28,8 @@ import { NewsSEOHead, FAQSchemaMarkup } from "@/components/news-seo-head";
 import SocialShareButtons from "@/components/social-share-buttons";
 import { McKinseyInsightCard } from "@/components/mckinsey-insight-card";
 import MarketIntelligenceDashboard from "@/pages/MarketIntelligenceDashboard";
+import { StorySubmissionForm } from "@/components/story-submission-form";
+import { RoadTalesCarousel } from "@/components/road-tales-carousel";
 
 interface ForumPost {
   id: string;
@@ -80,6 +82,7 @@ export default function ThrottleTalkPage() {
   const [communityFilter, setCommunityFilter] = useState('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isBenchmarkDialogOpen, setIsBenchmarkDialogOpen] = useState(false);
+  const [isStoryDialogOpen, setIsStoryDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -282,6 +285,15 @@ export default function ThrottleTalkPage() {
                 >
                   <TrendingUp className="h-4 w-4 mr-2" />
                   OEM Report
+                </Button>
+                <Button 
+                  onClick={() => setIsStoryDialogOpen(true)}
+                  variant="outline" 
+                  className="border-purple-600 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950" 
+                  data-testid="button-share-story"
+                >
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Share Story
                 </Button>
                 <Dialog open={isBenchmarkDialogOpen} onOpenChange={setIsBenchmarkDialogOpen}>
                   <DialogTrigger asChild>
@@ -698,6 +710,9 @@ export default function ThrottleTalkPage() {
 
           {/* Community Tab */}
           <TabsContent value="community" className="space-y-6">
+            {/* Road Tales Carousel - Featured Car Stories */}
+            <RoadTalesCarousel />
+            
             {/* Filter for Reviews and Questions */}
             <div className="flex gap-2 border-b border-gray-200 dark:border-gray-800">
               <button
@@ -809,6 +824,12 @@ export default function ThrottleTalkPage() {
           </TabsContent>
         </Tabs>
       </div>
+      
+      {/* Story Submission Form Dialog */}
+      <StorySubmissionForm 
+        open={isStoryDialogOpen} 
+        onOpenChange={setIsStoryDialogOpen} 
+      />
     </div>
   );
 }
