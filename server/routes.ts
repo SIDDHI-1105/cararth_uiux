@@ -4059,6 +4059,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Automated Content Generation - Manual Trigger (Admin only)
+  app.post("/api/throttle/generate", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { automatedContentGenerator } = await import('./automatedContentGenerator');
+      
+      // Trigger generation in background
+      automatedContentGenerator.generateAndPublishArticle().catch((error) => {
+        console.error('❌ Background content generation failed:', error);
+      });
+      
+      res.json({
+        success: true,
+        message: 'Content generation started in background'
+      });
+    } catch (error: any) {
+      console.error('Failed to trigger content generation:', error);
+      res.status(500).json({
+        error: 'Failed to start content generation',
+        message: error.message
+      });
+    }
+  });
+  
+  // Get content generation logs (Admin only)
+  app.get("/api/throttle/generation-logs", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { db } = await import('./db.js');
+      const { contentGenerationLogs } = await import('../shared/schema');
+      const { desc } = await import('drizzle-orm');
+      
+      const logs = await db.select()
+        .from(contentGenerationLogs)
+        .orderBy(desc(contentGenerationLogs.createdAt))
+        .limit(50);
+      
+      res.json({ logs });
+    } catch (error: any) {
+      console.error('Failed to fetch generation logs:', error);
+      res.status(500).json({
+        error: 'Failed to fetch logs',
+        message: error.message
+      });
+    }
+  });
+
   // Market insights for specific locations (McKinsey-style infographics)
   app.get("/api/news/market-insights", async (req, res) => {
     try {

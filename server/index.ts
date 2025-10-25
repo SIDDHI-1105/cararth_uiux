@@ -266,6 +266,14 @@ app.use((req, res, next) => {
       console.log(`✅ Server started successfully on port ${port}`);
       log(`serving on port ${port}`);
       
+      // Start automated content generation scheduler (Throttle Talk)
+      try {
+        const { automatedContentGenerator } = await import('./automatedContentGenerator');
+        automatedContentGenerator.startScheduler();
+      } catch (error: any) {
+        console.warn('⚠️ Could not start automated content generator:', error.message);
+      }
+      
     } catch (error) {
       console.error('❌ Failed to start server:', error);
       console.error('Server startup failed. Exiting.');
