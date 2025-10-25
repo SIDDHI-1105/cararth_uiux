@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import cararthLogo from "@assets/cararth-logo.png";
+import cararthLogoFull from "@assets/cararth-logo-full.png";
 
 interface BrandWordmarkProps {
   variant?: "header" | "hero" | "footer";
@@ -25,12 +26,16 @@ export function BrandWordmark({
     footer: "text-xs sm:text-sm md:text-base"
   };
   
+  // Use full logo (with www.cararth.com) for hero and footer
+  // Use cropped logo (cleaner) for header
+  const logoSrc = variant === "hero" || variant === "footer" ? cararthLogoFull : cararthLogo;
+  
   return (
     <div className={cn("flex flex-col items-start", className)} data-testid="cararth-logo">
       {/* CarArth Logo Image */}
       <div className="flex items-center">
         <img 
-          src={cararthLogo} 
+          src={logoSrc} 
           alt="CarArth - India's very own used car search engine"
           className={cn(
             "object-contain transition-transform duration-300 hover:scale-105",
@@ -42,8 +47,8 @@ export function BrandWordmark({
         />
       </div>
       
-      {/* Tagline (only show if explicitly requested and not already in logo) */}
-      {showTagline && variant !== "hero" && (
+      {/* Tagline - hide for hero since new logo includes branding */}
+      {showTagline && variant === "header" && (
         <div className={cn("font-bold text-gray-800 dark:text-gray-200 mt-2", taglineSizes[variant])}>
           India's very own used car search engine
           <span className="text-primary font-semibold">*</span>
