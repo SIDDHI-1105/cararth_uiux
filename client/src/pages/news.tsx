@@ -468,13 +468,13 @@ export default function ThrottleTalkPage() {
                               render={({ field }) => (
                                 <FormItem>
                                   <div className="flex items-center gap-2">
-                                    <FormLabel>MTD Sales (Units)</FormLabel>
+                                    <FormLabel>MTD Sales</FormLabel>
                                     <Tooltip>
                                       <TooltipTrigger asChild>
                                         <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
                                       </TooltipTrigger>
                                       <TooltipContent className="max-w-xs">
-                                        <p className="text-xs">Enter your dealership's total unit sales for the selected month. This will be compared against regional and national averages.</p>
+                                        <p className="text-xs">Month-to-Date sales: How many cars did you sell in the selected month? This will be compared against other dealers in your region.</p>
                                       </TooltipContent>
                                     </Tooltip>
                                   </div>
