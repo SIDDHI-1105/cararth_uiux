@@ -4276,6 +4276,177 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Newsletter Subscription API
+  app.post("/api/newsletter/subscribe", async (req, res) => {
+    try {
+      const { db } = await import('./db.js');
+      const { newsletterSubscribers, insertNewsletterSubscriberSchema } = await import('../shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const validationResult = insertNewsletterSubscriberSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: 'Invalid input',
+          details: validationResult.error.errors 
+        });
+      }
+      
+      const { email, name, frequency, topics } = validationResult.data;
+      
+      // Check if already subscribed
+      const existing = await db.select()
+        .from(newsletterSubscribers)
+        .where(eq(newsletterSubscribers.email, email))
+        .limit(1);
+      
+      if (existing.length > 0) {
+        // Reactivate if unsubscribed
+        if (existing[0].status === 'unsubscribed') {
+          await db.update(newsletterSubscribers)
+            .set({ 
+              status: 'active',
+              frequency,
+              topics,
+              name: name || existing[0].name,
+              unsubscribedAt: null,
+              unsubscribeReason: null
+            })
+            .where(eq(newsletterSubscribers.email, email));
+          
+          return res.json({ success: true, message: 'Subscription reactivated!' });
+        }
+        
+        return res.status(400).json({ error: 'Email already subscribed' });
+      }
+      
+      // Create new subscription
+      const [subscriber] = await db.insert(newsletterSubscribers).values({
+        email,
+        name: name || null,
+        frequency: frequency || 'weekly',
+        topics: topics || [],
+        status: 'active'
+      }).returning();
+      
+      console.log(`📧 New newsletter subscriber: ${email}`);
+      
+      res.status(201).json({ 
+        success: true, 
+        message: 'Successfully subscribed!',
+        subscriber 
+      });
+      
+    } catch (error: any) {
+      console.error('Failed to subscribe to newsletter:', error);
+      res.status(500).json({
+        error: 'Failed to subscribe',
+        message: error.message
+      });
+    }
+  });
+
+  // Polls API - Get active polls
+  app.get("/api/polls", async (req, res) => {
+    try {
+      const { db } = await import('./db.js');
+      const { polls } = await import('../shared/schema');
+      const { eq, and, or, gt, isNull, desc } = await import('drizzle-orm');
+      
+      const activePolls = await db.select()
+        .from(polls)
+        .where(
+          and(
+            eq(polls.active, true),
+            or(
+              gt(polls.expiresAt, new Date()),
+              isNull(polls.expiresAt)
+            )
+          )
+        )
+        .orderBy(desc(polls.featured), desc(polls.createdAt))
+        .limit(10);
+      
+      res.json({ success: true, polls: activePolls });
+      
+    } catch (error: any) {
+      console.error('Failed to fetch polls:', error);
+      res.status(500).json({
+        error: 'Failed to fetch polls',
+        message: error.message
+      });
+    }
+  });
+
+  // Vote on poll
+  app.post("/api/polls/:id/vote", async (req, res) => {
+    try {
+      const { db } = await import('./db.js');
+      const { polls, pollVotes } = await import('../shared/schema');
+      const { eq, and, sql } = await import('drizzle-orm');
+      
+      const { id } = req.params;
+      const { optionId, visitorId } = req.body;
+      
+      if (!optionId || !visitorId) {
+        return res.status(400).json({ error: 'optionId and visitorId are required' });
+      }
+      
+      // Check if already voted
+      const existingVote = await db.select()
+        .from(pollVotes)
+        .where(
+          and(
+            eq(pollVotes.pollId, id),
+            eq(pollVotes.visitorId, visitorId)
+          )
+        )
+        .limit(1);
+      
+      if (existingVote.length > 0) {
+        return res.status(400).json({ error: 'You have already voted on this poll' });
+      }
+      
+      // Record vote
+      await db.insert(pollVotes).values({
+        pollId: id,
+        optionId,
+        visitorId,
+        userId: null // For authenticated users, could add req.user?.sub
+      });
+      
+      // Update poll statistics
+      const [poll] = await db.select().from(polls).where(eq(polls.id, id));
+      
+      if (poll) {
+        const options = poll.options as any[];
+        const updatedOptions = options.map((opt: any) => 
+          opt.id === optionId 
+            ? { ...opt, votes: (opt.votes || 0) + 1 }
+            : opt
+        );
+        
+        await db.update(polls)
+          .set({ 
+            options: updatedOptions,
+            totalVotes: sql`${polls.totalVotes} + 1`
+          })
+          .where(eq(polls.id, id));
+      }
+      
+      console.log(`🗳️ New vote recorded for poll: ${id}, option: ${optionId}`);
+      
+      res.json({ success: true, message: 'Vote recorded!' });
+      
+    } catch (error: any) {
+      console.error('Failed to vote on poll:', error);
+      res.status(500).json({
+        error: 'Failed to vote',
+        message: error.message
+      });
+    }
+  });
+
   // Market insights for specific locations (McKinsey-style infographics)
   app.get("/api/news/market-insights", async (req, res) => {
     try {
