@@ -73,16 +73,16 @@ export function ThrottleTalkMegaMenu({ isOpen, onClose }: ThrottleTalkMegaMenuPr
       onMouseLeave={onClose}
       data-testid="mega-menu-throttle-talk"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
         <Card className="overflow-hidden shadow-2xl border-2 bg-background/95 backdrop-blur-sm">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 p-4 sm:p-6">
             {/* Categories Section */}
-            <div className="lg:col-span-2 space-y-4">
-              <div className="flex items-center gap-2 mb-4">
-                <Newspaper className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold text-lg">Explore Throttle Talk</h3>
+            <div className="lg:col-span-2 space-y-3 sm:space-y-4">
+              <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                <Newspaper className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                <h3 className="font-semibold text-base sm:text-lg">Explore Throttle Talk</h3>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                 {categories.map((category) => (
                   <Link 
                     key={category.title} 
@@ -91,38 +91,40 @@ export function ThrottleTalkMegaMenu({ isOpen, onClose }: ThrottleTalkMegaMenuPr
                   >
                     <Button
                       variant="ghost"
-                      className="w-full h-auto p-4 justify-start hover:bg-accent/50 transition-all group"
+                      className="w-full h-auto min-h-[44px] p-3 sm:p-4 justify-start hover:bg-accent/50 transition-all group"
                       data-testid={`mega-menu-category-${category.title.toLowerCase().replace(/\s+/g, '-')}`}
                     >
                       <div className={cn(
-                        "p-2 rounded-lg mr-3 transition-transform group-hover:scale-110",
+                        "p-1.5 sm:p-2 rounded-lg mr-2 sm:mr-3 transition-transform group-hover:scale-110",
                         category.bgColor
                       )}>
-                        <category.icon className={cn("h-5 w-5", category.color)} />
+                        <category.icon className={cn("h-4 w-4 sm:h-5 sm:w-5", category.color)} />
                       </div>
-                      <div className="text-left flex-1">
-                        <div className="font-semibold text-sm">{category.title}</div>
-                        <div className="text-xs text-muted-foreground">{category.description}</div>
+                      <div className="text-left flex-1 min-w-0">
+                        <div className="font-semibold text-xs sm:text-sm truncate">{category.title}</div>
+                        <div className="text-[10px] sm:text-xs text-muted-foreground truncate">{category.description}</div>
                       </div>
-                      <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
                     </Button>
                   </Link>
                 ))}
               </div>
 
               {/* Quick Actions */}
-              <div className="pt-4 border-t">
+              <div className="pt-3 sm:pt-4 border-t">
                 <div className="grid grid-cols-2 gap-2">
                   <Link href="/news?tab=community" onClick={onClose}>
-                    <Button variant="outline" size="sm" className="w-full" data-testid="button-submit-story">
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      Submit Your Story
+                    <Button variant="outline" className="w-full text-[10px] sm:text-xs min-h-[44px]" data-testid="button-submit-story">
+                      <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">Submit Your Story</span>
+                      <span className="sm:hidden">Submit Story</span>
                     </Button>
                   </Link>
                   <Link href="/news?tab=community" onClick={onClose}>
-                    <Button variant="outline" size="sm" className="w-full" data-testid="button-join-newsletter">
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Join Newsletter
+                    <Button variant="outline" className="w-full text-[10px] sm:text-xs min-h-[44px]" data-testid="button-join-newsletter">
+                      <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">Join Newsletter</span>
+                      <span className="sm:hidden">Newsletter</span>
                     </Button>
                   </Link>
                 </div>
@@ -130,10 +132,10 @@ export function ThrottleTalkMegaMenu({ isOpen, onClose }: ThrottleTalkMegaMenuPr
             </div>
 
             {/* Featured Articles Section */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 mb-4">
-                <TrendingUp className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold text-lg">Featured Articles</h3>
+            <div className="space-y-2 sm:space-y-3">
+              <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                <h3 className="font-semibold text-base sm:text-lg">Featured Articles</h3>
               </div>
               <div className="space-y-3">
                 {featuredArticles.length > 0 ? (

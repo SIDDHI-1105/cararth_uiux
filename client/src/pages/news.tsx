@@ -305,43 +305,44 @@ export default function ThrottleTalkPage() {
       
       {/* Clean header */}
       <div className="border-b border-gray-200 dark:border-gray-800">
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <BrandWordmark variant="header" showTagline={false} className="scale-75" />
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <BrandWordmark variant="header" showTagline={false} className="scale-75 sm:scale-75 hidden sm:block" />
               <div>
-                <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+                <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">
                   Throttle Talk
                 </h1>
-                <p className="text-gray-600 dark:text-gray-400 mt-1">
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-0.5 sm:mt-1">
                   Automotive community discussions
                 </p>
               </div>
             </div>
             {isAuthenticated ? (
-              <div className="flex gap-2">
+              <div className="flex gap-1.5 sm:gap-2 flex-wrap w-full sm:w-auto">
                 <Button 
                   variant="outline" 
                   onClick={() => window.location.href = '/news/oem-report'}
                   data-testid="button-oem-report"
+                  className="flex-1 sm:flex-none text-xs sm:text-sm min-h-[44px]"
                 >
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  OEM Report
+                  <TrendingUp className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">OEM Report</span>
                 </Button>
                 <Button 
                   onClick={() => setIsStoryDialogOpen(true)}
                   variant="outline" 
-                  className="border-purple-600 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950" 
+                  className="border-purple-600 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950 flex-1 sm:flex-none text-xs sm:text-sm min-h-[44px]" 
                   data-testid="button-share-story"
                 >
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Share Story
+                  <MessageSquare className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Share Story</span>
                 </Button>
                 <Dialog open={isBenchmarkDialogOpen} onOpenChange={setIsBenchmarkDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" data-testid="button-new-benchmark">
-                      <TrendingUp className="h-4 w-4 mr-2" />
-                      ML Benchmark
+                    <Button variant="outline" data-testid="button-new-benchmark" className="flex-1 sm:flex-none text-xs sm:text-sm min-h-[44px]">
+                      <TrendingUp className="h-4 w-4 sm:mr-2" />
+                      <span className="hidden sm:inline">ML Benchmark</span>
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[500px]">
@@ -452,9 +453,9 @@ export default function ThrottleTalkPage() {
                 
                 <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button className="bg-gray-900 text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100" data-testid="button-new-post">
-                      <Plus className="h-4 w-4 mr-2" />
-                      New Post
+                    <Button className="bg-gray-900 text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 flex-1 sm:flex-none text-xs sm:text-sm min-h-[44px]" data-testid="button-new-post">
+                      <Plus className="h-4 w-4 sm:mr-2" />
+                      <span className="hidden sm:inline">New Post</span>
                     </Button>
                   </DialogTrigger>
                 <DialogContent className="sm:max-w-[600px]">
@@ -552,15 +553,16 @@ export default function ThrottleTalkPage() {
       </div>
 
       {/* Main content with tabs */}
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
-            <TabsTrigger value="intelligence" className="flex items-center gap-2" data-testid="tab-intelligence">
-              <BarChart3 className="h-4 w-4" />
-              Market Intelligence
+          <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-8">
+            <TabsTrigger value="intelligence" className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3" data-testid="tab-intelligence">
+              <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Market Intelligence</span>
+              <span className="sm:hidden">Intelligence</span>
             </TabsTrigger>
-            <TabsTrigger value="community" className="flex items-center gap-2" data-testid="tab-community">
-              <Users className="h-4 w-4" />
+            <TabsTrigger value="community" className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3" data-testid="tab-community">
+              <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Community
             </TabsTrigger>
           </TabsList>
@@ -569,9 +571,9 @@ export default function ThrottleTalkPage() {
           <TabsContent value="intelligence" className="space-y-6">
             {/* Market Insights Section - AI-Powered Analysis */}
             <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-4">
-                <TrendingUp className="h-5 w-5 text-blue-600" />
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
                   AI-Powered Market Insights
                 </h2>
               </div>
@@ -756,7 +758,7 @@ export default function ThrottleTalkPage() {
             <RoadTalesCarousel />
             
             {/* Newsletter Signup & Poll Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <NewsletterSignup />
               <PollWidget />
             </div>
