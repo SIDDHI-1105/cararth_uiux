@@ -4399,6 +4399,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .from(contentGenerationLogs)
         .where(eq(contentGenerationLogs.status, 'success'));
       
+      // Get last 24h generations for health monitoring
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const last24hGenerations = await db.select()
+        .from(contentGenerationLogs)
+        .where(sql`${contentGenerationLogs.createdAt} >= ${twentyFourHoursAgo}`);
+      
+      const last24hFailed = last24hGenerations.filter(g => g.status === 'failed').length;
+      const last24hTotal = last24hGenerations.length;
+      const failureRate = last24hTotal > 0 ? (last24hFailed / last24hTotal) * 100 : 0;
+      
+      // Determine health status
+      let healthStatus: 'healthy' | 'degraded' | 'critical' = 'healthy';
+      let alertLevel: 'none' | 'warning' | 'critical' = 'none';
+      
+      if (failureRate >= 75) {
+        healthStatus = 'critical';
+        alertLevel = 'critical';
+      } else if (failureRate >= 40 || last24hFailed >= 3) {
+        healthStatus = 'degraded';
+        alertLevel = 'warning';
+      }
+      
+      // Last successful generation time
+      const lastSuccessful = recentGenerations.find(g => g.status === 'success');
+      const lastSuccessTime = lastSuccessful?.createdAt || null;
+      const hoursSinceSuccess = lastSuccessTime 
+        ? Math.floor((Date.now() - new Date(lastSuccessTime).getTime()) / (1000 * 60 * 60))
+        : null;
+      
+      // If no success in 48+ hours, mark as critical
+      if (hoursSinceSuccess !== null && hoursSinceSuccess >= 48) {
+        healthStatus = 'critical';
+        alertLevel = 'critical';
+      } else if (hoursSinceSuccess !== null && hoursSinceSuccess >= 24) {
+        healthStatus = 'degraded';
+        alertLevel = 'warning';
+      }
+      
       // Format content generation logs for frontend
       const formattedGenerations = recentGenerations.map(log => ({
         id: log.id,
@@ -4433,6 +4471,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         contentGeneration: {
           recentGenerations: formattedGenerations,
           successCount: Number(successfulGenerations[0]?.count) || 0,
+          health: {
+            status: healthStatus,
+            alertLevel: alertLevel,
+            failureRate: Math.round(failureRate),
+            last24hFailed,
+            last24hTotal,
+            lastSuccessTime,
+            hoursSinceSuccess,
+          },
         },
       });
     } catch (error: any) {

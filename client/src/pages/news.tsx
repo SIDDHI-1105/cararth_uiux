@@ -98,9 +98,11 @@ export default function ThrottleTalkPage() {
   const isAuthenticated = !!user;
 
   // Fetch community posts from RSS aggregation
-  const { data: communityData, isLoading: isCommunityLoading } = useQuery({
+  const { data: communityData, isLoading: isCommunityLoading, error: communityError, refetch: refetchCommunity } = useQuery({
     queryKey: ['/api/community/posts'],
     refetchInterval: 600000, // Refresh every 10 minutes
+    retry: 2, // Retry twice before failing
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 
   // Fetch user-generated posts
@@ -110,10 +112,12 @@ export default function ThrottleTalkPage() {
   });
 
   // Fetch market insights from Perplexity LLM (always load for unified tab)
-  const { data: marketInsightsData, isLoading: isMarketInsightsLoading } = useQuery({
+  const { data: marketInsightsData, isLoading: isMarketInsightsLoading, error: marketInsightsError, refetch: refetchMarketInsights } = useQuery({
     queryKey: ['/api/news/market-insights'],
     enabled: activeTab === 'intelligence',
     refetchInterval: 3600000, // Refresh every hour
+    retry: 2,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   // Post creation form
@@ -239,16 +243,52 @@ export default function ThrottleTalkPage() {
   }
   communityPosts = communityPosts.slice(0, 20);
 
-  if (isCommunityLoading || (activeTab === 'insights' && isMarketInsightsLoading)) {
+  if (isCommunityLoading || (activeTab === 'intelligence' && isMarketInsightsLoading)) {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-950">
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
-            {activeTab === 'insights' && (
+            {activeTab === 'intelligence' && (
               <p className="ml-3 text-gray-600 dark:text-gray-400">Analyzing market trends...</p>
             )}
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state handling with retry
+  if (communityError || (activeTab === 'intelligence' && marketInsightsError)) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-950">
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <Card>
+            <CardContent className="p-8 text-center">
+              <div className="text-4xl mb-4">⚠️</div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                Unable to Load Content
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                {communityError 
+                  ? "We're having trouble loading Throttle Talk articles. This could be due to a temporary connection issue."
+                  : "Market insights are temporarily unavailable. Our team is working to restore the service."}
+              </p>
+              <div className="flex gap-3 justify-center">
+                <Button 
+                  onClick={() => communityError ? refetchCommunity() : refetchMarketInsights()}
+                  data-testid="button-retry-load"
+                >
+                  Try Again
+                </Button>
+                <Link href="/">
+                  <Button variant="outline" data-testid="button-back-home">
+                    Go to Homepage
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );

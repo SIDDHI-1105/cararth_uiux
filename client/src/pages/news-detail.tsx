@@ -19,10 +19,11 @@ export default function NewsDetail() {
   const id = params.id;
   const trackedArticleIdRef = useRef<string | null>(null);
 
-  const { data: post, isLoading, error } = useQuery({
+  const { data: post, isLoading, error, refetch } = useQuery({
     queryKey: [`/api/community/posts/${id}`],
     enabled: Boolean(id),
-    retry: 1,
+    retry: 2, // Retry twice before failing
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 
   // Track page engagement
@@ -58,22 +59,56 @@ export default function NewsDetail() {
     );
   }
 
+  // Error state - connection issue or server error
+  if (error) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-950">
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <Card>
+            <CardContent className="p-8 text-center">
+              <div className="text-4xl mb-4">⚠️</div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                Unable to Load Article
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                We're having trouble loading this article. This could be due to a temporary connection issue.
+              </p>
+              <div className="flex gap-3 justify-center">
+                <Button onClick={() => refetch()} data-testid="button-retry-article">
+                  Try Again
+                </Button>
+                <Link href="/news">
+                  <Button variant="outline" data-testid="button-back-news">
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back to Throttle Talk
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Not found state - article doesn't exist
   if (!post) {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-950">
         <div className="max-w-4xl mx-auto px-4 py-8">
           <Card>
             <CardContent className="p-8 text-center">
+              <div className="text-4xl mb-4">📄</div>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                Post Not Found
+                Article Not Found
               </h2>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                This post may have been removed or doesn't exist.
+                This article may have been removed or doesn't exist. Check out our latest articles instead.
               </p>
               <Link href="/news">
-                <Button>
+                <Button data-testid="button-browse-articles">
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Throttle Talk
+                  Browse Articles
                 </Button>
               </Link>
             </CardContent>
