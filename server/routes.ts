@@ -7947,7 +7947,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Dynamic sitemap.xml generator
   app.get('/sitemap.xml', asyncHandler(async (req: any, res: any) => {
-    const cars = await storage.getAllCars();
+    // Get all cached portal listings (the 329 listings from various portals)
+    const cars = await storage.searchCachedPortalListings({
+      sortBy: 'datePosted',
+      sortOrder: 'desc',
+      limit: 1000, // Get all listings for sitemap
+      offset: 0
+    });
+    
     const baseUrl = 'https://cararth.com';
     const today = new Date().toISOString().split('T')[0];
     
