@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +32,6 @@ import { McKinseyInsightCard } from "@/components/mckinsey-insight-card";
 import MarketIntelligenceDashboard from "@/pages/MarketIntelligenceDashboard";
 import { StorySubmissionForm } from "@/components/story-submission-form";
 import { RoadTalesCarousel } from "@/components/road-tales-carousel";
-import { NewsletterSignup } from "@/components/newsletter-signup";
 import { PollWidget } from "@/components/poll-widget";
 
 interface ForumPost {
@@ -1100,11 +1100,8 @@ export default function ThrottleTalkPage() {
             {/* Road Tales Carousel - Featured Car Stories */}
             <RoadTalesCarousel />
             
-            {/* Newsletter Signup & Poll Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-              <NewsletterSignup />
-              <PollWidget />
-            </div>
+            {/* Poll Section */}
+            <PollWidget />
             
             {/* Filter for Reviews and Questions */}
             <div className="flex gap-2 border-b border-gray-200 dark:border-gray-800">
