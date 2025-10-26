@@ -53,7 +53,7 @@ import {
   insertCommunityPostSchema,
   insertCommunityCommentSchema 
 } from "@shared/schema";
-import { desc, eq, sql } from "drizzle-orm";
+import { desc, eq, sql, not, like } from "drizzle-orm";
 import { assistantService, type AssistantQuery } from "./assistantService";
 import { conversationTrainingService } from "./conversationTrainingService.js";
 import { cacheManager, withCache, HyderabadCacheWarmer } from "./advancedCaching.js";
@@ -2334,7 +2334,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
         .from(communityPosts)
         .leftJoin(users, eq(communityPosts.authorId, users.id))
-        .where(eq(communityPosts.status, 'published'))
+        .where(sql`${communityPosts.status} = 'published' AND ${communityPosts.id} NOT LIKE 'dealership-benchmark-%'`)
         .orderBy(desc(communityPosts.createdAt))
         .limit(20);
 
