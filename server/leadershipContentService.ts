@@ -8,6 +8,7 @@ interface LeadershipArticle extends CommunityPost {
   leaderName?: string;
   companyName?: string;
   position?: string;
+  enhancementMode?: 'grok' | 'fallback';
 }
 
 export class LeadershipContentService {
@@ -64,10 +65,7 @@ export class LeadershipContentService {
       }
     }
 
-    logError({ 
-      message: `Filtered ${leadershipPosts.length} leadership articles from ${posts.length} total posts`, 
-      statusCode: 200 
-    }, 'Leadership filtering');
+    console.log(`✅ Filtered ${leadershipPosts.length} leadership articles from ${posts.length} total posts`);
 
     return leadershipPosts;
   }
@@ -127,11 +125,18 @@ export class LeadershipContentService {
   generateSchemaMarkup(article: LeadershipArticle): string {
     const { leaderName, companyName, position } = this.extractLeadershipInfo(article);
 
+    // Clean description (truncate at sentence boundary, max 200 chars)
+    let description = article.content.substring(0, 200);
+    const lastPeriod = description.lastIndexOf('.');
+    if (lastPeriod > 100) {
+      description = description.substring(0, lastPeriod + 1);
+    }
+
     const schema: Record<string, any> = {
       "@context": "https://schema.org",
       "@type": "Article",
       "headline": article.title,
-      "description": article.content.substring(0, 200),
+      "description": description.trim(),
       "datePublished": article.publishedAt.toISOString(),
       "author": {
         "@type": "Organization",
@@ -147,20 +152,28 @@ export class LeadershipContentService {
         "@id": article.sourceUrl
       },
       "articleSection": "Leadership & Promotions",
-      "keywords": ["automotive leadership", "India auto industry", position, companyName, leaderName].filter(Boolean).join(", ")
+      "keywords": ["automotive leadership", "India auto industry", position, companyName, leaderName].filter(Boolean)
     };
 
-    // Add Person entity if leader identified
+    // Add Person entity if leader identified (only include defined fields)
     if (leaderName) {
-      schema["mentions"] = {
+      const personEntity: Record<string, any> = {
         "@type": "Person",
-        "name": leaderName,
-        "jobTitle": position,
-        "worksFor": companyName ? {
+        "name": leaderName
+      };
+      
+      if (position) {
+        personEntity.jobTitle = position;
+      }
+      
+      if (companyName) {
+        personEntity.worksFor = {
           "@type": "Organization",
           "name": companyName
-        } : undefined
-      };
+        };
+      }
+      
+      schema["mentions"] = personEntity;
     }
 
     // Add Organization entity if company identified
@@ -177,13 +190,16 @@ export class LeadershipContentService {
   /**
    * Enhance leadership article with AI-generated content (placeholder for Grok integration)
    */
-  async enhanceWithAI(article: LeadershipArticle): Promise<string> {
+  async enhanceWithAI(article: LeadershipArticle): Promise<{ content: string; mode: 'grok' | 'fallback' }> {
     const { leaderName, companyName, position } = this.extractLeadershipInfo(article);
     
     // Check for Grok API key
     if (!process.env.GROK_API_KEY) {
-      logError(createAppError('GROK_API_KEY not configured', 500, ErrorCategory.INTERNAL), 'Leadership content enhancement');
-      return this.generateFallbackEnhancement(article, leaderName, companyName, position);
+      console.log('⚠️ GROK_API_KEY not configured, using fallback enhancement');
+      return {
+        content: this.generateFallbackEnhancement(article, leaderName, companyName, position),
+        mode: 'fallback'
+      };
     }
 
     try {
@@ -232,16 +248,20 @@ Requirements:
       const data = await response.json();
       const enhancedContent = data.choices?.[0]?.message?.content || '';
 
-      logError({ 
-        message: `Enhanced leadership article with Grok: ${article.title}`, 
-        statusCode: 200 
-      }, 'Leadership content enhancement');
+      console.log(`✅ Enhanced leadership article with Grok: ${article.title}`);
 
-      return enhancedContent;
+      return {
+        content: enhancedContent,
+        mode: 'grok'
+      };
 
     } catch (error) {
+      console.log(`⚠️ Grok enhancement failed for ${article.title}, using fallback`);
       logError(createAppError('Failed to enhance content with Grok', 500, ErrorCategory.EXTERNAL_API), 'Leadership content enhancement');
-      return this.generateFallbackEnhancement(article, leaderName, companyName, position);
+      return {
+        content: this.generateFallbackEnhancement(article, leaderName, companyName, position),
+        mode: 'fallback'
+      };
     }
   }
 
@@ -275,7 +295,7 @@ For car buyers and industry watchers on CarArth, this leadership change could si
 
     for (const article of leadershipArticles) {
       try {
-        const [enhancedContent, schemaMarkup, internalLinks] = await Promise.all([
+        const [enhancementResult, schemaMarkup, internalLinks] = await Promise.all([
           this.enhanceWithAI(article),
           Promise.resolve(this.generateSchemaMarkup(article)),
           Promise.resolve(this.generateInternalLinks(article))
@@ -285,7 +305,8 @@ For car buyers and industry watchers on CarArth, this leadership change could si
 
         enhancedArticles.push({
           ...article,
-          enhancedContent,
+          enhancedContent: enhancementResult.content,
+          enhancementMode: enhancementResult.mode,
           schemaMarkup,
           internalLinks,
           leaderName,
@@ -294,6 +315,7 @@ For car buyers and industry watchers on CarArth, this leadership change could si
         });
 
       } catch (error) {
+        console.log(`⚠️ Failed to process leadership article: ${article.title}`);
         logError(createAppError('Failed to process leadership article', 500, ErrorCategory.INTERNAL), `Leadership processing: ${article.title}`);
         // Include original article without enhancements
         enhancedArticles.push(article);

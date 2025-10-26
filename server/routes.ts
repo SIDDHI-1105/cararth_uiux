@@ -4859,6 +4859,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Filter and enhance leadership articles
       const leadershipArticles = await leadershipContentService.processLeadershipArticles(allPosts);
       
+      res.setHeader('Content-Type', 'application/json');
       res.json({
         success: true,
         articles: leadershipArticles,
@@ -4869,6 +4870,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error('Leadership articles error:', error);
+      res.setHeader('Content-Type', 'application/json');
       res.status(500).json({
         success: false,
         error: 'Failed to fetch leadership articles',
