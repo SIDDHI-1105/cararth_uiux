@@ -4831,17 +4831,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { rssAggregator } = await import('./rssService');
       const posts = await rssAggregator.aggregateAutomotiveContent();
       
-      // Optionally include benchmark posts
-      const { getAllBenchmarkPosts } = await import('./benchmarkPostService');
-      const benchmarkPosts = await getAllBenchmarkPosts();
-      
-      const allPosts = [...benchmarkPosts, ...posts].sort((a, b) => 
-        b.publishedAt.getTime() - a.publishedAt.getTime()
-      );
-      
       res.json({
         success: true,
-        posts: allPosts,
+        posts: posts,
         timestamp: new Date().toISOString(),
         attribution: 'Content aggregated from various automotive sources with proper attribution'
       });
