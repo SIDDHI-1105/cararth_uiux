@@ -166,31 +166,64 @@ export const createWebsiteSchema = () => ({
 
 export const createOrganizationSchema = () => ({
   "@context": "https://schema.org",
-  "@type": "AutoDealer",
-  "name": "CarArth",
-  "description": "India's very own used car search engine. Compare cars across platforms with AI intelligence.",
-  "url": "https://cararth.com",
-  "logo": "https://cararth.com/cararth-logo-full.png",
-  "email": "connect@cararth.com",
-  "areaServed": {
-    "@type": "Country",
-    "name": "India"
+  "@type": "Organization",
+  "name": "Cararth",
+  "alternateName": "CarArth - India's Very Own Used Car Search Engine",
+  "legalName": "Cararth",
+  "url": "https://www.cararth.com",
+  "logo": {
+    "@type": "ImageObject",
+    "url": "https://www.cararth.com/cararth-logo-full.png",
+    "width": "600",
+    "height": "200"
   },
-  "serviceType": "Used Car Search Engine",
+  "description": "Cararth is India's first AI-powered used car search engine and marketplace aggregator. We bring together verified listings from multiple platforms including OLX, CarDekho, Cars24, and Facebook Marketplace into one intelligent search experience. Our platform uses multi-LLM AI technology to verify listings, detect fraud, ensure compliance, and provide authentic market intelligence for both buyers and sellers across India.",
+  "foundingDate": "2024",
   "founder": {
     "@type": "Organization",
-    "name": "CarArth Team"
+    "name": "Cararth Team"
   },
-  "foundingDate": "2024",
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "email": "connect@cararth.com",
+    "contactType": "Customer Support",
+    "areaServed": "IN",
+    "availableLanguage": ["English", "Hindi"]
+  },
+  "sameAs": [
+    "https://www.linkedin.com/company/109275569",
+    "https://www.facebook.com/profile.php?id=61580985187223",
+    "https://www.instagram.com/cararthofficial"
+  ],
+  "areaServed": {
+    "@type": "Country",
+    "name": "India",
+    "sameAs": "https://en.wikipedia.org/wiki/India"
+  },
+  "knowsAbout": [
+    "Used Car Sales",
+    "Automotive Market Intelligence",
+    "AI-Powered Vehicle Verification",
+    "Multi-Platform Car Aggregation",
+    "Indian Automotive Industry",
+    "Vehicle Pricing Analytics"
+  ],
+  "serviceType": "Used Car Search Engine & Marketplace Aggregator",
+  "slogan": "India's Very Own Used Car Search Engine",
+  "brand": {
+    "@type": "Brand",
+    "name": "Cararth"
+  },
   "hasOfferCatalog": {
     "@type": "OfferCatalog",
-    "name": "Used Cars",
+    "name": "Verified Used Car Listings",
     "itemListElement": [
       {
         "@type": "Offer",
         "itemOffered": {
-          "@type": "Car",
-          "name": "Used Cars across India"
+          "@type": "Product",
+          "name": "Verified Used Cars across India",
+          "category": "Automotive"
         }
       }
     ]
