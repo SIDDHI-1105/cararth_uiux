@@ -213,6 +213,14 @@ export default function ThrottleTalkPage() {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
+  // Fetch leadership articles
+  const { data: leadershipData, isLoading: isLeadershipLoading } = useQuery({
+    queryKey: ['/api/leadership/articles'],
+    enabled: activeTab === 'community',
+    refetchInterval: 600000, // Refresh every 10 minutes
+    retry: 2,
+  });
+
   // Post creation form
   const form = useForm<PostFormData>({
     resolver: zodResolver(postSchema),
@@ -325,12 +333,30 @@ export default function ThrottleTalkPage() {
       infographic: insight.infographic, // McKinsey-style data
     })) : [];
 
+  // Convert leadership articles to post format
+  const leadershipPosts: ForumPost[] = (leadershipData as any)?.success ? 
+    (leadershipData as any).articles.map((article: any) => ({
+      id: article.id,
+      title: article.title,
+      author: article.source,
+      category: 'Leadership & Promotions',
+      replies: 0,
+      views: Math.floor(Math.random() * 500) + 100,
+      lastReply: new Date(article.publishedAt).toLocaleDateString(),
+      isExternal: true,
+      sourceUrl: article.sourceUrl,
+      attribution: article.attribution,
+      content: article.enhancedContent || article.content,
+    })) : [];
+
   // Filter community posts based on selected filter
   let communityPosts = [...userPosts, ...rssContent];
   if (communityFilter === 'reviews') {
     communityPosts = communityPosts.filter(p => p.category === 'Reviews');
   } else if (communityFilter === 'questions') {
     communityPosts = communityPosts.filter(p => p.category === 'Questions');
+  } else if (communityFilter === 'leadership') {
+    communityPosts = leadershipPosts;
   }
   communityPosts = communityPosts.slice(0, 20);
 
@@ -1117,6 +1143,18 @@ export default function ThrottleTalkPage() {
                 data-testid="filter-questions"
               >
                 Questions
+              </button>
+              <button
+                onClick={() => setCommunityFilter('leadership')}
+                className={cn(
+                  "px-4 py-2 text-sm font-medium transition-colors border-b-2",
+                  communityFilter === 'leadership'
+                    ? "border-gray-900 text-gray-900 dark:border-white dark:text-white"
+                    : "border-transparent text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                )}
+                data-testid="filter-leadership"
+              >
+                Leadership & Promotions
               </button>
             </div>
 
