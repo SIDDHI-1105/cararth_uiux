@@ -69,12 +69,13 @@ export function ThrottleTalkMegaMenu({ isOpen, onClose }: ThrottleTalkMegaMenuPr
 
   return (
     <div 
-      className="absolute left-0 right-0 top-full mt-2 z-50"
+      className="absolute left-0 w-screen top-full mt-2 z-[100]"
+      style={{ left: '50%', transform: 'translateX(-50%)' }}
       onMouseLeave={onClose}
       data-testid="mega-menu-throttle-talk"
     >
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
-        <Card className="overflow-hidden shadow-2xl border-2 bg-background/95 backdrop-blur-sm">
+        <Card className="overflow-hidden shadow-2xl border-2 bg-background backdrop-blur-sm">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 p-4 sm:p-6">
             {/* Categories Section */}
             <div className="lg:col-span-2 space-y-3 sm:space-y-4">

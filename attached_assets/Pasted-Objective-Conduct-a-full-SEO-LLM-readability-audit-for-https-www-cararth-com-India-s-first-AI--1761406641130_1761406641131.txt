@@ -1,0 +1,39 @@
+Objective:
+Conduct a full SEO + LLM-readability audit for https://www.cararth.com (India’s first AI-based used-car search engine) and all discoverable listing pages.
+Produce Excel-ready data and a prioritized action report.
+Scope & workflow:
+Crawl ≈ 30–50 public URLs on cararth.com (starting from /, /sell-car, /news, /community, and any page containing /car/ or /listing/).
+For each page collect:
+URL, HTTP status, response time
+<title> and meta description text
+canonical tag
+H1/H2 count and content depth (word count)
+schema types present (JSON-LD Vehicle/Article/FAQ/AutoDealer)
+alt-text coverage and image sizes
+broken internal links (≤ 20 checked)
+keyword density for: used cars, pre-owned, Hyderabad, CarArth
+Output to cararth_audit.csv and cararth_audit.xlsx.
+Auto-generate a cararth_report.txt summarising:
+Critical issues (missing titles/schema/duplicate meta)
+High priority (actions to fix within 1 week)
+Medium priority (opportunities for improvement)
+10 top recommended fixes for LLM visibility.
+Save raw HTML in out/ and ZIP all deliverables to cararth_audit_bundle.zip.
+Compliance & performance:
+Respect robots.txt; user-agent = CarArthSEOAuditBot/1.0.
+Wait 1 s between requests.
+Use only open-source Python libs (requests, beautifulsoup4, pandas, openpyxl).
+Run in under 10 minutes.
+Deliverables:
+cararth_audit.xlsx (all page metrics)
+cararth_report.txt (priority summary & top fixes)
+out/*.json (per-page details)
+cararth_audit_bundle.zip (all files)
+Immediate next actions after run:
+Inject Vehicle schema on all /car/ pages (make, model, price, city, image).
+Create unique meta titles/descriptions per page with regional keywords (“Used Cars Hyderabad”).
+Add FAQ schema to Sell & Community pages.
+Compress images > 200 KB (WebP) and add alt tags.
+Generate dynamic sitemap.xml + robots.txt.
+Embed numbered steps and FAQs for LLM readability.
+Goal: Establish baseline for CarArth’s SEO and LLM discoverability before Hyderabad launch; output used to feed into weekly automation checks.
