@@ -4829,7 +4829,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/community/posts', async (req, res) => {
     try {
       const { rssAggregator } = await import('./rssService');
-      const posts = await rssAggregator.aggregateAutomotiveContent();
+      const allPosts = await rssAggregator.aggregateAutomotiveContent();
+      
+      // Filter out benchmark posts from community feed
+      const posts = allPosts.filter(post => 
+        post.category !== 'dealership_benchmark' && 
+        !post.id.startsWith('dealership-benchmark-')
+      );
       
       res.json({
         success: true,
