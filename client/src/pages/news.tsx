@@ -421,17 +421,39 @@ export default function ThrottleTalkPage() {
       <FAQSchemaMarkup />
       
       {/* Clean header */}
-      <div className="border-b border-gray-200 dark:border-gray-800">
+      <div className="border-b border-gray-200 dark:border-gray-800 bg-gradient-to-r from-white via-gray-50/30 to-white dark:from-gray-950 dark:via-gray-900/30 dark:to-gray-950">
         <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-2 sm:gap-4">
               <BrandWordmark variant="header" showTagline={false} className="scale-75 sm:scale-75 hidden sm:block" />
               <div>
-                <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">
-                  Throttle Talk
-                </h1>
-                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-0.5 sm:mt-1">
-                  Automotive community discussions
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-900 dark:from-white dark:via-blue-300 dark:to-purple-300 bg-clip-text text-transparent cursor-help hover:scale-105 transition-transform duration-200 inline-block">
+                        Throttle Talk
+                      </h1>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs bg-gradient-to-br from-blue-600 to-purple-600 border-0 text-white" side="bottom">
+                      <div className="space-y-2 p-2">
+                        <p className="font-semibold text-sm">🏁 India's Automotive Community Hub</p>
+                        <p className="text-xs leading-relaxed">
+                          Discover market insights, leadership news, community stories, and expert analysis. 
+                          Connect with fellow car enthusiasts, share experiences, and stay updated on the latest automotive trends.
+                        </p>
+                        <div className="flex gap-2 text-xs pt-1 border-t border-white/20">
+                          <span>📊 Market Intel</span>
+                          <span>•</span>
+                          <span>🚗 Road Tales</span>
+                          <span>•</span>
+                          <span>💬 Community</span>
+                        </div>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1 sm:mt-1.5 font-medium">
+                  India's Automotive Community & Market Intelligence Hub
                 </p>
               </div>
             </div>
