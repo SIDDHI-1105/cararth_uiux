@@ -40,6 +40,7 @@ import SpinnyDeals from "./pages/spinny-deals";
 import FAQPage from "./pages/faq";
 import RTADataImport from "./pages/RTADataImport";
 import MarketIntelligenceDashboard from "./pages/MarketIntelligenceDashboard";
+import AIVerificationGuide from "./pages/guide-ai-verification";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -85,6 +86,7 @@ function Router() {
       <Route path="/analytics/market-intelligence" component={MarketIntelligenceDashboard} />
       <Route path="/market-intelligence" component={MarketIntelligenceDashboard} />
       <Route path="/spinny-deals-hyderabad" component={SpinnyDeals} />
+      <Route path="/guides/ai-verified-used-car-trust-india" component={AIVerificationGuide} />
       <Route component={NotFound} />
     </Switch>
   );

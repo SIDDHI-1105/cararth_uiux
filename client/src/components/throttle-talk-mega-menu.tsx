@@ -63,6 +63,14 @@ export function ThrottleTalkMegaMenu({ isOpen, onClose }: ThrottleTalkMegaMenuPr
       color: "text-orange-600 dark:text-orange-400",
       bgColor: "bg-orange-50 dark:bg-orange-950/20",
     },
+    {
+      icon: Sparkles,
+      title: "AI Verification Guide",
+      description: "Ultimate trust guide",
+      href: "/guides/ai-verified-used-car-trust-india",
+      color: "text-indigo-600 dark:text-indigo-400",
+      bgColor: "bg-indigo-50 dark:bg-indigo-950/20",
+    },
   ];
 
   if (!isOpen) return null;
