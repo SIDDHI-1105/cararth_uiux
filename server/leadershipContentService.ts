@@ -8,7 +8,7 @@ interface LeadershipArticle extends CommunityPost {
   leaderName?: string;
   companyName?: string;
   position?: string;
-  enhancementMode?: 'grok' | 'fallback';
+  enhancementMode?: 'grok' | 'perplexity' | 'fallback';
 }
 
 export class LeadershipContentService {
@@ -188,37 +188,30 @@ export class LeadershipContentService {
   }
 
   /**
-   * Enhance leadership article with AI-generated content (placeholder for Grok integration)
+   * Enhance leadership article with AI-generated content (Grok → Perplexity → Fallback)
    */
-  async enhanceWithAI(article: LeadershipArticle): Promise<{ content: string; mode: 'grok' | 'fallback' }> {
+  async enhanceWithAI(article: LeadershipArticle): Promise<{ content: string; mode: 'grok' | 'perplexity' | 'fallback' }> {
     const { leaderName, companyName, position } = this.extractLeadershipInfo(article);
     
-    // Check for Grok API key
-    if (!process.env.GROK_API_KEY) {
-      console.log('⚠️ GROK_API_KEY not configured, using fallback enhancement');
-      return {
-        content: this.generateFallbackEnhancement(article, leaderName, companyName, position),
-        mode: 'fallback'
-      };
-    }
-
-    try {
-      const response = await fetch('https://api.x.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.GROK_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: 'grok-beta',
-          messages: [
-            {
-              role: 'system',
-              content: 'You are an expert automotive industry writer creating engaging, SEO-optimized content for the Indian market. Write in a vivid, storytelling style that captures reader attention.'
-            },
-            {
-              role: 'user',
-              content: `Create an engaging 500-word article about this automotive leadership news:
+    // Try Grok first
+    if (process.env.GROK_API_KEY) {
+      try {
+        const response = await fetch('https://api.x.ai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.GROK_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: 'grok-beta',
+            messages: [
+              {
+                role: 'system',
+                content: 'You are an expert automotive industry writer creating engaging, SEO-optimized content for the Indian market. Write in a vivid, storytelling style that captures reader attention.'
+              },
+              {
+                role: 'user',
+                content: `Create an engaging 500-word article about this automotive leadership news:
 
 Title: ${article.title}
 Summary: ${article.content}
@@ -234,35 +227,94 @@ Requirements:
 - End with a forward-looking statement about India's automotive future
 - Use conversational, engaging tone
 - Focus on human interest and business impact`
-            }
-          ],
-          temperature: 0.7,
-          max_tokens: 800
-        })
-      });
+              }
+            ],
+            temperature: 0.7,
+            max_tokens: 800
+          })
+        });
 
-      if (!response.ok) {
-        throw new Error(`Grok API error: ${response.status}`);
+        if (response.ok) {
+          const data = await response.json();
+          const enhancedContent = data.choices?.[0]?.message?.content || '';
+          
+          if (enhancedContent) {
+            console.log(`✅ Enhanced leadership article with Grok: ${article.title}`);
+            return {
+              content: enhancedContent,
+              mode: 'grok'
+            };
+          }
+        }
+      } catch (error) {
+        console.log(`⚠️ Grok failed for ${article.title}, trying Perplexity...`);
+        logError(createAppError('Grok enhancement failed', 500, ErrorCategory.EXTERNAL_API), 'Leadership content enhancement');
       }
-
-      const data = await response.json();
-      const enhancedContent = data.choices?.[0]?.message?.content || '';
-
-      console.log(`✅ Enhanced leadership article with Grok: ${article.title}`);
-
-      return {
-        content: enhancedContent,
-        mode: 'grok'
-      };
-
-    } catch (error) {
-      console.log(`⚠️ Grok enhancement failed for ${article.title}, using fallback`);
-      logError(createAppError('Failed to enhance content with Grok', 500, ErrorCategory.EXTERNAL_API), 'Leadership content enhancement');
-      return {
-        content: this.generateFallbackEnhancement(article, leaderName, companyName, position),
-        mode: 'fallback'
-      };
     }
+
+    // Try Perplexity as fallback
+    if (process.env.PERPLEXITY_API_KEY) {
+      try {
+        const response = await fetch('https://api.perplexity.ai/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: 'llama-3.1-sonar-small-128k-online',
+            messages: [
+              {
+                role: 'system',
+                content: 'You are an expert automotive industry writer creating engaging, SEO-optimized content for the Indian market. Write in a vivid, storytelling style.'
+              },
+              {
+                role: 'user',
+                content: `Write an engaging 500-word article about this automotive leadership news in India:
+
+Title: ${article.title}
+Summary: ${article.content}
+${leaderName ? `Leader: ${leaderName}` : ''}
+${companyName ? `Company: ${companyName}` : ''}
+${position ? `Position: ${position}` : ''}
+
+Requirements:
+- Start with vivid storytelling
+- Include keywords like "Indian auto leaders 2025", "automotive CEO India"
+- Add industry context and market implications
+- Use conversational, engaging tone
+- Focus on business impact`
+              }
+            ],
+            temperature: 0.7,
+            max_tokens: 800
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const enhancedContent = data.choices?.[0]?.message?.content || '';
+          
+          if (enhancedContent) {
+            console.log(`✅ Enhanced leadership article with Perplexity: ${article.title}`);
+            return {
+              content: enhancedContent,
+              mode: 'perplexity'
+            };
+          }
+        }
+      } catch (error) {
+        console.log(`⚠️ Perplexity failed for ${article.title}, using fallback`);
+        logError(createAppError('Perplexity enhancement failed', 500, ErrorCategory.EXTERNAL_API), 'Leadership content enhancement');
+      }
+    }
+
+    // Use basic fallback
+    console.log(`ℹ️ Using basic fallback for ${article.title}`);
+    return {
+      content: this.generateFallbackEnhancement(article, leaderName, companyName, position),
+      mode: 'fallback'
+    };
   }
 
   /**
