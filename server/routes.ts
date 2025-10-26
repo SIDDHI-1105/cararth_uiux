@@ -4847,6 +4847,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Leadership & Promotions Articles - Enhanced with AI and Schema Markup
+  app.get('/api/leadership/articles', async (req, res) => {
+    try {
+      const { rssAggregator } = await import('./rssService');
+      const { leadershipContentService } = await import('./leadershipContentService');
+      
+      // Fetch all RSS posts
+      const allPosts = await rssAggregator.aggregateAutomotiveContent();
+      
+      // Filter and enhance leadership articles
+      const leadershipArticles = await leadershipContentService.processLeadershipArticles(allPosts);
+      
+      res.json({
+        success: true,
+        articles: leadershipArticles,
+        count: leadershipArticles.length,
+        timestamp: new Date().toISOString(),
+        category: 'Leadership & Promotions',
+        attribution: 'AI-enhanced leadership content with Schema.org markup for improved SEO and LLM discoverability'
+      });
+    } catch (error) {
+      console.error('Leadership articles error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch leadership articles',
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
   // Create Dealership Benchmark - generates ML-powered performance report
   app.post('/api/dealership/benchmark', isAuthenticated, async (req: any, res) => {
     try {
