@@ -83,6 +83,7 @@ import { AIDeduplicationService } from "./aiDeduplicationService.js";
 import { grokService } from "./grokService.js";
 import { marketDataService } from "./marketDataService.js";
 import dealerRoutes from "./dealerRoutes.js";
+import { googleVehicleFeed } from "./googleVehicleFeed.js";
 
 // Security utility functions to prevent PII leakage in logs
 const maskPhoneNumber = (phone: string): string => {
@@ -961,6 +962,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: 'Health check system failure',
         message: error instanceof Error ? error.message : 'Unknown error'
       });
+    }
+  });
+
+  // Google Vehicle Listings Feed - XML/RSS feed for Google Merchant Center
+  app.get('/api/google-vehicle-feed.xml', async (req, res) => {
+    try {
+      console.log('📋 Google Vehicle Feed requested');
+      
+      const feedXml = await googleVehicleFeed.generateFeed();
+      
+      res.set('Content-Type', 'application/xml; charset=utf-8');
+      res.set('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+      res.send(feedXml);
+      
+      console.log('✅ Google Vehicle Feed generated successfully');
+    } catch (error) {
+      console.error('❌ Error generating Google Vehicle Feed:', error);
+      res.status(500).send('<?xml version="1.0" encoding="UTF-8"?><error>Feed generation failed</error>');
+    }
+  });
+
+  // Google Vehicle Feed Stats - Monitor feed health
+  app.get('/api/google-vehicle-feed/stats', async (req, res) => {
+    try {
+      const stats = await googleVehicleFeed.getFeedStats();
+      res.json(stats);
+    } catch (error) {
+      console.error('❌ Error getting feed stats:', error);
+      res.status(500).json({ error: 'Failed to get feed stats' });
     }
   });
 
