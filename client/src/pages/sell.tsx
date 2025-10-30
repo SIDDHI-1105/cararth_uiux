@@ -275,7 +275,10 @@ export default function SellPage() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Year</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <Select 
+                                onValueChange={field.onChange} 
+                                defaultValue={field.value?.toString()}
+                              >
                                 <FormControl>
                                   <SelectTrigger data-testid="select-year">
                                     <SelectValue placeholder="Select year" />
