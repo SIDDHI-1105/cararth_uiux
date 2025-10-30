@@ -1,0 +1,155 @@
+Prompt for Replit Agent — CarArth.com Search Results + Listing Page Redesign (Phase 2)
+We are developing cararth.com on Replit.
+I am not technical — please implement this fully, deploy it, and share a preview link and screenshots when done.
+The goal of this phase is to build:
+✅ A clean, modern Search Results Page (list of car listings)
+✅ A trust-led, easy-to-scan Listing Detail Page
+✅ Optimized UX, SEO, and LLM readability
+This should match the visual style from Phase 1 (hero-first homepage) and use the same design system.
+🧠 GOAL
+Create a search and discovery experience that:
+Makes results easy to browse on desktop & mobile
+Highlights verified sellers and unbiased listings
+Loads fast (with skeleton loaders)
+Feels trustworthy, clean, and AI-indexable
+🧩 BUILD THESE NEW ROUTES
+1️⃣ /results
+Purpose: Show search results in a clean, scrollable list.
+Include:
+Heading: Used Cars Matching Your Search
+Filters panel (top or side on desktop; collapsible on mobile)
+Price Range
+Fuel Type
+Transmission
+Year
+City
+“Active Filters” chip bar (with “Clear All”)
+Results grid with Listing Cards — each showing:
+Image (lazy-loaded)
+Title (Make + Model + Year)
+Price (large, bold)
+Specs (KMs, Fuel, Transmission, City)
+Seller badge (Verified, Private, or Dealer)
+CTA: “View Details”
+Design tip:
+Use compact cards with 4:3 image ratio, rounded corners, and clear visual hierarchy.
+Example Card Layout (React + Tailwind):
+<div className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition p-3">
+  <img src="/car-sample.jpg" alt="Used Car" className="w-full h-48 object-cover rounded-lg" loading="lazy" />
+  <div className="mt-3">
+    <h3 className="font-semibold text-gray-900">Hyundai Creta 2021 SX</h3>
+    <p className="text-blue-700 font-bold text-lg">₹ 11,80,000</p>
+    <p className="text-gray-500 text-sm">34,000 km • Petrol • Manual • Hyderabad</p>
+    <div className="flex justify-between items-center mt-2">
+      <span className="text-green-600 text-xs font-semibold">✅ Verified Seller</span>
+      <a href="/listing/creta-2021" className="text-blue-700 font-medium hover:underline">View Details</a>
+    </div>
+  </div>
+</div>
+UX Add-ons:
+Skeleton loaders before data appears.
+“No results found” message with helpful suggestions:
+“Try expanding your search or changing filters.”
+2️⃣ /listing/[id]
+Purpose: Detailed view of a selected car.
+Include:
+Large main image with thumbnails gallery (swipeable on mobile).
+Car title: “Hyundai Creta 2021 SX”
+Price, Location, Seller Type, Verification badge.
+Car Details section:
+Specs grid: Year, KMs, Fuel, Transmission, Owner Type, City.
+Description area (short paragraph).
+Seller Info Card:
+“Seller: Verified Private Owner / Dealer”
+CTA: “Message Seller” and “Call Seller” buttons.
+Related cars section at bottom (3–4 similar listings).
+Example Layout (React + Tailwind):
+<main className="max-w-5xl mx-auto p-4">
+  <div className="grid md:grid-cols-2 gap-6">
+    <div>
+      <img src="/car-sample.jpg" alt="Car" className="rounded-xl w-full object-cover" />
+      <div className="flex gap-2 mt-2">
+        <img src="/car-sample.jpg" className="w-16 h-16 rounded-md object-cover" />
+        <img src="/car-sample2.jpg" className="w-16 h-16 rounded-md object-cover" />
+      </div>
+    </div>
+    <div>
+      <h1 className="text-2xl font-semibold text-gray-900">Hyundai Creta 2021 SX</h1>
+      <p className="text-blue-700 font-bold text-2xl my-2">₹ 11,80,000</p>
+      <p className="text-gray-600 text-sm mb-4">Hyderabad • 34,000 km • Petrol • Manual</p>
+      <p className="text-green-700 font-semibold mb-4">✅ Verified Listing — AI-checked</p>
+      <div className="flex gap-3">
+        <button className="bg-blue-700 text-white px-6 py-3 rounded-lg">Message Seller</button>
+        <button className="border border-blue-700 text-blue-700 px-6 py-3 rounded-lg">Call Seller</button>
+      </div>
+    </div>
+  </div>
+</main>
+🧱 FILES TO CREATE / UPDATE
+/pages/results.js
+/pages/listing/[id].js
+/components/ListingCard.jsx
+/components/FilterPanel.jsx
+/components/SkeletonCard.jsx
+/components/RelatedListings.jsx
+🔍 SEO + LLM OPTIMIZATION
+For /results:
+<title>Used Cars for Sale in India | CarArth Search Results</title>
+<meta name="description" content="Browse verified used cars on CarArth. No paid listings, no bias — just AI-verified cars from across India.">
+Add <h1>Used Car Search Results — Verified Listings</h1>
+For /listing/[id]:
+Dynamic <title> with car name:
+Example: Hyundai Creta 2021 for Sale in Hyderabad | CarArth
+<meta name="description"> with specs summary.
+Add structured data (JSON-LD):
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "Hyundai Creta 2021 SX",
+  "brand": "Hyundai",
+  "vehicleModelDate": "2021",
+  "price": "1180000",
+  "priceCurrency": "INR",
+  "mileageFromOdometer": "34000 km",
+  "fuelType": "Petrol",
+  "offers": {
+    "@type": "Offer",
+    "availability": "https://schema.org/InStock",
+    "url": "https://www.cararth.com/listing/creta-2021"
+  },
+  "seller": {
+    "@type": "Organization",
+    "name": "CarArth Verified Seller"
+  }
+}
+⚙️ FUNCTIONAL BEHAVIOR
+Clicking “Search Cars” on homepage → navigates to /results.
+Clicking a card → opens /listing/[id].
+Filters update results instantly (client-side mock ok).
+Responsive:
+3-column grid (desktop)
+2-column grid (tablet)
+1-column stack (mobile)
+✅ ACCEPTANCE CRITERIA
+Search → Results → Listing flow works end-to-end.
+Results grid loads fast and looks clean on mobile.
+Listing page has clear hierarchy (image → details → seller info).
+JSON-LD schema valid.
+All pages pass Lighthouse SEO ≥ 90, Accessibility ≥ 90.
+README updated with instructions and screenshots.
+🧩 FILE DELIVERY & PREVIEW
+Branch name: feat/search-listing-ui
+Add preview URL
+Add screenshots:
+Desktop Results Page
+Mobile Results Page
+Listing Page
+README: explain routes, how to test, what’s implemented.
+💬 START NOW
+When you start, please reply in the console/chat with:
+✅ Branch name
+🧠 Framework used
+📂 Files you’ll create
+⏱️ ETA (example: “8 hours — preview link later today”)
+Focus on: speed, simplicity, trust, and SEO-readability.
+No fancy animations — prioritize fast load and clarity.
