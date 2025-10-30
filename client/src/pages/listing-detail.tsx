@@ -7,6 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { RelatedListings } from "@/components/related-listings";
+import { ContactOptions } from "@/components/contact-options";
+import { AIInsightCard } from "@/components/ai-insight-card";
+import { FloatingCTA } from "@/components/floating-cta";
+import { AIChatReply } from "@/components/ai-chat-reply";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import {
   ShieldCheck,
   MapPin,
@@ -28,6 +33,8 @@ export default function ListingDetail() {
   const { id } = useParams();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [showAIReply, setShowAIReply] = useState(false);
+  const isMobile = useIsMobile();
 
   // Fetch car details
   const { data: car, isLoading } = useQuery<any>({
@@ -92,6 +99,10 @@ export default function ListingDetail() {
 
   const carTitle = car.title || `${car.make} ${car.model} ${car.year}`;
   const carPrice = formatPrice(car.price);
+  
+  // Parse price once for consistent use
+  const numericPrice = typeof car.price === "string" ? parseFloat(car.price) : (car.price || 0);
+  const validPrice = isNaN(numericPrice) ? undefined : numericPrice;
 
   // Schema.org Product markup
   const structuredData = {
@@ -103,8 +114,10 @@ export default function ListingDetail() {
       name: car.make || "Unknown",
     },
     vehicleModelDate: car.year?.toString(),
-    price: typeof car.price === "string" ? parseFloat(car.price) : car.price,
-    priceCurrency: "INR",
+    ...(validPrice && {
+      price: validPrice,
+      priceCurrency: "INR",
+    }),
     mileageFromOdometer: {
       "@type": "QuantitativeValue",
       value: car.mileage || car.kmDriven || 0,
@@ -113,16 +126,24 @@ export default function ListingDetail() {
     fuelType: car.fuelType || "Petrol",
     vehicleTransmission: car.transmission || "Manual",
     image: currentImage,
-    offers: {
+    offers: validPrice ? {
       "@type": "Offer",
       availability: "https://schema.org/InStock",
       url: `https://cararth.com/listing/${id}`,
-      price: typeof car.price === "string" ? parseFloat(car.price) : car.price,
+      price: validPrice,
       priceCurrency: "INR",
-    },
+    } : undefined,
     seller: {
       "@type": "Organization",
       name: "CarArth Verified Seller",
+    },
+    potentialAction: {
+      "@type": "ContactAction",
+      target: [
+        "tel:+919999999999",
+        "https://wa.me/919999999999"
+      ],
+      name: "Contact Seller"
     },
   };
 
@@ -302,7 +323,7 @@ export default function ListingDetail() {
               {/* Seller Info */}
               <Card className="mb-6">
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-3 mb-4">
+                  <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
                       <User className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                     </div>
@@ -310,17 +331,6 @@ export default function ListingDetail() {
                       <p className="font-semibold">Verified Seller</p>
                       <p className="text-sm text-gray-600 dark:text-gray-400">CarArth Approved</p>
                     </div>
-                  </div>
-                  
-                  <div className="flex gap-3">
-                    <Button className="flex-1" data-testid="button-call-seller">
-                      <Phone className="w-4 h-4 mr-2" />
-                      Call Seller
-                    </Button>
-                    <Button variant="outline" className="flex-1" data-testid="button-message-seller">
-                      <MessageSquare className="w-4 h-4 mr-2" />
-                      Message
-                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -371,6 +381,32 @@ export default function ListingDetail() {
               </div>
             </CardContent>
           </Card>
+
+          {/* NEW: Contact Options - Trust-first buyer flow */}
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            <ContactOptions 
+              listingId={id || ""}
+              sellerPhone="+919999999999"
+              onMessageClick={() => setShowAIReply(true)}
+            />
+            
+            <AIInsightCard 
+              listingId={id || ""}
+              make={car.make}
+              model={car.model}
+              price={typeof car.price === "string" ? parseFloat(car.price) : car.price}
+              year={car.year}
+            />
+          </div>
+
+          {/* NEW: AI Chat Reply */}
+          {showAIReply && (
+            <AIChatReply 
+              carPrice={typeof car.price === "string" ? parseFloat(car.price) : car.price}
+              city={car.city}
+              visible={showAIReply}
+            />
+          )}
         </div>
 
         {/* Related Listings */}
@@ -384,6 +420,13 @@ export default function ListingDetail() {
           }}
         />
       </main>
+
+      {/* NEW: Floating Contact CTA for Mobile Only */}
+      {isMobile && (
+        <FloatingCTA onClick={() => {
+          console.log("Floating CTA clicked");
+        }} />
+      )}
     </>
   );
 }
