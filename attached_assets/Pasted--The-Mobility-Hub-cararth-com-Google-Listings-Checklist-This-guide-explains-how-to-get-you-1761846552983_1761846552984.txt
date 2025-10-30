@@ -1,0 +1,37 @@
+🇮🇳 The Mobility Hub (cararth.com): Google Listings Checklist 🚗
+This guide explains how to get your used cars listed for free on Google Search and Google Maps, like a special photo ad. Follow these steps exactly to avoid rejections.
+
+Part A: The Big Picture Flow (How it Works)
+Step	Who Does It?	What Happens?	Analogy
+1. Collect	Partner Dealer	Gives car photos & details to cararth.com.	Filling a school admission form.
+2. Clean & Verify	cararth.com LLM System (Gemini, Anthropic, GPT)	We use our AI tools to check if the photos are clean and the data (price, mileage) is correct and matches government records (VAHAN/RTO).	A teacher correcting the homework for mistakes. (This is where we prevent rejections!)
+3. Create & Submit	cararth.com	We put all the perfect car details into a single master file (the 'Feed') and send it to Google Merchant Center.	Sending the final, approved list to the library for display.
+4. Display	Google	Google matches the car to the dealer's location (Google Business Profile) and shows the listing to local buyers.	The library displaying your perfect card on the main board.
+Part B: The Golden Rules for ZERO REJECTIONS
+This is the most critical section. Follow every point strictly.
+
+1. The Car Rules (What to List)
+
+DO'S (Must Do)	DON'TS (Must AVOID)
+✅ LIST ONLY non-commercial, four-wheeled passenger vehicles (cars, SUVs, pickups).	❌ NO commercial vehicles (buses, large trucks, fleet vans).
+✅ Every car must have a CLEAN TITLE (no salvage, flood, or accident title defects).	❌ NO two-wheelers (motorcycles), boats, planes, or farm equipment.
+✅ The car must be immediately available for sale at the listed dealer.	❌ NO auction prices, "subscription only" deals, or future listings ("Coming Soon").
+2. The Data Rules (What to Write)
+
+DO'S (Must Do)	DON'TS (Must AVOID)
+✅ Verify EVERY DETAIL (Make, Model, Year, Fuel Type) using the RTO/VAHAN API via the car's Registration Number. This is your final source of truth.	❌ NEVER use a dealer's handwritten or unverified details. If VAHAN says 'Petrol,' your feed must say 'Petrol.'
+✅ Provide the exact VIN (Vehicle Identification Number) and Odometer Reading (Mileage) for every used car.	❌ DO NOT let your data get old. If a car is sold, remove it from the feed within 6 hours.
+✅ The Price in the feed must EXACTLY MATCH the final price seen on the car's page on cararth.com.	❌ DO NOT use promotional text like "Lowest Price Ever!" in the car's title or description. Stick to facts.
+3. The Image Rules (How the Photo Must Look)
+
+Image rejections are the most common issue. Your LLM-system must enforce these.
+
+DO'S (Must Do)	DON'TS (Must AVOID)
+✅ Use High-Quality Photos. (Recommended size: at least 800 x 600 pixels).	❌ NO Watermarks or Logos (including your own The Mobility Hub logo or the partner dealer's logo).
+✅ The main image must be a clear Front-Side Angle (about 45 
+∘
+ ).	❌ NO Superimposed Text, Banners, or Graphics (e.g., "Discounted," "Certified").
+✅ Show the ENTIRE CAR in the photo. The car should take up most of the frame (75% to 90%).	❌ NO Placeholder Images ("No Photo Available") or generic stock photos.
+✅ Use a clean, neutral background (white, grey, or a simple professional lot).	❌ DO NOT use photos that are blurry, dark, truncated, or contain offensive content.
+Summary for Your Team: The Zero-Rejection Mantra
+"If a car is listed on cararth.com, it must be a non-commercial passenger vehicle, backed by verified RTO/VAHAN data, and pictured with a clean, unedited photo. No exceptions."

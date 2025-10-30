@@ -58,7 +58,7 @@ export class ListingIngestionService {
         transmission: listing.transmission,
         createdAt: listing.listingDate,
         listingDate: listing.listingDate,
-        listingSource: 'ethical_ai', // Scraped listings default to ethical_ai
+        listingSource: 'ethical_ai' as const, // Scraped listings default to ethical_ai
         isVerified: trustResult.finalVerificationStatus === 'verified' || trustResult.finalVerificationStatus === 'certified',
       };
       

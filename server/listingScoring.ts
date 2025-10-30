@@ -7,7 +7,11 @@
  * - Completeness (15%)
  * - Image Quality (10%)
  * - Seller Trust (10%)
+ * 
+ * PLUS Google Vehicle Listings compliance for dealer listings
  */
+
+import { GoogleVehicleComplianceValidator } from './googleVehicleCompliance';
 
 interface ListingData {
   // Core fields
@@ -52,13 +56,22 @@ interface ScoringResult {
   priceFairnessLabel: string; // "2% below market" or "At market price"
   demandLevel: string; // "Strong" | "Moderate" | "Low"
   trustLevel: string; // "Verified Dealer" | "AI Verified" | "User Listing"
+  
+  // Google Compliance (for dealer listings)
+  googleCompliance?: {
+    isCompliant: boolean;
+    score: number;
+    label: string;
+    issues: string[];
+  };
 }
 
 export class ListingScoringService {
   /**
    * Calculate complete listing score with all sub-scores
+   * Includes Google Vehicle Listings compliance for dealer listings
    */
-  static calculateScore(listing: ListingData): ScoringResult {
+  static calculateScore(listing: ListingData, options?: { includeGoogleCompliance?: boolean; vin?: string; rtoVerified?: boolean }): ScoringResult {
     // Calculate individual sub-scores
     const priceScore = this.calculatePriceScore(listing);
     const recencyScore = this.calculateRecencyScore(listing);
@@ -86,6 +99,42 @@ export class ListingScoringService {
       sellerTrust: Math.round(sellerTrustScore.score * 10) / 10,
     };
     
+    // Check Google Vehicle Listings compliance for dealer listings
+    let googleCompliance: any = undefined;
+    if (options?.includeGoogleCompliance) {
+      const complianceResult = GoogleVehicleComplianceValidator.validate({
+        vehicleType: 'car', // Assume passenger car
+        make: listing.make,
+        model: listing.model,
+        year: listing.year,
+        vin: options.vin,
+        titleStatus: 'clean', // Assume clean title
+        mileage: listing.mileage,
+        price: listing.price,
+        images: listing.images ? listing.images.map((img: any) => ({
+          url: typeof img === 'string' ? img : img.url,
+          width: typeof img === 'object' ? img.width : undefined,
+          height: typeof img === 'object' ? img.height : undefined,
+        })) : [],
+        rtoVerified: options.rtoVerified,
+        fuelType: listing.fuelType,
+        transmission: listing.transmission,
+        availabilityStatus: 'available',
+      });
+      
+      googleCompliance = {
+        isCompliant: complianceResult.isCompliant,
+        score: complianceResult.score,
+        label: GoogleVehicleComplianceValidator.getComplianceLabel(complianceResult.score),
+        issues: complianceResult.issues,
+      };
+      
+      console.log(`🔍 Google Compliance Check: ${googleCompliance.label} (${googleCompliance.score}/100)`);
+      if (complianceResult.issues.length > 0) {
+        console.log(`   Issues: ${complianceResult.issues.join('; ')}`);
+      }
+    }
+    
     return {
       listingScore: Math.round(listingScore * 10) / 10,
       scoreBreakdown,
@@ -96,6 +145,7 @@ export class ListingScoringService {
       priceFairnessLabel: priceScore.label,
       demandLevel: demandScore.level,
       trustLevel: sellerTrustScore.label,
+      googleCompliance,
     };
   }
   
