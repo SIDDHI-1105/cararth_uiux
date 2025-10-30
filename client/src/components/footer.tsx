@@ -18,7 +18,7 @@ export default function Footer() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8">
           {/* Brand Section */}
           <div className="col-span-1 md:col-span-2">
             <Link href="/" className="flex items-center mb-4">
@@ -50,6 +50,31 @@ export default function Footer() {
               </Link>
               <Link href="/?brand=Honda" className="block text-muted-foreground hover:text-accent transition-colors">
                 Honda
+              </Link>
+            </div>
+          </div>
+
+          {/* Popular Cities */}
+          <div>
+            <h4 className="font-semibold mb-4">Popular Cities</h4>
+            <div className="space-y-2 text-sm">
+              <Link href="/used-cars-hyderabad" className="block text-muted-foreground hover:text-accent transition-colors">
+                Hyderabad
+              </Link>
+              <Link href="/used-cars-delhi-ncr" className="block text-muted-foreground hover:text-accent transition-colors">
+                Delhi NCR
+              </Link>
+              <Link href="/used-cars-mumbai" className="block text-muted-foreground hover:text-accent transition-colors">
+                Mumbai
+              </Link>
+              <Link href="/used-cars-bangalore" className="block text-muted-foreground hover:text-accent transition-colors">
+                Bangalore
+              </Link>
+              <Link href="/used-cars-pune" className="block text-muted-foreground hover:text-accent transition-colors">
+                Pune
+              </Link>
+              <Link href="/used-cars-chennai" className="block text-muted-foreground hover:text-accent transition-colors">
+                Chennai
               </Link>
             </div>
           </div>
