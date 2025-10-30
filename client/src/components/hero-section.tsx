@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Sparkles, ShieldCheck, User } from "lucide-react";
@@ -17,6 +18,7 @@ interface HeroSearchProps {
   }) => void;
   hasSearched?: boolean;
   isSearching?: boolean;
+  redirectToResults?: boolean;
 }
 
 interface HeroStats {
@@ -35,7 +37,8 @@ interface HeroStats {
   lastUpdated: string;
 }
 
-export default function HeroSection({ onSearch, hasSearched = false, isSearching = false }: HeroSearchProps) {
+export default function HeroSection({ onSearch, hasSearched = false, isSearching = false, redirectToResults = false }: HeroSearchProps) {
+  const [, setLocation] = useLocation();
   const [brand, setBrand] = useState("");
   const [budget, setBudget] = useState("");
   const [city, setCity] = useState("");
@@ -48,12 +51,18 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
   });
 
   const handleSearch = () => {
-    onSearch({ 
-      brand: brand || undefined, 
-      budget: budget || undefined, 
-      city: city || undefined, 
-      fuelType: fuelType || undefined 
-    });
+    if (redirectToResults) {
+      // Navigate to /results page
+      setLocation('/results');
+    } else {
+      // Use the inline search handler
+      onSearch({ 
+        brand: brand || undefined, 
+        budget: budget || undefined, 
+        city: city || undefined, 
+        fuelType: fuelType || undefined 
+      });
+    }
   };
 
   return (

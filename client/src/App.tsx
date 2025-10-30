@@ -49,11 +49,15 @@ import BangaloreCityPage from "./pages/city-bangalore";
 import PuneCityPage from "./pages/city-pune";
 import ChennaiCityPage from "./pages/city-chennai";
 import NotFound from "@/pages/not-found";
+import Results from "./pages/results";
+import ListingDetail from "./pages/listing-detail";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/results" component={Results} />
+      <Route path="/listing/:id" component={ListingDetail} />
       <Route path="/car/:id" component={CarDetail} />
       <Route path="/cars/:id" component={CarDetail} />
       <Route path="/marketplace/:id" component={MarketplaceListing} />
