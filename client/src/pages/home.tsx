@@ -33,6 +33,8 @@ import { Link } from "wouter";
 import { FAQSection } from "@/components/faq-section";
 import KeyInsights from "@/components/key-insights";
 import HomepageIntro from "@/components/homepage-intro";
+import { HowItWorks } from "@/components/how-it-works";
+import { TrustSection } from "@/components/trust-section";
 
 function HomeContent() {
   const [filters, setFilters] = useState<Record<string, any>>({});
@@ -376,9 +378,8 @@ function HomeContent() {
           isSearching={isLoading}
         />
         
-        <HomepageIntro />
-        
-        <KeyInsights />
+        {/* Show How It Works section before search */}
+        {!hasSearched && <HowItWorks />}
         
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-8">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6 sm:mb-8">
@@ -491,6 +492,9 @@ function HomeContent() {
 
           </Tabs>
           
+          {/* Trust Section - show after results or before if searched */}
+          {hasSearched && <TrustSection />}
+          
           {/* Enterprise Partnership Section */}
           <div className="mt-6 sm:mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl p-4 sm:p-6 border border-blue-200 dark:border-blue-800">
             <div className="text-center">
@@ -512,6 +516,13 @@ function HomeContent() {
         </div>
       </div>
 
+      {/* Trust Section - show for non-searched state */}
+      {!hasSearched && <TrustSection />}
+      
+      {/* Detailed content for interested users */}
+      <KeyInsights />
+      <HomepageIntro />
+      
       {/* FAQ Section */}
       <FAQSection />
 
