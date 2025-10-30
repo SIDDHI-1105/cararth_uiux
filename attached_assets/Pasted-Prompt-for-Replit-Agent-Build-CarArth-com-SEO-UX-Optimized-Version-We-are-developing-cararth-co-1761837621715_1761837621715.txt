@@ -1,0 +1,87 @@
+Prompt for Replit Agent: Build CarArth.com (SEO + UX Optimized Version)
+We are developing cararth.com here on Replit.
+I am not technical — please build and deploy the improved version based on this clear direction 👇
+🎯 Goal
+Make CarArth.com look professional, fast, and trustworthy — like India’s best AI-powered used car search engine.
+The website should be:
+Search-first (homepage hero)
+SEO-optimized (Google can easily index it)
+LLM-search friendly (so AI tools like ChatGPT or Perplexity understand it)
+Visually clean and responsive on mobile and desktop
+🛠️ What to Build
+Use Next.js (preferred) or React + Vite — whatever runs easily on Replit.
+Create these pages:
+Homepage (/)
+Big headline:
+“CarArth — India’s AI-Powered Used Car Search Engine”
+Subheading:
+“No paid listings. Verified sellers. Unbiased results.”
+Add a clear search bar right below with a blue Search Cars button.
+Show filter chips below it: Price | Fuel | Year | City
+Add a small trust line below:
+✅ “No paid listings — unbiased results”
+Must look perfect on mobile and desktop.
+Sell Page (/sell)
+Header: “Sell Your Car Once. Reach Everywhere.”
+3-step progress bar at the top: 1. Details → 2. Verification → 3. Publish
+Simple form:
+Brand (dropdown)
+Model (text input)
+Year (dropdown)
+Price (number)
+Image upload with preview (client-side only)
+Show a message below:
+“AI verifies every listing — no paid promotions.”
+Throttle Talk Page (/throttle-talk)
+One blog article with title: “India Used Car Market: Data-Driven Overview”
+Few lines of content and 3 data cards (Market Size, Digital Share, Platform Listings).
+City Pages
+/used-cars-in-hyderabad
+/used-cars-in-delhi-ncr
+Each page can have 2–3 sentences about local listings (just demo content).
+📈 SEO + LLM Optimization
+Add meta tags:
+<title>Used Car Search Engine | CarArth — No Paid Listings</title>
+<meta name="description" content="CarArth helps you find verified used cars across India with no paid listings — AI-powered and trustworthy.">
+Add structured data (JSON-LD) for:
+Organization (CarArth)
+Service (Used Car Listing)
+FAQPage (2 questions: What makes CarArth different? Does it charge sellers?)
+BlogPosting (for Throttle Talk)
+Add /public/sitemap.xml with links to the above pages.
+Use proper headings: <h1>, <h2>, <section>, <article>, <nav> etc.
+Ensure text and CTAs are crawlable (no hidden content).
+🧩 Components to Create
+/components/HeroSearch.jsx
+/components/SellFormStepper.jsx
+/components/ListingCard.jsx
+/components/SchemaInjector.jsx
+✅ What “Done” Looks Like
+Homepage has search bar visible above the fold.
+Sell form is clean and responsive.
+Throttle Talk shows one AI-powered article.
+Sitemap and meta tags are working.
+JSON-LD structured data is added and valid.
+All pages load cleanly on mobile and desktop.
+Simple README explains how to preview.
+📸 Deliverables
+When done, please:
+Create branch → feat/seo-ux-hero-sell
+Deploy preview URL
+Add 3 screenshots in PR:
+Desktop homepage
+Mobile homepage
+Sell page stepper
+Include README with:
+“How to run” steps
+Explanation of what’s built
+Short note for non-technical founder (“Click this link to view live demo”)
+💬 Start Now
+When you start, please reply in the console/chat with:
+✅ Branch name
+🧩 Tech stack used
+📂 Files you’ll create
+⏱️ Estimated time to complete
+🧠 Important Reminder
+Keep it simple, accessible, and visually elegant.
+SEO and LLM readability are more important than animations or complex effects.
