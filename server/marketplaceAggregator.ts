@@ -513,7 +513,8 @@ export class MarketplaceAggregator {
       authenticityRating: cached.qualityScore || 50,
       overallQualityScore: cached.qualityScore || 50,
       state: cached.state || undefined,
-      owners: cached.owners || 1
+      owners: cached.owners || 1,
+      listingSource: cached.listingSource || 'ethical_ai'
     };
 
     // Apply image-based ranking boost to cached results 

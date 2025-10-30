@@ -2956,7 +2956,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             sellerType: listing.sellerType,
             verificationStatus: listing.verificationStatus,
             listingDate: listing.listingDate,
-            owners: listing.owners
+            owners: listing.owners,
+            listingSource: listing.listingSource
           })),
           total: fastSearchResult.total,
           performance: {
