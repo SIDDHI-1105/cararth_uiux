@@ -8614,6 +8614,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <priority>0.95</priority>
   </url>
 
+  <!-- City Landing Pages for SEO -->
+  <url>
+    <loc>${baseUrl}/used-cars-hyderabad</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+
+  <url>
+    <loc>${baseUrl}/used-cars-delhi-ncr</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+
+  <url>
+    <loc>${baseUrl}/used-cars-mumbai</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+
+  <url>
+    <loc>${baseUrl}/used-cars-bangalore</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+
+  <url>
+    <loc>${baseUrl}/used-cars-pune</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+
+  <url>
+    <loc>${baseUrl}/used-cars-chennai</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+
   <!-- AI-Friendly Machine-Readable Data Endpoint -->
   <url>
     <loc>${baseUrl}/api/ai-info</loc>

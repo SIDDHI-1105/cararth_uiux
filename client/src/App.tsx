@@ -41,6 +41,12 @@ import FAQPage from "./pages/faq";
 import RTADataImport from "./pages/RTADataImport";
 import MarketIntelligenceDashboard from "./pages/MarketIntelligenceDashboard";
 import AIVerificationGuide from "./pages/guide-ai-verification";
+import HyderabadCityPage from "./pages/city-hyderabad";
+import DelhiCityPage from "./pages/city-delhi";
+import MumbaiCityPage from "./pages/city-mumbai";
+import BangaloreCityPage from "./pages/city-bangalore";
+import PuneCityPage from "./pages/city-pune";
+import ChennaiCityPage from "./pages/city-chennai";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -87,6 +93,12 @@ function Router() {
       <Route path="/market-intelligence" component={MarketIntelligenceDashboard} />
       <Route path="/spinny-deals-hyderabad" component={SpinnyDeals} />
       <Route path="/guides/ai-verified-used-car-trust-india" component={AIVerificationGuide} />
+      <Route path="/used-cars-hyderabad" component={HyderabadCityPage} />
+      <Route path="/used-cars-delhi-ncr" component={DelhiCityPage} />
+      <Route path="/used-cars-mumbai" component={MumbaiCityPage} />
+      <Route path="/used-cars-bangalore" component={BangaloreCityPage} />
+      <Route path="/used-cars-pune" component={PuneCityPage} />
+      <Route path="/used-cars-chennai" component={ChennaiCityPage} />
       <Route component={NotFound} />
     </Switch>
   );
