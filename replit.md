@@ -35,6 +35,7 @@ The frontend uses React 18 with TypeScript and Vite, Wouter for routing, Radix U
 - **Throttle Talk Navigation Enhancements**: Mega-dropdown menu component with hover activation showing categorized content (Market Intelligence, Community, OEM Analytics, Road Tales) and featured articles. Related articles carousel on detail pages with fully responsive design (1/2/3 items per breakpoint), dot pagination, and smooth transitions.
 - **User-Generated Content (UGC) System**: Production-ready story submission platform with AI moderation (xAI Grok) for car owner experiences, featuring quality scoring, safety checks, and a "Road Tales" carousel.
 - **Enhanced SEO Infrastructure**: Dynamic sitemap.xml generator, NewsSEOHead component with auto-generated meta tags, Schema.org markup, and a machine-readable data endpoint (`/api/ai-info`) for LLM agents.
+- **City Landing Pages**: SEO-optimized landing pages for major Indian markets (Hyderabad, Delhi NCR, Mumbai, Bangalore, Pune, Chennai) at `/used-cars-[city]` routes. Features reusable CityLandingPage component driven by centralized CITY_CONFIG data source for maintainability, complete Schema.org LocalBusiness markup with PostalAddress, unique meta tags and canonical URLs for each city, city-specific market insights and popular brands, integration with live car listings filtered by city, and footer navigation with "Popular Cities" section. New cities can be added by updating the single CITY_CONFIG object in `client/src/config/city-data.ts`.
 
 ## External Dependencies
 
