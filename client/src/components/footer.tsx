@@ -141,15 +141,11 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-border mt-8 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
+          <div className="flex flex-col md:flex-row justify-between items-center text-center md:text-left">
             <div className="text-sm text-muted-foreground mb-4 md:mb-0">
-              © 2025 CarArth. All rights reserved. | Compliant with Indian IT Act 2000 & Copyright Act 1957
+              © {new Date().getFullYear()} CarArth.com — A unit of Aaro7 Fintech Pvt. Ltd.
               <br />
-              <span className="text-xs">Cararth.com is a unit of Aaro7 Fintech Private Limited | Contact: connect@cararth.com</span>
-              <br />
-              <span className="text-xs mt-1">
-                * All listings subject to verification. Prices may vary. * CarArth aggregates data from multiple sources - verify independently.
-              </span>
+              <a href="mailto:connect@cararth.com" className="hover:text-accent transition-colors">connect@cararth.com</a> | Built on trust, powered by AI.
             </div>
             <div className="flex items-center space-x-4 text-xs text-muted-foreground">
               <span>🔒 Secure Platform</span>
