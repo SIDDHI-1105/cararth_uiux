@@ -136,7 +136,13 @@ export class GoogleVehicleComplianceValidator {
     const issues: string[] = [];
     const warnings: string[] = [];
     
-    const vehicleType = listing.vehicleType?.toLowerCase() || '';
+    // CRITICAL: Vehicle type is REQUIRED, no defaults allowed
+    if (!listing.vehicleType || listing.vehicleType.trim() === '') {
+      issues.push(`❌ GOOGLE REJECT: Vehicle type is REQUIRED. You must explicitly declare the type (car, suv, sedan, hatchback, pickup, van, etc.).`);
+      return { valid: false, issues, warnings };
+    }
+    
+    const vehicleType = listing.vehicleType.toLowerCase();
     
     // Blocked types (Google will reject)
     const blockedTypes = [
@@ -156,7 +162,7 @@ export class GoogleVehicleComplianceValidator {
     const allowedTypes = ['car', 'suv', 'sedan', 'hatchback', 'pickup', 'van', 'minivan', 'coupe', 'wagon'];
     const hasAllowedType = allowedTypes.some(type => vehicleType.includes(type));
     
-    if (!hasAllowedType && vehicleType) {
+    if (!hasAllowedType) {
       warnings.push(`⚠️ Vehicle type "${vehicleType}" is not explicitly recognized. Verify it's a passenger vehicle.`);
     }
     
@@ -173,7 +179,14 @@ export class GoogleVehicleComplianceValidator {
     issues: string[];
   } {
     const issues: string[] = [];
-    const titleStatus = listing.titleStatus || 'clean';
+    
+    // CRITICAL: Title status is REQUIRED, no defaults allowed
+    if (!listing.titleStatus) {
+      issues.push(`❌ GOOGLE REJECT: Title status is REQUIRED. You must explicitly declare the title status (clean, salvage, flood, accident, rebuilt).`);
+      return { valid: false, issues };
+    }
+    
+    const titleStatus = listing.titleStatus;
     
     if (titleStatus !== 'clean') {
       issues.push(`❌ GOOGLE REJECT: Title status is "${titleStatus}". Only vehicles with clean titles are accepted. No salvage, flood, or accident titles.`);
@@ -314,7 +327,14 @@ export class GoogleVehicleComplianceValidator {
     issues: string[];
   } {
     const issues: string[] = [];
-    const status = listing.availabilityStatus || 'available';
+    
+    // CRITICAL: Availability status is REQUIRED, no defaults allowed
+    if (!listing.availabilityStatus) {
+      issues.push(`❌ GOOGLE REJECT: Availability status is REQUIRED. You must explicitly declare if the vehicle is available, sold, pending, or coming_soon.`);
+      return { valid: false, issues };
+    }
+    
+    const status = listing.availabilityStatus;
     
     if (status === 'coming_soon') {
       issues.push(`❌ GOOGLE REJECT: "Coming Soon" listings are not allowed. Vehicle must be immediately available.`);

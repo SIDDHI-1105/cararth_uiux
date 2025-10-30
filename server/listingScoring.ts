@@ -102,14 +102,15 @@ export class ListingScoringService {
     // Check Google Vehicle Listings compliance for dealer listings
     let googleCompliance: any = undefined;
     if (options?.includeGoogleCompliance) {
+      // CRITICAL: Use actual listing data, not defaults
       const complianceResult = GoogleVehicleComplianceValidator.validate({
-        vehicleType: 'car', // Assume passenger car
+        vehicleType: (listing as any).vehicleType || undefined, // REQUIRED: Must be explicitly set by dealer
         make: listing.make,
         model: listing.model,
         year: listing.year,
-        vin: options.vin,
-        titleStatus: 'clean', // Assume clean title
-        mileage: listing.mileage,
+        vin: options.vin, // REQUIRED for Google compliance
+        titleStatus: (listing as any).titleStatus || undefined, // REQUIRED: Must be explicitly set
+        mileage: listing.mileage, // REQUIRED for used cars
         price: listing.price,
         images: listing.images ? listing.images.map((img: any) => ({
           url: typeof img === 'string' ? img : img.url,
@@ -119,7 +120,7 @@ export class ListingScoringService {
         rtoVerified: options.rtoVerified,
         fuelType: listing.fuelType,
         transmission: listing.transmission,
-        availabilityStatus: 'available',
+        availabilityStatus: (listing as any).availabilityStatus || undefined, // REQUIRED: Must be explicitly set
       });
       
       googleCompliance = {

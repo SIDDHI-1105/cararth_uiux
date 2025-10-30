@@ -62,6 +62,7 @@ export class ListingIngestionService {
         isVerified: trustResult.finalVerificationStatus === 'verified' || trustResult.finalVerificationStatus === 'certified',
       };
       
+      // Calculate score (no Google compliance for scraped listings)
       const scoringResult = ListingScoringService.calculateScore(scoringData);
       console.log(`📊 Listing score calculated: ${scoringResult.listingScore}/100 (${scoringResult.trustLevel})`);
       

@@ -94,6 +94,8 @@ export const cars = pgTable("cars", {
   avgSellingPrice: decimal("avg_selling_price", { precision: 10, scale: 2 }), // Average market price for this model
   completeness: decimal("completeness", { precision: 3, scale: 2 }).default('0'), // Completeness score 0-1
   imageQualityAvg: decimal("image_quality_avg", { precision: 3, scale: 2 }).default('0'), // Average image quality 0-1
+  googleComplianceScore: decimal("google_compliance_score", { precision: 3, scale: 0 }).default('0'), // Google Vehicle Listings compliance 0-100
+  priceFairnessLabel: text("price_fairness_label"), // e.g. "2% below market" or "At market price"
   
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -1098,6 +1100,8 @@ export const cachedPortalListings = pgTable(
     avgSellingPrice: decimal("avg_selling_price", { precision: 10, scale: 2 }), // Average market price for this model
     completeness: decimal("completeness", { precision: 3, scale: 2 }).default('0'), // Completeness score 0-1
     imageQualityAvg: decimal("image_quality_avg", { precision: 3, scale: 2 }).default('0'), // Average image quality 0-1
+    googleComplianceScore: decimal("google_compliance_score", { precision: 3, scale: 0 }).default('0'), // Google Vehicle Listings compliance 0-100
+    priceFairnessLabel: text("price_fairness_label"), // e.g. "2% below market" or "At market price"
     
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),

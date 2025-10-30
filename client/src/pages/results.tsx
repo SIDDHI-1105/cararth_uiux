@@ -330,6 +330,9 @@ export default function Results() {
                       isVerified={car.verificationStatus === "approved" || car.isVerified}
                       sellerType={car.isVerified ? "verified" : "private"}
                       listingSource={car.listingSource || "user_direct"}
+                      listingScore={car.listingScore}
+                      googleCompliant={car.googleComplianceScore >= 100}
+                      priceFairnessLabel={car.priceFairnessLabel}
                     />
                   ))}
                 </div>
