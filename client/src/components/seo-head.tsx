@@ -223,7 +223,24 @@ export const createOrganizationSchema = () => ({
         "itemOffered": {
           "@type": "Product",
           "name": "Verified Used Cars across India",
-          "category": "Automotive"
+          "category": "Automotive",
+          "description": "AI-verified used car listings aggregated from multiple platforms across India",
+          "brand": {
+            "@type": "Brand",
+            "name": "CarArth"
+          },
+          "offers": {
+            "@type": "AggregateOffer",
+            "priceCurrency": "INR",
+            "lowPrice": "100000",
+            "highPrice": "5000000",
+            "offerCount": "50",
+            "availability": "https://schema.org/InStock",
+            "seller": {
+              "@type": "Organization",
+              "name": "CarArth"
+            }
+          }
         }
       }
     ]
