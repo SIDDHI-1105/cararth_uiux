@@ -86,6 +86,15 @@ export const cars = pgTable("cars", {
   isSold: boolean("is_sold").default(false),
   isFeatured: boolean("is_featured").default(false),
   featuredExpiresAt: timestamp("featured_expires_at"),
+  
+  // Holistic Listing Ranking Framework fields
+  listingScore: decimal("listing_score", { precision: 5, scale: 2 }).default('0'), // Overall trust score 0-100
+  scoreBreakdown: jsonb("score_breakdown").default({}), // {price, recency, demand, completeness, imageQuality, sellerTrust}
+  demandIndex: decimal("demand_index", { precision: 3, scale: 2 }).default('0.5'), // Market demand 0-1
+  avgSellingPrice: decimal("avg_selling_price", { precision: 10, scale: 2 }), // Average market price for this model
+  completeness: decimal("completeness", { precision: 3, scale: 2 }).default('0'), // Completeness score 0-1
+  imageQualityAvg: decimal("image_quality_avg", { precision: 3, scale: 2 }).default('0'), // Average image quality 0-1
+  
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -1082,6 +1091,14 @@ export const cachedPortalListings = pgTable(
     // Listing source branding
     listingSource: text("listing_source").notNull().default('ethical_ai'), // 'ethical_ai' | 'exclusive_dealer' | 'user_direct'
     
+    // Holistic Listing Ranking Framework fields
+    listingScore: decimal("listing_score", { precision: 5, scale: 2 }).default('0'), // Overall trust score 0-100
+    scoreBreakdown: jsonb("score_breakdown").default({}), // {price, recency, demand, completeness, imageQuality, sellerTrust}
+    demandIndex: decimal("demand_index", { precision: 3, scale: 2 }).default('0.5'), // Market demand 0-1
+    avgSellingPrice: decimal("avg_selling_price", { precision: 10, scale: 2 }), // Average market price for this model
+    completeness: decimal("completeness", { precision: 3, scale: 2 }).default('0'), // Completeness score 0-1
+    imageQualityAvg: decimal("image_quality_avg", { precision: 3, scale: 2 }).default('0'), // Average image quality 0-1
+    
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
@@ -1090,6 +1107,7 @@ export const cachedPortalListings = pgTable(
     index("idx_cached_listing_date").on(table.listingDate),
     index("idx_cached_portal_external").on(table.portal, table.externalId),
     index("idx_cached_quality_score").on(table.qualityScore, table.listingDate), // For quality-based ranking
+    index("idx_cached_listing_score").on(table.listingScore, table.listingDate), // For trust-based ranking
   ],
 );
 

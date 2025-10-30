@@ -1,6 +1,7 @@
 import { TrustLayer, TrustAnalysisResult } from './trustLayer';
 import { MarketplaceListing } from './marketplaceAggregator';
 import { storage } from './storage';
+import { ListingScoringService } from './listingScoring';
 
 /**
  * CENTRALIZED LISTING INGESTION SERVICE
@@ -43,6 +44,27 @@ export class ListingIngestionService {
       // MANDATORY: Run through Trust Layer
       const trustResult = await this.trustLayer.screenListing(listing);
       
+      // Calculate holistic ranking score
+      const scoringData = {
+        price: listing.price,
+        make: listing.brand,
+        model: listing.model,
+        city: listing.city,
+        year: listing.year,
+        description: listing.description,
+        images: listing.images,
+        mileage: listing.mileage,
+        fuelType: listing.fuelType,
+        transmission: listing.transmission,
+        createdAt: listing.listingDate,
+        listingDate: listing.listingDate,
+        listingSource: 'ethical_ai', // Scraped listings default to ethical_ai
+        isVerified: trustResult.finalVerificationStatus === 'verified' || trustResult.finalVerificationStatus === 'certified',
+      };
+      
+      const scoringResult = ListingScoringService.calculateScore(scoringData);
+      console.log(`📊 Listing score calculated: ${scoringResult.listingScore}/100 (${scoringResult.trustLevel})`);
+      
       // Prepare listing data with Trust Layer's final verification status
       const listingData = {
         id: listing.id,
@@ -75,6 +97,14 @@ export class ListingIngestionService {
         imageAuthenticity: trustResult.imageAuthenticityScore || 0,
         hasRealImage: (trustResult.verifiedImageCount || 0) > 0,
         
+        // Holistic Ranking Framework scores
+        listingScore: scoringResult.listingScore,
+        scoreBreakdown: scoringResult.scoreBreakdown,
+        demandIndex: scoringResult.demandIndex,
+        avgSellingPrice: scoringResult.avgSellingPrice,
+        completeness: scoringResult.completeness,
+        imageQualityAvg: scoringResult.imageQualityAvg,
+        
         listingDate: listing.listingDate || new Date(),
         sourceMeta: {
           trustAnalysis: {
@@ -82,6 +112,11 @@ export class ListingIngestionService {
             trustScore: trustResult.trustScore,
             issues: trustResult.issues,
             verifiedImages: trustResult.verifiedImageCount || 0
+          },
+          scoringMetadata: {
+            priceFairnessLabel: scoringResult.priceFairnessLabel,
+            demandLevel: scoringResult.demandLevel,
+            trustLevel: scoringResult.trustLevel
           }
         },
         hash: this.generateHash(listing),
