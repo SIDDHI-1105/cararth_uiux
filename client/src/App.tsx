@@ -11,6 +11,7 @@ import Home from "./pages/home";
 import CarDetail from "./pages/car-detail";
 import MarketplaceListing from "./pages/marketplace-listing";
 import SellCar from "./pages/sell-car";
+import SellPage from "./pages/sell";
 import SellerSettings from "./pages/seller-settings";
 import MessagesPage from "./pages/messages";
 import Blog from "./pages/blog";
@@ -56,7 +57,7 @@ function Router() {
       <Route path="/car/:id" component={CarDetail} />
       <Route path="/cars/:id" component={CarDetail} />
       <Route path="/marketplace/:id" component={MarketplaceListing} />
-      <Route path="/sell" component={SellCar} />
+      <Route path="/sell" component={SellPage} />
       <Route path="/sell-car" component={SellCar} />
       <Route path="/sell-your-car" component={SellCar} />
       <Route path="/seller/settings" component={SellerSettings} />
