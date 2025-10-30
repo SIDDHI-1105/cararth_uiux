@@ -137,7 +137,7 @@ export default function SellPage() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-            Sell Your Car Once. Reach Everywhere.
+            List your car here. Reach everywhere!
           </h1>
           <p className="text-lg text-muted-foreground">
             AI verifies every listing — no paid promotions.
