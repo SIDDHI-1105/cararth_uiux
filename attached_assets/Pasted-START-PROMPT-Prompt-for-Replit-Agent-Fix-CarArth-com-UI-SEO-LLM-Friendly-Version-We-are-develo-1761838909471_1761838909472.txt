@@ -1,0 +1,145 @@
+START PROMPT
+Prompt for Replit Agent — Fix CarArth.com UI (SEO + LLM Friendly Version)
+We are developing cararth.com on Replit.
+I am not technical, so please handle everything end-to-end — design, code, structure, responsiveness, and a working preview.
+Your task is to fix and redesign CarArth.com’s UI so that it is:
+✅ Visually professional and trustworthy
+✅ Fully responsive (mobile + desktop)
+✅ SEO-friendly (semantic HTML, meta tags, crawlable content)
+✅ LLM-search friendly (clear structure, schema markup)
+✅ Focused on a “search-first” experience
+🧠 GOAL
+Make CarArth.com look like India’s most trusted AI-powered used car search engine, with a hero section that invites users to search immediately and clear messaging around “No Paid Listings” and “Verified Sellers”.
+🧩 BUILD THESE PAGES
+1️⃣ Homepage (/)
+Purpose: search-first design.
+Include:
+Big headline:
+CarArth — India’s AI-Powered Used Car Search Engine
+Subheadline:
+No paid listings. Verified sellers. Unbiased results.
+Prominent search bar (above the fold on desktop & mobile)
+Placeholder: Search by make, model or city (e.g. Creta 2021 Hyderabad)
+CTA: blue “Search Cars” button
+Filter chips under the search bar: Price, Fuel, Year, City
+Small trust text under it:
+✅ No paid listings — unbiased results
+“How It Works” section below:
+1️⃣ Search Verified Cars
+2️⃣ Filter Instantly
+3️⃣ Contact Directly
+Simple footer:
+© [current year] CarArth.com — A unit of Aaro7 Fintech Pvt. Ltd.
+connect@cararth.com | Built on trust, powered by AI.
+Homepage Layout (Tailwind or CSS acceptable):
+<section className="flex flex-col items-center justify-center text-center py-16 bg-gray-50">
+  <h1 className="text-3xl md:text-5xl font-bold text-gray-900 mb-3">
+    CarArth — India’s AI-Powered Used Car Search Engine
+  </h1>
+  <p className="text-gray-600 text-lg mb-6">
+    No paid listings. Verified sellers. Unbiased results.
+  </p>
+  <form className="w-full max-w-2xl flex items-center bg-white shadow-md rounded-full overflow-hidden">
+    <input
+      type="search"
+      placeholder="Search by make, model or city (e.g. Creta 2021 Hyderabad)"
+      className="flex-grow px-5 py-3 outline-none text-gray-700"
+    />
+    <button type="submit" className="bg-blue-700 hover:bg-blue-800 text-white font-semibold px-8 py-3">
+      Search Cars
+    </button>
+  </form>
+  <div className="flex gap-2 mt-4 text-sm text-gray-600">
+    <span className="px-3 py-1 border rounded-full">Price</span>
+    <span className="px-3 py-1 border rounded-full">Fuel</span>
+    <span className="px-3 py-1 border rounded-full">Year</span>
+    <span className="px-3 py-1 border rounded-full">City</span>
+  </div>
+  <p className="mt-4 text-green-600 text-sm">✅ No paid listings — unbiased results</p>
+</section>
+2️⃣ Sell Page (/sell)
+Goal: clean, transparent 3-step form.
+Include:
+Header: “Sell Your Car Once. Reach Everywhere.”
+Progress bar: 1. Details → 2. Verification → 3. Publish
+Form fields:
+Brand (dropdown)
+Model (text input)
+Year (dropdown)
+Price (number)
+Image upload with preview
+Info text below form:
+“AI verifies every listing — no paid promotions.”
+3️⃣ Throttle Talk Page (/throttle-talk)
+Goal: SEO & LLM-friendly blog layout.
+Include:
+Article title: “India Used Car Market: Data-Driven Overview”
+Subheadline: “Powered by CarArth AI Market Intelligence”
+Small article body (~3 short paragraphs)
+Add semantic HTML structure:
+<article itemscope itemtype="https://schema.org/BlogPosting">
+  <h1 itemprop="headline">India Used Car Market: Data-Driven Overview</h1>
+  <p itemprop="articleBody">India’s used car market is growing 15.5% CAGR...</p>
+  <meta itemprop="author" content="CarArth Market Intelligence">
+</article>
+4️⃣ City Pages
+Create:
+/used-cars-in-hyderabad
+/used-cars-in-delhi-ncr
+Each with short, crawlable content like:
+Find verified used cars in Hyderabad from trusted sellers. No paid listings, unbiased results.
+🧱 FILES TO CREATE
+/pages/index.js
+/pages/sell.js
+/pages/throttle-talk.js
+/pages/used-cars-in-hyderabad.js
+/pages/used-cars-in-delhi-ncr.js
+/components/Navbar.jsx
+/components/HeroSearch.jsx
+/components/SellFormStepper.jsx
+/components/Footer.jsx
+/public/sitemap.xml
+/public/logo.svg
+/README.md
+🔍 SEO + LLM REQUIREMENTS
+Add <title> and <meta name="description"> per page.
+Use JSON-LD structured data for:
+Organization
+Service (Used Car Listing)
+FAQ (2 Qs)
+BlogPosting
+Sitemap must include all routes.
+Proper heading structure: <h1>, <h2>, <section>, <footer>.
+Mobile-friendly <meta name="viewport">.
+All content crawlable (no hidden JS-only content).
+✅ ACCEPTANCE CRITERIA
+Homepage search bar visible above the fold (desktop & mobile).
+Sell form responsive and easy to use.
+Throttle Talk and City pages load cleanly.
+JSON-LD schema is valid (no syntax errors).
+Sitemap works and includes all routes.
+Lighthouse: SEO score ≥ 90, accessibility score ≥ 90.
+README includes:
+How to run (npm install && npm run dev)
+Short explanation for non-tech founder
+Link to live Replit preview
+🧩 WHAT TO DO WHEN DONE
+Create branch → feat/ui-seo-ux-fix
+Deploy preview
+Add 3 screenshots:
+Desktop homepage
+Mobile homepage
+Sell page stepper
+Write README and PR summary with:
+What’s built
+Preview URL
+Simple review instructions
+💬 START NOW
+When you begin, reply in console/chat with:
+✅ Branch name
+🧠 Framework (Next.js or React)
+📂 Files you’ll create
+⏱️ ETA (e.g., “8 hours — preview ready today”)
+Keep the UI clean, responsive, and SEO-ready.
+Do not use complex animations — focus on speed, accessibility, and clarity.
+✅ END PROMPT
