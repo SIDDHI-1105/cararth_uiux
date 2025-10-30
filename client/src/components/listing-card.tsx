@@ -14,6 +14,7 @@ interface ListingCardProps {
   city: string;
   sellerType?: "verified" | "dealer" | "private";
   isVerified?: boolean;
+  listingSource?: "ethical_ai" | "exclusive_dealer" | "user_direct";
 }
 
 export function ListingCard({
@@ -28,6 +29,7 @@ export function ListingCard({
   city,
   sellerType = "private",
   isVerified = false,
+  listingSource = "user_direct",
 }: ListingCardProps) {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-IN", {
@@ -41,6 +43,29 @@ export function ListingCard({
     if (!km) return "N/A";
     return `${km.toLocaleString("en-IN")} km`;
   };
+
+  const getSourceBadge = () => {
+    switch (listingSource) {
+      case "ethical_ai":
+        return {
+          text: "🧠 CarArthX Ethical AI",
+          className: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
+        };
+      case "exclusive_dealer":
+        return {
+          text: "🤝 CarArthX Exclusive Dealer",
+          className: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
+        };
+      case "user_direct":
+      default:
+        return {
+          text: "👤 CarArthX User",
+          className: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
+        };
+    }
+  };
+
+  const sourceBadge = getSourceBadge();
 
   return (
     <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200 border border-gray-200 dark:border-gray-800" data-testid={`card-listing-${id}`}>
@@ -56,6 +81,10 @@ export function ListingCard({
                 e.currentTarget.src = "https://placehold.co/400x300/e5e7eb/6b7280?text=No+Image";
               }}
             />
+            {/* Source Badge */}
+            <div className={`absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-bold ${sourceBadge.className}`} data-testid="badge-source">
+              {sourceBadge.text}
+            </div>
             {isVerified && (
               <div className="absolute top-2 right-2 bg-green-600 text-white px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
                 <ShieldCheck className="w-3 h-3" />

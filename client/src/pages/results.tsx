@@ -6,6 +6,7 @@ import Navbar from "@/components/navbar";
 import { FilterPanel, FilterState } from "@/components/filter-panel";
 import { ListingCard } from "@/components/listing-card";
 import { SkeletonCard } from "@/components/skeleton-card";
+import { BadgeLegend } from "@/components/badge-legend";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, SlidersHorizontal } from "lucide-react";
@@ -54,6 +55,7 @@ export default function Results() {
 
   const [sortBy, setSortBy] = useState("price-low");
   const [showFilters, setShowFilters] = useState(false);
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
 
   // Fetch cars based on filters
   const { data: cars = [], isLoading, error } = useQuery<any[]>({
@@ -81,11 +83,18 @@ export default function Results() {
     },
   });
 
-  // Sort cars
+  // Filter by source and sort cars
   const sortedCars = useMemo(() => {
     if (!cars.length) return [];
     
-    return [...cars].sort((a, b) => {
+    // Filter by source type
+    let filtered = cars;
+    if (sourceFilter !== "all") {
+      filtered = cars.filter(car => car.listingSource === sourceFilter);
+    }
+    
+    // Sort filtered results
+    return [...filtered].sort((a, b) => {
       switch (sortBy) {
         case "price-low":
           return parseFloat(a.price) - parseFloat(b.price);
@@ -99,7 +108,7 @@ export default function Results() {
           return 0;
       }
     });
-  }, [cars, sortBy]);
+  }, [cars, sortBy, sourceFilter]);
 
   const handleFilterChange = (newFilters: FilterState) => {
     setFilters(newFilters);
@@ -130,6 +139,59 @@ export default function Results() {
             <p className="text-gray-600 dark:text-gray-400">
               Showing {sortedCars.length} {sortedCars.length === 1 ? "result" : "results"}
             </p>
+          </div>
+
+          {/* Badge Legend */}
+          <BadgeLegend />
+
+          {/* Source Filter Buttons */}
+          <div className="mb-6">
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSourceFilter("all")}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                  sourceFilter === "all"
+                    ? "bg-primary text-primary-foreground shadow-md"
+                    : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                }`}
+                data-testid="filter-all"
+              >
+                All Listings
+              </button>
+              <button
+                onClick={() => setSourceFilter("ethical_ai")}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                  sourceFilter === "ethical_ai"
+                    ? "bg-green-600 text-white shadow-md"
+                    : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50"
+                }`}
+                data-testid="filter-ethical-ai"
+              >
+                🧠 Ethical AI
+              </button>
+              <button
+                onClick={() => setSourceFilter("exclusive_dealer")}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                  sourceFilter === "exclusive_dealer"
+                    ? "bg-blue-600 text-white shadow-md"
+                    : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50"
+                }`}
+                data-testid="filter-dealer"
+              >
+                🤝 Dealer Listings
+              </button>
+              <button
+                onClick={() => setSourceFilter("user_direct")}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                  sourceFilter === "user_direct"
+                    ? "bg-orange-600 text-white shadow-md"
+                    : "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-orange-900/50"
+                }`}
+                data-testid="filter-user"
+              >
+                👤 User Listings
+              </button>
+            </div>
           </div>
 
           <div className="flex flex-col lg:flex-row gap-6">
@@ -267,6 +329,7 @@ export default function Results() {
                       city={car.city || car.location || "India"}
                       isVerified={car.verificationStatus === "approved" || car.isVerified}
                       sellerType={car.isVerified ? "verified" : "private"}
+                      listingSource={car.listingSource || "user_direct"}
                     />
                   ))}
                 </div>

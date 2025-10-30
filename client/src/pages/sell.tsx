@@ -204,23 +204,28 @@ export default function SellPage() {
               <div className="text-center py-8">
                 <div className="mb-6">
                   <CheckCircle2 className="w-16 h-16 text-green-600 mx-auto mb-4" />
-                  <h3 className="text-2xl font-bold mb-2">Success!</h3>
+                  <h3 className="text-2xl font-bold mb-2">🎉 Your car listed as CarArthX User!</h3>
                   <p className="text-muted-foreground">
-                    Your car listing is now live and verified by AI. Buyers will start seeing it shortly.
+                    Your listing is now live on CarArth with the 👤 CarArthX User badge. Buyers can find it in the search results!
                   </p>
                 </div>
                 <div className="space-y-3">
-                  <Badge variant="outline" className="text-sm">
-                    ✅ AI-Verified Listing
-                  </Badge>
-                  <Badge variant="outline" className="text-sm">
-                    🚀 Multi-Platform Distribution
-                  </Badge>
-                  <Badge variant="outline" className="text-sm">
-                    🔒 Secure & Trusted
-                  </Badge>
+                  <div className="inline-flex items-center gap-2 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 px-4 py-2 rounded-full font-semibold text-sm">
+                    👤 CarArthX User
+                  </div>
+                  <div className="flex flex-wrap justify-center gap-3 mt-4">
+                    <Badge variant="outline" className="text-sm">
+                      ✅ AI-Verified
+                    </Badge>
+                    <Badge variant="outline" className="text-sm">
+                      🚀 Equal Visibility
+                    </Badge>
+                    <Badge variant="outline" className="text-sm">
+                      🔒 Secure & Trusted
+                    </Badge>
+                  </div>
                 </div>
-                <Button className="mt-6" onClick={() => window.location.href = '/'} data-testid="button-view-listings">
+                <Button className="mt-6" onClick={() => window.location.href = '/results'} data-testid="button-view-listings">
                   View All Listings
                 </Button>
               </div>
