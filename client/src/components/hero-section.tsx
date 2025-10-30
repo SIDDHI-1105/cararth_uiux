@@ -52,8 +52,18 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
 
   const handleSearch = () => {
     if (redirectToResults) {
-      // Navigate to /results page
-      setLocation('/results');
+      // Build query params from filters
+      const params = new URLSearchParams();
+      if (brand && brand !== "all") params.set("brand", brand);
+      if (budget && budget !== "all") params.set("budget", budget);
+      if (city && city !== "all") params.set("city", city);
+      if (fuelType && fuelType !== "all") params.set("fuelType", fuelType);
+      
+      const queryString = params.toString();
+      const path = queryString ? `/results?${queryString}` : '/results';
+      
+      // Navigate to /results page with filters
+      setLocation(path);
     } else {
       // Use the inline search handler
       onSearch({ 

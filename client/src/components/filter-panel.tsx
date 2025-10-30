@@ -7,6 +7,7 @@ import { X, SlidersHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export interface FilterState {
+  brand?: string;
   priceMin: number;
   priceMax: number;
   fuelType: string;
@@ -37,6 +38,7 @@ export function FilterPanel({ filters, onChange, onSearch, isCollapsed = false, 
 
   const handleClearAll = () => {
     onChange({
+      brand: "all",
       priceMin: 0,
       priceMax: 5000000,
       fuelType: "all",
@@ -49,6 +51,7 @@ export function FilterPanel({ filters, onChange, onSearch, isCollapsed = false, 
 
   const getActiveFiltersCount = () => {
     let count = 0;
+    if (filters.brand && filters.brand !== "all") count++;
     if (filters.priceMin > 0 || filters.priceMax < 5000000) count++;
     if (filters.fuelType !== "all") count++;
     if (filters.transmission !== "all") count++;
@@ -96,6 +99,14 @@ export function FilterPanel({ filters, onChange, onSearch, isCollapsed = false, 
       {/* Active Filters */}
       {activeCount > 0 && (
         <div className="flex flex-wrap gap-2" data-testid="active-filters-chips">
+          {filters.brand && filters.brand !== "all" && (
+            <Badge variant="secondary" className="gap-1">
+              {filters.brand}
+              <button onClick={() => onChange({ ...filters, brand: "all" })}>
+                <X className="w-3 h-3" />
+              </button>
+            </Badge>
+          )}
           {(filters.priceMin > 0 || filters.priceMax < 5000000) && (
             <Badge variant="secondary" className="gap-1">
               ₹{(filters.priceMin / 100000).toFixed(1)}L - ₹{(filters.priceMax / 100000).toFixed(1)}L
@@ -130,6 +141,29 @@ export function FilterPanel({ filters, onChange, onSearch, isCollapsed = false, 
           )}
         </div>
       )}
+
+      {/* Brand */}
+      <div className="space-y-2">
+        <Label htmlFor="brand" className="text-sm font-medium">Brand</Label>
+        <Select value={filters.brand || "all"} onValueChange={(value) => onChange({ ...filters, brand: value })}>
+          <SelectTrigger id="brand" data-testid="select-brand">
+            <SelectValue placeholder="All Brands" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Brands</SelectItem>
+            <SelectItem value="Maruti Suzuki">Maruti Suzuki</SelectItem>
+            <SelectItem value="Hyundai">Hyundai</SelectItem>
+            <SelectItem value="Tata">Tata</SelectItem>
+            <SelectItem value="Mahindra">Mahindra</SelectItem>
+            <SelectItem value="Honda">Honda</SelectItem>
+            <SelectItem value="Toyota">Toyota</SelectItem>
+            <SelectItem value="Kia">Kia</SelectItem>
+            <SelectItem value="MG">MG</SelectItem>
+            <SelectItem value="Renault">Renault</SelectItem>
+            <SelectItem value="Nissan">Nissan</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* Price Range */}
       <div className="space-y-3">

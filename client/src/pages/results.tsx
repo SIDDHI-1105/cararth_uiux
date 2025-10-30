@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { SEOHead } from "@/components/seo-head";
@@ -16,6 +16,7 @@ export default function Results() {
   const currentYear = new Date().getFullYear();
   
   const [filters, setFilters] = useState<FilterState>({
+    brand: "all",
     priceMin: 0,
     priceMax: 5000000,
     fuelType: "all",
@@ -25,6 +26,32 @@ export default function Results() {
     city: "all",
   });
 
+  // Parse URL query params on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const newFilters: Partial<FilterState> = {};
+    
+    if (params.has("brand")) {
+      newFilters.brand = params.get("brand")!;
+    }
+    if (params.has("city")) {
+      newFilters.city = params.get("city")!;
+    }
+    if (params.has("fuelType")) {
+      newFilters.fuelType = params.get("fuelType")!;
+    }
+    if (params.has("budget")) {
+      const budget = params.get("budget")!;
+      const [min, max] = budget.split("-").map(Number);
+      if (min) newFilters.priceMin = min;
+      if (max && max !== 99999999) newFilters.priceMax = max;
+    }
+    
+    if (Object.keys(newFilters).length > 0) {
+      setFilters(prev => ({ ...prev, ...newFilters }));
+    }
+  }, []);
+
   const [sortBy, setSortBy] = useState("price-low");
   const [showFilters, setShowFilters] = useState(false);
 
@@ -33,6 +60,7 @@ export default function Results() {
     queryKey: ["/api/marketplace/search", filters],
     queryFn: async () => {
       const searchFilters: any = {
+        brand: filters.brand && filters.brand !== "all" ? filters.brand : undefined,
         priceMin: filters.priceMin > 0 ? filters.priceMin : undefined,
         priceMax: filters.priceMax < 5000000 ? filters.priceMax : undefined,
         fuelType: filters.fuelType !== "all" ? [filters.fuelType] : undefined,
