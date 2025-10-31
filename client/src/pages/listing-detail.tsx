@@ -153,7 +153,7 @@ export default function ListingDetail() {
         title={`${carTitle} for Sale in ${car.city || "India"} | CarArth`}
         description={`Buy ${carTitle} - ₹${carPrice}. ${car.fuelType || "Petrol"}, ${car.transmission || "Manual"}, ${car.mileage || car.kmDriven || "N/A"} km. AI-verified listing on CarArth.`}
         keywords={`${car.make} ${car.model}, used ${car.make} ${car.year}, buy used cars ${car.city}, ${car.fuelType} cars`}
-        canonical={`https://cararth.com/listing/${id}`}
+        canonical={`https://www.cararth.com/listing/${id}`}
         structuredData={structuredData}
       />
 

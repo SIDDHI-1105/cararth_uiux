@@ -98,7 +98,7 @@ export function CityLandingPage({ cityData }: CityLandingPageProps) {
         title={`Used Cars in ${cityData.name} | CarArth - AI-Verified Listings`}
         description={cityData.description}
         keywords={cityData.keywords}
-        canonical={`https://cararth.com/used-cars-${cityData.slug}`}
+        canonical={`https://www.cararth.com/used-cars-${cityData.slug}`}
         structuredData={structuredData}
       />
       

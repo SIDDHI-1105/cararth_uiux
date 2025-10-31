@@ -202,7 +202,7 @@ export default function CommunityPage() {
         ogImage={communityImage}
         ogType="website"
         structuredData={structuredData}
-        canonical="https://cararth.com/community"
+        canonical="https://www.cararth.com/community"
       />
 
       <div className="container mx-auto px-4 py-8" data-testid="community-page">

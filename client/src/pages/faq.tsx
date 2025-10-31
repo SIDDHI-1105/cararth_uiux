@@ -43,7 +43,7 @@ export default function FAQPage() {
         description="Find answers to common questions about CarArth's AI-first platform for selling used cars across India. Learn about syndication, green listings, and more."
         keywords="CarArth FAQ, used car selling, car syndication, green listings, AI platform, car marketplace India"
         structuredData={faqStructuredData}
-        canonical="https://cararth.com/faq"
+        canonical="https://www.cararth.com/faq"
       />
       
       <div className="bg-gradient-to-b from-blue-50 to-white dark:from-blue-950/20 dark:to-background">

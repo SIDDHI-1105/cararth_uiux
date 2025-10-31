@@ -30,6 +30,16 @@ app.use(requestIdMiddleware);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Redirect non-www to www for canonical URL consistency
+app.use((req, res, next) => {
+  const host = req.headers.host || '';
+  if (host.startsWith('cararth.com') && !host.startsWith('www.')) {
+    const protocol = req.headers['x-forwarded-proto'] || 'https';
+    return res.redirect(301, `${protocol}://www.${host}${req.url}`);
+  }
+  next();
+});
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;

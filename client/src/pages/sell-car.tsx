@@ -233,7 +233,7 @@ export default function SellCar() {
         keywords="sell car online India, car selling platform, list car for sale, OLX car posting, Cars24 dealer, CarDekho listing, sell used car, car syndication India"
         ogType="website"
         structuredData={structuredData}
-        canonical="https://cararth.com/sell-your-car"
+        canonical="https://www.cararth.com/sell-your-car"
       />
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         

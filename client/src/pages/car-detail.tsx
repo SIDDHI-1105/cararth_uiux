@@ -107,7 +107,7 @@ export default function CarDetail() {
           mileage: car.mileage,
           price: car.price
         })}
-        canonical={typeof window !== 'undefined' ? window.location.href : `https://cararth.com/car/${car.id}`}
+        canonical={typeof window !== 'undefined' ? window.location.href : `https://www.cararth.com/car/${car.id}`}
       />
       <div className="max-w-4xl mx-auto p-6">
         <Link href="/">

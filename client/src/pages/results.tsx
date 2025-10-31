@@ -124,7 +124,7 @@ export default function Results() {
         title="Used Cars for Sale in India | CarArth Search Results"
         description="Browse verified used cars on CarArth. No paid listings, no bias — just AI-verified cars from across India."
         keywords="used cars for sale, buy used cars India, verified car listings, AI-verified cars, second hand cars"
-        canonical="https://cararth.com/results"
+        canonical="https://www.cararth.com/results"
       />
       
       <Navbar />

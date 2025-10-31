@@ -127,7 +127,7 @@ export default function SellPage() {
         title="Sell Your Car - CarArth | AI-Verified Listings"
         description="Sell your used car on CarArth. Free AI-verified listings, reach buyers across India, no paid promotions. List once, reach everywhere."
         keywords="sell car online, sell used car India, car listing, free car listing, AI verified car sale"
-        canonical="https://cararth.com/sell"
+        canonical="https://www.cararth.com/sell"
         structuredData={structuredData}
       />
       
