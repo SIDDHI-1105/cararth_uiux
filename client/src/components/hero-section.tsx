@@ -77,25 +77,25 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
   };
 
   return (
-    <section className="bg-gradient-to-b from-background via-accent/5 to-background min-h-[60vh] flex items-center justify-center px-4 py-8 md:py-12">
+    <section className="bg-gradient-to-b from-background via-accent/5 to-background px-4 py-6 md:py-8">
       <div className="max-w-6xl mx-auto w-full">
         
         {/* Compact Headline */}
-        <div className="text-center mb-6">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 text-foreground">
+        <div className="text-center mb-4">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 text-foreground">
             Find Your Perfect Car
           </h1>
-          <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
-            Search <span className="font-semibold text-foreground">{statsLoading ? '...' : `${heroStats?.totalListings || 0}+`}</span> verified listings from dealers, platforms & individual sellers
+          <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl mx-auto">
+            Search <span className="font-semibold text-foreground">{statsLoading ? '...' : `${heroStats?.totalListings || 0}+`}</span> verified listings
           </p>
         </div>
 
         {/* Central Search Card */}
-        <Card className="bg-card/95 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-xl border-2 max-w-4xl mx-auto mb-6" data-testid="hero-search-form">
+        <Card className="bg-card/95 backdrop-blur-sm rounded-xl p-3 sm:p-4 shadow-xl border-2 max-w-4xl mx-auto mb-4" data-testid="hero-search-form">
           {/* Desktop: Grid Layout */}
-          <div className="hidden md:grid md:grid-cols-5 gap-3 mb-4">
+          <div className="hidden md:grid md:grid-cols-5 gap-2 mb-3">
             <Select value={brand} onValueChange={setBrand}>
-              <SelectTrigger className="h-12" data-testid="select-brand">
+              <SelectTrigger className="h-10" data-testid="select-brand">
                 <SelectValue placeholder="Brand" />
               </SelectTrigger>
               <SelectContent>
@@ -111,7 +111,7 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
             </Select>
             
             <Select value={city} onValueChange={setCity}>
-              <SelectTrigger className="h-12" data-testid="select-city">
+              <SelectTrigger className="h-10" data-testid="select-city">
                 <SelectValue placeholder="City" />
               </SelectTrigger>
               <SelectContent>
@@ -126,7 +126,7 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
             </Select>
             
             <Select value={budget} onValueChange={setBudget}>
-              <SelectTrigger className="h-12" data-testid="select-budget">
+              <SelectTrigger className="h-10" data-testid="select-budget">
                 <SelectValue placeholder="Price" />
               </SelectTrigger>
               <SelectContent>
@@ -140,7 +140,7 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
             </Select>
             
             <Select value={fuelType} onValueChange={setFuelType}>
-              <SelectTrigger className="h-12" data-testid="select-fuel-type">
+              <SelectTrigger className="h-10" data-testid="select-fuel-type">
                 <SelectValue placeholder="Fuel" />
               </SelectTrigger>
               <SelectContent>
@@ -153,7 +153,7 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
             </Select>
             
             <Select value={year} onValueChange={setYear}>
-              <SelectTrigger className="h-12" data-testid="select-year">
+              <SelectTrigger className="h-10" data-testid="select-year">
                 <SelectValue placeholder="Year" />
               </SelectTrigger>
               <SelectContent>
@@ -166,7 +166,7 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
           </div>
 
           {/* Mobile: Horizontal Scrollable Chips */}
-          <div className="md:hidden mb-4 -mx-2 px-2">
+          <div className="md:hidden mb-3 -mx-2 px-2">
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory">
               <div className="snap-start shrink-0">
                 <Select value={brand} onValueChange={setBrand}>
@@ -249,22 +249,22 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
           <Button 
             onClick={handleSearch}
             disabled={isSearching}
-            className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+            className="w-full h-11 text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
             data-testid="button-search-cars"
           >
-            <Search className="mr-2 h-5 w-5" />
+            <Search className="mr-2 h-4 w-4" />
             {isSearching ? 'Searching...' : 'Search Cars'}
           </Button>
         </Card>
 
         {/* Trust Badges */}
-        <div className="flex flex-wrap justify-center gap-3 max-w-3xl mx-auto">
-          <Badge variant="outline" className="px-4 py-2 bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-300" data-testid="badge-verified">
-            <ShieldCheck className="w-4 h-4 mr-2" />
+        <div className="flex flex-wrap justify-center gap-2 max-w-3xl mx-auto">
+          <Badge variant="outline" className="px-3 py-1 text-xs bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-300" data-testid="badge-verified">
+            <ShieldCheck className="w-3 h-3 mr-1" />
             ✅ Verified by CarArthX
           </Badge>
-          <Badge variant="outline" className="px-4 py-2 bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300" data-testid="badge-no-paid">
-            <Sparkles className="w-4 h-4 mr-2" />
+          <Badge variant="outline" className="px-3 py-1 text-xs bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300" data-testid="badge-no-paid">
+            <Sparkles className="w-3 h-3 mr-1" />
             🤝 No Paid Listings
           </Badge>
         </div>
