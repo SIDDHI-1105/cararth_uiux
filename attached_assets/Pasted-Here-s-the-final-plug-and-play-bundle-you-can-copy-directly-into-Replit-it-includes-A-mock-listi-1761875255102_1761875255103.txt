@@ -1,0 +1,164 @@
+Here’s the final, plug-and-play bundle you can copy directly into Replit — it includes:
+A mock listings data file (/data/listings.json)
+A demo listings page (/pages/demo-listings.js)
+Instructions for integration & testing
+This will let you (or your Replit agent) preview the CarArth Trust Cards live in seconds — no backend required.
+📁 FILE: /data/listings.json
+[
+  {
+    "id": "1",
+    "title": "Hyundai Creta 2021 SX",
+    "make": "Hyundai",
+    "model": "Creta",
+    "variant": "SX",
+    "year": 2021,
+    "price": 1180000,
+    "avg_selling_price": 1200000,
+    "city": "Hyderabad",
+    "kms": 34000,
+    "fuel": "Petrol",
+    "transmission": "Manual",
+    "color": "White",
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1605510230483-97a5a4d63f7b?auto=format&fit=crop&w=800&q=80",
+        "width": 1200,
+        "height": 800,
+        "quality": 0.82
+      }
+    ],
+    "sellerType": "CarArthXDealer",
+    "verified": true,
+    "dateAdded": "2025-10-27T10:00:00Z",
+    "demandIndex": 0.7,
+    "completeness": 0.9,
+    "imageQualityAvg": 0.8,
+    "listingScore": 88.3,
+    "scoreBreakdown": {
+      "price": 98.3,
+      "recency": 90,
+      "demand": 70,
+      "completeness": 90,
+      "imageQuality": 88,
+      "sellerTrust": 90
+    }
+  },
+  {
+    "id": "2",
+    "title": "Maruti Swift 2019 VXi",
+    "make": "Maruti",
+    "model": "Swift",
+    "variant": "VXi",
+    "year": 2019,
+    "price": 650000,
+    "avg_selling_price": 670000,
+    "city": "Nagpur",
+    "kms": 42000,
+    "fuel": "Petrol",
+    "transmission": "Manual",
+    "color": "Red",
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1608653164438-6d158aefc741?auto=format&fit=crop&w=800&q=80",
+        "width": 1280,
+        "height": 800,
+        "quality": 0.78
+      }
+    ],
+    "sellerType": "CarArthXUser",
+    "verified": true,
+    "dateAdded": "2025-10-20T10:00:00Z",
+    "demandIndex": 0.6,
+    "completeness": 0.85,
+    "imageQualityAvg": 0.75,
+    "listingScore": 80.4,
+    "scoreBreakdown": {
+      "price": 97,
+      "recency": 75,
+      "demand": 60,
+      "completeness": 85,
+      "imageQuality": 78,
+      "sellerTrust": 85
+    }
+  },
+  {
+    "id": "3",
+    "title": "Tata Nexon 2022 XZ+",
+    "make": "Tata",
+    "model": "Nexon",
+    "variant": "XZ+",
+    "year": 2022,
+    "price": 1150000,
+    "avg_selling_price": 1170000,
+    "city": "Indore",
+    "kms": 25000,
+    "fuel": "Diesel",
+    "transmission": "Automatic",
+    "color": "Blue",
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1616763816169-09e82aa43c9c?auto=format&fit=crop&w=800&q=80",
+        "width": 1200,
+        "height": 800,
+        "quality": 0.9
+      }
+    ],
+    "sellerType": "CarArthXAI",
+    "verified": true,
+    "dateAdded": "2025-10-29T10:00:00Z",
+    "demandIndex": 0.85,
+    "completeness": 0.95,
+    "imageQualityAvg": 0.9,
+    "listingScore": 93.2,
+    "scoreBreakdown": {
+      "price": 99,
+      "recency": 98,
+      "demand": 85,
+      "completeness": 95,
+      "imageQuality": 90,
+      "sellerTrust": 95
+    }
+  }
+]
+📄 FILE: /pages/demo-listings.js
+import React from "react";
+import ListingCard from "../components/ListingCard";
+import listingsData from "../data/listings.json";
+
+export default function DemoListings() {
+  return (
+    <main className="min-h-screen bg-gray-50 py-10 px-4 md:px-12">
+      <header className="text-center mb-10">
+        <h1 className="text-3xl md:text-5xl font-bold text-gray-900">
+          🚗 CarArth Trust Listings Demo
+        </h1>
+        <p className="text-gray-600 mt-3">
+          Transparent. Data-driven. AI-verified used car listings.
+        </p>
+      </header>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+        {listingsData.map((listing) => (
+          <ListingCard key={listing.id} listing={listing} />
+        ))}
+      </div>
+
+      <footer className="text-center text-gray-500 mt-12 text-sm">
+        Powered by CarArthX Ethical AI · © {new Date().getFullYear()} Aaro7
+        Fintech Pvt. Ltd.
+      </footer>
+    </main>
+  );
+}
+⚙️ Folder Structure Recap
+cararth-replit/
+│
+├── /components/
+│   ├── ListingCard.jsx
+│   └── TrustScoreCard.jsx
+│
+├── /data/
+│   └── listings.json
+│
+└── /pages/
+    └── demo-listings.js
