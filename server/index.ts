@@ -106,7 +106,10 @@ app.use((req, res, next) => {
     
     // Mount SEO routes for server-side rendered pages (MUST be before Vite middleware)
     // These routes serve HTML with meta tags and JSON-LD for search engines
-    app.use(seoRoutes);
+    // Only enabled in production - in development, let Vite handle everything
+    if (process.env.NODE_ENV === 'production') {
+      app.use(seoRoutes);
+    }
     
     // Server-side rendering for car detail pages (for social media crawlers)
     app.get('/car/:id', async (req, res, next) => {
