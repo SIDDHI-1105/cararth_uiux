@@ -1,0 +1,58 @@
+// pages/used-cars-in-hyderabad.js
+import Head from "next/head";
+import Link from "next/link";
+
+export default function CityPage() {
+  const cityMeta = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Used Cars in Hyderabad - Verified Listings",
+    "description": "Find verified used cars in Hyderabad on CarArth. Aggregated from multiple platforms. No paid listings. List once and syndicate across partner networks."
+  };
+
+  return (
+    <>
+      <Head>
+        <title>Used Cars in Hyderabad — Verified Listings | CarArth</title>
+        <meta name="description" content="Find verified used cars in Hyderabad on CarArth. Aggregated from multiple platforms. No paid listings. List once and syndicate across partner networks." />
+        <link rel="canonical" href="https://www.cararth.com/used-cars-in-hyderabad" />
+        <script type="application/ld+json">{JSON.stringify(cityMeta)}</script>
+      </Head>
+
+      <main className="min-h-screen bg-gray-50 p-6">
+        <header className="max-w-5xl mx-auto text-center">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Used cars in Hyderabad — verified listings</h1>
+          <p className="mt-2 text-gray-600">Search AI-verified listings from multiple platforms. No paid promotions — honest prices and verified sellers across Hyderabad.</p>
+        </header>
+
+        <section className="max-w-5xl mx-auto mt-6 grid gap-4">
+          <div className="bg-white p-4 rounded shadow">
+            <h2 className="font-semibold">Why CarArth for Hyderabad buyers</h2>
+            <ul className="mt-2 text-sm text-gray-600 list-disc pl-5">
+              <li>Aggregates listings from partner platforms so you don’t miss options</li>
+              <li>AI-assisted price ranges to help you evaluate fair offers</li>
+              <li>No paid listings — all results are unbiased and verified</li>
+            </ul>
+          </div>
+
+          <div className="bg-white p-4 rounded shadow">
+            <h2 className="font-semibold">Popular models in Hyderabad</h2>
+            <p className="text-sm text-gray-600 mt-2">Creta, City, Baleno, Swift, Nexon — view verified listings and price trends for these models.</p>
+          </div>
+
+          <div className="bg-white p-4 rounded shadow">
+            <h2 className="font-semibold">Sell in Hyderabad</h2>
+            <p className="text-sm text-gray-600 mt-2">List once and syndicate to partner marketplaces and local dealers to increase visibility.</p>
+            <div className="mt-3">
+              <Link href="/sell"><a className="px-4 py-2 bg-green-600 text-white rounded">List your car — Hyderabad</a></Link>
+            </div>
+          </div>
+        </section>
+
+        <footer className="mt-10 text-center text-sm text-gray-500">
+          © {new Date().getFullYear()} CarArth — Local listings in Hyderabad. connect@cararth.com
+        </footer>
+      </main>
+    </>
+  );
+}

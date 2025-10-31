@@ -1,0 +1,69 @@
+// pages/sell.js
+import Head from "next/head";
+import Link from "next/link";
+
+export default function Sell() {
+  const serviceJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "Used Car Listing & Syndication",
+    "provider": {
+      "@type": "Organization",
+      "name": "CarArth",
+      "url": "https://www.cararth.com"
+    },
+    "serviceType": "Used Car Listing and Syndication",
+    "areaServed": "India",
+    "description": "List your used car once on CarArth and syndicate it across partner marketplaces and dealer networks. AI verifies listing details for fair pricing."
+  };
+
+  return (
+    <>
+      <Head>
+        <title>Sell Your Car — List Once, Reach Everywhere | CarArth</title>
+        <meta name="description" content="List your car on CarArth and syndicate it to partner platforms. No paid listings. Verified sellers get fair visibility." />
+        <link rel="canonical" href="https://www.cararth.com/sell" />
+        <script type="application/ld+json">{JSON.stringify(serviceJsonLd)}</script>
+      </Head>
+
+      <main className="min-h-screen bg-gray-50 p-6">
+        <header className="max-w-4xl mx-auto text-center">
+          <h1 className="text-3xl font-bold text-gray-900">Sell your car once. Reach everywhere.</h1>
+          <p className="mt-2 text-gray-600">List on CarArth and choose syndication — your verified listing goes to partner marketplaces and dealer networks, without paid boosts.</p>
+        </header>
+
+        <section className="max-w-4xl mx-auto mt-6 bg-white rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold">Quick 3-step listing</h2>
+
+          <ol className="mt-4 space-y-4">
+            <li>
+              <h3 className="font-medium">Step 1 — Car details</h3>
+              <p className="text-sm text-gray-600">Brand, model, year, kms, fuel and color — keep it honest to help buyers trust your listing.</p>
+            </li>
+            <li>
+              <h3 className="font-medium">Step 2 — Photos & price</h3>
+              <p className="text-sm text-gray-600">Add at least 3 clear photos and a fair asking price. AI will suggest a price range to help you list competitively.</p>
+            </li>
+            <li>
+              <h3 className="font-medium">Step 3 — Publish & syndicate</h3>
+              <p className="text-sm text-gray-600">Choose syndication to partner sites and dealers. Your listing goes live and buyers can contact you directly.</p>
+            </li>
+          </ol>
+
+          <div className="mt-6 flex gap-3">
+            <Link href="/sell-wizard"><a className="px-4 py-3 bg-blue-600 text-white rounded">🚗 Start listing</a></Link>
+            <Link href="/contact"><a className="px-4 py-3 border rounded">Talk to a specialist</a></Link>
+          </div>
+
+          <div className="mt-6 text-sm text-gray-500">
+            <p><strong>Note:</strong> CarArth does not accept paid listing boosts. All listings are shown based on verification, relevance and fairness.</p>
+          </div>
+        </section>
+
+        <footer className="mt-10 text-center text-sm text-gray-500">
+          Questions? Email <a href="mailto:connect@cararth.com" className="underline">connect@cararth.com</a>
+        </footer>
+      </main>
+    </>
+  );
+}

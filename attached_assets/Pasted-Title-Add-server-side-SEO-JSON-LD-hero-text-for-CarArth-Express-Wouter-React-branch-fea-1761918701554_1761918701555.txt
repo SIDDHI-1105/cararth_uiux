@@ -1,0 +1,333 @@
+Title: Add server-side SEO + JSON-LD + hero text for CarArth (Express + Wouter + React) — branch feat/ssr-seo-wouter
+Context (read this once):
+CarArth uses Wouter + React on the client and Express as the server. We need server-side meta tags and JSON-LD for the homepage, /sell, and one sample city page so Google and LLMs can read them immediately (no client-only injection). Also generate sitemap and robots, and run basic tests.
+High-level goals (do all):
+Serve HTML shell per route from Express that includes <title>, canonical <link>, meta description, meta keywords, and JSON-LD in the <head> for:
+/ (homepage)
+/sell
+/used-cars-hyderabad (sample city page)
+Provide a reusable renderShell({ meta, bodyHtml }) function and use it in Express route handlers for the three routes above.
+Add robots.txt and public/sitemap.xml.
+Commit changes to branch feat/ssr-seo-wouter and open a PR.
+Run verification steps (curl, view head HTML, and simulate GSC live-test instructions). Provide screenshots and short plain-English summary.
+Files to create / update (exact)
+server.js (or update existing Express server)
+lib/renderShell.js (new helper)
+routes/seoRoutes.js (new — route handlers for /, /sell, /used-cars-hyderabad)
+public/robots.txt
+public/sitemap.xml
+Update README with run/test instructions
+1) Add lib/renderShell.js (paste this file)
+// lib/renderShell.js
+// Simple HTML shell generator to inject meta and JSON-LD server-side.
+// Usage: const html = renderShell({ meta, jsonLdScripts, bodyHtml });
+function escapeHtml(s) {
+  return String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function buildJsonLdScripts(jsonLdArray = []) {
+  return (jsonLdArray || [])
+    .map((obj) => {
+      try {
+        return `<script type="application/ld+json">${JSON.stringify(obj)}</script>`;
+      } catch (e) {
+        return "";
+      }
+    })
+    .join("\n");
+}
+
+function renderShell({ meta = {}, jsonLd = [], bodyHtml = "", initialState = {} } = {}) {
+  const title = escapeHtml(meta.title || "CarArth");
+  const description = escapeHtml(meta.description || "CarArth — trusted used car search.");
+  const canonical = escapeHtml(meta.canonical || "https://www.cararth.com/");
+  const keywords = escapeHtml(meta.keywords || "used car search, verified cars, no paid listings, car syndication");
+  const jsonLdScripts = buildJsonLdScripts(jsonLd);
+
+  // Minimal CSS reset and container for mounting React client (if present).
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>${title}</title>
+    <meta name="description" content="${description}" />
+    <meta name="keywords" content="${keywords}" />
+    <link rel="canonical" href="${canonical}" />
+    ${jsonLdScripts}
+    <style>
+      /* lightweight styles to avoid FOUC if needed */
+      body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:#fff; color:#111; }
+      #root { min-height:100vh; }
+    </style>
+  </head>
+  <body>
+    <div id="root">${bodyHtml}</div>
+    <script>
+      // pass initial state to client if needed
+      window.__CARARTH_INITIAL_STATE = ${JSON.stringify(initialState || {})};
+    </script>
+    <!-- Client bundle mount (existing SPA mount script should be included in your app build) -->
+    <script src="/client.bundle.js" defer></script>
+  </body>
+</html>`;
+}
+
+module.exports = { renderShell };
+2) Add routes/seoRoutes.js (paste this file)
+// routes/seoRoutes.js
+const express = require("express");
+const router = express.Router();
+const { renderShell } = require("../lib/renderShell");
+
+// JSON-LD blocks (editable)
+const ORG_JSON = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "CarArth",
+  "url": "https://www.cararth.com",
+  "description": "CarArth — a trust-first used car search platform. Aggregates verified listings from multiple sources. No paid listings. List once and syndicate across partner networks.",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://www.cararth.com/search?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+};
+
+const FAQ_JSON = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Does CarArth charge for listings?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. CarArth does not accept paid listing boosts. We prioritize verified listings and fair visibility for sellers."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How does syndication work?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "List once on CarArth and opt into syndication. We distribute your verified listing to partner marketplaces and dealer networks."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What role does AI play?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "AI verifies registration details, estimates fair price ranges, and flags listing issues. AI supports trust and clarity — it does not boost paid listings."
+      }
+    }
+  ]
+};
+
+// Route: homepage
+router.get("/", (req, res) => {
+  const meta = {
+    title: "CarArth — One Trusted Place for Every Verified Car",
+    description: "Find verified used cars from multiple platforms in one trusted place. No paid listings. Sellers: list once and syndicate nationwide.",
+    canonical: "https://www.cararth.com/",
+    keywords: "used car search India, verified used cars, no paid listings, car syndication, AI price insights"
+  };
+
+  const heroHtml = `
+    <header style="padding:24px;max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:center">
+      <div style="display:flex;align-items:center;gap:12px">
+        <img src="/logo.svg" alt="CarArth logo" style="height:44px">
+      </div>
+      <nav style="font-size:14px">
+        <a href="/" style="margin-right:12px">Buy</a>
+        <a href="/sell" style="margin-right:12px">Sell</a>
+        <a href="/throttle-talk" style="margin-right:12px">Throttle Talk</a>
+      </nav>
+    </header>
+    <section style="text-align:center;padding:40px 20px;max-width:900px;margin:0 auto">
+      <h1 style="font-size:28px;margin:0 0 12px">One trusted place for every verified car</h1>
+      <p style="color:#444;margin:0 0 18px">Verified listings from multiple platforms · List once · No paid listings · AI-assisted price insights</p>
+      <form action="/results" method="get" style="display:flex;gap:8px;justify-content:center;margin-top:12px">
+        <input name="q" placeholder="Search by make, model or city (e.g., Creta 2021 Hyderabad)" style="padding:12px;border-radius:8px;border:1px solid #ddd;width:60%">
+        <button style="padding:12px 18px;background:#1657FF;color:#fff;border-radius:8px;border:none;">🔍 Search verified cars</button>
+      </form>
+    </section>
+  `;
+
+  const html = renderShell({
+    meta,
+    jsonLd: [ORG_JSON, FAQ_JSON],
+    bodyHtml: heroHtml
+  });
+  res.send(html);
+});
+
+// Route: sell landing
+router.get("/sell", (req, res) => {
+  const meta = {
+    title: "Sell Your Car — List Once, Reach Everywhere | CarArth",
+    description: "List your car on CarArth and syndicate it to partner platforms. No paid listings. Verified sellers get fair visibility.",
+    canonical: "https://www.cararth.com/sell"
+  };
+
+  const serviceJson = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "Used Car Listing & Syndication",
+    "provider": { "@type": "Organization", "name": "CarArth", "url": "https://www.cararth.com" },
+    "serviceType": "Used Car Listing and Syndication",
+    "description": "List once on CarArth and syndicate to partner platforms and dealers. Verified listings and AI-assisted price guidance."
+  };
+
+  const sellHtml = `
+    <section style="max-width:800px;margin:40px auto;padding:20px;background:#fff;border-radius:10px">
+      <h1 style="font-size:26px;margin-bottom:8px">Sell your car once. Reach everywhere.</h1>
+      <p style="color:#444">List on CarArth and choose syndication — your verified listing goes to partner marketplaces and dealer networks, without paid boosts.</p>
+      <ol style="margin-top:12px;color:#444">
+        <li><strong>Step 1:</strong> Add basic car details (brand, model, year, kms).</li>
+        <li><strong>Step 2:</strong> Upload 3+ photos and set your price (AI suggests fair range).</li>
+        <li><strong>Step 3:</strong> Publish and opt into syndication to partner platforms.</li>
+      </ol>
+      <p style="margin-top:12px"><a href="/sell-wizard" style="background:#1657FF;color:#fff;padding:10px 14px;border-radius:8px;text-decoration:none">🚗 Start listing</a></p>
+    </section>
+  `;
+
+  const html = renderShell({
+    meta,
+    jsonLd: [ORG_JSON, serviceJson],
+    bodyHtml: sellHtml
+  });
+
+  res.send(html);
+});
+
+// Route: sample city page (Hyderabad)
+router.get("/used-cars-hyderabad", (req, res) => {
+  const meta = {
+    title: "Used Cars in Hyderabad — Verified Listings | CarArth",
+    description: "Find verified used cars in Hyderabad on CarArth. Aggregated from partner platforms. No paid listings. List once and syndicate across partner networks.",
+    canonical: "https://www.cararth.com/used-cars-hyderabad"
+  };
+
+  const cityJson = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Used Cars in Hyderabad - Verified Listings",
+    "description": meta.description
+  };
+
+  const cityHtml = `
+    <section style="max-width:900px;margin:40px auto;padding:20px">
+      <h1 style="font-size:24px;margin-bottom:8px">Used cars in Hyderabad — verified listings</h1>
+      <p style="color:#444">Search AI-verified listings from multiple platforms. No paid promotions — honest prices and verified sellers across Hyderabad.</p>
+      <div style="margin-top:14px;background:#fff;padding:12px;border-radius:8px">
+        <h3 style="margin:0 0 8px">Why CarArth in Hyderabad</h3>
+        <ul style="margin:0;padding-left:18px;color:#444">
+          <li>Aggregates listings from partner platforms so you don’t miss options</li>
+          <li>AI price guidance to evaluate fair offers</li>
+          <li>No paid listings — unbiased, verified results</li>
+        </ul>
+      </div>
+    </section>
+  `;
+
+  const html = renderShell({
+    meta,
+    jsonLd: [ORG_JSON, cityJson],
+    bodyHtml: cityHtml
+  });
+
+  res.send(html);
+});
+
+module.exports = router;
+3) Update server.js to use routes/seoRoutes.js
+Find your Express app bootstrap (likely server.js or app.js) and add:
+// server.js (or app.js) — partial snippet
+const express = require("express");
+const app = express();
+const path = require("path");
+
+app.use(express.static(path.join(__dirname, "public"))); // serve logo, sitemap, robots
+
+const seoRoutes = require("./routes/seoRoutes");
+app.use("/", seoRoutes);
+
+// keep your existing SPA mount route for other paths (if any)
+// e.g., app.get('*', (req,res) => res.sendFile(...)) but ensure seoRoutes above matches specific routes first.
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+4) Add public/robots.txt (paste file)
+User-agent: *
+Disallow:
+
+Sitemap: https://www.cararth.com/sitemap.xml
+5) Add public/sitemap.xml (paste file)
+Create a basic sitemap with the main demo routes. Update later to include dynamic listing URLs.
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+ <url>
+  <loc>https://www.cararth.com/</loc>
+  <lastmod>2025-10-31</lastmod>
+  <changefreq>daily</changefreq>
+ </url>
+ <url>
+  <loc>https://www.cararth.com/sell</loc>
+  <lastmod>2025-10-31</lastmod>
+  <changefreq>weekly</changefreq>
+ </url>
+ <url>
+  <loc>https://www.cararth.com/used-cars-hyderabad</loc>
+  <lastmod>2025-10-31</lastmod>
+  <changefreq>weekly</changefreq>
+ </url>
+ <!-- Add additional city pages here -->
+</urlset>
+6) README update (short instructions for non-tech person)
+Add to README.md a short section:
+SEO & JSON-LD server-side injection:
+- Branch: feat/ssr-seo-wouter
+- Start server: npm install && npm run start
+- Check homepage HTML: curl -L https://localhost:3000/ | sed -n '1,200p'
+- Sitemap at: https://<replit-preview>/sitemap.xml
+- Robots at: https://<replit-preview>/robots.txt
+7) Tests to run (agent must run and attach results/screenshots)
+A. Local header & HTML test
+Run these commands and attach the outputs/screenshots in the PR:
+# Check headers
+curl -I -L http://localhost:3000/
+
+# Check the first 200 lines of HTML for homepage
+curl -L http://localhost:3000/ | sed -n '1,200p'
+
+# Confirm JSON-LD appears in HTML (search for "Organization" or "FAQPage")
+curl -L http://localhost:3000/ | grep -i "FAQPage" -n || true
+curl -L http://localhost:3000/ | grep -i "Application/ld+json" -n || true
+B. Validate sitemap & robots
+Open http://localhost:3000/sitemap.xml and http://localhost:3000/robots.txt in browser and screenshot.
+C. GSC live-test steps (agent to screenshot)
+In Google Search Console, go to URL Inspection → enter https://www.cararth.com/ and click Test Live URL. Attach screenshot of result.
+If “Page can be indexed” or similar, click Request Indexing and take screenshot.
+(If agent cannot access your GSC account, show the HTML output and say: "Ready for GSC TEST: HTML contains meta and JSON-LD". Explain how you (owner) can run the Test Live URL and request indexing.)
+8) Deliverables (what to commit / attach in PR)
+Branch: feat/ssr-seo-wouter with commits.
+Files added/changed (list).
+Screenshots / outputs:
+curl -I header output (homepage)
+curl -L / | sed -n '1,200p' showing <title> and JSON-LD
+screenshot of /sitemap.xml and /robots.txt in preview URL
+screenshot of GSC "Test Live URL" results (or confirmation steps)
+Short plain-English PR description of what changed (3–6 bullets).
+README updated with run/test instructions.
+9) Acceptance criteria (what I will verify after PR)
+ Homepage HTML served by Express includes <title>, <meta name="description">, canonical link, and Organization + FAQ JSON-LD.
+ /sell returns Service JSON-LD and meta in HTML.
+ /used-cars-hyderabad returns WebPage JSON-LD and meta in HTML.
+ /sitemap.xml and /robots.txt are accessible.
+ curl checks show meta/JSON-LD in server response (not injected client-side on

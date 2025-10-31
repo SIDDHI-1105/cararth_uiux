@@ -1,0 +1,141 @@
+// pages/index.js
+import Head from "next/head";
+import Link from "next/link";
+
+export default function Home() {
+  const orgJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "CarArth",
+    "url": "https://www.cararth.com",
+    "description": "CarArth — a trust-first used car search platform that aggregates verified listings from multiple sources. No paid listings. Sellers can list once and syndicate across partner networks.",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://www.cararth.com/search?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  };
+
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Does CarArth charge for listings?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. CarArth does not accept paid listing boosts. We prioritize verified listings and fair visibility for sellers."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How does syndication work?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "List once on CarArth and opt into syndication. We distribute your verified listing to partner marketplaces and dealer networks for wider reach."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What role does AI play?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "AI verifies registration details, estimates fair price ranges, and flags listing issues. AI supports trust and clarity—CarArth does not use AI to boost paid listings."
+        }
+      }
+    ]
+  };
+
+  return (
+    <>
+      <Head>
+        <title>CarArth — One Trusted Place for Every Verified Car</title>
+        <meta name="description" content="Find verified used cars from multiple platforms in one trusted place. No paid listings. Sellers: list once and syndicate nationwide. Honest prices, verified sellers." />
+        <meta name="keywords" content="used car search India, verified used cars, no paid listings, car syndication, AI price insights" />
+        <link rel="canonical" href="https://www.cararth.com/" />
+        <script type="application/ld+json">{JSON.stringify(orgJsonLd)}</script>
+        <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
+      </Head>
+
+      <main className="min-h-screen bg-gray-50">
+        <header className="max-w-6xl mx-auto p-6 flex items-center justify-between">
+          <a href="/" className="flex items-center gap-3">
+            <img src="/logo.svg" alt="CarArth logo" style={{height: 44}} />
+            <span className="sr-only">CarArth — home</span>
+          </a>
+          <nav className="space-x-4 text-sm">
+            <Link href="/"><a>Buy</a></Link>
+            <Link href="/sell"><a>Sell</a></Link>
+            <Link href="/throttle-talk"><a>Throttle Talk</a></Link>
+            <Link href="/demo-listings"><a>Demo</a></Link>
+          </nav>
+        </header>
+
+        {/* HERO */}
+        <section className="bg-white py-10">
+          <div className="max-w-5xl mx-auto px-6 text-center">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900">One trusted place for every verified car</h1>
+            <p className="mt-3 text-gray-600 max-w-2xl mx-auto">
+              Verified listings from multiple platforms — post once to reach dealers and buyers across India. No paid listings. Smarter insights for fair pricing.
+            </p>
+
+            {/* Search bar (visual, client-side) */}
+            <form className="mt-6 max-w-2xl mx-auto flex gap-2">
+              <input
+                aria-label="Search cars by model, city or registration"
+                type="search"
+                placeholder="Search by make, model or city (e.g., Creta 2021 Hyderabad)"
+                className="flex-1 px-4 py-3 rounded-lg border focus:outline-none"
+              />
+              <button type="submit" className="px-5 py-3 rounded-lg bg-blue-600 text-white font-semibold">🔍 Search verified cars</button>
+            </form>
+
+            <div className="mt-4 flex flex-wrap justify-center gap-2 text-sm text-gray-700">
+              <span className="px-3 py-1 border rounded-full">✅ No paid listings</span>
+              <span className="px-3 py-1 border rounded-full">🔁 List once · reach multiple platforms</span>
+              <span className="px-3 py-1 border rounded-full">🔎 AI-assisted price insights</span>
+            </div>
+          </div>
+        </section>
+
+        {/* HOW IT WORKS */}
+        <section id="how-it-works" className="max-w-5xl mx-auto p-6">
+          <h2 className="text-xl font-semibold text-gray-800">How CarArth works</h2>
+          <div className="mt-4 grid md:grid-cols-3 gap-4">
+            <article className="p-4 bg-white rounded-lg shadow">
+              <h3 className="font-semibold">1. Search verified cars</h3>
+              <p className="text-gray-600 text-sm mt-2">We aggregate verified listings from multiple sources so you find every option in one place.</p>
+            </article>
+            <article className="p-4 bg-white rounded-lg shadow">
+              <h3 className="font-semibold">2. List once, reach everywhere</h3>
+              <p className="text-gray-600 text-sm mt-2">Sellers post once and choose syndication to partner marketplaces and dealer networks.</p>
+            </article>
+            <article className="p-4 bg-white rounded-lg shadow">
+              <h3 className="font-semibold">3. Fair, transparent insights</h3>
+              <p className="text-gray-600 text-sm mt-2">AI verifies details and estimates fair price ranges — we never accept paid boosts.</p>
+            </article>
+          </div>
+        </section>
+
+        {/* TRUST & QUICK LINKS */}
+        <section className="bg-white py-6">
+          <div className="max-w-5xl mx-auto p-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="text-sm text-gray-700">
+              <strong>Trusted · Transparent · Convenient</strong>
+              <p className="mt-1">Verified listings, syndication for sellers, and unbiased search for buyers.</p>
+            </div>
+            <div className="flex gap-3">
+              <Link href="/sell"><a className="px-4 py-2 bg-green-600 text-white rounded">🚗 List your car — reach every platform</a></Link>
+              <Link href="/demo-listings"><a className="px-4 py-2 border rounded">See demo listings</a></Link>
+            </div>
+          </div>
+        </section>
+
+        <footer className="mt-8 py-6 text-center text-sm text-gray-500">
+          © {new Date().getFullYear()} CarArth — A unit of Aaro7 Fintech Pvt. Ltd. • connect@cararth.com
+        </footer>
+      </main>
+    </>
+  );
+}
