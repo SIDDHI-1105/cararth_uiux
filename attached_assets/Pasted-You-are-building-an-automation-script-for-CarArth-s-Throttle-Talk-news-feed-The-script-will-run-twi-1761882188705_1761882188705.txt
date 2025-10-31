@@ -1,0 +1,76 @@
+You are building an automation script for CarArth's Throttle Talk news feed. The script will run twice daily (9:00 AM IST and 9:00 PM IST) and must:
+
+1) PRIMARY: Call the Perplexity API to generate a Throttle Talk style news article using the exact CarArth format and tone (see format below).  
+2) FALLBACK: If Perplexity fails, call xAI Grok with the same prompt.  
+3) VALIDATION: Ensure all numeric claims are explicitly tied to a cited source. If the model cannot find a verified value, output: "No current official data available for this metric."  
+4) DEDUP: Compare the new article title+first 80 chars with the last 14 days of published posts. If similarity > 85% with any recent post, skip publishing and log "duplicate".  
+5) OUTPUT: Produce Markdown with the following sections and exact structure:
+
+---
+Title line (H1): e.g. `India Used Car Market Grows 15.5% YoY`  
+by [Source Name or "Perplexity AI"] | Category: Market Insights | Date: DD/MM/YYYY
+
+### 📈 Summary:
+3–5 sentences summarizing the top developments (used-car market, OEM performance, policy/EV trends).
+
+### 🔍 Data Highlights:
+- 📊 Market Size: ₹XXB (source)
+- 🚗 Used/New Ratio: X.Xx (source)
+- ⚡ EV Listings: +X% YoY (source)
+- 🏢 Top OEM: [OEM Name] (source)
+
+### 💡 AI Insight:
+3–4 sentences synthesizing implications for dealers/buyers.
+
+### ✅ Actionable Recommendations:
+- 🎯 Dealer: short recommendation
+- 🔋 Seller: short recommendation
+- 🏎️ Buyer: short recommendation
+
+### 📚 Sources:
+- Source 1 — full URL
+- Source 2 — full URL
+- Source 3 — full URL
+
+Closing line:
+"All data reflects the most recent updates available from verified sources. Throttle Talk will continue to refine insights as new data becomes available."
+
+Word count: 280–400 words. Use neutral, humble, analyst tone — not promotional.
+
+6) PUBLISH: POST the Markdown to the CarArth CMS endpoint:
+HTTP POST to `${CMS_ENDPOINT}/api/news` with JSON body:
+{
+  "title": "<title>",
+  "byline": "<byline>",
+  "category": "Market Insights",
+  "date": "DD/MM/YYYY",
+  "markdown": "<full_markdown>",
+  "sources": ["https://...","https://..."],
+  "tags": ["Market Data","Used Cars","Throttle Talk"]
+}
+Use header `Authorization: Bearer ${CMS_API_KEY}`.
+
+7) LOGGING & ERRORS:
+- Write logs to stdout and to a local log file `throttletalk.log`.
+- On API failures use exponential backoff (start 2s, max attempts 5). If both Perplexity & xAI fail, send an error POST to `${ALERT_WEBHOOK}` with the error payload and abort.
+
+8) RATE LIMITS:
+- Limit Perplexity calls to 1 request/second. Respect xAI rate limits similarly.
+
+9) SECRET VARS (set in Replit Secrets with these names):
+- `PERPLEXITY_API_KEY`
+- `XAI_API_KEY`
+- `CMS_ENDPOINT` (e.g., https://cararth.com)
+- `CMS_API_KEY`
+- `ALERT_WEBHOOK` (optional)
+- `NEWS_LOOKBACK_DAYS` (default 14)
+
+10) DEDUP SOURCE: Fetch recent posts from `${CMS_ENDPOINT}/api/news?from=YYYY-MM-DD&limit=100` to compare titles & content.
+
+11) TEST MODE: Provide a `--dry-run` flag that prints the generated Markdown and the API payload without sending it to the CMS.
+
+12) DEPLOYMENT: Provide a scheduler snippet (cron expression) or GitHub Actions yml that runs at **9:00 AM IST and 9:00 PM IST** daily. Convert IST to UTC for cron (IST = UTC+5:30). Use UTC cron times: `03:30` and `15:30` UTC.
+
+--- 
+
+### Example Perplexity Prompt (send as `messages[0].content` or request body):
