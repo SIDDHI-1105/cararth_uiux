@@ -9,6 +9,7 @@ import {
 } from "./errorHandling.js";
 import { setGlobalLogger } from "../shared/logging";
 import { initializeMetricsService } from "./listingMetricsService.js";
+import seoRoutes from "./routes/seoRoutes.js";
 
 const app = express();
 
@@ -102,6 +103,10 @@ app.use((req, res, next) => {
 
     // Add health check endpoint  
     app.get('/health', createHealthCheckHandler());
+    
+    // Mount SEO routes for server-side rendered pages (MUST be before Vite middleware)
+    // These routes serve HTML with meta tags and JSON-LD for search engines
+    app.use(seoRoutes);
     
     // Server-side rendering for car detail pages (for social media crawlers)
     app.get('/car/:id', async (req, res, next) => {
