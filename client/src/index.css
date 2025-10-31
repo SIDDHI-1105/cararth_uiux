@@ -169,6 +169,16 @@
   }
 }
 
+/* Scrollbar Hide for Mobile Horizontal Scrolling */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* Clean Card Design */
 .card {
   @apply bg-card text-card-foreground rounded-lg border;

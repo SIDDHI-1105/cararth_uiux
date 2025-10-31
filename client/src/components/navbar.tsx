@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { AuthDialog } from "@/components/auth-dialog";
 import { ThrottleTalkMegaMenu } from "@/components/throttle-talk-mega-menu";
+import cararthLogo from "@assets/cararth-logo.png";
 
 export default function Navbar() {
   const [location] = useLocation();
@@ -24,16 +25,21 @@ export default function Navbar() {
   return (
     <>
       {/* Launch Status Banner */}
-      <div className="bg-gradient-to-r from-green-600 to-blue-600 text-white py-3 px-4 text-center text-base md:text-lg font-semibold border-b shadow-sm">
-        🚀 <strong>Hyderabad – Live Now!</strong> Authentic listings available | 🔄 <strong>Delhi NCR – Coming Soon</strong> | Expanding across India
+      <div className="bg-gradient-to-r from-green-600 to-blue-600 text-white py-2 px-4 text-center text-sm md:text-base font-semibold border-b shadow-sm">
+        🚀 <strong>Hyderabad – Live Now!</strong> | <strong>Delhi NCR – Coming Soon</strong>
       </div>
-      <nav className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
+      <nav className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center min-h-[90px] md:min-h-[112px] py-4">
+        <div className="flex justify-between items-center h-16 py-2">
           <div className="flex items-center space-x-6">
             <Link href="/" className="flex-shrink-0" data-testid="link-home">
               <div className="flex items-center group">
-                <BrandWordmark variant="header" showTagline={true} className="transition-transform duration-300 hover:scale-105" />
+                <img 
+                  src={cararthLogo} 
+                  alt="CarArth" 
+                  className="h-10 sm:h-11 object-contain transition-transform duration-300 hover:scale-105"
+                  style={{ maxHeight: '44px' }}
+                />
               </div>
             </Link>
           </div>
