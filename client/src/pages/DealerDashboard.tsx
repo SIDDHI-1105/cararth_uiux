@@ -784,112 +784,261 @@ export default function DealerDashboard() {
           <TabsContent value="bulk-upload">
             <Card>
               <CardHeader>
-                <CardTitle>Bulk Vehicle Upload</CardTitle>
-                <CardDescription>
-                  Upload multiple vehicles with images, RC, and insurance documents
+                <CardTitle className="text-2xl">📦 Upload Multiple Cars at Once</CardTitle>
+                <CardDescription className="text-base">
+                  Save time by adding your entire inventory in one go - complete with photos and documents
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                    <Download className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                    <div className="flex-1">
-                      <p className="font-medium text-blue-900 dark:text-blue-100">
-                        Download CSV Template
-                      </p>
-                      <p className="text-sm text-blue-700 dark:text-blue-300">
-                        Format: VIN, Make, Model, Year, Price, Mileage, Fuel Type, Transmission, Owner Count, City, Description
-                      </p>
+                <div className="space-y-6">
+                  {/* Step 1: Download Template */}
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 p-6 rounded-xl border-2 border-blue-200 dark:border-blue-800 shadow-sm">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-xl font-bold">
+                        1
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold text-blue-900 dark:text-blue-100 mb-2 flex items-center gap-2">
+                          <Download className="h-5 w-5" />
+                          Download the Template File
+                        </h3>
+                        <p className="text-blue-800 dark:text-blue-200 mb-3">
+                          This is a simple Excel-like file where you'll enter your car details
+                        </p>
+                        <div className="bg-white dark:bg-gray-900 p-4 rounded-lg mb-3">
+                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            What information you'll need to fill in:
+                          </p>
+                          <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 dark:text-gray-400">
+                            <div>• Chassis Number (VIN)</div>
+                            <div>• Car Brand (e.g., Maruti, Hyundai)</div>
+                            <div>• Model Name</div>
+                            <div>• Year of Manufacture</div>
+                            <div>• Selling Price</div>
+                            <div>• Kilometers Driven</div>
+                            <div>• Fuel Type (Petrol/Diesel)</div>
+                            <div>• Gearbox Type (Manual/Automatic)</div>
+                            <div>• Number of Previous Owners</div>
+                            <div>• City Location</div>
+                          </div>
+                        </div>
+                        <Button
+                          variant="default"
+                          size="lg"
+                          data-testid="button-download-template"
+                          className="bg-blue-600 hover:bg-blue-700"
+                          onClick={() => {
+                            const link = document.createElement("a");
+                            link.href = "/bulk-upload-template.csv";
+                            link.download = "cararth_bulk_upload.csv";
+                            link.click();
+                          }}
+                        >
+                          <Download className="mr-2 h-5 w-5" />
+                          Download Template
+                        </Button>
+                      </div>
                     </div>
-                    <Button
-                      variant="outline"
-                      data-testid="button-download-template"
-                      onClick={() => {
-                        const link = document.createElement("a");
-                        link.href = "/bulk-upload-template.csv";
-                        link.download = "cararth_bulk_upload.csv";
-                        link.click();
-                      }}
-                    >
-                      Download
-                    </Button>
                   </div>
 
-                  <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
-                    <p className="text-sm font-medium text-amber-900 dark:text-amber-100 mb-2">
-                      📋 File Naming Convention:
-                    </p>
-                    <ul className="text-sm text-amber-800 dark:text-amber-200 space-y-1 list-disc list-inside">
-                      <li>Images: <code className="bg-amber-100 dark:bg-amber-900 px-1 rounded">{"{VIN}_1.jpg, {VIN}_2.jpg, {VIN}_3.jpg"}</code> (at least 3)</li>
-                      <li>RC: <code className="bg-amber-100 dark:bg-amber-900 px-1 rounded">{"{VIN}_RC.pdf"}</code> or <code className="bg-amber-100 dark:bg-amber-900 px-1 rounded">{"{VIN}_registration.pdf"}</code></li>
-                      <li>Insurance: <code className="bg-amber-100 dark:bg-amber-900 px-1 rounded">{"{VIN}_insurance.pdf"}</code> or <code className="bg-amber-100 dark:bg-amber-900 px-1 rounded">{"{VIN}_policy.pdf"}</code></li>
-                    </ul>
+                  {/* Step 2: Photo Naming Guide */}
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 p-6 rounded-xl border-2 border-green-200 dark:border-green-800 shadow-sm">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 w-12 h-12 bg-green-600 text-white rounded-full flex items-center justify-center text-xl font-bold">
+                        2
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold text-green-900 dark:text-green-100 mb-2">
+                          📸 How to Name Your Photos & Documents
+                        </h3>
+                        <p className="text-green-800 dark:text-green-200 mb-4">
+                          Name each file using the car's chassis number (VIN) so we know which photos belong to which car
+                        </p>
+                        
+                        <div className="space-y-4">
+                          {/* Photos Example */}
+                          <div className="bg-white dark:bg-gray-900 p-4 rounded-lg">
+                            <p className="font-medium text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
+                              <span className="text-lg">📷</span>
+                              Car Photos (minimum 3 required)
+                            </p>
+                            <div className="bg-green-50 dark:bg-green-950/50 p-3 rounded border border-green-200 dark:border-green-800">
+                              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                <strong>Example:</strong> If your car's VIN is "MA3ERLF1S00A12345", name photos as:
+                              </p>
+                              <div className="space-y-1 text-sm font-mono bg-white dark:bg-gray-900 p-2 rounded">
+                                <div className="text-green-700 dark:text-green-400">✓ MA3ERLF1S00A12345_1.jpg</div>
+                                <div className="text-green-700 dark:text-green-400">✓ MA3ERLF1S00A12345_2.jpg</div>
+                                <div className="text-green-700 dark:text-green-400">✓ MA3ERLF1S00A12345_3.jpg</div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* RC Example */}
+                          <div className="bg-white dark:bg-gray-900 p-4 rounded-lg">
+                            <p className="font-medium text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
+                              <span className="text-lg">📄</span>
+                              Registration Certificate (RC)
+                            </p>
+                            <div className="bg-green-50 dark:bg-green-950/50 p-3 rounded border border-green-200 dark:border-green-800">
+                              <p className="text-sm font-mono bg-white dark:bg-gray-900 p-2 rounded text-green-700 dark:text-green-400">
+                                MA3ERLF1S00A12345_RC.pdf
+                              </p>
+                              <p className="text-xs text-gray-500 mt-2">
+                                (or _registration.pdf also works)
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Insurance Example */}
+                          <div className="bg-white dark:bg-gray-900 p-4 rounded-lg">
+                            <p className="font-medium text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
+                              <span className="text-lg">🛡️</span>
+                              Insurance Policy
+                            </p>
+                            <div className="bg-green-50 dark:bg-green-950/50 p-3 rounded border border-green-200 dark:border-green-800">
+                              <p className="text-sm font-mono bg-white dark:bg-gray-900 p-2 rounded text-green-700 dark:text-green-400">
+                                MA3ERLF1S00A12345_insurance.pdf
+                              </p>
+                              <p className="text-xs text-gray-500 mt-2">
+                                (or _policy.pdf also works)
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                          <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                            <strong>💡 Pro Tip:</strong> Keep all files in one folder on your computer before uploading - makes it easier to select them all at once!
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  <form onSubmit={handleBulkUpload} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="csvFile">1. CSV File (Required)</Label>
-                      <Input
-                        id="csvFile"
-                        data-testid="input-csv-file"
-                        type="file"
-                        accept=".csv"
-                        onChange={(e) => {
-                          setCsvFile(e.target.files?.[0] || null);
-                          setValidationResult(null);
-                        }}
-                        required
-                      />
-                      {csvFile && (
-                        <p className="text-sm text-green-600 dark:text-green-400">
-                          ✓ {csvFile.name}
+                  {/* Step 3: Upload Files */}
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 p-6 rounded-xl border-2 border-purple-200 dark:border-purple-800 shadow-sm">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 w-12 h-12 bg-purple-600 text-white rounded-full flex items-center justify-center text-xl font-bold">
+                        3
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold text-purple-900 dark:text-purple-100 mb-2">
+                          ⬆️ Upload Your Files
+                        </h3>
+                        <p className="text-purple-800 dark:text-purple-200 mb-4">
+                          Now select all the files you've prepared and upload them together
                         </p>
-                      )}
-                    </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="bulkImages">2. Vehicle Images</Label>
-                      <Input
-                        id="bulkImages"
-                        data-testid="input-bulk-images"
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        onChange={(e) => setBulkImages(Array.from(e.target.files || []))}
-                      />
-                      {bulkImages.length > 0 && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {bulkImages.length} image(s) selected
-                        </p>
-                      )}
-                    </div>
+                        <form onSubmit={handleBulkUpload} className="space-y-5">
+                          {/* CSV Upload */}
+                          <div className="bg-white dark:bg-gray-900 p-4 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-purple-400 dark:hover:border-purple-600 transition-colors">
+                            <Label htmlFor="csvFile" className="text-base font-semibold flex items-center gap-2 mb-2">
+                              <span className="text-2xl">📊</span>
+                              Your Completed Template File
+                            </Label>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                              Upload the CSV file you filled with your car details
+                            </p>
+                            <Input
+                              id="csvFile"
+                              data-testid="input-csv-file"
+                              type="file"
+                              accept=".csv"
+                              className="cursor-pointer"
+                              onChange={(e) => {
+                                setCsvFile(e.target.files?.[0] || null);
+                                setValidationResult(null);
+                              }}
+                              required
+                            />
+                            {csvFile && (
+                              <div className="mt-3 p-2 bg-green-50 dark:bg-green-950/30 rounded flex items-center gap-2">
+                                <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                <span className="text-sm text-green-700 dark:text-green-300 font-medium">
+                                  {csvFile.name}
+                                </span>
+                              </div>
+                            )}
+                          </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="bulkDocuments">3. RC & Insurance Documents (PDF)</Label>
-                      <Input
-                        id="bulkDocuments"
-                        data-testid="input-bulk-documents"
-                        type="file"
-                        accept=".pdf"
-                        multiple
-                        onChange={(e) => setBulkDocuments(Array.from(e.target.files || []))}
-                      />
-                      {bulkDocuments.length > 0 && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {bulkDocuments.length} document(s) selected
-                        </p>
-                      )}
-                    </div>
+                          {/* Images Upload */}
+                          <div className="bg-white dark:bg-gray-900 p-4 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-purple-400 dark:hover:border-purple-600 transition-colors">
+                            <Label htmlFor="bulkImages" className="text-base font-semibold flex items-center gap-2 mb-2">
+                              <span className="text-2xl">📷</span>
+                              Car Photos
+                            </Label>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                              Select all your car images at once (they should be named as shown above)
+                            </p>
+                            <Input
+                              id="bulkImages"
+                              data-testid="input-bulk-images"
+                              type="file"
+                              accept="image/*"
+                              multiple
+                              className="cursor-pointer"
+                              onChange={(e) => setBulkImages(Array.from(e.target.files || []))}
+                            />
+                            {bulkImages.length > 0 && (
+                              <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-950/30 rounded">
+                                <span className="text-sm text-blue-700 dark:text-blue-300 font-medium">
+                                  📸 {bulkImages.length} photo{bulkImages.length !== 1 ? 's' : ''} selected
+                                </span>
+                              </div>
+                            )}
+                          </div>
 
-                    <Button
-                      type="submit"
-                      data-testid="button-bulk-upload-submit"
-                      className="w-full"
-                      disabled={bulkUploadMutation.isPending}
-                    >
-                      {bulkUploadMutation.isPending ? "Validating..." : "Validate Upload"}
-                    </Button>
-                  </form>
+                          {/* Documents Upload */}
+                          <div className="bg-white dark:bg-gray-900 p-4 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-purple-400 dark:hover:border-purple-600 transition-colors">
+                            <Label htmlFor="bulkDocuments" className="text-base font-semibold flex items-center gap-2 mb-2">
+                              <span className="text-2xl">📄</span>
+                              Registration & Insurance Papers
+                            </Label>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                              Upload all RC and insurance documents (PDF format)
+                            </p>
+                            <Input
+                              id="bulkDocuments"
+                              data-testid="input-bulk-documents"
+                              type="file"
+                              accept=".pdf"
+                              multiple
+                              className="cursor-pointer"
+                              onChange={(e) => setBulkDocuments(Array.from(e.target.files || []))}
+                            />
+                            {bulkDocuments.length > 0 && (
+                              <div className="mt-3 p-2 bg-amber-50 dark:bg-amber-950/30 rounded">
+                                <span className="text-sm text-amber-700 dark:text-amber-300 font-medium">
+                                  📎 {bulkDocuments.length} document{bulkDocuments.length !== 1 ? 's' : ''} selected
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          <Button
+                            type="submit"
+                            data-testid="button-bulk-upload-submit"
+                            size="lg"
+                            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-6 text-lg"
+                            disabled={bulkUploadMutation.isPending}
+                          >
+                            {bulkUploadMutation.isPending ? (
+                              <>
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                                Checking your files...
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle className="mr-2 h-6 w-6" />
+                                Check & Upload All Cars
+                              </>
+                            )}
+                          </Button>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
 
                   {validationResult && (
                     <div className="space-y-3">
