@@ -15,6 +15,7 @@
 import { storage } from './storage.js';
 import type { CachedPortalListing } from '@shared/schema.js';
 import { sql, and, or, gte, lte, like, desc, asc } from 'drizzle-orm';
+import { calculateTrustScore } from './trustScoring.js';
 
 export interface SearchFilters {
   // Core filters
@@ -124,6 +125,20 @@ export class FastSearchService {
       
       listings = Array.from(deduplicatedMap.values());
       console.log(`🎯 Deduplicated to ${listings.length} unique listings (removed exact duplicates)`);
+      
+      // CALCULATE TRUST SCORES for each listing
+      listings = listings.map(listing => {
+        const trustScore = calculateTrustScore(listing);
+        return {
+          ...listing,
+          // Add computed trust score fields
+          trustScore: trustScore.overall,
+          trustScoreLabel: trustScore.label,
+          trustScoreColor: trustScore.color,
+          trustScoreBreakdown: trustScore.breakdown,
+        };
+      });
+      console.log(`✨ Calculated trust scores for ${listings.length} listings`);
       
       // Get total count for pagination
       const total = await this.getSearchCount(filters);

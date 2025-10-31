@@ -333,6 +333,10 @@ export default function Results() {
                       listingScore={car.listingScore}
                       googleCompliant={car.googleComplianceScore >= 100}
                       priceFairnessLabel={car.priceFairnessLabel}
+                      trustScore={car.trustScore}
+                      trustScoreLabel={car.trustScoreLabel}
+                      trustScoreColor={car.trustScoreColor}
+                      trustScoreBreakdown={car.trustScoreBreakdown}
                     />
                   ))}
                 </div>

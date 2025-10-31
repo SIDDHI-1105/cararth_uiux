@@ -1,6 +1,17 @@
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { ShieldCheck, MapPin, Fuel, Gauge, Calendar } from "lucide-react";
+import { TrustScoreCard } from "@/components/TrustScoreCard";
+
+interface TrustScoreBreakdown {
+  price: number;
+  recency: number;
+  demand: number;
+  completeness: number;
+  imageQuality: number;
+  sellerTrust: number;
+  googleCompliance?: number;
+}
 
 interface ListingCardProps {
   id: string;
@@ -18,6 +29,10 @@ interface ListingCardProps {
   listingScore?: number;
   googleCompliant?: boolean;
   priceFairnessLabel?: string;
+  trustScore?: number;
+  trustScoreLabel?: 'Excellent' | 'Good' | 'Fair' | 'Needs Review';
+  trustScoreColor?: 'green' | 'blue' | 'yellow' | 'orange';
+  trustScoreBreakdown?: TrustScoreBreakdown;
 }
 
 export function ListingCard({
@@ -36,6 +51,10 @@ export function ListingCard({
   listingScore,
   googleCompliant,
   priceFairnessLabel,
+  trustScore,
+  trustScoreLabel,
+  trustScoreColor,
+  trustScoreBreakdown,
 }: ListingCardProps) {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-IN", {
@@ -158,6 +177,18 @@ export function ListingCard({
             <MapPin className="w-3.5 h-3.5" />
             <span>{city}</span>
           </div>
+          
+          {/* Trust Score Card - Only show if trust score data is available */}
+          {trustScore && trustScoreLabel && trustScoreColor && trustScoreBreakdown && (
+            <div className="mb-3">
+              <TrustScoreCard
+                overall={trustScore}
+                label={trustScoreLabel}
+                color={trustScoreColor}
+                breakdown={trustScoreBreakdown}
+              />
+            </div>
+          )}
           
           <div className="flex justify-between items-center pt-3 border-t border-gray-100 dark:border-gray-800">
             <Badge variant={sellerType === "verified" ? "default" : "secondary"} className="text-xs">
