@@ -6,7 +6,7 @@ const steps = [
     number: 1,
     icon: Search,
     title: "Search Verified Cars",
-    description: "Browse AI-verified listings from across India's top platforms in one place",
+    description: "Browse transparent listings from verified dealers, individual sellers, and trusted platforms nationwide",
     color: "text-blue-600 dark:text-blue-400"
   },
   {
