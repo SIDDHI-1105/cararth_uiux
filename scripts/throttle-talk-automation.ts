@@ -14,7 +14,7 @@ import { join } from 'path';
 const CONFIG = {
   PERPLEXITY_API_KEY: process.env.PERPLEXITY_API_KEY || '',
   XAI_API_KEY: process.env.XAI_API_KEY || process.env.GROK_API_KEY || '',
-  CMS_ENDPOINT: process.env.CMS_ENDPOINT || 'https://www.cararth.com',
+  CMS_ENDPOINT: process.env.CMS_ENDPOINT || 'http://localhost:5000',
   CMS_API_KEY: process.env.CMS_API_KEY || '',
   ALERT_WEBHOOK: process.env.ALERT_WEBHOOK || '',
   NEWS_LOOKBACK_DAYS: parseInt(process.env.NEWS_LOOKBACK_DAYS || '14', 10),
