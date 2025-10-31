@@ -43,24 +43,13 @@ export default function Navbar() {
               <Link 
                 href="/" 
                 className={`px-4 py-2 rounded-lg text-base md:text-lg font-semibold transition-all duration-300 ${
-                  location === "/" 
+                  location === "/" || location === "/results"
                     ? "text-accent-foreground bg-accent" 
                     : "text-foreground hover:text-accent hover:bg-accent/10"
                 }`}
                 data-testid="link-buy-cars"
               >
                 Buy
-              </Link>
-              <Link 
-                href="/results" 
-                className={`px-4 py-2 rounded-lg text-base md:text-lg font-semibold transition-all duration-300 ${
-                  location === "/results" 
-                    ? "text-accent-foreground bg-accent" 
-                    : "text-foreground hover:text-accent hover:bg-accent/10"
-                }`}
-                data-testid="link-browse-cars"
-              >
-                Browse All
               </Link>
               <Link 
                 href="/sell-car" 
