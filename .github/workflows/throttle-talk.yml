@@ -1,0 +1,60 @@
+name: Throttle Talk Automated Content Generation
+
+on:
+  schedule:
+    # Run at 3:30 AM UTC (9:00 AM IST)
+    - cron: '30 3 * * *'
+    # Run at 3:30 PM UTC (9:00 PM IST)
+    - cron: '30 15 * * *'
+  
+  workflow_dispatch:
+    # Allow manual triggering from GitHub Actions UI
+
+jobs:
+  generate-content:
+    name: Generate Throttle Talk Article
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run Throttle Talk automation
+        env:
+          PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
+          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+          GROK_API_KEY: ${{ secrets.GROK_API_KEY }}
+          CMS_ENDPOINT: ${{ secrets.CMS_ENDPOINT || 'https://www.cararth.com' }}
+          CMS_API_KEY: ${{ secrets.CMS_API_KEY }}
+          ALERT_WEBHOOK: ${{ secrets.ALERT_WEBHOOK }}
+          NEWS_LOOKBACK_DAYS: ${{ secrets.NEWS_LOOKBACK_DAYS || '14' }}
+        run: npm run throttle-talk
+      
+      - name: Upload logs as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: throttletalk-logs-${{ github.run_number }}
+          path: scripts/throttletalk.log
+          retention-days: 30
+      
+      - name: Notify on failure
+        if: failure() && secrets.ALERT_WEBHOOK != ''
+        run: |
+          curl -X POST "${{ secrets.ALERT_WEBHOOK }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "error": "GitHub Actions workflow failed",
+              "workflow": "${{ github.workflow }}",
+              "run_id": "${{ github.run_id }}",
+              "timestamp": "${{ github.event.head_commit.timestamp }}"
+            }'

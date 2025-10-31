@@ -4884,6 +4884,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Throttle Talk Automation API - GET recent news for deduplication
+  app.get('/api/news', async (req, res) => {
+    try {
+      const { db } = await import('./db.js');
+      const { gte } = await import('drizzle-orm');
+      const { from, limit = '100' } = req.query;
+      
+      let query = db.select({
+        title: communityPosts.title,
+        content: communityPosts.content,
+        createdAt: communityPosts.createdAt
+      })
+      .from(communityPosts)
+      .orderBy(communityPosts.createdAt);
+      
+      // Filter by date if provided
+      if (from && typeof from === 'string') {
+        const fromDate = new Date(from);
+        query = query.where(gte(communityPosts.createdAt, fromDate)) as any;
+      }
+      
+      // Apply limit
+      const limitNum = parseInt(limit as string, 10);
+      query = query.limit(limitNum) as any;
+      
+      const posts = await query;
+      
+      res.json(posts);
+    } catch (error) {
+      console.error('Failed to fetch news articles:', error);
+      res.status(500).json({ error: 'Failed to fetch news articles' });
+    }
+  });
+
+  // Throttle Talk Automation API - POST new article (API key auth)
+  app.post('/api/news', async (req, res) => {
+    try {
+      // Simple API key authentication
+      const authHeader = req.headers.authorization;
+      const apiKey = authHeader?.replace('Bearer ', '');
+      const expectedKey = process.env.CMS_API_KEY || process.env.THROTTLE_TALK_API_KEY;
+      
+      // Skip auth in development mode for testing
+      if (process.env.NODE_ENV === 'production' && expectedKey && apiKey !== expectedKey) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+      
+      const { db } = await import('./db.js');
+      const { title, byline, category, date, markdown, sources, tags } = req.body;
+      
+      if (!title || !markdown) {
+        return res.status(400).json({ error: 'Title and markdown are required' });
+      }
+      
+      // Create post in communityPosts table
+      const [newPost] = await db.insert(communityPosts).values({
+        authorId: 'throttle-talk-automation', // System user
+        title,
+        content: markdown,
+        category: category || 'Market Insights',
+        isExternal: true,
+        sourceName: byline || 'Throttle Talk AI',
+        sourceUrl: sources?.[0] || null,
+        attribution: sources?.length > 0 ? `Sources: ${sources.join(', ')}` : null,
+      }).returning();
+      
+      logError({
+        message: 'Throttle Talk article published',
+        statusCode: 201,
+        context: { title, category, sourcesCount: sources?.length || 0 }
+      }, 'Throttle Talk automation');
+      
+      res.status(201).json({
+        success: true,
+        article: newPost,
+        message: 'Article published successfully'
+      });
+    } catch (error) {
+      console.error('Failed to publish news article:', error);
+      res.status(500).json({ error: 'Failed to publish article' });
+    }
+  });
+
   // Leadership & Promotions Articles - Enhanced with AI and Schema Markup
   app.get('/api/leadership/articles', async (req, res) => {
     try {
