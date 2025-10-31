@@ -93,6 +93,7 @@ export function renderShell(options: RenderShellOptions = {}): string {
       // Pass initial state to client for hydration
       window.__CARARTH_INITIAL_STATE = ${JSON.stringify(initialState)};
     </script>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>`;
 }
