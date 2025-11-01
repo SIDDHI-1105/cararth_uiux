@@ -8673,7 +8673,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .orderBy(desc(userStories.createdAt))
       .limit(200);
     
-    const baseUrl = 'https://www.cararth.com';
+    const baseUrl = 'https://cararth.com';
     const today = new Date().toISOString().split('T')[0];
     
     let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
@@ -8718,14 +8718,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
-  </url>
-
-  <!-- Pillar Content & Guides -->
-  <url>
-    <loc>${baseUrl}/guides/ai-verified-used-car-trust-india</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.95</priority>
   </url>
 
   <!-- City Landing Pages for SEO -->
