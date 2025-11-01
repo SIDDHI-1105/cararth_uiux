@@ -104,12 +104,9 @@ app.use((req, res, next) => {
     // Add health check endpoint  
     app.get('/health', createHealthCheckHandler());
     
-    // Mount SEO routes for server-side rendered pages (MUST be before Vite middleware)
-    // These routes serve HTML with meta tags and JSON-LD for search engines
-    // Only enabled in production - in development, let Vite handle everything
-    if (process.env.NODE_ENV === 'production') {
-      app.use(seoRoutes);
-    }
+    // TODO: SEO routes disabled temporarily - need to implement proper production build integration
+    // The current approach doesn't work with Vite's production build output
+    // Future: Inject meta tags into index.html during build or use proper SSR setup
     
     // Server-side rendering for car detail pages (for social media crawlers)
     app.get('/car/:id', async (req, res, next) => {
