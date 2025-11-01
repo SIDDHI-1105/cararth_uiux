@@ -83,10 +83,10 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
         {/* Compact Headline */}
         <div className="text-center mb-4">
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 text-foreground">
-            Find Your Perfect Car
+            One trusted place for every verified car
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl mx-auto">
-            Search <span className="font-semibold text-foreground">{statsLoading ? '...' : `${heroStats?.totalListings || 0}+`}</span> verified listings
+            Verified listings from multiple platforms · List once · No paid listings
           </p>
         </div>
 
