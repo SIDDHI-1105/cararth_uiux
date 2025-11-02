@@ -255,16 +255,18 @@ export class AetherService {
       console.log(`   SEO Score: ${Math.max(0, seoScore)}/100`);
       console.log(`   Issues found: ${issues.length}`);
 
+      const criticalIssuesList = issues.filter(i => i.severity === 'high');
+      const warningsList = issues.filter(i => i.severity === 'medium');
+
       return {
-        targetUrl: baseUrl,
         auditType: params.auditType || 'full',
-        seoScore: Math.max(0, seoScore),
-        issuesFound: issues,
+        overallScore: Math.max(0, seoScore),
+        pagesChecked: pagesChecked,
+        criticalIssues: criticalIssuesList,
+        warnings: warningsList,
         recommendations,
-        pagesChecked: pagesToCheck.length,
-        criticalIssues: issues.filter(i => i.severity === 'high').length,
-        warnings: issues.filter(i => i.severity === 'medium').length,
-        suggestions: issues.filter(i => i.severity === 'low').length,
+        auditDuration: duration,
+        pagesAudited: pagesChecked,
       };
     } catch (error: any) {
       console.error(`   ✗ SEO audit failed:`, error.message);

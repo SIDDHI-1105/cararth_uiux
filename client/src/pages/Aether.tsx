@@ -492,7 +492,7 @@ export default function Aether() {
                   <Alert>
                     <CheckCircle2 className="h-4 w-4" />
                     <AlertDescription>
-                      SEO Audit complete! Score: {runSeoAuditMutation.data.audit.seoScore}/100
+                      SEO Audit complete! Score: {runSeoAuditMutation.data.audit.overallScore}/100
                     </AlertDescription>
                   </Alert>
                 )}
@@ -520,17 +520,20 @@ export default function Aether() {
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <p className="font-medium text-slate-900 dark:text-slate-100">
-                              {audit.targetUrl}
+                              SEO Audit ({audit.auditType})
                             </p>
                             <div className="flex items-center gap-2 mt-2">
-                              <Badge variant={audit.seoScore >= 80 ? "default" : audit.seoScore >= 60 ? "secondary" : "destructive"}>
-                                Score: {audit.seoScore}/100
+                              <Badge variant={audit.overallScore >= 80 ? "default" : audit.overallScore >= 60 ? "secondary" : "destructive"}>
+                                Score: {audit.overallScore}/100
                               </Badge>
                               <Badge variant="outline">
-                                {audit.criticalIssues} critical
+                                {Array.isArray(audit.criticalIssues) ? audit.criticalIssues.length : audit.criticalIssues || 0} critical
                               </Badge>
                               <Badge variant="outline">
-                                {audit.warnings} warnings
+                                {Array.isArray(audit.warnings) ? audit.warnings.length : audit.warnings || 0} warnings
+                              </Badge>
+                              <Badge variant="outline">
+                                {audit.pagesChecked || 0} pages
                               </Badge>
                             </div>
                           </div>
