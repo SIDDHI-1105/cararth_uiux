@@ -1,1 +1,82 @@
-[]
+[
+  {
+    "id": "b41c7c8c-8c0e-41cb-83f7-77cc79796134",
+    "sweepType": "geo",
+    "promptText": "What are the best used car search engines in India?",
+    "promptCategory": "general_search",
+    "aiProvider": "openai",
+    "aiModel": "gpt-4o-mini-2024-07-18",
+    "aiResponse": "In India, several platforms are popular for searching and buying used cars. Here are some of the best used car search engines:\n\n1. **CarDekho**: A widely used platform with a comprehensive database of used cars. It offers detailed listings, reviews, and comparisons.\n\n2. **OLX**: A popular classifieds platform where individuals can buy and sell used cars. It's user-friendly and allows for direct communication between buyers and sellers.\n\n3. **Cars24**: This platform specializes in buying and selling used cars with a focus on quick transactions. They also provide inspection reports and guarantee a certain price for cars.\n\n4. **CarWale**: Offers a vast selection of used cars with detailed filters to help users find their ideal vehicle. The site includes reviews and price comparisons.\n\n5. **Zoomcar**: While primarily a car rental service, Zoomcar also has a section for buying used cars, focusing on well-maintained vehicles.\n\n6. **Droom**: An online marketplace for buying and selling vehicles, including used cars. Droom offers features like price comparisons and vehicle history checks.\n\n7. **Truebil**: This platform provides a curated list of used cars with inspections, ensuring quality and transparency.\n\n8. **Facebook Marketplace**: A growing option for buying and selling used cars, where users can find local listings and negotiate directly with sellers.\n\n9. **Cardekho Gaadi**: Part of the CarDekho family, this site specializes in used cars, focusing on classified listings and user-friendly navigation.\n\nThese platforms typically offer various filters for price, brand, model, and location, making it easier for buyers to find the right used car.",
+    "cararthMentioned": false,
+    "mentionContext": null,
+    "mentionPosition": null,
+    "competitorsMentioned": [
+      "CarDekho",
+      "Cars24",
+      "OLX",
+      "CarWale",
+      "Droom",
+      "CARS24"
+    ],
+    "responseQuality": null,
+    "relevanceScore": null,
+    "sweepDuration": 8838,
+    "tokensUsed": 355,
+    "cost": "0.0002049",
+    "cached": false,
+    "budgetExceeded": false,
+    "createdAt": "2025-11-02T18:22:11.288Z"
+  },
+  {
+    "id": "1e51e231-58f1-4c3e-8aa5-837177d52340",
+    "sweepType": "geo",
+    "promptText": "Where can I find authentic used cars in Hyderabad with verified pricing?",
+    "promptCategory": "location_specific",
+    "aiProvider": "openai",
+    "aiModel": "gpt-4o-mini-2024-07-18",
+    "aiResponse": "In Hyderabad, there are several reliable platforms and dealerships where you can find authentic used cars with verified pricing. Here are some options to consider:\n\n1. **Online Marketplaces**:\n   - **CarDekho**: Offers a vast selection of used cars with verified listings and pricing transparency.\n   - **Cars24**: Specializes in buying and selling used cars with a focus on providing detailed vehicle history and fair pricing.\n   - **OLX and Quikr**: While these are general classifieds, you can find many used cars listed by owners. Always ensure to check seller authenticity and vehicle condition.\n   - **Truebil**: Provides a platform for buying and selling used cars with thorough inspections and pricing verification.\n\n2. **Certified Dealerships**:\n   - **Maruti Suzuki True Value**: Specializes in certified pre-owned Maruti vehicles with verified pricing and quality assurance.\n   - **Honda Certified Used Cars**: Offers certified used Honda vehicles with a warranty and verified pricing.\n   - **Mahindra First Choice Wheels**: Another reliable option for certified used cars from Mahindra and other brands, focusing on quality and transparency.\n\n3. **Local Dealerships**:\n   - Visit local dealerships that specialize in used cars. Look for those with good reviews and a reputation for honesty and customer service.\n\n4. **Social Media and Community Groups**:\n   - Join local Facebook groups or community forums where people list used cars for sale. Ensure to verify the details and check the car physically before making a purchase.\n\n5. **Car Expos and Fairs**:\n   - Keep an eye out for car expos or fairs in Hyderabad, where various dealers showcase their used cars. These events can sometimes offer competitive pricing and promotions.\n\nBefore making a purchase, it’s advisable to:\n- Verify the car’s history (accidents, service records).\n- Get a mechanic to inspect the vehicle.\n- Check for any outstanding loans or disputes related to the vehicle.\n\nBy following these tips, you should be able to find a reliable used car that fits your needs and budget.",
+    "cararthMentioned": false,
+    "mentionContext": null,
+    "mentionPosition": null,
+    "competitorsMentioned": [
+      "CarDekho",
+      "Cars24",
+      "OLX",
+      "CARS24"
+    ],
+    "responseQuality": null,
+    "relevanceScore": null,
+    "sweepDuration": 7353,
+    "tokensUsed": 437,
+    "cost": "0.00025320000000000003",
+    "cached": false,
+    "budgetExceeded": false,
+    "createdAt": "2025-11-02T18:22:19.223Z"
+  },
+  {
+    "id": "905e1351-5ab8-43e0-a757-dc6a541aff83",
+    "sweepType": "geo",
+    "promptText": "How do I check if a used car listing in India is legitimate?",
+    "promptCategory": "trust_safety",
+    "aiProvider": "openai",
+    "aiModel": "gpt-4o-mini-2024-07-18",
+    "aiResponse": "Checking the legitimacy of a used car listing in India involves several steps to ensure that the vehicle is not only genuine but also free from legal issues. Here are some key steps you can take:\n\n1. **Verify the Seller:**\n   - Check the credibility of the seller, whether it's an individual or a dealership. Look for reviews or ratings online if it's a dealer.\n   - Ask for identification and ensure that the name on the documents matches the seller's ID.\n\n2. **Inspect the Documents:**\n   - **Registration Certificate (RC):** Verify that the RC is original and not a photocopy. Check the details like chassis number, engine number, and the owner's name.\n   - **Insurance Papers:** Ensure that the car has valid insurance. It’s also good to check if the insurance is transferable.\n   - **Pollution Under Control (PUC) Certificate:** Make sure the car has a valid PUC certificate.\n\n3. **Check Vehicle History:**\n   - Use online services like Vahan (vahan.parivahan.gov.in) to check the vehicle's registration details, including ownership history, accidents, and any pending loans.\n   - You can also consider using third-party services that provide vehicle history reports.\n\n4. **Inspect the Car:**\n   - Conduct a thorough physical inspection of the car, checking for signs of damage, rust, or any modifications.\n   - Look under the hood for leaks or any signs of poor maintenance.\n   - Take the car for a test drive to assess its performance.\n\n5. **Verify the Price:**\n   - Compare the listed price with similar models to ensure it is reasonable. Websites like OLX, CarDekho, or Cars24 can give you a sense of market pricing.\n\n6. **Check for Pending Loans:**\n   - Ensure that there are no outstanding loans against the vehicle. If the seller has taken a loan, it may complicate the ownership transfer process.\n\n7. **Transfer of Ownership:**\n   - Ensure that the seller agrees to complete the transfer of ownership process through the Regional Transport Office (RTO). This is crucial for your legal ownership and liability.\n\n8. **Get a Professional Opinion:**\n   - If you’re unsure about the condition of the car, consider getting a professional mechanic to inspect it.\n\n9. **Avoid Suspicious Deals:**\n   - Be wary of deals that seem too good to be true, or sellers who pressure you to complete the transaction quickly.\n\n10. **Payment Method:**\n    - Use secure payment methods and avoid cash transactions when possible. Always ensure that you have proper documentation for any payments made.\n\nBy following these steps, you can significantly reduce the risk of falling for scams or purchasing a vehicle with hidden issues.",
+    "cararthMentioned": false,
+    "mentionContext": null,
+    "mentionPosition": null,
+    "competitorsMentioned": [
+      "CarDekho",
+      "Cars24",
+      "OLX",
+      "CARS24"
+    ],
+    "responseQuality": null,
+    "relevanceScore": null,
+    "sweepDuration": 12155,
+    "tokensUsed": 572,
+    "cost": "0.00033374999999999995",
+    "cached": false,
+    "budgetExceeded": false,
+    "createdAt": "2025-11-02T18:22:31.878Z"
+  }
+]

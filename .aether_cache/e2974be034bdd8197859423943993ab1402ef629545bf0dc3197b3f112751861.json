@@ -1,0 +1,15 @@
+{
+  "prompt": "Where can I find authentic used cars in Hyderabad with verified pricing?",
+  "operation": "chat",
+  "response": {
+    "content": "In Hyderabad, there are several reliable platforms and dealerships where you can find authentic used cars with verified pricing. Here are some options to consider:\n\n1. **Online Marketplaces**:\n   - **CarDekho**: Offers a vast selection of used cars with verified listings and pricing transparency.\n   - **Cars24**: Specializes in buying and selling used cars with a focus on providing detailed vehicle history and fair pricing.\n   - **OLX and Quikr**: While these are general classifieds, you can find many used cars listed by owners. Always ensure to check seller authenticity and vehicle condition.\n   - **Truebil**: Provides a platform for buying and selling used cars with thorough inspections and pricing verification.\n\n2. **Certified Dealerships**:\n   - **Maruti Suzuki True Value**: Specializes in certified pre-owned Maruti vehicles with verified pricing and quality assurance.\n   - **Honda Certified Used Cars**: Offers certified used Honda vehicles with a warranty and verified pricing.\n   - **Mahindra First Choice Wheels**: Another reliable option for certified used cars from Mahindra and other brands, focusing on quality and transparency.\n\n3. **Local Dealerships**:\n   - Visit local dealerships that specialize in used cars. Look for those with good reviews and a reputation for honesty and customer service.\n\n4. **Social Media and Community Groups**:\n   - Join local Facebook groups or community forums where people list used cars for sale. Ensure to verify the details and check the car physically before making a purchase.\n\n5. **Car Expos and Fairs**:\n   - Keep an eye out for car expos or fairs in Hyderabad, where various dealers showcase their used cars. These events can sometimes offer competitive pricing and promotions.\n\nBefore making a purchase, it’s advisable to:\n- Verify the car’s history (accidents, service records).\n- Get a mechanic to inspect the vehicle.\n- Check for any outstanding loans or disputes related to the vehicle.\n\nBy following these tips, you should be able to find a reliable used car that fits your needs and budget.",
+    "tokens": 437,
+    "model": "gpt-4o-mini-2024-07-18",
+    "finish_reason": "stop",
+    "cost": 0.00025320000000000003,
+    "mock": false
+  },
+  "options": {},
+  "cachedAt": "2025-11-02T18:22:19.222Z",
+  "key": "e2974be034bdd8197859423943993ab1402ef629545bf0dc3197b3f112751861"
+}

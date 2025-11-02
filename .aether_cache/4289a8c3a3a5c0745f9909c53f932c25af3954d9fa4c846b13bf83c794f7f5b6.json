@@ -1,0 +1,15 @@
+{
+  "prompt": "What are the best used car search engines in India?",
+  "operation": "chat",
+  "response": {
+    "content": "In India, several platforms are popular for searching and buying used cars. Here are some of the best used car search engines:\n\n1. **CarDekho**: A widely used platform with a comprehensive database of used cars. It offers detailed listings, reviews, and comparisons.\n\n2. **OLX**: A popular classifieds platform where individuals can buy and sell used cars. It's user-friendly and allows for direct communication between buyers and sellers.\n\n3. **Cars24**: This platform specializes in buying and selling used cars with a focus on quick transactions. They also provide inspection reports and guarantee a certain price for cars.\n\n4. **CarWale**: Offers a vast selection of used cars with detailed filters to help users find their ideal vehicle. The site includes reviews and price comparisons.\n\n5. **Zoomcar**: While primarily a car rental service, Zoomcar also has a section for buying used cars, focusing on well-maintained vehicles.\n\n6. **Droom**: An online marketplace for buying and selling vehicles, including used cars. Droom offers features like price comparisons and vehicle history checks.\n\n7. **Truebil**: This platform provides a curated list of used cars with inspections, ensuring quality and transparency.\n\n8. **Facebook Marketplace**: A growing option for buying and selling used cars, where users can find local listings and negotiate directly with sellers.\n\n9. **Cardekho Gaadi**: Part of the CarDekho family, this site specializes in used cars, focusing on classified listings and user-friendly navigation.\n\nThese platforms typically offer various filters for price, brand, model, and location, making it easier for buyers to find the right used car.",
+    "tokens": 355,
+    "model": "gpt-4o-mini-2024-07-18",
+    "finish_reason": "stop",
+    "cost": 0.0002049,
+    "mock": false
+  },
+  "options": {},
+  "cachedAt": "2025-11-02T18:22:11.288Z",
+  "key": "4289a8c3a3a5c0745f9909c53f932c25af3954d9fa4c846b13bf83c794f7f5b6"
+}
