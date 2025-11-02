@@ -87,10 +87,8 @@ export function TrustSection() {
 
           {/* Learn More Link */}
           <div className="mt-8 text-center">
-            <Link href="/guides/ai-verified-used-car-trust-india">
-              <a className="text-primary hover:underline font-medium">
-                Learn more about our AI verification process →
-              </a>
+            <Link href="/guides/ai-verified-used-car-trust-india" className="text-primary hover:underline font-medium">
+              Learn more about our AI verification process →
             </Link>
           </div>
         </div>
