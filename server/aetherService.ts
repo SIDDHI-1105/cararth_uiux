@@ -521,18 +521,38 @@ Format as JSON with keys: title, metaDescription, outline (array), keywords (arr
 
       const aiResponse = completion.choices[0]?.message?.content || "";
       
-      // Try to parse JSON response
+      // Try to parse JSON response (handle markdown code blocks)
       try {
-        const parsed = JSON.parse(aiResponse);
+        // Remove markdown code blocks if present
+        let jsonStr = aiResponse.trim();
+        if (jsonStr.startsWith('```json')) {
+          jsonStr = jsonStr.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+        } else if (jsonStr.startsWith('```')) {
+          jsonStr = jsonStr.replace(/^```\s*/, '').replace(/\s*```$/, '');
+        }
+        
+        const parsed = JSON.parse(jsonStr);
+        
+        // Flatten outline if it's an array of objects
+        let flatOutline = parsed.outline || [];
+        if (flatOutline.length > 0 && typeof flatOutline[0] === 'object') {
+          flatOutline = flatOutline.map((item: any) => {
+            if (item.H2) return item.H2;
+            if (item.H3) return `  ${item.H3}`;
+            return JSON.stringify(item);
+          });
+        }
+        
         return {
           title: parsed.title || params.topic,
           metaDescription: parsed.metaDescription || "",
-          outline: parsed.outline || [],
+          outline: flatOutline,
           keywords: parsed.keywords || [],
           wordCount: parsed.wordCount || 1500,
           aiResponse,
         };
       } catch (e) {
+        console.error('Failed to parse content brief JSON:', e);
         // Fallback if not valid JSON
         return {
           title: params.topic,
