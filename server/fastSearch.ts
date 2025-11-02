@@ -17,6 +17,33 @@ import type { CachedPortalListing } from '@shared/schema.js';
 import { sql, and, or, gte, lte, like, desc, asc } from 'drizzle-orm';
 import { calculateTrustScore } from './trustScoring.js';
 
+/**
+ * Check if an image URL is a placeholder/fake image
+ */
+function isPlaceholderImage(imageUrl: string | null | undefined): boolean {
+  if (!imageUrl) return true;
+  
+  const url = imageUrl.toLowerCase();
+  const placeholderPatterns = [
+    'spacer', 'shimmer', 'placeholder', 'no-image', 
+    'noimage', 'default', '.svg', 'cd-shimmer',
+    '/generated_images/', // AI-generated placeholder icons
+    '/api/proxy/image' // Object storage proxy URLs (dealer uploads, often placeholders)
+  ];
+  
+  return placeholderPatterns.some(pattern => url.includes(pattern));
+}
+
+/**
+ * Validate if a listing has real, non-placeholder images
+ */
+function hasRealImages(images: string[] | null | undefined): boolean {
+  if (!images || images.length === 0) return false;
+  
+  // Check if at least one image is NOT a placeholder
+  return images.some(img => !isPlaceholderImage(img));
+}
+
 export interface SearchFilters {
   // Core filters
   make?: string;
@@ -143,9 +170,9 @@ export class FastSearchService {
       // CRITICAL: SORT BY TRUST SCORE AND IMAGE QUALITY
       // Listings WITHOUT verified images must be pushed to the bottom
       listings.sort((a, b) => {
-        // First priority: Listings with real/verified images go first
-        const aHasImages = (a.images && a.images.length > 0 && !a.images[0]?.includes('spacer')) || a.hasRealImage;
-        const bHasImages = (b.images && b.images.length > 0 && !b.images[0]?.includes('spacer')) || b.hasRealImage;
+        // FIXED: Defensive image validation - check actual URLs AND database flag
+        const aHasImages = hasRealImages(a.images) && (a.hasRealImage !== false);
+        const bHasImages = hasRealImages(b.images) && (b.hasRealImage !== false);
         
         if (aHasImages && !bHasImages) return -1;
         if (!aHasImages && bHasImages) return 1;
