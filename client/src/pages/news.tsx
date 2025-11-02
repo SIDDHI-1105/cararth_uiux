@@ -17,7 +17,7 @@ import {
   MessageSquare, Eye, Calendar, Plus, 
   MessageCircle, Globe, ExternalLink, LogIn,
   Heart, Bookmark, Share2, ThumbsUp, TrendingUp,
-  Image as ImageIcon, Play, BarChart3, Users, Info, HelpCircle, Download, X
+  Image as ImageIcon, Play, BarChart3, Users, Info, HelpCircle, Download, X, BookOpen, FileCheck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useForm } from "react-hook-form";
@@ -438,13 +438,13 @@ export default function ThrottleTalkPage() {
                       <div className="space-y-2 p-2">
                         <p className="font-semibold text-sm">🏁 India's Automotive Community Hub</p>
                         <p className="text-xs leading-relaxed">
-                          Discover market insights, leadership news, community stories, and expert analysis. 
+                          Discover market insights, educational guides, community stories, and expert analysis. 
                           Connect with fellow car enthusiasts, share experiences, and stay updated on the latest automotive trends.
                         </p>
                         <div className="flex gap-2 text-xs pt-1 border-t border-white/20">
                           <span>📊 Market Intel</span>
                           <span>•</span>
-                          <span>🚗 Road Tales</span>
+                          <span>📚 Guides</span>
                           <span>•</span>
                           <span>💬 Community</span>
                         </div>
@@ -920,7 +920,7 @@ export default function ThrottleTalkPage() {
       {/* Main content with tabs */}
       <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-8">
+          <TabsList className="grid w-full grid-cols-3 mb-4 sm:mb-8">
             <TabsTrigger value="intelligence" className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3" data-testid="tab-intelligence">
               <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Market Intelligence</span>
@@ -929,6 +929,10 @@ export default function ThrottleTalkPage() {
             <TabsTrigger value="community" className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3" data-testid="tab-community">
               <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Community
+            </TabsTrigger>
+            <TabsTrigger value="guides" className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3" data-testid="tab-guides">
+              <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              Guides
             </TabsTrigger>
           </TabsList>
 
@@ -1244,6 +1248,113 @@ export default function ThrottleTalkPage() {
                   </Card>
                 ))
               )}
+            </div>
+          </TabsContent>
+
+          {/* Educational Guides Tab */}
+          <TabsContent value="guides" className="space-y-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
+                  Educational Guides
+                </h2>
+              </div>
+              
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                In-depth guides to help you navigate India's used car market with confidence
+              </p>
+
+              {/* Pillar Article */}
+              <Card className="hover:shadow-md transition-shadow border-2 border-purple-200 dark:border-purple-900 bg-gradient-to-br from-purple-50 to-white dark:from-purple-950/20 dark:to-gray-950">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0">
+                      <div className="w-12 h-12 rounded-lg bg-purple-600 dark:bg-purple-700 flex items-center justify-center">
+                        <BookOpen className="h-6 w-6 text-white" />
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <Badge className="mb-3 bg-purple-600 text-white">Pillar Guide</Badge>
+                      <Link href="/guides/ai-verified-used-car-trust-india">
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 hover:text-purple-600 dark:hover:text-purple-400 transition-colors cursor-pointer">
+                          The Ultimate Guide to AI-Verified Used Car Trust in India
+                        </h3>
+                      </Link>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-4 leading-relaxed">
+                        Comprehensive 3000+ word guide on how AI verification is solving India's used car trust crisis. 
+                        Learn about fraud detection, compliance standards, odometer tampering, VAHAN integration, and the future of verified car buying.
+                      </p>
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mb-4">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          Published Oct 26, 2025
+                        </span>
+                        <Badge variant="outline" className="text-xs">AI Verification</Badge>
+                        <Badge variant="outline" className="text-xs">Trust Scoring</Badge>
+                        <Badge variant="outline" className="text-xs">Fraud Detection</Badge>
+                      </div>
+                      <Link href="/guides/ai-verified-used-car-trust-india">
+                        <Button className="bg-purple-600 hover:bg-purple-700 text-white" data-testid="button-read-pillar-guide">
+                          Read Full Guide
+                          <ExternalLink className="ml-2 h-4 w-4" />
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Cluster Articles Section */}
+              <div className="mt-8">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <span className="text-purple-600">→</span> Related Deep-Dive Articles
+                </h3>
+                
+                {/* Cluster Article 1 */}
+                <Card className="hover:shadow-sm transition-shadow mb-4">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 mt-1">
+                        <FileCheck className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <Badge variant="outline" className="mb-2 text-xs">Cluster Article</Badge>
+                        <a href="/guides/ai-check-vs-manual-inspection.html" className="block group">
+                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                            Why Manual Car Inspections Alone Aren't Enough — And Why AI Isn't Here to Replace Them
+                          </h4>
+                        </a>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
+                          A detailed comparison of AI-powered verification vs traditional manual inspections. 
+                          Learn when to use each approach, their strengths and limitations, and how they work together for maximum buyer confidence.
+                        </p>
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mb-3">
+                          <span>By Kritarth Pattnaik</span>
+                          <Badge variant="outline" className="text-xs">Inspection Methods</Badge>
+                          <Badge variant="outline" className="text-xs">Hybrid Approach</Badge>
+                        </div>
+                        <a href="/guides/ai-check-vs-manual-inspection.html">
+                          <Button variant="outline" size="sm" data-testid="button-read-cluster-article">
+                            Read Article
+                            <ExternalLink className="ml-2 h-3 w-3" />
+                          </Button>
+                        </a>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Coming Soon Placeholder */}
+                <Card className="border-dashed border-2 border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50">
+                  <CardContent className="p-6 text-center">
+                    <BookOpen className="h-8 w-8 text-gray-400 mx-auto mb-3" />
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      More guides coming soon! Topics include RTO verification, dealership benchmarking, and market trends.
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
