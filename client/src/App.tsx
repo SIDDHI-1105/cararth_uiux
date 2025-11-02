@@ -22,6 +22,7 @@ import AdminReview from "./pages/admin-review";
 import AdminSyndication from "./pages/admin-syndication";
 import AdminDiagnostics from "./pages/AdminDiagnostics";
 import ProductionSync from "./pages/ProductionSync";
+import Aether from "./pages/Aether";
 import PartnerInvite from "./pages/partner-invite";
 import PartnerDashboard from "./pages/partner-dashboard";
 import DealerDashboard from "./pages/DealerDashboard";
@@ -71,6 +72,7 @@ function Router() {
       <Route path="/admin/blog" component={AdminBlog} />
       <Route path="/admin/diagnostics" component={AdminDiagnostics} />
       <Route path="/admin/production-sync" component={ProductionSync} />
+      <Route path="/admin/aether" component={Aether} />
       <Route path="/admin/partners" component={AdminPartners} />
       <Route path="/admin/partners/:sourceId/monitor" component={AdminPartnerMonitor} />
       <Route path="/admin/review" component={AdminReview} />

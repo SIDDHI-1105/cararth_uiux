@@ -8779,6 +8779,139 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }));
 
+  // AETHER - Project AETHER endpoints
+  // Run a single GEO sweep
+  app.post('/api/aether/sweep', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    const { aetherService } = await import('./aetherService.js');
+    const { geoSweeps } = await import('../shared/schema');
+    
+    // Validate input
+    const sweepInputSchema = z.object({
+      promptText: z.string().min(10).max(1000),
+      promptCategory: z.string().max(50).optional(),
+    });
+    
+    const validation = sweepInputSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({ error: validation.error.issues });
+    }
+    
+    const { promptText, promptCategory } = validation.data;
+
+    // Run the GEO sweep
+    const sweepResult = await aetherService.runGeoSweep({
+      promptText,
+      promptCategory,
+    });
+
+    // Save to database
+    const db = (storage as any).db;
+    const [savedSweep] = await db.insert(geoSweeps).values({
+      ...sweepResult,
+      sweepType: 'manual',
+    }).returning();
+
+    res.json({
+      success: true,
+      sweep: savedSweep,
+      cararthMentioned: savedSweep.cararthMentioned,
+    });
+  }));
+
+  // Run batch GEO sweeps
+  app.post('/api/aether/sweeps/batch', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    const { aetherService } = await import('./aetherService.js');
+    const { geoSweeps } = await import('../shared/schema');
+    
+    // Validate input with batch size limit
+    const batchInputSchema = z.object({
+      prompts: z.array(z.object({
+        text: z.string().min(10).max(1000),
+        category: z.string().max(50).optional(),
+      })).min(1).max(10), // Max 10 prompts per batch
+    });
+    
+    const validation = batchInputSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({ error: validation.error.issues });
+    }
+    
+    const { prompts } = validation.data;
+
+    // Run batch sweeps
+    const sweepResults = await aetherService.runBatchSweeps(prompts);
+
+    // Save all to database
+    const db = (storage as any).db;
+    const savedSweeps = await db.insert(geoSweeps).values(
+      sweepResults.map(result => ({
+        ...result,
+        sweepType: 'manual',
+      }))
+    ).returning();
+
+    const mentionCount = savedSweeps.filter((s: any) => s.cararthMentioned).length;
+
+    res.json({
+      success: true,
+      sweeps: savedSweeps,
+      total: savedSweeps.length,
+      cararthMentioned: mentionCount,
+      mentionRate: (mentionCount / savedSweeps.length * 100).toFixed(1) + '%',
+    });
+  }));
+
+  // Get recent GEO sweeps
+  app.get('/api/aether/sweeps', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    const { geoSweeps } = await import('../shared/schema');
+    const db = (storage as any).db;
+
+    const limit = parseInt(req.query.limit as string) || 50;
+    const offset = parseInt(req.query.offset as string) || 0;
+
+    const sweeps = await db.select()
+      .from(geoSweeps)
+      .orderBy(desc(geoSweeps.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    res.json({
+      sweeps,
+      total: sweeps.length,
+    });
+  }));
+
+  // Get GEO sweep statistics
+  app.get('/api/aether/sweeps/stats', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    const { geoSweeps } = await import('../shared/schema');
+    const db = (storage as any).db;
+
+    const totalSweeps = await db.select({ count: sql<number>`count(*)` })
+      .from(geoSweeps);
+
+    const mentionedSweeps = await db.select({ count: sql<number>`count(*)` })
+      .from(geoSweeps)
+      .where(eq(geoSweeps.cararthMentioned, true));
+
+    const totalCost = await db.select({ sum: sql<number>`sum(cost)` })
+      .from(geoSweeps);
+
+    const avgRelevance = await db.select({ avg: sql<number>`avg(relevance_score)` })
+      .from(geoSweeps);
+
+    const total = Number(totalSweeps[0].count) || 0;
+    const mentioned = Number(mentionedSweeps[0].count) || 0;
+    const mentionRate = total > 0 ? (mentioned / total * 100).toFixed(1) : '0.0';
+
+    res.json({
+      totalSweeps: total,
+      mentionedSweeps: mentioned,
+      mentionRate: mentionRate + '%',
+      totalCost: Number(totalCost[0].sum) || 0,
+      avgRelevance: Number(avgRelevance[0].avg) || 0,
+    });
+  }));
+
   // Dynamic sitemap.xml generator
   app.get('/sitemap.xml', asyncHandler(async (req: any, res: any) => {
     const { db } = await import('./db.js');

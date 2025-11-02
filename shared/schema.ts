@@ -2294,6 +2294,135 @@ export const googleVehicleFeeds = pgTable("google_vehicle_feeds", {
   index("idx_google_feed_expires").on(table.expiresAt),
 ]);
 
+// AETHER - Project AETHER (Adaptive Engine for Trust, Heuristics & Evolving Rankings)
+// GEO Sweeps - Track AI response monitoring
+export const geoSweeps = pgTable("geo_sweeps", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Sweep metadata
+  sweepType: text("sweep_type").notNull().default('manual'), // 'manual' | 'scheduled' | 'auto'
+  promptText: text("prompt_text").notNull(), // The query sent to AI
+  promptCategory: text("prompt_category"), // e.g. "inspection", "selling", "buying"
+  
+  // AI response data
+  aiProvider: text("ai_provider").notNull(), // 'openai' | 'anthropic' | etc
+  aiModel: text("ai_model").notNull(), // 'gpt-4' | 'gpt-4-turbo'
+  aiResponse: text("ai_response").notNull(), // Full AI response
+  
+  // CarArth detection
+  cararthMentioned: boolean("cararth_mentioned").default(false),
+  mentionContext: text("mention_context"), // Snippet of text where CarArth was mentioned
+  mentionPosition: integer("mention_position"), // Position in response (1 = first, 2 = second, etc)
+  competitorsMentioned: text("competitors_mentioned").array().default([]), // Other platforms mentioned
+  
+  // Quality metrics
+  responseQuality: integer("response_quality"), // 1-5 rating
+  relevanceScore: decimal("relevance_score", { precision: 3, scale: 2 }), // 0-1 how relevant was the response
+  
+  // Metadata
+  sweepDuration: integer("sweep_duration"), // milliseconds
+  tokensUsed: integer("tokens_used"),
+  cost: decimal("cost", { precision: 10, scale: 6 }), // USD cost of API call
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_geo_sweeps_created").on(table.createdAt),
+  index("idx_geo_sweeps_mentioned").on(table.cararthMentioned),
+  index("idx_geo_sweeps_category").on(table.promptCategory),
+]);
+
+// SEO Audits - Track SEO health over time
+export const seoAudits = pgTable("seo_audits", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Audit metadata
+  auditType: text("audit_type").notNull().default('full'), // 'full' | 'sitemap' | 'schema' | 'performance'
+  
+  // Overall scores
+  overallScore: integer("overall_score").notNull(), // 0-100
+  sitemapScore: integer("sitemap_score"), // 0-100
+  schemaScore: integer("schema_score"), // 0-100
+  canonicalScore: integer("canonical_score"), // 0-100
+  performanceScore: integer("performance_score"), // 0-100
+  
+  // Sitemap analysis
+  sitemapUrls: integer("sitemap_urls"), // Total URLs in sitemap
+  sitemapErrors: integer("sitemap_errors"),
+  sitemapWarnings: integer("sitemap_warnings"),
+  
+  // Schema markup analysis
+  pagesChecked: integer("pages_checked"),
+  pagesWithSchema: integer("pages_with_schema"),
+  schemaTypes: text("schema_types").array().default([]), // e.g. ['Product', 'Organization', 'FAQPage']
+  schemaErrors: jsonb("schema_errors").default([]),
+  
+  // Canonical analysis
+  canonicalIssues: integer("canonical_issues"),
+  duplicateCanonicals: integer("duplicate_canonicals"),
+  missingCanonicals: integer("missing_canonicals"),
+  
+  // Issues & recommendations
+  criticalIssues: jsonb("critical_issues").default([]),
+  warnings: jsonb("warnings").default([]),
+  recommendations: jsonb("recommendations").default([]),
+  
+  // Metadata
+  auditDuration: integer("audit_duration"), // milliseconds
+  pagesAudited: integer("pages_audited"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_seo_audits_created").on(table.createdAt),
+  index("idx_seo_audits_score").on(table.overallScore),
+]);
+
+// AETHER Experiments - A/B test tracking and learning
+export const aetherExperiments = pgTable("aether_experiments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Experiment metadata
+  name: text("name").notNull(),
+  description: text("description"),
+  hypothesis: text("hypothesis").notNull(), // What we're testing
+  category: text("category").notNull(), // 'schema' | 'content' | 'technical' | 'prompt'
+  
+  // Status
+  status: text("status").notNull().default('draft'), // 'draft' | 'running' | 'completed' | 'cancelled'
+  
+  // Baseline & target metrics
+  baselineMetric: text("baseline_metric").notNull(), // e.g. 'geo_mention_rate'
+  baselineValue: decimal("baseline_value", { precision: 10, scale: 2 }).notNull(),
+  targetValue: decimal("target_value", { precision: 10, scale: 2 }).notNull(),
+  
+  // Results
+  actualValue: decimal("actual_value", { precision: 10, scale: 2 }),
+  outcome: text("outcome"), // 'win' | 'neutral' | 'loss'
+  confidenceLevel: decimal("confidence_level", { precision: 3, scale: 2 }), // 0-1
+  
+  // Learning weights (for reinforcement learning)
+  weight: decimal("weight", { precision: 5, scale: 2 }).default('1.00'), // Importance weighting
+  weightDelta: decimal("weight_delta", { precision: 5, scale: 2 }).default('0'), // Change from last evaluation
+  
+  // Implementation details
+  implementationNotes: text("implementation_notes"),
+  changesApplied: jsonb("changes_applied").default({}), // What was changed
+  
+  // Timeline
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  evaluatedAt: timestamp("evaluated_at"),
+  
+  // Metadata
+  createdBy: varchar("created_by"), // User ID
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_aether_experiments_status").on(table.status),
+  index("idx_aether_experiments_category").on(table.category),
+  index("idx_aether_experiments_outcome").on(table.outcome),
+]);
+
 // Insert schemas
 export const insertDealerSchema = createInsertSchema(dealers).omit({
   id: true,
@@ -2325,6 +2454,23 @@ export const insertGoogleVehicleFeedSchema = createInsertSchema(googleVehicleFee
   createdAt: true,
 });
 
+// AETHER Insert schemas
+export const insertGeoSweepSchema = createInsertSchema(geoSweeps).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSeoAuditSchema = createInsertSchema(seoAudits).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAetherExperimentSchema = createInsertSchema(aetherExperiments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Type exports
 export type InsertDealer = z.infer<typeof insertDealerSchema>;
 export type Dealer = typeof dealers.$inferSelect;
@@ -2336,3 +2482,11 @@ export type InsertValidationReport = z.infer<typeof insertValidationReportSchema
 export type ValidationReport = typeof validationReports.$inferSelect;
 export type InsertGoogleVehicleFeed = z.infer<typeof insertGoogleVehicleFeedSchema>;
 export type GoogleVehicleFeed = typeof googleVehicleFeeds.$inferSelect;
+
+// AETHER Type exports
+export type InsertGeoSweep = z.infer<typeof insertGeoSweepSchema>;
+export type GeoSweep = typeof geoSweeps.$inferSelect;
+export type InsertSeoAudit = z.infer<typeof insertSeoAuditSchema>;
+export type SeoAudit = typeof seoAudits.$inferSelect;
+export type InsertAetherExperiment = z.infer<typeof insertAetherExperimentSchema>;
+export type AetherExperiment = typeof aetherExperiments.$inferSelect;
