@@ -285,6 +285,10 @@ export default function AIVerificationGuide() {
             
             <p>Let's unpack how it works.</p>
             
+            <p>
+              For a detailed breakdown of how Cararth's 200-Point AI Verification compares to traditional manual inspections, read <Link href="/guides/ai-check-vs-manual-inspection.html" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">this guide</Link>.
+            </p>
+            
             <h3>Step 1: Multi-LLM (Large Language Model) Integration</h3>
             
             <p>
