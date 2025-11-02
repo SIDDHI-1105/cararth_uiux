@@ -204,12 +204,9 @@ function HomeContent() {
         limit: 50
       };
 
-      console.log('🔎 API Request - Searching with filters:', searchFilters);
-      
       try {
         const response = await apiRequest('POST', '/api/marketplace/search', searchFilters);
         const result = await response.json();
-        console.log(`✅ API Response - Found ${result.listings?.length || 0} listings`);
         
         // Manually refresh usage status after successful local search
         queryClient.invalidateQueries({ queryKey: ["/api/usage/status"] });
@@ -232,7 +229,6 @@ function HomeContent() {
   // FIXED: Removed sortedCars reference that was causing component crash
 
   const handleHeroSearch = (searchFilters: any) => {
-    console.log('🔍 Hero search triggered with:', searchFilters);
     setHasSearched(true);
     setActiveTab("local");
     
@@ -254,7 +250,6 @@ function HomeContent() {
       if (max && max !== 99999999) newFilters.priceMax = max;
     }
     
-    console.log('✅ Setting filters to:', newFilters);
     // Update filters state - this will trigger the local query to refetch
     setFilters(newFilters);
   };

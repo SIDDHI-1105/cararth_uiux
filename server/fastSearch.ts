@@ -140,6 +140,29 @@ export class FastSearchService {
       });
       console.log(`✨ Calculated trust scores for ${listings.length} listings`);
       
+      // CRITICAL: SORT BY TRUST SCORE AND IMAGE QUALITY
+      // Listings WITHOUT verified images must be pushed to the bottom
+      listings.sort((a, b) => {
+        // First priority: Listings with real/verified images go first
+        const aHasImages = (a.images && a.images.length > 0 && !a.images[0]?.includes('spacer')) || a.hasRealImage;
+        const bHasImages = (b.images && b.images.length > 0 && !b.images[0]?.includes('spacer')) || b.hasRealImage;
+        
+        if (aHasImages && !bHasImages) return -1;
+        if (!aHasImages && bHasImages) return 1;
+        
+        // Second priority: Sort by trust score (higher is better) - NO tolerance
+        const trustDiff = (b.trustScore || 0) - (a.trustScore || 0);
+        if (trustDiff !== 0) return trustDiff;
+        
+        // Third priority: Image authenticity score
+        const authDiff = (b.imageAuthenticity || 0) - (a.imageAuthenticity || 0);
+        if (authDiff !== 0) return authDiff;
+        
+        // Fourth priority: Quality score
+        return (b.qualityScore || 0) - (a.qualityScore || 0);
+      });
+      console.log(`📊 Sorted ${listings.length} listings by trust score and image quality (verified images first)`);
+      
       // Get total count for pagination
       const total = await this.getSearchCount(filters);
       
