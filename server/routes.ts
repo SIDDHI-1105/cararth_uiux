@@ -8912,6 +8912,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   }));
 
+  // Run SEO audit
+  app.post('/api/aether/seo-audit', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    const { aetherService } = await import('./aetherService.js');
+    const { seoAudits } = await import('../shared/schema');
+    
+    // Validate input
+    const auditInputSchema = z.object({
+      targetUrl: z.string().url(),
+      auditType: z.string().max(50).optional(),
+    });
+    
+    const validation = auditInputSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({ error: validation.error.issues });
+    }
+    
+    const { targetUrl, auditType } = validation.data;
+
+    // Run the SEO audit
+    const auditResult = await aetherService.runSeoAudit({
+      targetUrl,
+      auditType,
+    });
+
+    // Save to database
+    const db = (storage as any).db;
+    const [savedAudit] = await db.insert(seoAudits).values(auditResult).returning();
+
+    res.json({
+      success: true,
+      audit: savedAudit,
+    });
+  }));
+
+  // Get recent SEO audits
+  app.get('/api/aether/seo-audits', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    const { seoAudits } = await import('../shared/schema');
+    const { desc } = await import('drizzle-orm');
+    const db = (storage as any).db;
+
+    const limit = parseInt(req.query.limit as string) || 10;
+    const offset = parseInt(req.query.offset as string) || 0;
+
+    const audits = await db.select()
+      .from(seoAudits)
+      .orderBy(desc(seoAudits.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    res.json({
+      audits,
+      total: audits.length,
+    });
+  }));
+
+  // Generate content brief
+  app.post('/api/aether/content-brief', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    const { aetherService } = await import('./aetherService.js');
+    
+    // Validate input
+    const contentInputSchema = z.object({
+      topic: z.string().min(5).max(200),
+      targetKeywords: z.array(z.string()).optional(),
+      contentType: z.string().max(50).optional(),
+    });
+    
+    const validation = contentInputSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({ error: validation.error.issues });
+    }
+    
+    const { topic, targetKeywords, contentType } = validation.data;
+
+    // Generate content brief
+    const brief = await aetherService.generateContentBrief({
+      topic,
+      targetKeywords,
+      contentType,
+    });
+
+    res.json({
+      success: true,
+      brief,
+    });
+  }));
+
   // Dynamic sitemap.xml generator
   app.get('/sitemap.xml', asyncHandler(async (req: any, res: any) => {
     const { db } = await import('./db.js');

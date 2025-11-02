@@ -26,6 +26,9 @@ export default function Aether() {
   const [promptText, setPromptText] = useState("");
   const [promptCategory, setPromptCategory] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
+  const [targetUrl, setTargetUrl] = useState("https://cararth.com");
+  const [contentTopic, setContentTopic] = useState("");
+  const [contentKeywords, setContentKeywords] = useState("");
 
   // Fetch GEO sweep stats
   const { data: stats, isLoading: statsLoading } = useQuery<{
@@ -73,12 +76,52 @@ export default function Aether() {
     },
   });
 
+  // Fetch SEO audits
+  const { data: auditsData, isLoading: auditsLoading } = useQuery<{ audits: any[]; total: number }>({
+    queryKey: ['/api/aether/seo-audits'],
+  });
+
+  // Run SEO audit mutation
+  const runSeoAuditMutation = useMutation({
+    mutationFn: async (data: { targetUrl: string; auditType?: string }) => {
+      const response = await apiRequest("POST", "/api/aether/seo-audit", data);
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/aether/seo-audits'] });
+    },
+  });
+
+  // Generate content brief mutation
+  const generateBriefMutation = useMutation({
+    mutationFn: async (data: { topic: string; targetKeywords?: string[]; contentType?: string }) => {
+      const response = await apiRequest("POST", "/api/aether/content-brief", data);
+      return await response.json();
+    },
+  });
+
   const handleRunSweep = () => {
     if (!promptText.trim()) return;
     runSweepMutation.mutate({ promptText, promptCategory });
   };
 
+  const handleRunSeoAudit = () => {
+    if (!targetUrl.trim()) return;
+    runSeoAuditMutation.mutate({ targetUrl, auditType: 'full' });
+  };
+
+  const handleGenerateBrief = () => {
+    if (!contentTopic.trim()) return;
+    const keywords = contentKeywords.split(',').map(k => k.trim()).filter(Boolean);
+    generateBriefMutation.mutate({ 
+      topic: contentTopic, 
+      targetKeywords: keywords.length > 0 ? keywords : undefined,
+      contentType: 'blog post'
+    });
+  };
+
   const sweeps = sweepsData?.sweeps || [];
+  const audits = auditsData?.audits || [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 p-8">
@@ -105,13 +148,13 @@ export default function Aether() {
               <Search className="h-4 w-4" />
               GEO Insights
             </TabsTrigger>
-            <TabsTrigger value="seo" className="flex items-center gap-2" disabled>
+            <TabsTrigger value="seo" className="flex items-center gap-2">
               <FileSearch className="h-4 w-4" />
               SEO Audit
             </TabsTrigger>
-            <TabsTrigger value="experiments" className="flex items-center gap-2" disabled>
-              <FlaskConical className="h-4 w-4" />
-              Experiments
+            <TabsTrigger value="content" className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              Content
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-2" disabled>
               <Settings className="h-4 w-4" />
@@ -408,22 +451,207 @@ export default function Aether() {
             </Card>
           </TabsContent>
 
-          {/* Placeholder tabs */}
-          <TabsContent value="seo">
+          {/* SEO Audit Tab */}
+          <TabsContent value="seo" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>SEO Audit</CardTitle>
-                <CardDescription>Coming soon...</CardDescription>
+                <CardTitle>Run SEO Audit</CardTitle>
+                <CardDescription>
+                  Analyze your site's SEO health - sitemap, canonicals, schema markup, meta tags
+                </CardDescription>
               </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Target URL</label>
+                  <Input
+                    value={targetUrl}
+                    onChange={(e) => setTargetUrl(e.target.value)}
+                    placeholder="https://cararth.com"
+                    data-testid="input-target-url"
+                  />
+                </div>
+                <Button 
+                  onClick={handleRunSeoAudit}
+                  disabled={runSeoAuditMutation.isPending}
+                  data-testid="button-run-seo-audit"
+                >
+                  {runSeoAuditMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Running Audit...
+                    </>
+                  ) : (
+                    <>
+                      <FileSearch className="mr-2 h-4 w-4" />
+                      Run SEO Audit
+                    </>
+                  )}
+                </Button>
+
+                {runSeoAuditMutation.data && (
+                  <Alert>
+                    <CheckCircle2 className="h-4 w-4" />
+                    <AlertDescription>
+                      SEO Audit complete! Score: {runSeoAuditMutation.data.audit.seoScore}/100
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Audits</CardTitle>
+                <CardDescription>Historical SEO audit results</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {auditsLoading ? (
+                  <div className="text-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-slate-400" />
+                  </div>
+                ) : audits.length === 0 ? (
+                  <div className="text-center py-8 text-slate-500">
+                    No audits yet. Run your first SEO audit above!
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {audits.map((audit: any) => (
+                      <div key={audit.id} className="border rounded-lg p-4 space-y-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <p className="font-medium text-slate-900 dark:text-slate-100">
+                              {audit.targetUrl}
+                            </p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <Badge variant={audit.seoScore >= 80 ? "default" : audit.seoScore >= 60 ? "secondary" : "destructive"}>
+                                Score: {audit.seoScore}/100
+                              </Badge>
+                              <Badge variant="outline">
+                                {audit.criticalIssues} critical
+                              </Badge>
+                              <Badge variant="outline">
+                                {audit.warnings} warnings
+                              </Badge>
+                            </div>
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            {new Date(audit.createdAt).toLocaleDateString()}
+                          </div>
+                        </div>
+
+                        {audit.recommendations && audit.recommendations.length > 0 && (
+                          <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded p-3">
+                            <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
+                              Top Recommendations:
+                            </p>
+                            <ul className="text-sm text-blue-800 dark:text-blue-200 list-disc list-inside space-y-1">
+                              {audit.recommendations.slice(0, 3).map((rec: string, idx: number) => (
+                                <li key={idx}>{rec}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="experiments">
+          {/* Content Generation Tab */}
+          <TabsContent value="content" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Experiments</CardTitle>
-                <CardDescription>Coming soon...</CardDescription>
+                <CardTitle>Generate Content Brief</CardTitle>
+                <CardDescription>
+                  AI-powered SEO content briefs with outlines, keywords, and recommendations
+                </CardDescription>
               </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Topic</label>
+                  <Input
+                    value={contentTopic}
+                    onChange={(e) => setContentTopic(e.target.value)}
+                    placeholder="E.g., Best used cars to buy in India 2024"
+                    data-testid="input-content-topic"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Target Keywords (comma-separated, optional)</label>
+                  <Input
+                    value={contentKeywords}
+                    onChange={(e) => setContentKeywords(e.target.value)}
+                    placeholder="used cars, India, 2024, best deals"
+                    data-testid="input-content-keywords"
+                  />
+                </div>
+                <Button 
+                  onClick={handleGenerateBrief}
+                  disabled={generateBriefMutation.isPending}
+                  data-testid="button-generate-brief"
+                >
+                  {generateBriefMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Generate Brief
+                    </>
+                  )}
+                </Button>
+
+                {generateBriefMutation.data && (
+                  <div className="space-y-4 border rounded-lg p-4 mt-4">
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">SEO Title</h3>
+                      <p className="text-slate-700 dark:text-slate-300">
+                        {generateBriefMutation.data.brief.title}
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">Meta Description</h3>
+                      <p className="text-slate-700 dark:text-slate-300">
+                        {generateBriefMutation.data.brief.metaDescription}
+                      </p>
+                    </div>
+
+                    {generateBriefMutation.data.brief.keywords && generateBriefMutation.data.brief.keywords.length > 0 && (
+                      <div>
+                        <h3 className="font-semibold text-lg mb-2">Keywords</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {generateBriefMutation.data.brief.keywords.map((kw: string, idx: number) => (
+                            <Badge key={idx} variant="outline">{kw}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {generateBriefMutation.data.brief.outline && generateBriefMutation.data.brief.outline.length > 0 && (
+                      <div>
+                        <h3 className="font-semibold text-lg mb-2">Content Outline</h3>
+                        <ul className="list-disc list-inside space-y-1 text-slate-700 dark:text-slate-300">
+                          {generateBriefMutation.data.brief.outline.map((item: string, idx: number) => (
+                            <li key={idx}>{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">Recommended Word Count</h3>
+                      <p className="text-slate-700 dark:text-slate-300">
+                        {generateBriefMutation.data.brief.wordCount} words
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
             </Card>
           </TabsContent>
 
