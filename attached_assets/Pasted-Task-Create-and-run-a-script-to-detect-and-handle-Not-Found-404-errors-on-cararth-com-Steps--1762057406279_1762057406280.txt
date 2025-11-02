@@ -1,0 +1,46 @@
+Task: Create and run a script to detect and handle "Not Found (404)" errors on cararth.com.
+
+Steps:
+
+1. Fetch list of known 404 URLs (use this seed list or crawl from sitemap):
+   [
+     "https://cararth.com/?brand=Honda",
+     "https://cararth.com/faq",
+     "https://cararth.com/api/news/market-insights",
+     "https://cararth.com/cars/swift",
+     "https://cararth.com/cars/hyundai",
+     "https://cararth.com/cars/under-5-lakh",
+     "https://cararth.com/cars/mumbai",
+     "https://cararth.com/car/3b883fb3-dc57-4ede-8d82-765f931ebf62",
+     "https://cararth.com/car/92e5a53e-58ed-49e8-8277-0cddb6046560"
+   ]
+
+2. For each URL:
+   - Check HTTP status (200, 301, 404, 410).
+   - Categorize based on URL pattern:
+     - `/api/` → mark as "API endpoint" → add to robots.txt exclusion list.
+     - `/car/{UUID}` → mark as "Vehicle detail page" → check DB; if missing, set rule: return 410 or redirect to /cars.
+     - `/cars/{category}` or `/cars/{city}` → mark as "Listing page" → check if page exists or SSR fallback is enabled.
+     - Static pages (`/faq`, `/search`, `/news`) → verify routes exist in build; if not, create empty placeholder route.
+     - Query parameter pages (`/?brand=...`) → ensure they render main /cars page and respond with 200.
+
+3. Auto-generate a JSON report:
+   {
+     "url": "https://cararth.com/cars/hyundai",
+     "status": 404,
+     "category": "listing",
+     "recommended_fix": "Add SSR route or redirect to /cars",
+     "action_status": "pending"
+   }
+
+4. Implement quick fixes (if permissions available):
+   - Add robots.txt rule: Disallow: /api/
+   - Create a fallback redirect rule (Express.js, Next.js, or NGINX):
+       If /cars/* or /car/* returns 404 → redirect to /cars
+   - Ensure all static routes (/faq, /search, /news) exist or return a 200 HTML.
+
+5. Output summary in console and save report as `404_audit.json`.
+
+Goal: 
+Make sure no legitimate front-end or sitemap-linked URL on cararth.com returns 404. 
+All user-facing routes should return 200 (or valid redirect), and only dead endpoints should return 410.
