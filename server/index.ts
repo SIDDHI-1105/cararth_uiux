@@ -115,8 +115,23 @@ app.use((req, res, next) => {
         const car = await storage.getCar(req.params.id);
         
         if (!car) {
-          // If car not found, pass to next handler (SPA will show 404)
-          return next();
+          // Return 410 Gone to signal permanent deletion to search engines
+          // This tells Google to remove these URLs from the index
+          return res.status(410).send(`
+            <!DOCTYPE html>
+            <html>
+              <head>
+                <meta charset="utf-8">
+                <title>Car Listing No Longer Available | CarArth</title>
+                <meta http-equiv="refresh" content="3;url=/results">
+              </head>
+              <body>
+                <h1>This car listing is no longer available</h1>
+                <p>Redirecting you to search results...</p>
+                <p>If not redirected, <a href="/results">click here</a>.</p>
+              </body>
+            </html>
+          `);
         }
         
         // HTML escape helper for safe meta tag insertion
