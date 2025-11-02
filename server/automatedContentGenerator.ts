@@ -232,12 +232,8 @@ Write the article now.`
     try {
       console.log('📝 Publishing article to database...');
       
-      // Get admin user ID (or use system user)
-      const adminUser = await db.query.users.findFirst({
-        where: sql`role = 'admin'`,
-      });
-      
-      const authorId = adminUser?.id || 'system-generator';
+      // Use Cararth Team system user for automated content attribution
+      const authorId = 'system-cararth-team';
       
       const [publishedPost] = await db.insert(communityPosts).values({
         authorId,
