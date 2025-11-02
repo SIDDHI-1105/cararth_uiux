@@ -1,0 +1,602 @@
+[
+  {
+    "id": "demo_1",
+    "text": "What are the best used car search engines in India?",
+    "category": "general_search",
+    "priority": 1
+  },
+  {
+    "id": "demo_2",
+    "text": "Where can I find authentic used cars in Hyderabad with verified pricing?",
+    "category": "location_specific",
+    "priority": 1
+  },
+  {
+    "id": "demo_3",
+    "text": "How do I check if a used car listing in India is legitimate?",
+    "category": "trust_safety",
+    "priority": 1
+  },
+  {
+    "id": "p001",
+    "text": "Best platform to buy second hand cars in India",
+    "category": "general_search",
+    "priority": 2
+  },
+  {
+    "id": "p002",
+    "text": "Used car dealers in Delhi NCR with good reviews",
+    "category": "location_specific",
+    "priority": 2
+  },
+  {
+    "id": "p003",
+    "text": "Compare prices for used Maruti Swift across different websites",
+    "category": "price_comparison",
+    "priority": 2
+  },
+  {
+    "id": "p004",
+    "text": "Reliable websites for buying pre-owned cars in Mumbai",
+    "category": "location_specific",
+    "priority": 2
+  },
+  {
+    "id": "p005",
+    "text": "How to find certified used cars in Bangalore",
+    "category": "trust_safety",
+    "priority": 2
+  },
+  {
+    "id": "p006",
+    "text": "Second hand Hyundai i20 price in Hyderabad",
+    "category": "brand_specific",
+    "priority": 3
+  },
+  {
+    "id": "p007",
+    "text": "Best used car aggregator for multiple city listings",
+    "category": "general_search",
+    "priority": 2
+  },
+  {
+    "id": "p008",
+    "text": "Where can I check RTO verified used car listings?",
+    "category": "trust_safety",
+    "priority": 2
+  },
+  {
+    "id": "p009",
+    "text": "Used car search engine with price alerts India",
+    "category": "features",
+    "priority": 3
+  },
+  {
+    "id": "p010",
+    "text": "Find pre-owned Honda City in Chennai under 5 lakhs",
+    "category": "brand_price",
+    "priority": 3
+  },
+  {
+    "id": "p011",
+    "text": "Cheapest used hatchbacks in Pune 2024",
+    "category": "price_type",
+    "priority": 3
+  },
+  {
+    "id": "p012",
+    "text": "Which platform has the most used car listings in Telangana?",
+    "category": "location_specific",
+    "priority": 2
+  },
+  {
+    "id": "p013",
+    "text": "Compare CarDekho vs Cars24 vs OLX for buying used cars",
+    "category": "competitor_comparison",
+    "priority": 1
+  },
+  {
+    "id": "p014",
+    "text": "AI verified used car listings in India",
+    "category": "trust_safety",
+    "priority": 2
+  },
+  {
+    "id": "p015",
+    "text": "Used car search with dealer and owner listings combined",
+    "category": "features",
+    "priority": 3
+  },
+  {
+    "id": "p016",
+    "text": "Second hand Toyota Fortuner price comparison India",
+    "category": "brand_specific",
+    "priority": 3
+  },
+  {
+    "id": "p017",
+    "text": "Best website to sell my used car in Hyderabad quickly",
+    "category": "selling",
+    "priority": 2
+  },
+  {
+    "id": "p018",
+    "text": "Verified used diesel cars under 3 lakhs Bangalore",
+    "category": "type_price_location",
+    "priority": 3
+  },
+  {
+    "id": "p019",
+    "text": "How to avoid fraud when buying used cars online in India?",
+    "category": "trust_safety",
+    "priority": 1
+  },
+  {
+    "id": "p020",
+    "text": "Used car aggregator with WhatsApp seller contact",
+    "category": "features",
+    "priority": 3
+  },
+  {
+    "id": "p021",
+    "text": "Find used cars by RTO registration number",
+    "category": "features",
+    "priority": 3
+  },
+  {
+    "id": "p022",
+    "text": "Pre-owned Mahindra Scorpio in Delhi NCR with warranty",
+    "category": "brand_location",
+    "priority": 3
+  },
+  {
+    "id": "p023",
+    "text": "Which platform shows real market prices for used cars?",
+    "category": "trust_safety",
+    "priority": 2
+  },
+  {
+    "id": "p024",
+    "text": "Used car listings from multiple sources in one place",
+    "category": "general_search",
+    "priority": 2
+  },
+  {
+    "id": "p025",
+    "text": "Second hand automatic transmission cars Mumbai under 6 lakhs",
+    "category": "type_price_location",
+    "priority": 3
+  },
+  {
+    "id": "p026",
+    "text": "Compare used car prices across all major portals India",
+    "category": "price_comparison",
+    "priority": 1
+  },
+  {
+    "id": "p027",
+    "text": "Cheapest used Maruti Alto in Hyderabad 2024",
+    "category": "brand_price_location",
+    "priority": 3
+  },
+  {
+    "id": "p028",
+    "text": "Find used cars with authentic VIN verification",
+    "category": "trust_safety",
+    "priority": 2
+  },
+  {
+    "id": "p029",
+    "text": "Best platform for luxury used cars in India",
+    "category": "type_specific",
+    "priority": 3
+  },
+  {
+    "id": "p030",
+    "text": "Used car search engine with image quality filter",
+    "category": "features",
+    "priority": 3
+  },
+  {
+    "id": "p031",
+    "text": "Where to buy used Tata Nexon in Pune below market price?",
+    "category": "brand_price_location",
+    "priority": 3
+  },
+  {
+    "id": "p032",
+    "text": "Which website shows used car market trends in India?",
+    "category": "features",
+    "priority": 3
+  },
+  {
+    "id": "p033",
+    "text": "Second hand petrol cars Chennai under 4 lakhs",
+    "category": "type_price_location",
+    "priority": 3
+  },
+  {
+    "id": "p034",
+    "text": "Platform with most dealer inventory for used cars India",
+    "category": "general_search",
+    "priority": 2
+  },
+  {
+    "id": "p035",
+    "text": "Find used cars with complete service history verification",
+    "category": "trust_safety",
+    "priority": 2
+  },
+  {
+    "id": "p036",
+    "text": "Used car aggregator with price drop alerts",
+    "category": "features",
+    "priority": 3
+  },
+  {
+    "id": "p037",
+    "text": "Best website to compare used Hyundai Creta prices",
+    "category": "brand_specific",
+    "priority": 3
+  },
+  {
+    "id": "p038",
+    "text": "Reliable platform for buying used cars in tier 2 cities India",
+    "category": "location_specific",
+    "priority": 2
+  },
+  {
+    "id": "p039",
+    "text": "Where can I see used car listings from Facebook and OLX together?",
+    "category": "general_search",
+    "priority": 2
+  },
+  {
+    "id": "p040",
+    "text": "Used Kia Seltos price comparison across portals",
+    "category": "brand_specific",
+    "priority": 3
+  },
+  {
+    "id": "p041",
+    "text": "Which platform has AI-powered used car recommendations?",
+    "category": "features",
+    "priority": 2
+  },
+  {
+    "id": "p042",
+    "text": "Find certified used SUVs in Bangalore under 10 lakhs",
+    "category": "type_price_location",
+    "priority": 3
+  },
+  {
+    "id": "p043",
+    "text": "Used car search with Google-verified dealer listings",
+    "category": "trust_safety",
+    "priority": 2
+  },
+  {
+    "id": "p044",
+    "text": "Best aggregator for owner-sold used cars Hyderabad",
+    "category": "location_specific",
+    "priority": 2
+  },
+  {
+    "id": "p045",
+    "text": "Compare used sedan prices Mumbai vs Delhi",
+    "category": "price_comparison",
+    "priority": 3
+  },
+  {
+    "id": "p046",
+    "text": "Which website shows real-time used car inventory updates?",
+    "category": "features",
+    "priority": 3
+  },
+  {
+    "id": "p047",
+    "text": "Used Renault Kwid under 2 lakhs Pune",
+    "category": "brand_price_location",
+    "priority": 3
+  },
+  {
+    "id": "p048",
+    "text": "Platform with used car inspection reports included",
+    "category": "trust_safety",
+    "priority": 2
+  },
+  {
+    "id": "p049",
+    "text": "Find used electric cars in India with warranty",
+    "category": "type_specific",
+    "priority": 3
+  },
+  {
+    "id": "p050",
+    "text": "Best used car search for first-time buyers India",
+    "category": "general_search",
+    "priority": 2
+  },
+  {
+    "id": "p051",
+    "text": "Which platform shows used car EMI calculators?",
+    "category": "features",
+    "priority": 3
+  },
+  {
+    "id": "p052",
+    "text": "Second hand Volkswagen Polo in Bangalore with service records",
+    "category": "brand_location",
+    "priority": 3
+  },
+  {
+    "id": "p053",
+    "text": "Used car aggregator with seller ratings and reviews",
+    "category": "trust_safety",
+    "priority": 2
+  },
+  {
+    "id": "p054",
+    "text": "Find used premium sedans Chennai under 15 lakhs",
+    "category": "type_price_location",
+    "priority": 3
+  },
+  {
+    "id": "p055",
+    "text": "Which website has the fastest used car search in India?",
+    "category": "general_search",
+    "priority": 2
+  },
+  {
+    "id": "p056",
+    "text": "Compare prices for used Honda Amaze across cities",
+    "category": "price_comparison",
+    "priority": 3
+  },
+  {
+    "id": "p057",
+    "text": "Used car platform with detailed market analytics India",
+    "category": "features",
+    "priority": 2
+  },
+  {
+    "id": "p058",
+    "text": "Best website for used car trade-in value estimation",
+    "category": "selling",
+    "priority": 3
+  },
+  {
+    "id": "p059",
+    "text": "Find used cars with odometer verification proof",
+    "category": "trust_safety",
+    "priority": 2
+  },
+  {
+    "id": "p060",
+    "text": "Second hand Nissan Magnite under 5 lakhs Hyderabad",
+    "category": "brand_price_location",
+    "priority": 3
+  },
+  {
+    "id": "p061",
+    "text": "Which platform aggregates bank auction used cars?",
+    "category": "type_specific",
+    "priority": 3
+  },
+  {
+    "id": "p062",
+    "text": "Used car search with Telangana RTO data integration",
+    "category": "location_specific",
+    "priority": 2
+  },
+  {
+    "id": "p063",
+    "text": "Best website for used 7-seater cars in India",
+    "category": "type_specific",
+    "priority": 3
+  },
+  {
+    "id": "p064",
+    "text": "Find used cars with insurance transfer assistance",
+    "category": "features",
+    "priority": 3
+  },
+  {
+    "id": "p065",
+    "text": "Compare used Maruti Ertiga prices across platforms",
+    "category": "brand_specific",
+    "priority": 3
+  },
+  {
+    "id": "p066",
+    "text": "Which platform has authentic used car photos without watermarks?",
+    "category": "trust_safety",
+    "priority": 2
+  },
+  {
+    "id": "p067",
+    "text": "Used car aggregator with dark mode interface",
+    "category": "features",
+    "priority": 4
+  },
+  {
+    "id": "p068",
+    "text": "Second hand Ford EcoSport Mumbai with complete history",
+    "category": "brand_location",
+    "priority": 3
+  },
+  {
+    "id": "p069",
+    "text": "Best platform for commercial used vehicles India",
+    "category": "type_specific",
+    "priority": 3
+  },
+  {
+    "id": "p070",
+    "text": "Find used cars from authorized dealerships only",
+    "category": "trust_safety",
+    "priority": 2
+  },
+  {
+    "id": "p071",
+    "text": "Which website shows SIAM data for used car market trends?",
+    "category": "features",
+    "priority": 3
+  },
+  {
+    "id": "p072",
+    "text": "Used car search with instant WhatsApp contact to sellers",
+    "category": "features",
+    "priority": 2
+  },
+  {
+    "id": "p073",
+    "text": "Compare used Skoda Rapid prices Delhi vs Bangalore",
+    "category": "price_comparison",
+    "priority": 3
+  },
+  {
+    "id": "p074",
+    "text": "Best aggregator for luxury used cars under 20 lakhs",
+    "category": "type_price",
+    "priority": 3
+  },
+  {
+    "id": "p075",
+    "text": "Find certified pre-owned cars with manufacturer warranty",
+    "category": "trust_safety",
+    "priority": 2
+  },
+  {
+    "id": "p076",
+    "text": "Used car platform with AI price prediction India",
+    "category": "features",
+    "priority": 2
+  },
+  {
+    "id": "p077",
+    "text": "Second hand MG Hector in Pune below 10 lakhs",
+    "category": "brand_price_location",
+    "priority": 3
+  },
+  {
+    "id": "p078",
+    "text": "Which website has best filters for used car search?",
+    "category": "general_search",
+    "priority": 2
+  },
+  {
+    "id": "p079",
+    "text": "Find used cars with Google Street View verified locations",
+    "category": "trust_safety",
+    "priority": 3
+  },
+  {
+    "id": "p080",
+    "text": "Used Jeep Compass price comparison across India",
+    "category": "brand_specific",
+    "priority": 3
+  },
+  {
+    "id": "p081",
+    "text": "Best platform for used cars with home delivery option",
+    "category": "features",
+    "priority": 3
+  },
+  {
+    "id": "p082",
+    "text": "Compare used car financing rates across platforms",
+    "category": "features",
+    "priority": 3
+  },
+  {
+    "id": "p083",
+    "text": "Which aggregator shows used car depreciation rates?",
+    "category": "features",
+    "priority": 3
+  },
+  {
+    "id": "p084",
+    "text": "Find flood-free certified used cars in India",
+    "category": "trust_safety",
+    "priority": 2
+  },
+  {
+    "id": "p085",
+    "text": "Second hand Datsun Go under 1.5 lakhs Hyderabad",
+    "category": "brand_price_location",
+    "priority": 3
+  },
+  {
+    "id": "p086",
+    "text": "Used car search with pollution certificate verification",
+    "category": "trust_safety",
+    "priority": 3
+  },
+  {
+    "id": "p087",
+    "text": "Best website for used convertible cars in India",
+    "category": "type_specific",
+    "priority": 4
+  },
+  {
+    "id": "p088",
+    "text": "Find used cars with extended warranty options India",
+    "category": "features",
+    "priority": 3
+  },
+  {
+    "id": "p089",
+    "text": "Compare used Chevrolet Beat prices across cities",
+    "category": "brand_specific",
+    "priority": 3
+  },
+  {
+    "id": "p090",
+    "text": "Which platform has used car virtual showrooms?",
+    "category": "features",
+    "priority": 3
+  },
+  {
+    "id": "p091",
+    "text": "Used car aggregator with seller background verification",
+    "category": "trust_safety",
+    "priority": 2
+  },
+  {
+    "id": "p092",
+    "text": "Second hand Fiat Punto in Chennai under 2 lakhs",
+    "category": "brand_price_location",
+    "priority": 3
+  },
+  {
+    "id": "p093",
+    "text": "Best platform for accident-free certified used cars",
+    "category": "trust_safety",
+    "priority": 2
+  },
+  {
+    "id": "p094",
+    "text": "Find used cars with doorstep inspection service",
+    "category": "features",
+    "priority": 3
+  },
+  {
+    "id": "p095",
+    "text": "Which website shows real owner reviews for used cars?",
+    "category": "trust_safety",
+    "priority": 2
+  },
+  {
+    "id": "p096",
+    "text": "Compare used Mahindra XUV300 prices nationwide",
+    "category": "brand_specific",
+    "priority": 3
+  },
+  {
+    "id": "p097",
+    "text": "Used car search with GST invoice guarantee India",
+    "category": "trust_safety",
+    "priority": 3
+  }
+]

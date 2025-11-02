@@ -1,0 +1,16 @@
+{
+  "promptWeights": {},
+  "categoryWeights": {
+    "general_search": 1.0,
+    "location_specific": 1.0,
+    "trust_safety": 1.2,
+    "price_comparison": 1.0,
+    "brand_specific": 0.9,
+    "features": 0.95,
+    "competitor_comparison": 1.3,
+    "selling": 0.9,
+    "type_specific": 0.85
+  },
+  "learningRate": 0.1,
+  "lastUpdated": null
+}
