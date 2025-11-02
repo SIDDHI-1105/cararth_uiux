@@ -8701,6 +8701,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           try {
             await db.insert(cachedPortalListings).values({
               ...listing,
+              external_id: listing.external_id || listing.id || crypto.randomUUID(), // Generate external_id if missing
               images: listing.images, // Already JSONB from export
               created_at: new Date(listing.created_at)
             }).onConflictDoNothing(); // Skip duplicates
