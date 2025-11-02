@@ -16,6 +16,32 @@ import { ListingScoringService } from './listingScoring';
  * 4. Only approved listings are saved to database
  * 5. Database gets proper verificationStatus from Trust Layer
  */
+
+/**
+ * Check if an image URL is a placeholder/fake image
+ */
+function isPlaceholderImage(imageUrl: string): boolean {
+  if (!imageUrl) return true;
+  
+  const url = imageUrl.toLowerCase();
+  const placeholderPatterns = [
+    'spacer', 'shimmer', 'placeholder', 'no-image', 
+    'noimage', 'default', '.svg', 'cd-shimmer'
+  ];
+  
+  return placeholderPatterns.some(pattern => url.includes(pattern));
+}
+
+/**
+ * Validate if a listing has real, non-placeholder images
+ */
+function hasRealImages(images: string[] | undefined): boolean {
+  if (!images || images.length === 0) return false;
+  
+  // Check if at least one image is NOT a placeholder
+  return images.some(img => !isPlaceholderImage(img));
+}
+
 export class ListingIngestionService {
   private trustLayer: TrustLayer;
   
@@ -96,7 +122,8 @@ export class ListingIngestionService {
         // Quality metrics from Trust Layer
         qualityScore: trustResult.trustScore,
         imageAuthenticity: trustResult.imageAuthenticityScore || 0,
-        hasRealImage: (trustResult.verifiedImageCount || 0) > 0,
+        // FIXED: Validate actual image URLs, not just count
+        hasRealImage: hasRealImages(listing.images) && (trustResult.verifiedImageCount || 0) > 0,
         
         // Holistic Ranking Framework scores
         listingScore: scoringResult.listingScore,
