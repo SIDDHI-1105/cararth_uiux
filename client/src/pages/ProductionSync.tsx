@@ -12,8 +12,8 @@ export default function ProductionSync() {
 
   const seedMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("/api/admin/seed-production", "POST", {});
-      return response;
+      const response = await apiRequest("POST", "/api/admin/seed-production", {});
+      return await response.json();
     },
     onSuccess: (data) => {
       setSeedResult(data);
@@ -22,8 +22,8 @@ export default function ProductionSync() {
 
   const scraperMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("/api/admin/trigger-scrapers", "POST", {});
-      return response;
+      const response = await apiRequest("POST", "/api/admin/trigger-scrapers", {});
+      return await response.json();
     },
     onSuccess: (data) => {
       setScraperResult(data);
