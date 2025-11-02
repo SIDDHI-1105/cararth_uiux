@@ -2970,6 +2970,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             id: listing.id,
             title: listing.title,
             brand: listing.brand,
+            make: listing.brand, // Frontend expects 'make' field
             model: listing.model,
             year: listing.year,
             price: parseInt(listing.price),
@@ -2980,6 +2981,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             city: listing.city,
             state: listing.state,
             images: listing.images || [],
+            hasRealImage: listing.hasRealImage, // Image quality flag
+            portal: listing.portal,
             source: listing.portal,
             url: listing.url,
             condition: listing.condition,
@@ -2987,7 +2990,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             verificationStatus: listing.verificationStatus,
             listingDate: listing.listingDate,
             owners: listing.owners,
-            listingSource: listing.listingSource
+            listingSource: listing.listingSource,
+            // Trust scoring fields
+            trustScore: listing.trustScore,
+            trustScoreLabel: listing.trustScoreLabel,
+            trustScoreColor: listing.trustScoreColor,
+            qualityScore: listing.qualityScore,
+            imageAuthenticity: listing.imageAuthenticity
           })),
           total: fastSearchResult.total,
           performance: {
