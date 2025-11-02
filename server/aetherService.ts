@@ -500,16 +500,22 @@ export class AetherService {
 
 Target keywords: ${params.targetKeywords?.join(', ') || 'auto-generate based on topic'}
 Content type: ${params.contentType || 'blog post'}
+Market: India (focus on Indian automotive market, pricing in Lakhs, popular brands like Maruti, Hyundai, Tata, Mahindra)
 
 Provide:
 1. SEO-optimized title (50-60 characters)
 2. Meta description (150-160 characters)
 3. Content outline (H2 and H3 headings)
-4. Primary and secondary keywords
-5. Recommended word count
+4. Primary keywords (15-20 keywords including):
+   - Long-tail keywords specific to Indian used car market
+   - Local search terms (city-specific: Delhi, Mumbai, Bangalore, Hyderabad, etc.)
+   - Brand-specific terms (Maruti Suzuki, Hyundai, Tata, Honda, etc.)
+   - Feature-focused terms (mileage, warranty, certified pre-owned, etc.)
+   - Trending search terms in Indian automotive space
+5. Recommended word count (1500-2500 for comprehensive coverage)
 6. Key points to cover
 
-Format as JSON with keys: title, metaDescription, outline (array), keywords (array), wordCount (number), keyPoints (array)`;
+Format as JSON with keys: title, metaDescription, outline (array of strings), keywords (array of 15-20 strings), wordCount (number), keyPoints (array)`;
 
     try {
       const completion = await this.openai.chat.completions.create({
