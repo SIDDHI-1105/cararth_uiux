@@ -8759,12 +8759,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      batchIngestionService.triggerIngestion();
+      // Start ingestion in background
+      const cities = ['hyderabad', 'bangalore', 'mumbai', 'delhi', 'pune', 'chennai'];
+      batchIngestionService.runIngestion(cities).catch(error => {
+        console.error('Background ingestion failed:', error);
+      });
       
       res.json({
         success: true,
         message: 'Scraper ingestion started',
-        status: batchIngestionService.getStatus()
+        cities,
+        isIngesting: true
       });
       
     } catch (error: any) {
