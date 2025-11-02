@@ -95,6 +95,20 @@ app.use((req, res, next) => {
         console.error('❌ Failed to start metrics service:', metricsError);
         console.error('Continuing without metrics tracking...');
       }
+
+      // Initialize AETHER production system
+      try {
+        const { initializeAether } = await import('./lib/aether/initialize.js');
+        const aetherInitialized = await initializeAether(app);
+        if (aetherInitialized) {
+          console.log('✅ AETHER production system initialized');
+        } else {
+          console.log('⚠️ AETHER initialization completed with warnings');
+        }
+      } catch (aetherError) {
+        console.error('❌ Failed to initialize AETHER:', aetherError);
+        console.error('Continuing without AETHER features...');
+      }
     } catch (error) {
       console.error('❌ Failed to register routes:', error);
       console.error('Server cannot start without routes. Exiting.');
