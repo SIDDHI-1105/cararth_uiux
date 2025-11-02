@@ -5,9 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { BrandWordmark } from "@/components/brand-wordmark";
+import SocialShareButtons from "@/components/social-share-buttons";
 import {
   Home,
-  Share2,
   Clock,
   BookOpen,
   ChevronRight,
@@ -107,10 +107,11 @@ export default function AIVerificationGuide() {
             </Button>
           </Link>
           <BrandWordmark variant="header" showTagline={false} className="scale-75" />
-          <Button variant="outline" size="sm" data-testid="button-share">
-            <Share2 className="h-4 w-4 mr-2" />
-            Share
-          </Button>
+          <SocialShareButtons
+            url="https://www.cararth.com/guides/ai-verified-used-car-trust-india"
+            title="The Ultimate Guide to AI-Verified Used Car Trust in India"
+            description="How AI verification is solving India's used car trust crisis"
+          />
         </div>
       </header>
 
