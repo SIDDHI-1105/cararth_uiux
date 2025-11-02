@@ -19,7 +19,8 @@ import {
   Loader2,
   Sparkles,
   DollarSign,
-  Eye
+  Eye,
+  Brain
 } from "lucide-react";
 
 export default function Aether() {
@@ -134,13 +135,23 @@ export default function Aether() {
           
           <div className="relative z-10">
             <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 bg-purple-500/10 backdrop-blur-sm rounded-xl border border-purple-500/30 shadow-lg shadow-purple-500/20">
-                <Sparkles className="h-10 w-10 text-purple-300 animate-pulse" />
+              {/* CarArth x ÆTHER Brain Logo */}
+              <div className="relative">
+                <div className="p-3 bg-purple-500/10 backdrop-blur-sm rounded-xl border border-purple-500/30 shadow-lg shadow-purple-500/20">
+                  <Brain className="h-10 w-10 text-purple-300 animate-pulse" />
+                </div>
+                {/* CarArth DNA marker */}
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gradient-to-br from-green-500 to-blue-500 rounded-full border-2 border-slate-900 flex items-center justify-center">
+                  <span className="text-white text-[8px] font-black">C</span>
+                </div>
               </div>
               <div>
-                <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-200 via-indigo-200 to-pink-200 tracking-tight">
-                  ÆTHER
-                </h1>
+                <div className="flex items-baseline gap-2">
+                  <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-200 via-indigo-200 to-pink-200 tracking-tight">
+                    ÆTHER
+                  </h1>
+                  <span className="text-xs font-bold text-purple-400/70 tracking-wider">by CarArth</span>
+                </div>
                 <p className="text-purple-300/90 text-sm font-mono mt-1 tracking-widest uppercase">
                   Adaptive Engine for Trust, Heuristics & Evolving Rankings
                 </p>
