@@ -4840,17 +4840,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.redirect(`/?brand=${brand}`);
   });
 
-  app.get("/guides/:type", (req, res) => {
-    const { type } = req.params;
-    if (type === 'buying') {
-      res.redirect('/news?category=market');
-    } else if (type === 'maintenance') {
-      res.redirect('/news?category=technology');
-    } else if (type === 'finance') {
-      res.redirect('/finance');
-    } else {
-      res.redirect('/news');
-    }
+  // Legacy guide type redirects (specific types only, don't catch static HTML guide files)
+  app.get("/guides/buying", (req, res) => {
+    res.redirect('/news?category=market');
+  });
+  
+  app.get("/guides/maintenance", (req, res) => {
+    res.redirect('/news?category=technology');
+  });
+  
+  app.get("/guides/finance", (req, res) => {
+    res.redirect('/finance');
   });
 
   // Sitemap now served from /public/sitemap.xml (static file)
