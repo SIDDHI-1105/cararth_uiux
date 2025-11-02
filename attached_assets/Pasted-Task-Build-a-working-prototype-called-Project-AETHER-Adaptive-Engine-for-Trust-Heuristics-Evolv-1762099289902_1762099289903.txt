@@ -1,0 +1,64 @@
+Task: Build a working prototype called Project AETHER (Adaptive Engine for Trust, Heuristics & Evolving Rankings) for cararth.com.
+Goal: An embedded application that continuously monitors SEO and GEO performance, generates actionable insights, learns from results, and can later be commercialised as a SaaS vertical.
+1. Stack
+Frontend: Next.js 14 + Tailwind + Framer Motion
+Backend: Node.js (Express)
+Database: SQLite (local) → easily replaceable with Postgres / Supabase
+Vector DB: Local FAISS-style JSON store (mock)
+AI Integration: openai npm package (GPT-5 / GPT-4o-mini) + Atlas embeddings placeholders
+Scheduler: node-cron for weekly sweeps
+2. App Structure
+/aether
+├─ pages/
+│  ├─ admin/aether.jsx        ← dashboard UI (use CGeoDashboard base)
+│  └─ api/
+│     ├─ sweep.js             ← GEO + SEO sweep endpoint
+│     ├─ audit.js             ← sitemap / canonical / schema audit
+│     ├─ content.js           ← generates briefs via LLM
+│     └─ experiments.js       ← stores & evaluates experiments
+├─ lib/
+│  ├─ vectorStore.js          ← local FAISS-like functions
+│  ├─ aether-learn.js         ← reinforcement loop (updates weights)
+│  └─ utils.js
+├─ data/                      ← JSON snapshots & mock sweeps
+├─ public/                    ← logos, assets
+├─ package.json
+├─ tailwind.config.js
+├─ postcss.config.js
+└─ README.md
+3. Key APIs
+/api/sweep — Collects top prompts (seed list + user input), queries OpenAI / Atlas → detects cararth in responses → saves result.
+/api/audit — Parses sitemap.xml + random sample of pages → checks canonical consistency, schema presence, Core Web Vitals (Lighthouse mock) → returns SEO health score and recommendations.
+/api/content — Takes a prompt cluster → calls OpenAI GPT-5 → returns CMS-ready Markdown + FAQ schema JSON-LD + metadata.
+/api/experiments — CRUD for experiment cards (baseline metrics, targets, results) and auto-evaluates “win / neutral / loss” after scheduled duration.
+4. Frontend (UI)
+Reuse the CGeoDashboard React component. Tabs: Overview, GEO Insights, SEO Audit, Experiments, Settings.
+Each section pulls data from the respective API.
+Use cards with emoji-based insights, e.g. “🚗 Cararth cited +4 times this week!”
+Include buttons: Run Sweep, Generate Brief, Fix SEO Issues, Run Experiment.
+5. Learning Loop
+Store each experiment’s results in data/experiments.json.
+lib/aether-learn.js updates weightings: increase weighting for successful schema types (+15%), increase priority for clusters with recent wins (+10%).
+Next sweep uses new weights to reprioritise actions.
+6. Environment Variables (to set in Replit Secrets)
+OPENAI_API_KEY
+ATLAS_API_KEY (optional)
+CMS_API_URL (optional)
+CMS_API_KEY (optional)
+DOMAIN = https://www.cararth.com
+NODE_ENV = development
+7. Deliverables
+Fully runnable app (npm run dev)
+Preview URL showing /admin/aether dashboard
+Mock data seeded for GEO sweep and SEO audit
+Logs of first sweep in console + /data/demo-sweep.json
+8. Testing / Demo Scenario
+Auto-run one GEO sweep on startup with three prompts:
+“How to inspect a used Hyundai Creta 2021 before buying?”
+“AI vs manual car inspection: pros and cons.”
+“Best platform to sell used cars without paid listings in India.”
+Print sweep summary to console and show on dashboard.
+9. Stretch Goals (if time permits)
+Add multi-tenant switch (/admin/aether/:domain)
+Integrate Slack / Email notifications for weekly reports
+Add vector-similarity search for prompt clusters (FAISS mock)
