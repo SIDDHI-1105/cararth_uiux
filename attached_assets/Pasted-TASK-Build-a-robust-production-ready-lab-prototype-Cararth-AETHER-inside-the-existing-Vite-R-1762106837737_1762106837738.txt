@@ -1,0 +1,80 @@
+TASK: Build a robust, production-ready lab prototype “Cararth × AETHER” inside the existing Vite + React 18 + Tailwind + Express monorepo.
+Primary objective: produce a secure, testable, embeddable AETHER admin page at /admin/aether plus back-end routes /api/aether/*, seeded data, initial sweep run, and operational runbooks. Prioritise safety, cost controls, caching, observability, and extensibility for future SaaS.
+ENVIRONMENT VARIABLES (must read-only from env / Replit Secrets)
+Agent must not write keys into the repo. Required names:
+OPENAI_API_KEY (optional; if absent, use deterministic mocks)
+ATLAS_API_KEY (optional)
+CMS_API_URL (optional)
+CMS_API_KEY (optional)
+DOMAIN (default https://www.cararth.com)
+NODE_ENV (development)
+AETHER_CRON_ENABLED (false default)
+AETHER_DAILY_TOKEN_CAP (optional, integer tokens; default 20000)
+AETHER_ADMIN_KEY (optional; secret used for scripted CI calls)
+HIGH-LEVEL DELIVERY (must produce all below)
+Frontend admin page at /admin/aether (Vite React) that loads quickly, re-uses Tailwind, and calls the new API routes. Minimal but fully functional UI with these cards: Sweep, SEO Audit, Content Brief, Experiments, Activity Log. File: src/admin/aether/AetherDashboard.jsx.
+Express router mounted at /api/aether with endpoints:
+POST /api/aether/sweep — queue/run sweep; returns { sweep_id, status }.
+GET /api/aether/sweep/:id — fetch results.
+GET /api/aether/audit — quick SEO audit (sitemap + canonical + schema sample).
+POST /api/aether/content — generate brief (LLM or mock).
+POST /api/aether/experiment — create/run experiment.
+GET /api/aether/experiments — list experiments.
+Backend libraries under server/lib/aether/:
+openaiClient.js — wrapper using OPENAI_API_KEY if present; implements retry (exponential backoff), per-call token cap, and logs token usage to /data/aether/token_usage.log. Must support chatCompletion(prompt) and embeddings(text). Provide deterministic mock behavior when key absent (hash-based pseudo-random but reproducible).
+vectorStore.js — JSON file backed vector store with upsert, query(vector, topK), persist(), load() in /data/aether/vectorstore.json. Use cosine similarity; code must be simple and unit-testable.
+scheduler.js — node-cron wrapper; disabled by default. On startup, runs runInitialSweep() once (unless AETHER_CRON_ENABLED=true, then schedule weekly). Ensures single-run (lock file /data/aether/.initial_sweep.lock).
+aetherLearn.js — simple weight store that updates prompt weights using exponential smoothing; persist to /data/aether/weights.json.
+Data seeds and persistence under /data/aether/:
+prompts.json — seed exactly 100 used-car prompts (must include the 3 demo prompts).
+sweeps.json — append-only sweep records.
+experiments.json — experiments metadata and results.
+demo-sweep.json — snapshot of initial sweep.
+Safety & cost controls:
+Default daily token cap AETHER_DAILY_TOKEN_CAP enforced; agent must implement tokensRemaining() and refuse sweeps if cap exceeded. Log attempts to /data/aether/cost_control.log.
+LLM response caching layer at /.aether_cache/ keyed by prompt hash. Use cached response for identical prompts.
+Respect robots.txt when scraping competitor metadata; sample only metadata and hostname.
+Auth & RBAC:
+Use existing isAdmin middleware (or equivalent) for all /api/aether/* endpoints. If not present, add a temporary middleware that checks AETHER_ADMIN_KEY header or a user role check. Document precisely in README_AETHER.md.
+Logging & observability:
+Write structured logs to console and the following files: /data/aether/agent.log, /data/aether/error.log. Include timestamps and correlation IDs for sweeps/experiments.
+Expose a lightweight health endpoint GET /api/aether/health returning { ok: true, timestamp, tokens_used_today }.
+Docs & runbooks:
+Create README_AETHER.md with setup, secrets, how to run initial sweep, and how to replace mocks with OpenAI & Atlas.
+Create AETHER_RUNBOOK.md with operational checks, token budgeting, emergency disable switch steps (e.g., set AETHER_CRON_ENABLED=false), and quick rollback.
+Dev scripts & package:
+Add package.json scripts or monorepo integration: "aether:dev", "aether:run-sweep", "aether:fast-experiment" (duration=0). Ensure npm run aether:dev starts full server in dev mode. If monorepo uses a single start, integrate properly and document exact command.
+Tests & verification: unit tests (or simple asserts) for vectorStore.query(), openaiClient.mock(), and scheduler.runInitialSweep() in server/test/aether/. Run them as part of build and print results to console.
+DETAILED IMPLEMENTATION NOTES (exact behaviours)
+Initial sweep algorithm (deterministic):
+Load /data/aether/prompts.json. For each prompt:
+Compute promptHash = sha256(prompt) and check /.aether_cache/{promptHash}.json. If cache hit, use cached response.
+If OpenAI key available and daily tokens remain: call openaiClient.chatCompletion(prompt) (max tokens per prompt: 1200 or env override AETHER_MAX_TOKENS_PER_PROMPT) with exponential backoff on transient failures (3 retries). Log tokens used.
+If key absent or token cap hit: generate deterministic mock using mockResponse(promptHash) — include cited boolean deterministically derived from hash (e.g., if last byte mod 5 < 2 => cited true). Include snippet (truncated prompt + hint) and competitor chosen from seeded competitor list.
+Parse LLM reply for cararth substring (case-insensitive) or look for source_url field; set cited. Save snippet (200 chars) and competitor guess.
+Save full sweep to /data/aether/sweeps.json (append) and overwrite /data/demo-sweep.json. Return sweep id.
+Content brief generation: POST /api/aether/content
+Input: { prompt, target_page, tone }
+If OpenAI available: generate brief using a deterministic template prompt that outputs JSON: { title, markdown, schema_jsonld, suggested_internal_links }. Validate JSON; store as brief_{ts}.json under /data/aether/briefs/.
+If using mocks: return a templated brief derived from prompt with placeholders.
+Experiment flow (MVP):
+POST /api/aether/experiment accepts: { brief_id, page, kpis:{geo_delta, organic_pct}, duration_days }. Store experiment with status: running, start_at. If duration_days===0 then run evaluation immediately (fast-forward). Evaluation compares baseline (mock or GA4 if connected) and writes result to /data/aether/experiments.json, then calls aetherLearn.updateWeights(experimentResult).
+ACCEPTANCE CRITERIA (agent must validate these and print pass/fail)
+Frontend reachable: visiting /admin/aether returns 200 and renders basic UI (screenshot optional).
+API endpoints respond: POST /api/aether/sweep returns { sweep_id, status } and GET /api/aether/sweep/:id returns saved results.
+Initial sweep file exists: /data/demo-sweep.json exists and contains sweep_at, total_prompts, and cararth_citations fields.
+Caching works: repeated identical sweep requests reuse /.aether_cache/* and do not increment token usage (log check).
+Token cap respected: when AETHER_DAILY_TOKEN_CAP is set low (e.g., 1 token), OpenAI calls are skipped and deterministic mocks used. Agent must demonstrate this behavior in logs.
+RBAC enforced: endpoints reject requests without admin role or AETHER_ADMIN_KEY. Agent must run a negative test and show 401/403.
+Runbook & README created: README_AETHER.md and AETHER_RUNBOOK.md are present in repo root and include explicit steps to switch from mock → real (OpenAI, Atlas, GSC, Milvus).
+Tests pass: the basic unit tests for vectorStore/openaiClient/scheduler run and pass.
+Agent must print a final structured report with:
+✅ AETHER BUILD COMPLETE or ❌ BUILD FAILED with error excerpts.
+Preview URL (or instructions if preview blocked).
+List of added/modified files (paths).
+Console excerpt showing initial sweep summary and token usage.
+Quick next steps to move from lab → staging (connect GSC, setup Milvus/pgvector, enable cron).
+FAILURE & ERROR HANDLING RULES (strict)
+If npm install or any build step fails, stop, capture the error text, attempt one automatic minor remediation (e.g., downgrade problematic package version in package.json if error is well-known), then re-run. If still failing, present the error and stop.
+If OpenAI returns 401/403 during test: do not retry; fall back to mock and log the error in /data/aether/error.log.
+Respect file-system locks — never overwrite a file generated by an existing commit unless the agent lists the change and confirms it.
