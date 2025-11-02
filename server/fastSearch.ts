@@ -169,10 +169,10 @@ export class FastSearchService {
       
       // CRITICAL: SORT BY TRUST SCORE AND IMAGE QUALITY
       // Listings WITHOUT verified images must be pushed to the bottom
-      listings.sort((a, b) => {
+      listings.sort((a: any, b: any) => {
         // FIXED: Defensive image validation - check actual URLs AND database flag
-        const aHasImages = hasRealImages(a.images) && (a.hasRealImage !== false);
-        const bHasImages = hasRealImages(b.images) && (b.hasRealImage !== false);
+        const aHasImages = hasRealImages(a.images as string[]) && (a.hasRealImage !== false);
+        const bHasImages = hasRealImages(b.images as string[]) && (b.hasRealImage !== false);
         
         if (aHasImages && !bHasImages) return -1;
         if (!aHasImages && bHasImages) return 1;
