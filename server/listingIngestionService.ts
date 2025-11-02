@@ -28,7 +28,7 @@ function isPlaceholderImage(imageUrl: string): boolean {
     'spacer', 'shimmer', 'placeholder', 'no-image', 
     'noimage', 'default', '.svg', 'cd-shimmer',
     '/generated_images/', // AI-generated placeholder icons
-    '/api/proxy/image' // Object storage proxy URLs (dealer uploads, often placeholders)
+    'replit-objstore' // Object storage URLs (dealer uploads, often placeholders)
   ];
   
   return placeholderPatterns.some(pattern => url.includes(pattern));
