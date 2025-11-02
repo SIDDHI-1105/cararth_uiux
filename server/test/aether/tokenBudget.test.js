@@ -16,7 +16,7 @@ console.log(`✅ PASS: Budget stats (cap: ${stats.dailyCap}, used: ${stats.token
 
 // Test 2: Can Use Tokens Check
 console.log('Test 2: Can Use Tokens Check');
-const canUseSmal = tokenBudget.canUseTokens(100);
+const canUseSmall = tokenBudget.canUseTokens(100);
 const canUseLarge = tokenBudget.canUseTokens(1000000);
 
 assert(typeof canUseSmall === 'boolean', 'Should return boolean');
