@@ -124,39 +124,86 @@ export default function Aether() {
   const audits = auditsData?.audits || [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-50 flex items-center gap-3">
-            <Sparkles className="h-8 w-8 text-blue-600" />
-            Project AETHER
-          </h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-2">
-            Adaptive Engine for Trust, Heuristics & Evolving Rankings
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-indigo-950 p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Enigmatic Hero Header - Hidden Intelligence */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-purple-900/50 to-indigo-900/50 p-8 shadow-2xl border border-purple-500/20">
+          {/* Mysterious Glow Effect */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-purple-600/20 via-transparent to-transparent"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-indigo-600/20 via-transparent to-transparent"></div>
+          
+          <div className="relative z-10">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="p-3 bg-purple-500/10 backdrop-blur-sm rounded-xl border border-purple-500/30 shadow-lg shadow-purple-500/20">
+                <Sparkles className="h-10 w-10 text-purple-300 animate-pulse" />
+              </div>
+              <div>
+                <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-200 via-indigo-200 to-pink-200 tracking-tight">
+                  ÆTHER
+                </h1>
+                <p className="text-purple-300/90 text-sm font-mono mt-1 tracking-widest uppercase">
+                  Adaptive Engine for Trust, Heuristics & Evolving Rankings
+                </p>
+              </div>
+            </div>
+            <p className="text-slate-300/80 text-base max-w-3xl leading-relaxed font-light">
+              Unveiling the invisible threads that connect your brand to AI consciousness. Monitor how machine intelligence perceives you, 
+              decode the hidden patterns in search algorithms, and harness the unseen forces shaping digital discovery. 
+              Where data meets divination.
+            </p>
+            <div className="flex flex-wrap gap-3 mt-6">
+              <Badge className="bg-purple-500/20 text-purple-200 border-purple-400/30 hover:bg-purple-500/30 text-xs px-4 py-1.5 font-mono backdrop-blur-sm">
+                ⚡ Perception Mapping
+              </Badge>
+              <Badge className="bg-indigo-500/20 text-indigo-200 border-indigo-400/30 hover:bg-indigo-500/30 text-xs px-4 py-1.5 font-mono backdrop-blur-sm">
+                🔮 Pattern Recognition
+              </Badge>
+              <Badge className="bg-pink-500/20 text-pink-200 border-pink-400/30 hover:bg-pink-500/30 text-xs px-4 py-1.5 font-mono backdrop-blur-sm">
+                ∞ Neural Synthesis
+              </Badge>
+              <Badge className="bg-violet-500/20 text-violet-200 border-violet-400/30 hover:bg-violet-500/30 text-xs px-4 py-1.5 font-mono backdrop-blur-sm">
+                ◊ Shadow Analysis
+              </Badge>
+            </div>
+          </div>
         </div>
 
-        {/* Main Tabs */}
+        {/* Main Tabs - Premium Navigation */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-5 gap-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm p-2 rounded-xl shadow-lg border-2 border-slate-200 dark:border-slate-800">
+            <TabsTrigger 
+              value="overview" 
+              className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white font-semibold rounded-lg transition-all"
+            >
               <Eye className="h-4 w-4" />
               Overview
             </TabsTrigger>
-            <TabsTrigger value="geo" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="geo" 
+              className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white font-semibold rounded-lg transition-all"
+            >
               <Search className="h-4 w-4" />
-              GEO Insights
+              GEO Intelligence
             </TabsTrigger>
-            <TabsTrigger value="seo" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="seo" 
+              className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white font-semibold rounded-lg transition-all"
+            >
               <FileSearch className="h-4 w-4" />
-              SEO Audit
+              SEO Analyzer
             </TabsTrigger>
-            <TabsTrigger value="content" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="content" 
+              className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white font-semibold rounded-lg transition-all"
+            >
               <TrendingUp className="h-4 w-4" />
-              Content
+              Content Lab
             </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-2" disabled>
+            <TabsTrigger 
+              value="settings" 
+              className="flex items-center gap-2 font-semibold rounded-lg opacity-50" 
+              disabled
+            >
               <Settings className="h-4 w-4" />
               Settings
             </TabsTrigger>
@@ -164,121 +211,191 @@ export default function Aether() {
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                    Total Sweeps
-                  </CardTitle>
+            {/* Premium Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Total Sweeps Card */}
+              <Card className="relative overflow-hidden border-2 border-indigo-100 dark:border-indigo-900 shadow-lg hover:shadow-xl transition-shadow">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-500/10 to-transparent rounded-bl-full"></div>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-indigo-100 dark:bg-indigo-900/40 rounded-lg">
+                      <Search className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                    </div>
+                    <CardTitle className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                      AI Sweeps
+                    </CardTitle>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-slate-900 dark:text-slate-50">
+                  <div className="text-4xl font-black text-indigo-600 dark:text-indigo-400">
                     {statsLoading ? "..." : stats?.totalSweeps || 0}
                   </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                    CarArth Mentions
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-green-600">
-                    {statsLoading ? "..." : stats?.mentionedSweeps || 0}
-                  </div>
-                  <p className="text-xs text-slate-500 mt-1">
-                    {stats?.mentionRate || "0%"} mention rate
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">
+                    GEO visibility checks
                   </p>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400 flex items-center gap-1">
-                    <DollarSign className="h-4 w-4" />
-                    Total Cost
-                  </CardTitle>
+              {/* CarArth Mentions Card */}
+              <Card className="relative overflow-hidden border-2 border-green-100 dark:border-green-900 shadow-lg hover:shadow-xl transition-shadow">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-500/10 to-transparent rounded-bl-full"></div>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-green-100 dark:bg-green-900/40 rounded-lg">
+                      <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <CardTitle className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                      Brand Mentions
+                    </CardTitle>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-slate-900 dark:text-slate-50">
-                    ${statsLoading ? "..." : (stats?.totalCost || 0).toFixed(4)}
+                  <div className="text-4xl font-black text-green-600 dark:text-green-400">
+                    {statsLoading ? "..." : stats?.mentionedSweeps || 0}
                   </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">
+                    {stats?.mentionRate || "0%"} AI visibility rate
+                  </p>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                    Avg Relevance
-                  </CardTitle>
+              {/* Total Cost Card */}
+              <Card className="relative overflow-hidden border-2 border-purple-100 dark:border-purple-900 shadow-lg hover:shadow-xl transition-shadow">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-500/10 to-transparent rounded-bl-full"></div>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-purple-100 dark:bg-purple-900/40 rounded-lg">
+                      <DollarSign className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <CardTitle className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                      API Cost
+                    </CardTitle>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-blue-600">
-                    {statsLoading ? "..." : (stats?.avgRelevance || 0).toFixed(2)}
+                  <div className="text-4xl font-black text-purple-600 dark:text-purple-400">
+                    ${statsLoading ? "..." : (stats?.totalCost || 0).toFixed(4)}
                   </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">
+                    Total monitoring spend
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Avg Relevance Card */}
+              <Card className="relative overflow-hidden border-2 border-pink-100 dark:border-pink-900 shadow-lg hover:shadow-xl transition-shadow">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-pink-500/10 to-transparent rounded-bl-full"></div>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-pink-100 dark:bg-pink-900/40 rounded-lg">
+                      <Sparkles className="h-5 w-5 text-pink-600 dark:text-pink-400" />
+                    </div>
+                    <CardTitle className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                      Relevance
+                    </CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-4xl font-black text-pink-600 dark:text-pink-400">
+                    {statsLoading ? "..." : (stats?.avgRelevance || 0).toFixed(1)}
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">
+                    Average quality score
+                  </p>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Quick Actions */}
-            <Card>
+            {/* Quick Actions - Premium Style */}
+            <Card className="border-2 border-indigo-100 dark:border-indigo-900 shadow-lg bg-gradient-to-br from-white to-indigo-50/30 dark:from-slate-900 dark:to-indigo-950/30">
               <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>Run demo sweeps or view recent results</CardDescription>
+                <CardTitle className="text-xl font-bold text-slate-900 dark:text-slate-50">🚀 Launch Pad</CardTitle>
+                <CardDescription className="text-base">
+                  Test your AI visibility or explore competitor intelligence
+                </CardDescription>
               </CardHeader>
-              <CardContent className="flex gap-3">
+              <CardContent className="flex flex-wrap gap-3">
                 <Button
                   onClick={() => runDemoSweepMutation.mutate()}
                   disabled={runDemoSweepMutation.isPending}
                   data-testid="button-run-demo"
+                  className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold px-6 shadow-lg"
+                  size="lg"
                 >
                   {runDemoSweepMutation.isPending ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Running Demo...
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Running Intelligence Sweep...
                     </>
                   ) : (
                     <>
-                      <Sparkles className="mr-2 h-4 w-4" />
-                      Run Demo Sweeps
+                      <Sparkles className="mr-2 h-5 w-5" />
+                      Run Demo AI Sweeps
                     </>
                   )}
                 </Button>
-                <Button variant="outline" onClick={() => setActiveTab("geo")}>
-                  <TrendingUp className="mr-2 h-4 w-4" />
-                  View GEO Insights
+                <Button 
+                  variant="outline" 
+                  onClick={() => setActiveTab("geo")}
+                  className="border-2 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-950 font-semibold px-6"
+                  size="lg"
+                >
+                  <Search className="mr-2 h-5 w-5" />
+                  View GEO Dashboard
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setActiveTab("seo")}
+                  className="border-2 border-purple-200 dark:border-purple-800 hover:bg-purple-50 dark:hover:bg-purple-950 font-semibold px-6"
+                  size="lg"
+                >
+                  <FileSearch className="mr-2 h-5 w-5" />
+                  Audit SEO Health
                 </Button>
               </CardContent>
             </Card>
 
-            {/* Recent Activity */}
+            {/* Recent Activity - Enhanced */}
             {sweeps.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Sweeps</CardTitle>
-                  <CardDescription>Latest 5 GEO monitoring sweeps</CardDescription>
+              <Card className="border-2 border-slate-200 dark:border-slate-800 shadow-lg">
+                <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
+                  <CardTitle className="text-xl font-bold text-slate-900 dark:text-slate-50 flex items-center gap-2">
+                    <Eye className="h-5 w-5 text-indigo-600" />
+                    Recent Intelligence Sweeps
+                  </CardTitle>
+                  <CardDescription className="text-base">
+                    Your latest AI visibility monitoring results
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-3 pt-6">
                   {sweeps.slice(0, 5).map((sweep: any) => (
-                    <div key={sweep.id} className="flex items-start justify-between p-3 border rounded-lg">
+                    <div 
+                      key={sweep.id} 
+                      className="flex items-start justify-between p-4 border-2 border-slate-100 dark:border-slate-800 rounded-xl hover:border-indigo-200 dark:hover:border-indigo-800 hover:shadow-md transition-all bg-white dark:bg-slate-900"
+                    >
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-relaxed">
                           {sweep.promptText.length > 80 ? sweep.promptText.substring(0, 80) + '...' : sweep.promptText}
                         </p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant={sweep.cararthMentioned ? "default" : "secondary"} className="text-xs">
-                            {sweep.cararthMentioned ? "✅ Mentioned" : "❌ Not Mentioned"}
+                        <div className="flex items-center gap-2 mt-2">
+                          <Badge 
+                            variant={sweep.cararthMentioned ? "default" : "secondary"} 
+                            className={`text-xs font-semibold ${
+                              sweep.cararthMentioned 
+                                ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-100' 
+                                : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-100'
+                            }`}
+                          >
+                            {sweep.cararthMentioned ? "✅ Brand Mentioned" : "❌ Not Mentioned"}
                           </Badge>
                           {sweep.promptCategory && (
-                            <Badge variant="outline" className="text-xs">
+                            <Badge variant="outline" className="text-xs font-medium border-indigo-200 text-indigo-700 dark:border-indigo-700 dark:text-indigo-300">
                               {sweep.promptCategory}
                             </Badge>
                           )}
                         </div>
                       </div>
-                      <div className="text-xs text-slate-500 ml-4">
+                      <div className="text-xs text-slate-500 dark:text-slate-400 ml-4 font-medium">
                         {new Date(sweep.createdAt).toLocaleString()}
                       </div>
                     </div>
