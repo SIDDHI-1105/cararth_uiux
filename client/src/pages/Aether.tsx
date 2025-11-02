@@ -146,23 +146,23 @@ export default function Aether() {
                 </p>
               </div>
             </div>
-            <p className="text-slate-300/80 text-base max-w-3xl leading-relaxed font-light">
-              Unveiling the invisible threads that connect your brand to AI consciousness. Monitor how machine intelligence perceives you, 
-              decode the hidden patterns in search algorithms, and harness the unseen forces shaping digital discovery. 
-              Where data meets divination.
+            <p className="text-slate-300/80 text-base max-w-3xl leading-relaxed font-light italic">
+              A synthesis of strategic intelligence and algorithmic divination. Decode the hidden semiotics of search, 
+              map the cognitive architecture of digital discovery, and illuminate the invisible forces governing brand perception. 
+              Intelligence refined through analysis, elevated by intuition.
             </p>
             <div className="flex flex-wrap gap-3 mt-6">
               <Badge className="bg-purple-500/20 text-purple-200 border-purple-400/30 hover:bg-purple-500/30 text-xs px-4 py-1.5 font-mono backdrop-blur-sm">
-                ⚡ Perception Mapping
+                ∴ Cognitive Mapping
               </Badge>
               <Badge className="bg-indigo-500/20 text-indigo-200 border-indigo-400/30 hover:bg-indigo-500/30 text-xs px-4 py-1.5 font-mono backdrop-blur-sm">
-                🔮 Pattern Recognition
+                ◇ Strategic Foresight
               </Badge>
               <Badge className="bg-pink-500/20 text-pink-200 border-pink-400/30 hover:bg-pink-500/30 text-xs px-4 py-1.5 font-mono backdrop-blur-sm">
-                ∞ Neural Synthesis
+                ∞ Analytical Synthesis
               </Badge>
               <Badge className="bg-violet-500/20 text-violet-200 border-violet-400/30 hover:bg-violet-500/30 text-xs px-4 py-1.5 font-mono backdrop-blur-sm">
-                ◊ Shadow Analysis
+                ◊ Latent Discovery
               </Badge>
             </div>
           </div>
@@ -183,21 +183,21 @@ export default function Aether() {
               className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white font-semibold rounded-lg transition-all"
             >
               <Search className="h-4 w-4" />
-              GEO Intelligence
+              Perception Map
             </TabsTrigger>
             <TabsTrigger 
               value="seo" 
               className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white font-semibold rounded-lg transition-all"
             >
               <FileSearch className="h-4 w-4" />
-              SEO Analyzer
+              Structural Audit
             </TabsTrigger>
             <TabsTrigger 
               value="content" 
               className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white font-semibold rounded-lg transition-all"
             >
               <TrendingUp className="h-4 w-4" />
-              Content Lab
+              Strategic Briefs
             </TabsTrigger>
             <TabsTrigger 
               value="settings" 
@@ -222,7 +222,7 @@ export default function Aether() {
                       <Search className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                     </div>
                     <CardTitle className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
-                      AI Sweeps
+                      Cognitive Sweeps
                     </CardTitle>
                   </div>
                 </CardHeader>
@@ -231,7 +231,7 @@ export default function Aether() {
                     {statsLoading ? "..." : stats?.totalSweeps || 0}
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">
-                    GEO visibility checks
+                    Perception analyses
                   </p>
                 </CardContent>
               </Card>
@@ -245,7 +245,7 @@ export default function Aether() {
                       <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
                     </div>
                     <CardTitle className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
-                      Brand Mentions
+                      Recognition Index
                     </CardTitle>
                   </div>
                 </CardHeader>
@@ -254,7 +254,7 @@ export default function Aether() {
                     {statsLoading ? "..." : stats?.mentionedSweeps || 0}
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">
-                    {stats?.mentionRate || "0%"} AI visibility rate
+                    {stats?.mentionRate || "0%"} cognitive presence
                   </p>
                 </CardContent>
               </Card>
@@ -268,7 +268,7 @@ export default function Aether() {
                       <DollarSign className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                     </div>
                     <CardTitle className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
-                      API Cost
+                      Intelligence Cost
                     </CardTitle>
                   </div>
                 </CardHeader>
@@ -277,7 +277,7 @@ export default function Aether() {
                     ${statsLoading ? "..." : (stats?.totalCost || 0).toFixed(4)}
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">
-                    Total monitoring spend
+                    Analysis investment
                   </p>
                 </CardContent>
               </Card>
@@ -306,12 +306,12 @@ export default function Aether() {
               </Card>
             </div>
 
-            {/* Quick Actions - Premium Style */}
+            {/* Strategic Command Center */}
             <Card className="border-2 border-indigo-100 dark:border-indigo-900 shadow-lg bg-gradient-to-br from-white to-indigo-50/30 dark:from-slate-900 dark:to-indigo-950/30">
               <CardHeader>
-                <CardTitle className="text-xl font-bold text-slate-900 dark:text-slate-50">🚀 Launch Pad</CardTitle>
-                <CardDescription className="text-base">
-                  Test your AI visibility or explore competitor intelligence
+                <CardTitle className="text-xl font-bold text-slate-900 dark:text-slate-50">∴ Strategic Command</CardTitle>
+                <CardDescription className="text-base italic">
+                  Initiate perception analysis or decode competitor architecture
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-wrap gap-3">
@@ -325,12 +325,12 @@ export default function Aether() {
                   {runDemoSweepMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Running Intelligence Sweep...
+                      Analyzing Cognition...
                     </>
                   ) : (
                     <>
                       <Sparkles className="mr-2 h-5 w-5" />
-                      Run Demo AI Sweeps
+                      Run Perception Sweep
                     </>
                   )}
                 </Button>
@@ -341,7 +341,7 @@ export default function Aether() {
                   size="lg"
                 >
                   <Search className="mr-2 h-5 w-5" />
-                  View GEO Dashboard
+                  View Perception Map
                 </Button>
                 <Button 
                   variant="outline" 
@@ -350,7 +350,7 @@ export default function Aether() {
                   size="lg"
                 >
                   <FileSearch className="mr-2 h-5 w-5" />
-                  Audit SEO Health
+                  Structural Analysis
                 </Button>
               </CardContent>
             </Card>
@@ -361,10 +361,10 @@ export default function Aether() {
                 <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
                   <CardTitle className="text-xl font-bold text-slate-900 dark:text-slate-50 flex items-center gap-2">
                     <Eye className="h-5 w-5 text-indigo-600" />
-                    Recent Intelligence Sweeps
+                    Cognitive Archive
                   </CardTitle>
-                  <CardDescription className="text-base">
-                    Your latest AI visibility monitoring results
+                  <CardDescription className="text-base italic">
+                    Chronicle of perception analysis and strategic insight
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3 pt-6">
