@@ -8655,6 +8655,124 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(aiInfo);
   }));
 
+  // Admin endpoint: Seed production database from dev snapshot
+  app.post('/api/admin/seed-production', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    if (!('db' in storage)) {
+      return res.status(503).json({ error: 'Database storage required' });
+    }
+
+    try {
+      const { readFile } = await import('fs/promises');
+      const path = await import('path');
+      const { fileURLToPath } = await import('url');
+      
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
+      const seedFilePath = path.join(__dirname, '../data/dev-seed.json');
+      
+      // Read the seed data
+      const seedDataRaw = await readFile(seedFilePath, 'utf-8');
+      const seedData = JSON.parse(seedDataRaw);
+      
+      if (!Array.isArray(seedData) || seedData.length === 0) {
+        return res.status(400).json({ error: 'Invalid seed data format' });
+      }
+
+      console.log(`📦 Seeding production with ${seedData.length} listings...`);
+
+      const db = (storage as any).db;
+      const { cachedPortalListings } = await import('../shared/schema');
+      
+      // Check current count
+      const currentCount = await db.select({ count: sql<number>`count(*)` })
+        .from(cachedPortalListings);
+      const existingCount = Number(currentCount[0].count);
+      
+      console.log(`   Current listings in production: ${existingCount}`);
+      
+      // Insert listings in batches
+      let inserted = 0;
+      const batchSize = 50;
+      
+      for (let i = 0; i < seedData.length; i += batchSize) {
+        const batch = seedData.slice(i, i + batchSize);
+        
+        for (const listing of batch) {
+          try {
+            await db.insert(cachedPortalListings).values({
+              ...listing,
+              images: listing.images, // Already JSONB from export
+              created_at: new Date(listing.created_at)
+            }).onConflictDoNothing(); // Skip duplicates
+            
+            inserted++;
+          } catch (err) {
+            console.error(`   ⚠️  Failed to insert listing ${listing.id}:`, err);
+          }
+        }
+        
+        console.log(`   ✓ Seeded ${Math.min(i + batchSize, seedData.length)}/${seedData.length} listings...`);
+      }
+
+      // Get final stats
+      const finalCount = await db.select({ count: sql<number>`count(*)` })
+        .from(cachedPortalListings);
+      const totalListings = Number(finalCount[0].count);
+      
+      const realImagesCount = await db.select({ count: sql<number>`count(*)` })
+        .from(cachedPortalListings)
+        .where(eq(cachedPortalListings.has_real_image, true));
+      const realImages = Number(realImagesCount[0].count);
+
+      console.log(`✅ Production seeding complete!`);
+      console.log(`   Total listings: ${totalListings}`);
+      console.log(`   Real images: ${realImages}`);
+      console.log(`   Placeholders: ${totalListings - realImages}`);
+
+      res.json({
+        success: true,
+        inserted,
+        totalListings,
+        realImages,
+        placeholders: totalListings - realImages
+      });
+      
+    } catch (error: any) {
+      console.error('❌ Production seeding failed:', error);
+      res.status(500).json({ error: error.message || 'Seeding failed' });
+    }
+  }));
+
+  // Admin endpoint: Trigger scrapers to fetch fresh listings
+  app.post('/api/admin/trigger-scrapers', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
+    try {
+      console.log('🚀 Admin triggered scraper ingestion');
+      
+      const { batchIngestionService } = await import('./batchIngestion.js');
+      
+      const status = batchIngestionService.getStatus();
+      if (status.isIngesting) {
+        return res.status(429).json({ 
+          error: 'Ingestion already in progress',
+          isIngesting: true,
+          status 
+        });
+      }
+      
+      batchIngestionService.triggerIngestion();
+      
+      res.json({
+        success: true,
+        message: 'Scraper ingestion started',
+        status: batchIngestionService.getStatus()
+      });
+      
+    } catch (error: any) {
+      console.error('❌ Failed to trigger scrapers:', error);
+      res.status(500).json({ error: error.message || 'Failed to start scrapers' });
+    }
+  }));
+
   // Dynamic sitemap.xml generator
   app.get('/sitemap.xml', asyncHandler(async (req: any, res: any) => {
     const { db } = await import('./db.js');
