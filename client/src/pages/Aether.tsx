@@ -147,22 +147,21 @@ export default function Aether() {
               </div>
             </div>
             <p className="text-slate-300/80 text-base max-w-3xl leading-relaxed font-light italic">
-              A synthesis of strategic intelligence and algorithmic divination. Decode the hidden semiotics of search, 
-              map the cognitive architecture of digital discovery, and illuminate the invisible forces governing brand perception. 
-              Intelligence refined through analysis, elevated by intuition.
+              See what AI sees. Understand how search engines think. Uncover the hidden patterns that shape your digital presence. 
+              Strategic intelligence meets intuitive insight—revealing what others miss.
             </p>
             <div className="flex flex-wrap gap-3 mt-6">
               <Badge className="bg-purple-500/20 text-purple-200 border-purple-400/30 hover:bg-purple-500/30 text-xs px-4 py-1.5 font-mono backdrop-blur-sm">
-                ∴ Cognitive Mapping
+                ∴ Perception Tracking
               </Badge>
               <Badge className="bg-indigo-500/20 text-indigo-200 border-indigo-400/30 hover:bg-indigo-500/30 text-xs px-4 py-1.5 font-mono backdrop-blur-sm">
-                ◇ Strategic Foresight
+                ◇ Pattern Analysis
               </Badge>
               <Badge className="bg-pink-500/20 text-pink-200 border-pink-400/30 hover:bg-pink-500/30 text-xs px-4 py-1.5 font-mono backdrop-blur-sm">
-                ∞ Analytical Synthesis
+                ∞ Deep Intelligence
               </Badge>
               <Badge className="bg-violet-500/20 text-violet-200 border-violet-400/30 hover:bg-violet-500/30 text-xs px-4 py-1.5 font-mono backdrop-blur-sm">
-                ◊ Latent Discovery
+                ◊ Hidden Insights
               </Badge>
             </div>
           </div>
@@ -222,7 +221,7 @@ export default function Aether() {
                       <Search className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                     </div>
                     <CardTitle className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
-                      Cognitive Sweeps
+                      Total Scans
                     </CardTitle>
                   </div>
                 </CardHeader>
@@ -231,7 +230,7 @@ export default function Aether() {
                     {statsLoading ? "..." : stats?.totalSweeps || 0}
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">
-                    Perception analyses
+                    AI visibility checks
                   </p>
                 </CardContent>
               </Card>
@@ -245,7 +244,7 @@ export default function Aether() {
                       <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
                     </div>
                     <CardTitle className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
-                      Recognition Index
+                      Visibility Score
                     </CardTitle>
                   </div>
                 </CardHeader>
@@ -254,7 +253,7 @@ export default function Aether() {
                     {statsLoading ? "..." : stats?.mentionedSweeps || 0}
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">
-                    {stats?.mentionRate || "0%"} cognitive presence
+                    {stats?.mentionRate || "0%"} detection rate
                   </p>
                 </CardContent>
               </Card>
@@ -306,12 +305,12 @@ export default function Aether() {
               </Card>
             </div>
 
-            {/* Strategic Command Center */}
+            {/* Quick Actions */}
             <Card className="border-2 border-indigo-100 dark:border-indigo-900 shadow-lg bg-gradient-to-br from-white to-indigo-50/30 dark:from-slate-900 dark:to-indigo-950/30">
               <CardHeader>
-                <CardTitle className="text-xl font-bold text-slate-900 dark:text-slate-50">∴ Strategic Command</CardTitle>
+                <CardTitle className="text-xl font-bold text-slate-900 dark:text-slate-50">∴ Intelligence Hub</CardTitle>
                 <CardDescription className="text-base italic">
-                  Initiate perception analysis or decode competitor architecture
+                  Run scans to reveal hidden patterns and competitor insights
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-wrap gap-3">
@@ -325,12 +324,12 @@ export default function Aether() {
                   {runDemoSweepMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Analyzing Cognition...
+                      Running Scan...
                     </>
                   ) : (
                     <>
                       <Sparkles className="mr-2 h-5 w-5" />
-                      Run Perception Sweep
+                      Run Demo Scan
                     </>
                   )}
                 </Button>
@@ -341,7 +340,7 @@ export default function Aether() {
                   size="lg"
                 >
                   <Search className="mr-2 h-5 w-5" />
-                  View Perception Map
+                  View Insights
                 </Button>
                 <Button 
                   variant="outline" 
@@ -350,7 +349,7 @@ export default function Aether() {
                   size="lg"
                 >
                   <FileSearch className="mr-2 h-5 w-5" />
-                  Structural Analysis
+                  Audit Site
                 </Button>
               </CardContent>
             </Card>
@@ -361,10 +360,10 @@ export default function Aether() {
                 <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
                   <CardTitle className="text-xl font-bold text-slate-900 dark:text-slate-50 flex items-center gap-2">
                     <Eye className="h-5 w-5 text-indigo-600" />
-                    Cognitive Archive
+                    Recent Scans
                   </CardTitle>
                   <CardDescription className="text-base italic">
-                    Chronicle of perception analysis and strategic insight
+                    Your latest visibility checks and pattern discoveries
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3 pt-6">
