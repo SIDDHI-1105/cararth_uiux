@@ -1,0 +1,70 @@
+{
+  "timestamp": "2025-11-02T04:27:23.745Z",
+  "total_checked": 9,
+  "needs_fix": 0,
+  "results": [
+    {
+      "url": "https://cararth.com/?brand=Honda",
+      "status": 200,
+      "category": "Query parameter page",
+      "recommended_fix": "Working correctly",
+      "action_status": "ok"
+    },
+    {
+      "url": "https://cararth.com/faq",
+      "status": 200,
+      "category": "Static page",
+      "recommended_fix": "Working correctly",
+      "action_status": "ok"
+    },
+    {
+      "url": "https://cararth.com/api/news/market-insights",
+      "status": 200,
+      "category": "API endpoint",
+      "recommended_fix": "Already handled, add to robots.txt to prevent indexing",
+      "action_status": "ok"
+    },
+    {
+      "url": "https://cararth.com/cars/swift",
+      "status": 200,
+      "category": "Listing page",
+      "recommended_fix": "Working correctly",
+      "action_status": "ok"
+    },
+    {
+      "url": "https://cararth.com/cars/hyundai",
+      "status": 200,
+      "category": "Listing page",
+      "recommended_fix": "Working correctly",
+      "action_status": "ok"
+    },
+    {
+      "url": "https://cararth.com/cars/under-5-lakh",
+      "status": 200,
+      "category": "Listing page",
+      "recommended_fix": "Working correctly",
+      "action_status": "ok"
+    },
+    {
+      "url": "https://cararth.com/cars/mumbai",
+      "status": 200,
+      "category": "Listing page",
+      "recommended_fix": "Working correctly",
+      "action_status": "ok"
+    },
+    {
+      "url": "https://cararth.com/car/3b883fb3-dc57-4ede-8d82-765f931ebf62",
+      "status": 200,
+      "category": "Vehicle detail page",
+      "recommended_fix": "Working correctly",
+      "action_status": "ok"
+    },
+    {
+      "url": "https://cararth.com/car/92e5a53e-58ed-49e8-8277-0cddb6046560",
+      "status": 200,
+      "category": "Vehicle detail page",
+      "recommended_fix": "Working correctly",
+      "action_status": "ok"
+    }
+  ]
+}
