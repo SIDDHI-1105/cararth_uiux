@@ -104,47 +104,144 @@ export default function ListingDetail() {
   const numericPrice = typeof car.price === "string" ? parseFloat(car.price) : (car.price || 0);
   const validPrice = isNaN(numericPrice) ? undefined : numericPrice;
 
-  // Schema.org Product markup
+  // Comprehensive Schema.org Vehicle + Product markup for Google rich results
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": "Product",
+    "@type": ["Vehicle", "Product", "Car"],
     name: carTitle,
-    brand: {
-      "@type": "Brand",
-      name: car.make || "Unknown",
-    },
+    description: car.description || `${carTitle} in excellent condition. ${car.fuelType} engine, ${car.transmission} transmission. Located in ${car.city || "India"}.`,
+    
+    // Vehicle-specific fields
+    vehicleIdentificationNumber: car.vin || undefined,
+    manufacturer: car.make || "Unknown",
+    model: car.model || "Unknown",
+    modelDate: car.year?.toString(),
+    productionDate: car.year?.toString(),
     vehicleModelDate: car.year?.toString(),
-    ...(validPrice && {
-      price: validPrice,
-      priceCurrency: "INR",
-    }),
+    
+    // Vehicle condition and specs
+    itemCondition: car.verificationStatus === 'certified' ? 
+      "https://schema.org/RefurbishedCondition" : 
+      "https://schema.org/UsedCondition",
     mileageFromOdometer: {
       "@type": "QuantitativeValue",
       value: car.mileage || car.kmDriven || 0,
       unitCode: "KMT",
+      unitText: "kilometers"
     },
     fuelType: car.fuelType || "Petrol",
     vehicleTransmission: car.transmission || "Manual",
-    image: currentImage,
+    driveWheelConfiguration: car.driveType || undefined,
+    vehicleEngine: car.engineSize ? {
+      "@type": "EngineSpecification",
+      engineDisplacement: {
+        "@type": "QuantitativeValue",
+        value: car.engineSize,
+        unitCode: "CMQ"
+      }
+    } : undefined,
+    bodyType: car.bodyType || "Sedan",
+    numberOfDoors: car.doors || 4,
+    vehicleSeatingCapacity: car.seats || 5,
+    color: car.color || undefined,
+    
+    // Product/Brand info
+    brand: {
+      "@type": "Brand",
+      name: car.make || "Unknown",
+    },
+    category: "Automobiles > Used Cars",
+    
+    // Images
+    image: images.length > 0 ? images : [currentImage],
+    
+    // Offers and pricing
     offers: validPrice ? {
       "@type": "Offer",
-      availability: "https://schema.org/InStock",
-      url: `https://cararth.com/listing/${id}`,
-      price: validPrice,
+      url: `https://www.cararth.com/listing/${id}`,
       priceCurrency: "INR",
+      price: validPrice,
+      availability: "https://schema.org/InStock",
+      priceValidUntil: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      seller: {
+        "@type": car.sellerType === 'dealer' ? "AutoDealer" : "Person",
+        name: car.sellerName || "CarArth Verified Seller",
+        ...(car.sellerPhone && { telephone: car.sellerPhone }),
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: car.city || "India",
+          addressRegion: car.state || "Telangana",
+          addressCountry: "IN"
+        }
+      },
+      acceptedPaymentMethod: [
+        "http://purl.org/goodrelations/v1#Cash",
+        "http://purl.org/goodrelations/v1#ByBankTransferInAdvance"
+      ]
     } : undefined,
+    
+    // Seller organization
     seller: {
-      "@type": "Organization",
-      name: "CarArth Verified Seller",
+      "@type": car.sellerType === 'dealer' ? "AutoDealer" : "Organization",
+      name: car.sellerName || "CarArth - India's Used Car Marketplace",
+      url: "https://www.cararth.com",
+      logo: "https://www.cararth.com/logo.png",
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: car.city || "Hyderabad",
+        addressRegion: car.state || "Telangana",
+        addressCountry: "IN"
+      }
     },
+    
+    // Additional details for AI/LLM understanding
+    additionalProperty: [
+      ...(car.ownerNumber ? [{
+        "@type": "PropertyValue",
+        name: "Previous Owners",
+        value: car.ownerNumber
+      }] : []),
+      ...(car.insuranceValidity ? [{
+        "@type": "PropertyValue",
+        name: "Insurance Validity",
+        value: car.insuranceValidity
+      }] : []),
+      ...(car.registrationNumber ? [{
+        "@type": "PropertyValue",
+        name: "Registration Number",
+        value: car.registrationNumber
+      }] : []),
+      {
+        "@type": "PropertyValue",
+        name: "Verification Status",
+        value: car.verificationStatus || "unverified"
+      },
+      ...(car.googleCompliant ? [{
+        "@type": "PropertyValue",
+        name: "Google Vehicle Listings Compliant",
+        value: "Yes"
+      }] : [])
+    ],
+    
+    // Trust signals
+    aggregateRating: car.trustScore ? {
+      "@type": "AggregateRating",
+      ratingValue: (car.trustScore / 20).toFixed(1),
+      bestRating: "5",
+      worstRating: "1",
+      ratingCount: "1"
+    } : undefined,
+    
+    // Contact actions
     potentialAction: {
       "@type": "ContactAction",
       target: [
-        "tel:+919999999999",
-        "https://wa.me/919999999999"
+        ...(car.sellerPhone ? [`tel:${car.sellerPhone}`] : []),
+        ...(car.sellerPhone ? [`https://wa.me/${car.sellerPhone.replace(/[^0-9]/g, '')}`] : []),
+        `https://www.cararth.com/listing/${id}`
       ],
       name: "Contact Seller"
-    },
+    }
   };
 
   return (
