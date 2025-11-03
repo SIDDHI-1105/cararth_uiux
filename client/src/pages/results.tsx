@@ -118,6 +118,118 @@ export default function Results() {
     setShowFilters(false);
   };
 
+  // Helper function to safely parse price from various Indian formats
+  // Handles all variants: ₹ 12,45,000, ₹ 12.45 Lakh, ₹ 5 Lakhs, ₹ 1 Cr 25 Lakh 50 Thousand
+  const parseSafePrice = (price: any): number | undefined => {
+    if (price === null || price === undefined || price === "") return undefined;
+    
+    // If already a number, return it (including 0)
+    if (typeof price === "number") return isNaN(price) ? undefined : price;
+    
+    // If string, handle Indian formats by detecting and summing ALL components
+    if (typeof price === "string") {
+      let str = price.toLowerCase().trim();
+      
+      // Remove currency symbols
+      str = str.replace(/[₹$]/g, "");
+      
+      let total = 0;
+      
+      // Extract crore component(s) - handle singular/plural (word boundary to avoid "across")
+      const croreMatches = str.match(/(\d+(?:\.\d+)?)\s*(?:crores?|crs?)\b/g);
+      if (croreMatches) {
+        croreMatches.forEach(match => {
+          const num = parseFloat(match.match(/(\d+(?:\.\d+)?)/)?.[1] || "0");
+          total += num * 10000000;
+          str = str.replace(match, "");
+        });
+      }
+      
+      // Extract lakh component(s) - handle singular/plural/lac/lacs
+      const lakhMatches = str.match(/(\d+(?:\.\d+)?)\s*(?:lakhs?|lacs?)\b/g);
+      if (lakhMatches) {
+        lakhMatches.forEach(match => {
+          const num = parseFloat(match.match(/(\d+(?:\.\d+)?)/)?.[1] || "0");
+          total += num * 100000;
+          str = str.replace(match, "");
+        });
+      }
+      
+      // Extract thousand component(s) - handle K and spelled-out
+      const thousandMatches = str.match(/(\d+(?:\.\d+)?)\s*(?:thousands?|ths?|k)\b/g);
+      if (thousandMatches) {
+        thousandMatches.forEach(match => {
+          const num = parseFloat(match.match(/(\d+(?:\.\d+)?)/)?.[1] || "0");
+          total += num * 1000;
+          str = str.replace(match, "");
+        });
+      }
+      
+      // If no unit found, try to parse as plain number (with commas)
+      if (total === 0) {
+        const cleaned = str.replace(/[,\s]/g, "").replace(/[^\d.]/g, "");
+        const parsed = parseFloat(cleaned);
+        if (!isNaN(parsed)) {
+          return parsed;
+        }
+      } else {
+        // Add any remaining plain number (e.g., "1 Cr 50" → crore + 50)
+        const remaining = str.replace(/[,\s]/g, "").replace(/[^\d.]/g, "");
+        if (remaining && !isNaN(parseFloat(remaining))) {
+          total += parseFloat(remaining);
+        }
+      }
+      
+      return total >= 0 ? total : undefined;
+    }
+    
+    return undefined;
+  };
+
+  // Schema.org ItemList markup for search results (only include vehicles with valid data)
+  const itemListSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Used Cars for Sale in India",
+    description: "Browse verified used car listings from across India with AI-powered verification and authenticity checks.",
+    numberOfItems: sortedCars.length,
+    itemListElement: sortedCars.slice(0, 20).map((car, index) => {
+      const safePrice = parseSafePrice(car.price);
+      
+      return {
+        "@type": "ListItem",
+        position: index + 1,
+        item: {
+          "@type": ["Vehicle", "Product"],
+          name: car.title || `${car.make} ${car.model} ${car.year}`,
+          url: `https://www.cararth.com/listing/${car.id}`,
+          ...(car.images?.[0] || car.imageUrl ? { image: car.images?.[0] || car.imageUrl } : {}),
+          ...(car.make || car.brand ? { manufacturer: car.make || car.brand } : {}),
+          ...(car.model && { model: car.model }),
+          ...(car.year && { vehicleModelDate: car.year.toString() }),
+          ...((car.mileage || car.kmDriven) && {
+            mileageFromOdometer: {
+              "@type": "QuantitativeValue",
+              value: car.mileage || car.kmDriven,
+              unitCode: "KMT"
+            }
+          }),
+          ...(car.fuelType && { fuelType: car.fuelType }),
+          ...(car.transmission && { vehicleTransmission: car.transmission }),
+          ...(safePrice !== undefined && {
+            offers: {
+              "@type": "Offer",
+              price: safePrice,
+              priceCurrency: "INR",
+              availability: "https://schema.org/InStock",
+              url: `https://www.cararth.com/listing/${car.id}`
+            }
+          })
+        }
+      };
+    })
+  };
+
   return (
     <>
       <SEOHead
@@ -125,6 +237,7 @@ export default function Results() {
         description="Browse verified used cars on CarArth. No paid listings, no bias — just AI-verified cars from across India."
         keywords="used cars for sale, buy used cars India, verified car listings, AI-verified cars, second hand cars"
         canonical="https://www.cararth.com/results"
+        structuredData={itemListSchema}
       />
       
       <Navbar />

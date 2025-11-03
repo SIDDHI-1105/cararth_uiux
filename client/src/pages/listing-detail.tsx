@@ -100,98 +100,180 @@ export default function ListingDetail() {
   const carTitle = car.title || `${car.make} ${car.model} ${car.year}`;
   const carPrice = formatPrice(car.price);
   
-  // Parse price once for consistent use
-  const numericPrice = typeof car.price === "string" ? parseFloat(car.price) : (car.price || 0);
-  const validPrice = isNaN(numericPrice) ? undefined : numericPrice;
+  // Helper function to safely parse price from various Indian formats
+  // Handles all variants: ₹ 12,45,000, ₹ 12.45 Lakh, ₹ 5 Lakhs, ₹ 1 Cr 25 Lakh 50 Thousand
+  const parseSafePrice = (price: any): number | undefined => {
+    if (price === null || price === undefined || price === "") return undefined;
+    
+    // If already a number, return it (including 0)
+    if (typeof price === "number") return isNaN(price) ? undefined : price;
+    
+    // If string, handle Indian formats by detecting and summing ALL components
+    if (typeof price === "string") {
+      let str = price.toLowerCase().trim();
+      
+      // Remove currency symbols
+      str = str.replace(/[₹$]/g, "");
+      
+      let total = 0;
+      
+      // Extract crore component(s) - handle singular/plural (word boundary to avoid "across")
+      const croreMatches = str.match(/(\d+(?:\.\d+)?)\s*(?:crores?|crs?)\b/g);
+      if (croreMatches) {
+        croreMatches.forEach(match => {
+          const num = parseFloat(match.match(/(\d+(?:\.\d+)?)/)?.[1] || "0");
+          total += num * 10000000;
+          str = str.replace(match, "");
+        });
+      }
+      
+      // Extract lakh component(s) - handle singular/plural/lac/lacs
+      const lakhMatches = str.match(/(\d+(?:\.\d+)?)\s*(?:lakhs?|lacs?)\b/g);
+      if (lakhMatches) {
+        lakhMatches.forEach(match => {
+          const num = parseFloat(match.match(/(\d+(?:\.\d+)?)/)?.[1] || "0");
+          total += num * 100000;
+          str = str.replace(match, "");
+        });
+      }
+      
+      // Extract thousand component(s) - handle K and spelled-out
+      const thousandMatches = str.match(/(\d+(?:\.\d+)?)\s*(?:thousands?|ths?|k)\b/g);
+      if (thousandMatches) {
+        thousandMatches.forEach(match => {
+          const num = parseFloat(match.match(/(\d+(?:\.\d+)?)/)?.[1] || "0");
+          total += num * 1000;
+          str = str.replace(match, "");
+        });
+      }
+      
+      // If no unit found, try to parse as plain number (with commas)
+      if (total === 0) {
+        const cleaned = str.replace(/[,\s]/g, "").replace(/[^\d.]/g, "");
+        const parsed = parseFloat(cleaned);
+        if (!isNaN(parsed)) {
+          return parsed;
+        }
+      } else {
+        // Add any remaining plain number (e.g., "1 Cr 50" → crore + 50)
+        const remaining = str.replace(/[,\s]/g, "").replace(/[^\d.]/g, "");
+        if (remaining && !isNaN(parseFloat(remaining))) {
+          total += parseFloat(remaining);
+        }
+      }
+      
+      return total >= 0 ? total : undefined;
+    }
+    
+    return undefined;
+  };
+  
+  // Parse price once for consistent use with proper sanitization
+  const validPrice = parseSafePrice(car.price);
 
   // Comprehensive Schema.org Vehicle + Product markup for Google rich results
+  // Only include fields with actual data - no false defaults
   const structuredData = {
     "@context": "https://schema.org",
     "@type": ["Vehicle", "Product", "Car"],
     name: carTitle,
-    description: car.description || `${carTitle} in excellent condition. ${car.fuelType} engine, ${car.transmission} transmission. Located in ${car.city || "India"}.`,
+    description: car.description || `${carTitle}${car.city ? ` located in ${car.city}` : ""}.`,
     
-    // Vehicle-specific fields
-    vehicleIdentificationNumber: car.vin || undefined,
-    manufacturer: car.make || "Unknown",
-    model: car.model || "Unknown",
-    modelDate: car.year?.toString(),
-    productionDate: car.year?.toString(),
-    vehicleModelDate: car.year?.toString(),
+    // Vehicle-specific fields (only if available)
+    ...(car.vin && { vehicleIdentificationNumber: car.vin }),
+    ...(car.make && { manufacturer: car.make }),
+    ...(car.model && { model: car.model }),
+    ...(car.year && {
+      modelDate: car.year.toString(),
+      productionDate: car.year.toString(),
+      vehicleModelDate: car.year.toString()
+    }),
     
-    // Vehicle condition and specs
+    // Vehicle condition and specs (only include if data exists)
     itemCondition: car.verificationStatus === 'certified' ? 
       "https://schema.org/RefurbishedCondition" : 
       "https://schema.org/UsedCondition",
-    mileageFromOdometer: {
-      "@type": "QuantitativeValue",
-      value: car.mileage || car.kmDriven || 0,
-      unitCode: "KMT",
-      unitText: "kilometers"
-    },
-    fuelType: car.fuelType || "Petrol",
-    vehicleTransmission: car.transmission || "Manual",
-    driveWheelConfiguration: car.driveType || undefined,
-    vehicleEngine: car.engineSize ? {
-      "@type": "EngineSpecification",
-      engineDisplacement: {
+    ...((car.mileage || car.kmDriven) && {
+      mileageFromOdometer: {
         "@type": "QuantitativeValue",
-        value: car.engineSize,
-        unitCode: "CMQ"
+        value: car.mileage || car.kmDriven,
+        unitCode: "KMT",
+        unitText: "kilometers"
       }
-    } : undefined,
-    bodyType: car.bodyType || "Sedan",
-    numberOfDoors: car.doors || 4,
-    vehicleSeatingCapacity: car.seats || 5,
-    color: car.color || undefined,
+    }),
+    ...(car.fuelType && { fuelType: car.fuelType }),
+    ...(car.transmission && { vehicleTransmission: car.transmission }),
+    ...(car.driveType && { driveWheelConfiguration: car.driveType }),
+    ...(car.engineSize && {
+      vehicleEngine: {
+        "@type": "EngineSpecification",
+        engineDisplacement: {
+          "@type": "QuantitativeValue",
+          value: car.engineSize,
+          unitCode: "CMQ"
+        }
+      }
+    }),
+    ...(car.bodyType && { bodyType: car.bodyType }),
+    ...(car.doors && { numberOfDoors: car.doors }),
+    ...(car.seats && { vehicleSeatingCapacity: car.seats }),
+    ...(car.color && { color: car.color }),
     
-    // Product/Brand info
-    brand: {
-      "@type": "Brand",
-      name: car.make || "Unknown",
-    },
+    // Product/Brand info (only if make is available)
+    ...(car.make && {
+      brand: {
+        "@type": "Brand",
+        name: car.make,
+      }
+    }),
     category: "Automobiles > Used Cars",
     
     // Images
     image: images.length > 0 ? images : [currentImage],
     
-    // Offers and pricing
-    offers: validPrice ? {
-      "@type": "Offer",
-      url: `https://www.cararth.com/listing/${id}`,
-      priceCurrency: "INR",
-      price: validPrice,
-      availability: "https://schema.org/InStock",
-      priceValidUntil: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      seller: {
-        "@type": car.sellerType === 'dealer' ? "AutoDealer" : "Person",
-        name: car.sellerName || "CarArth Verified Seller",
-        ...(car.sellerPhone && { telephone: car.sellerPhone }),
-        address: {
-          "@type": "PostalAddress",
-          addressLocality: car.city || "India",
-          addressRegion: car.state || "Telangana",
-          addressCountry: "IN"
-        }
-      },
-      acceptedPaymentMethod: [
-        "http://purl.org/goodrelations/v1#Cash",
-        "http://purl.org/goodrelations/v1#ByBankTransferInAdvance"
-      ]
-    } : undefined,
+    // Offers and pricing (only include if valid price exists, including 0)
+    ...(validPrice !== undefined && {
+      offers: {
+        "@type": "Offer",
+        url: `https://www.cararth.com/listing/${id}`,
+        priceCurrency: "INR",
+        price: validPrice,
+        availability: "https://schema.org/InStock",
+        priceValidUntil: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        ...(car.city && {
+          seller: {
+            "@type": car.sellerType === 'dealer' ? "AutoDealer" : "Person",
+            ...(car.sellerName && { name: car.sellerName }),
+            ...(car.sellerPhone && { telephone: car.sellerPhone }),
+            address: {
+              "@type": "PostalAddress",
+              ...(car.city && { addressLocality: car.city }),
+              ...(car.state && { addressRegion: car.state }),
+              addressCountry: "IN"
+            }
+          }
+        }),
+        acceptedPaymentMethod: [
+          "http://purl.org/goodrelations/v1#Cash",
+          "http://purl.org/goodrelations/v1#ByBankTransferInAdvance"
+        ]
+      }
+    }),
     
-    // Seller organization
+    // Seller organization (only include location if available)
     seller: {
       "@type": car.sellerType === 'dealer' ? "AutoDealer" : "Organization",
       name: car.sellerName || "CarArth - India's Used Car Marketplace",
       url: "https://www.cararth.com",
       logo: "https://www.cararth.com/logo.png",
-      address: {
-        "@type": "PostalAddress",
-        addressLocality: car.city || "Hyderabad",
-        addressRegion: car.state || "Telangana",
-        addressCountry: "IN"
-      }
+      ...(car.city && {
+        address: {
+          "@type": "PostalAddress",
+          ...(car.city && { addressLocality: car.city }),
+          ...(car.state && { addressRegion: car.state }),
+          addressCountry: "IN"
+        }
+      })
     },
     
     // Additional details for AI/LLM understanding
