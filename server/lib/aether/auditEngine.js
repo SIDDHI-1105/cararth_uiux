@@ -7,6 +7,7 @@ import { schemaChecker } from './checkers/schemaChecker.js';
 import { contentSemanticsChecker } from './checkers/contentSemanticsChecker.js';
 import { performanceChecker } from './checkers/performanceChecker.js';
 import { geoCorrelationChecker } from './checkers/geoCorrelationChecker.js';
+import { learnFromAudits } from './aetherLearn.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -143,6 +144,17 @@ class AuditEngine {
         duration: audit.duration,
         correlationId: corrId
       });
+      
+      // Trigger learning if enabled
+      if (process.env.AETHER_LEARNING_MODE === 'true') {
+        try {
+          console.log('[AuditEngine] Triggering AETHER learning update...');
+          learnFromAudits();
+        } catch (learningError) {
+          console.error('[AuditEngine] Learning update failed (non-fatal):', learningError.message);
+          // Don't fail the audit if learning fails
+        }
+      }
       
       return audit;
     } catch (error) {

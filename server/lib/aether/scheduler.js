@@ -2,6 +2,7 @@ import cron from 'node-cron';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { learnFromAudits } from './aetherLearn.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -187,6 +188,39 @@ class Scheduler {
   }
 
   /**
+   * Schedule weekly AETHER learning updates
+   */
+  scheduleWeeklyLearning() {
+    if (!process.env.AETHER_LEARNING_MODE === 'true') {
+      console.log('[Scheduler] AETHER_LEARNING_MODE not enabled, weekly learning not scheduled');
+      return false;
+    }
+
+    if (!this.cronEnabled) {
+      console.log('[Scheduler] Cron disabled, weekly learning not scheduled');
+      return false;
+    }
+
+    // Run every Monday at 3 AM UTC
+    const job = cron.schedule('0 3 * * 1', async () => {
+      console.log('[AETHER_LEARN] Running scheduled weekly update');
+      try {
+        learnFromAudits();
+        console.log('[AETHER_LEARN] Weekly learning update completed');
+      } catch (error) {
+        console.error('[AETHER_LEARN] Weekly learning update failed:', error);
+      }
+    }, {
+      scheduled: true,
+      timezone: 'UTC'
+    });
+
+    this.jobs.set('aether_weekly_learning', job);
+    console.log('[Scheduler] AETHER weekly learning scheduled for Mondays at 3 AM UTC');
+    return true;
+  }
+
+  /**
    * Get status of all jobs
    */
   getStatus() {
@@ -210,3 +244,9 @@ class Scheduler {
 
 // Export singleton instance
 export const scheduler = new Scheduler();
+
+// Auto-schedule AETHER learning if enabled
+if (process.env.AETHER_LEARNING_MODE === 'true') {
+  scheduler.scheduleWeeklyLearning();
+  console.log('[AETHER_LEARN] ✅ AETHER LEARNING MODE ENABLED');
+}
