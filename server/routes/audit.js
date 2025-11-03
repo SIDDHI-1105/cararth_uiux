@@ -2,6 +2,7 @@ import express from 'express';
 import { auditEngine } from '../lib/aether/auditEngine.js';
 import { reportGenerator } from '../lib/aether/reportGenerator.js';
 import { aetherAuthMiddleware } from '../lib/aether/rbacMiddleware.js';
+import { getWeights, resetAuditWeights } from '../lib/aether/aetherLearn.js';
 
 const router = express.Router();
 
@@ -138,6 +139,50 @@ router.get('/', aetherAuthMiddleware, async (req, res) => {
     console.error('[AuditAPI] Error listing audits:', error);
     res.status(500).json({
       error: 'Failed to list audits',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/aether/weights
+ * Get current AETHER learning weights for audit modules
+ */
+router.get('/weights', aetherAuthMiddleware, async (req, res) => {
+  try {
+    const weights = getWeights();
+    
+    res.json({
+      weights,
+      learningEnabled: process.env.AETHER_LEARNING_MODE === 'true',
+      description: 'Adaptive weights for SEO audit module impact correlation'
+    });
+  } catch (error) {
+    console.error('[AuditAPI] Error fetching weights:', error);
+    res.status(500).json({
+      error: 'Failed to fetch learning weights',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/aether/weights/reset
+ * Reset learning weights to defaults (admin only)
+ */
+router.post('/weights/reset', aetherAuthMiddleware, async (req, res) => {
+  try {
+    const weights = resetAuditWeights();
+    
+    res.json({
+      success: true,
+      weights,
+      message: 'Learning weights reset to defaults'
+    });
+  } catch (error) {
+    console.error('[AuditAPI] Error resetting weights:', error);
+    res.status(500).json({
+      error: 'Failed to reset weights',
       message: error.message
     });
   }
