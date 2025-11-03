@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, PlayCircle, AlertCircle } from "lucide-react";
+import { Loader2, PlayCircle, AlertCircle, Brain, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import AuditSummaryCard from "@/components/aether/AuditSummaryCard";
 import ImpactMatrix from "@/components/aether/ImpactMatrix";
@@ -36,6 +36,12 @@ export default function AuditPage() {
   const { data: auditsData } = useQuery<{ audits: any[]; total: number }>({
     queryKey: ['/api/aether/audits'],
     refetchInterval: 10000, // Refresh every 10 seconds
+  });
+
+  // Fetch AETHER learning weights
+  const { data: weightsData } = useQuery<{ learningEnabled: boolean; weights: any; description: string }>({
+    queryKey: ['/api/aether/weights'],
+    refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   // Poll current audit status
@@ -98,10 +104,26 @@ export default function AuditPage() {
       {/* Run Audit Form */}
       <Card data-testid="card-run-audit">
         <CardHeader>
-          <CardTitle>Run SEO Audit</CardTitle>
-          <CardDescription>
-            Comprehensive technical SEO analysis with GEO visibility correlation
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Run SEO Audit</CardTitle>
+              <CardDescription>
+                Comprehensive technical SEO analysis with GEO visibility correlation
+              </CardDescription>
+            </div>
+            {weightsData?.learningEnabled && (
+              <div 
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border border-purple-500/20"
+                data-testid="badge-learning-active"
+              >
+                <Brain className="h-4 w-4 text-purple-600 dark:text-purple-400 animate-pulse" />
+                <span className="text-sm font-medium text-purple-700 dark:text-purple-300">
+                  Learning Active
+                </span>
+                <Zap className="h-3 w-3 text-yellow-500" />
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
