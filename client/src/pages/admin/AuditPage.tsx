@@ -40,7 +40,7 @@ export default function AuditPage() {
 
   // Fetch AETHER learning weights
   const { data: weightsData } = useQuery<{ learningEnabled: boolean; weights: any; description: string }>({
-    queryKey: ['/api/aether/weights'],
+    queryKey: ['/api/aether/audit/weights'],
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
