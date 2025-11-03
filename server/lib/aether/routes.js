@@ -400,8 +400,7 @@ router.post('/audit/run', asyncHandler(async (req, res) => {
  * IMPORTANT: Must be before /:audit_id wildcard route
  */
 router.get('/audit/weights', asyncHandler(async (req, res) => {
-  const { getWeights } = await import('./aetherLearn.js');
-  const weights = getWeights();
+  const weights = aetherLearn.getWeights();
   
   res.json({
     weights,
