@@ -1,0 +1,136 @@
+TASK: Enable ÆTHER Learning Mode (Adaptive Intelligence System)
+Goal: Add a self-learning layer to ÆTHER that continuously improves SEO + GEO impact weighting based on historical audits, sweeps, and experiments. Implement the adaptive weighting engine, environment flag, persistence, logs, and background updates. Must integrate cleanly with existing AETHER audit system inside the Vite + React + Express monorepo.
+ACTION ITEMS
+Environment Configuration
+Add AETHER_LEARNING_MODE=true to the environment configuration.
+Read this flag in backend (process.env.AETHER_LEARNING_MODE).
+When false, system runs audits normally without updating weights.
+Create/Update Backend Files
+File: server/lib/aether/aetherLearn.js
+Implement functions:
+import fs from "fs";
+import path from "path";
+const weightsPath = path.resolve("data/aether/weights.json");
+
+export function initWeights() {
+  if (!fs.existsSync(weightsPath)) {
+    fs.mkdirSync(path.dirname(weightsPath), { recursive: true });
+    const defaults = {
+      indexability: 0.2,
+      schema: 0.2,
+      content: 0.25,
+      performance: 0.2,
+      geoCorrelation: 0.15
+    };
+    fs.writeFileSync(weightsPath, JSON.stringify(defaults, null, 2));
+  }
+}
+
+export function getWeights() {
+  if (!fs.existsSync(weightsPath)) initWeights();
+  return JSON.parse(fs.readFileSync(weightsPath, "utf8"));
+}
+
+export function updateWeights(observedImpact) {
+  const current = getWeights();
+  const alpha = 0.2; // smoothing factor
+  for (const key of Object.keys(current)) {
+    if (observedImpact[key] !== undefined) {
+      current[key] =
+        current[key] * (1 - alpha) + observedImpact[key] * alpha;
+    }
+  }
+  fs.writeFileSync(weightsPath, JSON.stringify(current, null, 2));
+  logLearningEvent(observedImpact, current);
+  return current;
+}
+
+export function logLearningEvent(observed, updated) {
+  const logPath = path.resolve("data/aether/agent.log");
+  const ts = new Date().toISOString();
+  const line = `[AETHER_LEARN ${ts}] Observed ${JSON.stringify(
+    observed
+  )} → Updated ${JSON.stringify(updated)}\\n`;
+  fs.appendFileSync(logPath, line);
+}
+
+export function learnFromAudits() {
+  const auditsPath = path.resolve("data/aether/audits.json");
+  const sweepsPath = path.resolve("data/aether/sweeps.json");
+  if (!fs.existsSync(auditsPath) || !fs.existsSync(sweepsPath)) return;
+  const audits = JSON.parse(fs.readFileSync(auditsPath, "utf8"));
+  const sweeps = JSON.parse(fs.readFileSync(sweepsPath, "utf8"));
+
+  // Example simple correlation proxy:
+  const observedImpact = {
+    indexability: Math.random() * 0.1 + 0.15,
+    schema: Math.random() * 0.1 + 0.25,
+    content: Math.random() * 0.1 + 0.2,
+    performance: Math.random() * 0.1 + 0.15,
+    geoCorrelation: Math.random() * 0.1 + 0.1
+  };
+
+  updateWeights(observedImpact);
+}
+Exports: initWeights(), getWeights(), updateWeights(), learnFromAudits().
+Integrate Learning into Audit Flow
+Modify server/lib/aether/auditEngine.js after audit completion:
+import { learnFromAudits } from "./aetherLearn.js";
+if (process.env.AETHER_LEARNING_MODE === "true") {
+  learnFromAudits();
+}
+This triggers an update whenever an audit completes successfully.
+Add Scheduled Weekly Learning Job
+Modify server/lib/aether/scheduler.js:
+import cron from "node-cron";
+import { learnFromAudits } from "./aetherLearn.js";
+if (process.env.AETHER_LEARNING_MODE === "true") {
+  cron.schedule("0 3 * * 1", async () => {
+    console.log("[AETHER_LEARN] Running scheduled weekly update");
+    learnFromAudits();
+  });
+}
+UI Feedback
+In AuditPage.jsx, after a completed audit, fetch updated weights from new endpoint GET /api/aether/weights (to be created).
+Display under Impact Matrix:
+“Learning active — predicted visibility weights adjusted automatically.”
+Add Endpoint for Monitoring
+File: server/routes/weights.js (mount at /api/aether/weights)
+import express from "express";
+import { getWeights } from "../lib/aether/aetherLearn.js";
+const router = express.Router();
+router.get("/", (req, res) => res.json(getWeights()));
+export default router;
+Mount this route in your Express app:
+app.use("/api/aether/weights", weightsRouter);
+Verification Steps
+Run an audit with AETHER_LEARNING_MODE=true.
+Confirm:
+/data/aether/weights.json created or updated.
+/data/aether/agent.log contains [AETHER_LEARN] entries.
+GET /api/aether/weights returns JSON with updated weights.
+Audit dashboard displays “Learning Active”.
+Unit Test
+Add server/test/aether/aetherLearn.test.js:
+import { getWeights, updateWeights } from "../../lib/aether/aetherLearn.js";
+test("updates weights smoothly", () => {
+  const before = getWeights();
+  const after = updateWeights({ schema: 0.5 });
+  expect(after.schema).not.toBe(before.schema);
+});
+Add script "aether:test-learn": "jest server/test/aether/aetherLearn.test.js".
+ACCEPTANCE CRITERIA
+AETHER_LEARNING_MODE env variable recognized.
+Weights file auto-created & updated.
+Logs show learning events.
+/api/aether/weights endpoint returns current weights.
+UI displays “Learning Active” message.
+Unit test passes.
+Safe if no audits/sweeps exist (graceful fallback).
+POST-BUILD OUTPUT REQUIRED:
+“✅ AETHER LEARNING MODE ENABLED” message
+Paths of created/modified files
+Console excerpt showing [AETHER_LEARN] log line
+Output of GET /api/aether/weights sample JSON
+Unit test pass confirmation
+Short next steps for real correlation modeling
