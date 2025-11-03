@@ -1,0 +1,21 @@
+{
+  "weights": {
+    "indexability": 0.20,
+    "schema": 0.20,
+    "content": 0.25,
+    "performance": 0.20,
+    "geo": 0.15
+  },
+  "severityWeights": {
+    "critical": 1.0,
+    "high": 0.7,
+    "medium": 0.4,
+    "low": 0.1
+  },
+  "scoreThresholds": {
+    "excellent": 90,
+    "good": 75,
+    "fair": 60,
+    "poor": 40
+  }
+}

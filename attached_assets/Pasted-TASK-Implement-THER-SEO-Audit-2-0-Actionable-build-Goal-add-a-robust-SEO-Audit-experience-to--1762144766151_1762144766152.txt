@@ -1,0 +1,108 @@
+TASK: Implement ÆTHER — SEO Audit 2.0 (Actionable build)
+Goal: add a robust SEO Audit experience to /admin/aether that runs deep technical checks, schema validation, content semantics, Core Web Vitals, and correlates outcomes with GEO visibility. Deliver a working UI, Express API, audit engine, tests, demo data, caching, and runbooks. Integrate with existing Vite + React + Express monorepo. Prioritize safety, observability, and developer ergonomics.
+ENVIRONMENT / SECRETS (read-only)
+Agent must read keys from env / Replit secrets only. Do not write keys to repo.
+OPENAI_API_KEY (optional)
+GSC_SERVICE_ACCOUNT_JSON (optional for Google Search Console)
+AETHER_ADMIN_KEY (required for CI test calls)
+AETHER_DAILY_TOKEN_CAP (default 20000)
+AETHER_MAX_TOKENS_PER_PROMPT (default 1200)
+HIGH-LEVEL DELIVERABLES (create these files/paths)
+Frontend
+src/admin/aether/AuditPage.jsx — new page in admin nav (tab: Structural Audit). Use Tailwind, accessible, responsive. Include:
+Run Audit form (target URL) + Run button
+Audit Summary card (score, last run, top 3 issues)
+Impact Matrix visual (heatmap or vertical list)
+Drill-down list of issues with expand/collapse per page
+“Run Quick GEO Check” CTA calling /api/aether/geo-check
+src/admin/aether/components/*:
+AuditSummaryCard.jsx, IssueRow.jsx, ImpactMatrix.jsx, AuditFilters.jsx, AuditExportBtn.jsx
+Backend
+server/routes/audit.js (mount at /api/aether/audit) with endpoints:
+POST /api/aether/audit/run — starts audit (accepts { url, modules: ["index","schema","content","performance","geo"] }) → returns { audit_id, status: "queued" }.
+GET /api/aether/audit/:audit_id — returns full audit JSON.
+GET /api/aether/audit/:audit_id/report.pdf — returns a generated PDF summary.
+GET /api/aether/audits — list audits (recent).
+Use existing isAdmin middleware or fallback to checking AETHER_ADMIN_KEY header.
+Audit Engine
+server/lib/aether/auditEngine.js — orchestrator calling modular checkers and returning JSON results + aggregate score + per-issue impact estimate.
+server/lib/aether/checkers/:
+indexabilityChecker.js (robots, sitemap vs canonical)
+schemaChecker.js (JSON-LD detection & type validation)
+contentSemanticsChecker.js (readability, entity extraction using embeddings or a local NLP lib; fallback deterministic heuristics if no embedding key)
+performanceChecker.js (Lighthouse API wrapper mock — use lighthouse CLI if available; otherwise provide deterministic performance sample)
+geoCorrelationChecker.js (reads AETHER sweeps / GEO data and correlates issue clusters to AI mentions; if no sweeps exist, generate mock correlations)
+Checker outputs follow this JSON schema:
+{
+  "category": "Schema",
+  "issues":[
+    {
+      "id":"schema_missing_car",
+      "page":"/used-cars/creta-2021",
+      "severity":"critical",
+      "description":"Missing Car schema JSON-LD or incorrect properties.",
+      "impact_score":0.78,
+      "suggested_fix":"Add schema.org/Vehicle with make/model/year and offers."
+    }
+  ],
+  "categoryScore": 68
+}
+Persisted Data
+Save audits to data/aether/audits.json (append). Save per-audit snapshot files under data/aether/audits/{audit_id}.json.
+PDF Report
+Create server/lib/aether/reportGenerator.js to create a simple PDF (title, score, top issues) using react-pdf or pdfkit.
+Caching & Cost Controls
+Cache any LLM or embedding calls in /.aether_cache/ keyed by sha256 of the request (TTL 30 days).
+Enforce daily token caps via AETHER_DAILY_TOKEN_CAP; log token usage to /data/aether/token_usage.log. If cap exceeded, audit continues with mocks and notes in report.
+Tests
+Unit tests (Jest) in server/test/aether/:
+auditEngine.test.js (mock checkers)
+schemaChecker.test.js (sample HTML with/without JSON-LD)
+indexabilityChecker.test.js (sample sitemap & robots)
+Add npm run aether:test script that runs these tests.
+Docs / Runbook
+README_AETHER.md update: How to run audit locally, required envs, how to interpret results, how to enable GSC/Lighthouse integration.
+AETHER_RUNBOOK.md update: emergency stop, disable cron, token-budget tips, how to regenerate PDF.
+DETAILED BEHAVIOR (must implement exactly)
+Run endpoint flow (POST /api/aether/audit/run):
+Validate url (must be full URL). Enforce isAdmin or AETHER_ADMIN_KEY header.
+Create audit_id = audit_YYYYMMDD_HHMMSS_random4.
+Save job meta to data/aether/audits.json with status: queued.
+Enqueue auditEngine.run(audit_id, url, modules) to job queue (simple in-process queue acceptable for Replit).
+Immediately return { audit_id, status: "queued" }.
+Audit engine run:
+For each module selected, run the checker with timeouts (module timeout default 25s). If a module fails, mark module as failed and include error message in audit JSON.
+Collect all issues and compute an aggregate SEO Health Score (0–100) using weighted categories: indexability (20%), schema (20%), content (25%), performance (20%), geo-correlation (15%). Weighting must be configurable in server/config/auditWeights.json.
+Compute Impact Matrix: rank issues by severity × impact_score × pagesAffected.
+Persist full audit JSON to data/aether/audits/{audit_id}.json and update data/aether/audits.json.
+GEO correlation module:
+If data/aether/sweeps.json exists, compute per-cluster correlation (Pearson or simple % change) between presence/absence of structured data and AI mentions. If no sweeps, generate deterministic mock correlation derived from hash of domain + date.
+PDF generation:
+Generate a simple PDF summary on-demand at /api/aether/audit/:audit_id/report.pdf. Include audit summary, top 5 issues with suggested fixes, and top recommended priority actions with expected uplift percentages (from impact_score).
+UI interactions:
+AuditPage.jsx should trigger POST /api/aether/audit/run, poll GET /api/aether/audit/:id (SSE or polling) and render live status. After completion, show score, impact matrix, and an “Apply fix” button that opens the suggested fix (just UI stub for now).
+RBAC Negative test:
+Agent must run a negative test: call POST /api/aether/audit/run without admin key and confirm 401. Log the test result.
+ACCEPTANCE CRITERIA (agent must run & demonstrate)
+POST /api/aether/audit/run returns { audit_id, status } and GET /api/aether/audit/:id returns JSON with score, modules, and issues[].
+data/aether/audits/{audit_id}.json exists and matches the API output.
+Frontend page /admin/aether (Structural Audit tab) renders and can:
+Submit an audit, show queued → running → complete states.
+Display summary card, impact matrix, and drill-down issues.
+Provide a link/button to download the PDF report.
+Tests run: npm run aether:test passes all included unit tests.
+Token cap behavior: when AETHER_DAILY_TOKEN_CAP set to 1, the audit uses mocks and logs the fallback in /data/aether/agent.log.
+RBAC negative test returns 401 for unauthenticated requests.
+LOGGING / ERROR HANDLING RULES
+All audit runs must have a correlation ID printed in logs and stored in audit JSON (correlation_id).
+All errors are written to /data/aether/error.log with timestamp + stacktrace.
+If an external service (GSC / Lighthouse / LLM) returns 401/403, include friendly error in audit JSON and continue with mocks.
+POST-BUILD REPORT (agent must paste here)
+✅ AETHER AUDIT 2.0 BUILD COMPLETE or ❌ BUILD FAILED with error logs
+Preview URL for /admin/aether or instructions to run locally
+List of created/modified files
+Short console excerpt showing: audit run id, score, top 3 issues, where PDF saved
+Unit test summary (pass/fail)
+Quick next steps to enable GSC & Lighthouse integrations
+TIMEBOX: complete within Replit agent run constraints. If any long installs block completion, commit partial work, include remediation steps, and exit with clear instructions.
+END OF PROMPT

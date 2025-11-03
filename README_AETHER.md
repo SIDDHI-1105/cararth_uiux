@@ -424,6 +424,154 @@ Dashboard shows:
 - ✅ Token budget status
 - ✅ Cache performance
 
+## SEO Structural Audits
+
+ÆTHER includes a comprehensive SEO audit system that analyzes your site's technical health across multiple dimensions.
+
+### Architecture
+
+The audit system consists of:
+- **Audit Engine**: Orchestrates modular checkers with timeout protection
+- **5 Checker Modules**: Indexability, Schema, Content Semantics, Performance, GEO Correlation
+- **Weighted Scoring**: Configurable category weights for overall health score
+- **Impact Matrix**: Ranked issue prioritization by severity × impact × pages affected
+- **PDF Reports**: Downloadable audit summaries with actionable recommendations
+
+### Running Audits
+
+#### Via API
+```bash
+# Start new audit
+curl -X POST http://localhost:5000/api/aether/audit/run \
+  -H "Content-Type: application/json" \
+  -H "x-aether-admin-key: $AETHER_ADMIN_KEY" \
+  -d '{"url": "https://cararth.com"}'
+
+# Get audit results
+curl http://localhost:5000/api/aether/audit/audit_20251103_123456_a1b2
+
+# Download PDF report
+curl http://localhost:5000/api/aether/audit/audit_20251103_123456_a1b2/report.pdf \
+  -o audit_report.pdf
+
+# List recent audits
+curl http://localhost:5000/api/aether/audits
+```
+
+#### Via UI
+Navigate to `/admin/aether` → "Structural Audit" tab:
+1. Enter target URL
+2. Select audit modules (or run all)
+3. Click "Run Audit"
+4. View results with filterable issue list
+5. Download PDF report
+
+### Audit Modules
+
+#### 1. Indexability (Weight: 30%)
+- Validates robots.txt configuration
+- Checks sitemap.xml structure and accessibility
+- Detects canonical URLs and noindex directives
+- Identifies crawl blockers
+
+#### 2. Schema Markup (Weight: 25%)
+- Detects JSON-LD structured data
+- Validates Vehicle, Organization, LocalBusiness schemas
+- Checks for missing or incomplete schema
+- Provides schema.org implementation guidance
+
+#### 3. Content Semantics (Weight: 20%)
+- Analyzes readability scores
+- Calculates keyword density
+- Extracts key entities
+- Uses deterministic heuristics (no external API required)
+
+#### 4. Performance (Weight: 15%)
+- Mock Lighthouse scores (FCP, LCP, CLS, TBT)
+- Deterministic scoring based on URL patterns
+- Identifies performance bottlenecks
+
+#### 5. GEO Correlation (Weight: 10%)
+- Correlates SEO issues with AI mention rates
+- Reads from existing sweep data in `data/aether/sweeps.json`
+- Uses Pearson correlation to identify impact
+- Falls back to mocks if no sweep data exists
+
+### Scoring System
+
+Overall audit score (0-100) is calculated using weighted category scores:
+
+```javascript
+score = 
+  indexability_score × 0.30 +
+  schema_score × 0.25 +
+  content_score × 0.20 +
+  performance_score × 0.15 +
+  geo_score × 0.10
+```
+
+Severity weights for issue prioritization:
+- **Critical**: 1.0 (major blocker, fix immediately)
+- **High**: 0.7 (significant impact, fix soon)
+- **Medium**: 0.4 (moderate impact, plan fix)
+- **Low**: 0.1 (minor issue, nice to have)
+
+### Data Storage
+
+Audit results are persisted in two locations:
+- **Registry**: `data/aether/audits.json` (append-only list)
+- **Individual Audits**: `data/aether/audits/{audit_id}.json`
+
+### Testing Audits Locally
+
+```bash
+# Run all audit tests
+cd server/test/aether
+node runTests.js
+
+# Run individual test suites
+node auditEngine.test.js
+node schemaChecker.test.js
+node indexabilityChecker.test.js
+node rbac.test.js
+```
+
+### Configuration
+
+Audit weights can be customized in `server/config/auditWeights.json`:
+
+```json
+{
+  "weights": {
+    "indexability": 0.30,
+    "schema": 0.25,
+    "content": 0.20,
+    "performance": 0.15,
+    "geo": 0.10
+  },
+  "severityWeights": {
+    "critical": 1.0,
+    "high": 0.7,
+    "medium": 0.4,
+    "low": 0.1
+  }
+}
+```
+
+### Token Budget Integration
+
+Audits respect the same token budget as sweeps:
+- If `AETHER_DAILY_TOKEN_CAP` is reached, audit switches to deterministic mocks
+- All mock usage is logged to `data/aether/agent.log`
+- No external API calls made when in mock mode
+
+### Correlation IDs
+
+Every audit run receives a unique correlation ID for tracing:
+- Logged in `data/aether/agent.log`
+- Included in audit JSON response
+- Used for debugging and performance analysis
+
 ## Support
 
 For issues, check:

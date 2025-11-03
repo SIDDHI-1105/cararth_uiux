@@ -20,8 +20,10 @@ import {
   Sparkles,
   DollarSign,
   Eye,
-  Brain
+  Brain,
+  ShieldCheck
 } from "lucide-react";
+import AuditPage from "./admin/AuditPage";
 
 export default function Aether() {
   const [promptText, setPromptText] = useState("");
@@ -580,113 +582,7 @@ export default function Aether() {
 
           {/* SEO Audit Tab */}
           <TabsContent value="seo" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Run SEO Audit</CardTitle>
-                <CardDescription>
-                  Analyze your site's SEO health - sitemap, canonicals, schema markup, meta tags
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Target URL</label>
-                  <Input
-                    value={targetUrl}
-                    onChange={(e) => setTargetUrl(e.target.value)}
-                    placeholder="https://cararth.com"
-                    data-testid="input-target-url"
-                  />
-                </div>
-                <Button 
-                  onClick={handleRunSeoAudit}
-                  disabled={runSeoAuditMutation.isPending}
-                  data-testid="button-run-seo-audit"
-                >
-                  {runSeoAuditMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Running Audit...
-                    </>
-                  ) : (
-                    <>
-                      <FileSearch className="mr-2 h-4 w-4" />
-                      Run SEO Audit
-                    </>
-                  )}
-                </Button>
-
-                {runSeoAuditMutation.data && (
-                  <Alert>
-                    <CheckCircle2 className="h-4 w-4" />
-                    <AlertDescription>
-                      SEO Audit complete! Score: {runSeoAuditMutation.data.audit.overallScore}/100
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Audits</CardTitle>
-                <CardDescription>Historical SEO audit results</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {auditsLoading ? (
-                  <div className="text-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-slate-400" />
-                  </div>
-                ) : audits.length === 0 ? (
-                  <div className="text-center py-8 text-slate-500">
-                    No audits yet. Run your first SEO audit above!
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {audits.map((audit: any) => (
-                      <div key={audit.id} className="border rounded-lg p-4 space-y-3">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <p className="font-medium text-slate-900 dark:text-slate-100">
-                              SEO Audit ({audit.auditType})
-                            </p>
-                            <div className="flex items-center gap-2 mt-2">
-                              <Badge variant={audit.overallScore >= 80 ? "default" : audit.overallScore >= 60 ? "secondary" : "destructive"}>
-                                Score: {audit.overallScore}/100
-                              </Badge>
-                              <Badge variant="outline">
-                                {Array.isArray(audit.criticalIssues) ? audit.criticalIssues.length : audit.criticalIssues || 0} critical
-                              </Badge>
-                              <Badge variant="outline">
-                                {Array.isArray(audit.warnings) ? audit.warnings.length : audit.warnings || 0} warnings
-                              </Badge>
-                              <Badge variant="outline">
-                                {audit.pagesChecked || 0} pages
-                              </Badge>
-                            </div>
-                          </div>
-                          <div className="text-xs text-slate-500">
-                            {new Date(audit.createdAt).toLocaleDateString()}
-                          </div>
-                        </div>
-
-                        {audit.recommendations && audit.recommendations.length > 0 && (
-                          <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded p-3">
-                            <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
-                              Top Recommendations:
-                            </p>
-                            <ul className="text-sm text-blue-800 dark:text-blue-200 list-disc list-inside space-y-1">
-                              {audit.recommendations.slice(0, 3).map((rec: string, idx: number) => (
-                                <li key={idx}>{rec}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <AuditPage />
           </TabsContent>
 
           {/* Content Generation Tab */}

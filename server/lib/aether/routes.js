@@ -6,6 +6,8 @@ import { tokenBudget } from './tokenBudget.js';
 import { vectorStore } from './vectorStore.js';
 import { aetherLearn } from './aetherLearn.js';
 import { scheduler } from './scheduler.js';
+import { auditEngine } from './auditEngine.js';
+import { reportGenerator } from './reportGenerator.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -342,6 +344,120 @@ router.post('/scheduler/run-initial-sweep', asyncHandler(async (req, res) => {
     success: !result.skipped,
     result
   });
+}));
+
+/**
+ * ============================================
+ * SEO AUDIT ENDPOINTS
+ * ============================================
+ */
+
+/**
+ * POST /audit/run
+ * Start a new SEO audit
+ */
+router.post('/audit/run', asyncHandler(async (req, res) => {
+  const { url, modules } = req.body;
+
+  if (!url) {
+    return res.status(400).json({
+      error: 'Missing required parameter: url'
+    });
+  }
+
+  // Validate URL
+  try {
+    new URL(url);
+  } catch (err) {
+    return res.status(400).json({
+      error: 'Invalid URL format'
+    });
+  }
+
+  const correlationId = req.headers['x-correlation-id'] || null;
+  
+  // Start audit (returns Promise, runs async)
+  const auditPromise = auditEngine.runAudit(url, modules, correlationId);
+  
+  // Get audit ID early
+  const auditId = auditEngine.generateAuditId();
+  
+  // Run in background
+  auditPromise.catch(err => {
+    console.error('[AuditAPI] Background audit failed:', err);
+  });
+
+  res.json({
+    audit_id: auditId,
+    status: 'queued',
+    message: 'Audit started, check status at /api/aether/audit/:audit_id'
+  });
+}));
+
+/**
+ * GET /audit/:audit_id
+ * Get audit results by ID
+ */
+router.get('/audit/:audit_id', asyncHandler(async (req, res) => {
+  const { audit_id } = req.params;
+
+  const audit = auditEngine.getAudit(audit_id);
+
+  if (!audit) {
+    return res.status(404).json({
+      error: 'Audit not found',
+      audit_id
+    });
+  }
+
+  res.json(audit);
+}));
+
+/**
+ * GET /audit/:audit_id/report.pdf
+ * Download PDF report for audit
+ */
+router.get('/audit/:audit_id/report.pdf', asyncHandler(async (req, res) => {
+  const { audit_id } = req.params;
+
+  const audit = auditEngine.getAudit(audit_id);
+
+  if (!audit) {
+    return res.status(404).json({
+      error: 'Audit not found',
+      audit_id
+    });
+  }
+
+  if (audit.status !== 'completed') {
+    return res.status(400).json({
+      error: 'Audit not yet completed',
+      status: audit.status
+    });
+  }
+
+  // Generate PDF
+  const pdfBuffer = await reportGenerator.generatePDF(audit);
+
+  // Set headers for PDF download
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename="${audit_id}_report.pdf"`);
+  res.setHeader('Content-Length', pdfBuffer.length);
+
+  res.send(pdfBuffer);
+}));
+
+/**
+ * GET /audits
+ * List recent audits
+ */
+router.get('/audits', asyncHandler(async (req, res) => {
+  const limit = parseInt(req.query.limit) || 20;
+  const offset = parseInt(req.query.offset) || 0;
+
+  const result = auditEngine.listAudits(limit, offset);
+
+  res.json(result);
 }));
 
 export default router;

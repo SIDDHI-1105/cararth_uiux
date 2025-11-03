@@ -419,6 +419,176 @@ fi
 - ✅ Analyze cost trends
 - ✅ Plan capacity adjustments
 
+## SEO Audit Emergency Procedures
+
+### 🚨 Emergency Stop: Cancel Running Audit
+
+If an audit is consuming too many resources or taking too long:
+
+```bash
+# 1. Check current running audits (none stored in process, check logs)
+tail -50 data/aether/agent.log | grep -i "audit"
+
+# 2. The audit engine has built-in 25s timeout per module
+# If stuck, the system will auto-recover
+# To manually stop all operations, restart the server:
+npm run dev
+
+# 3. Check for corrupted audit files
+ls -lh data/aether/audits/
+```
+
+### 🚨 High Token Usage from Audits
+
+**Symptoms**: Audits consuming more tokens than expected
+
+**Investigation**:
+```bash
+# 1. Check recent audit token usage
+cat data/aether/agent.log | grep "audit" | grep "tokens"
+
+# 2. Review audit configuration
+cat server/config/auditWeights.json
+
+# 3. Check if mocks are being used
+cat data/aether/agent.log | grep -i "mock" | tail -20
+```
+
+**Immediate Actions**:
+```bash
+# 1. Lower token cap to force mock mode
+export AETHER_DAILY_TOKEN_CAP=1
+npm run dev
+
+# 2. Verify mocks are active
+curl -X POST http://localhost:5000/api/aether/audit/run \
+  -H "Content-Type: application/json" \
+  -H "x-aether-admin-key: $AETHER_ADMIN_KEY" \
+  -d '{"url": "https://cararth.com"}' | jq '.'
+
+# Check logs for mock usage
+tail -20 data/aether/agent.log | grep -i "mock"
+```
+
+### 🚨 Audit Data Corruption
+
+**Symptoms**: Audits not saving, missing audit files, JSON parse errors
+
+**Recovery Steps**:
+```bash
+# 1. Backup current data
+cp data/aether/audits.json data/aether/audits.json.backup
+cp -r data/aether/audits data/aether/audits.backup
+
+# 2. Validate JSON integrity
+node -e "console.log(JSON.parse(require('fs').readFileSync('data/aether/audits.json')))"
+
+# 3. If corrupted, restore from backup or reinitialize
+echo '{"audits":[]}' > data/aether/audits.json
+mkdir -p data/aether/audits
+
+# 4. Run test audit to verify
+curl -X POST http://localhost:5000/api/aether/audit/run \
+  -H "Content-Type: application/json" \
+  -H "x-aether-admin-key: $AETHER_ADMIN_KEY" \
+  -d '{"url": "https://cararth.com"}'
+```
+
+### 🚨 PDF Generation Failures
+
+**Symptoms**: PDF downloads fail, 500 errors on /report.pdf endpoint
+
+**Diagnosis**:
+```bash
+# 1. Check if pdfkit is installed
+node -e "require('pdfkit')"
+
+# 2. Test PDF generation manually
+node -e "const PDFDocument = require('pdfkit'); const doc = new PDFDocument(); console.log('OK');"
+
+# 3. Check file permissions
+ls -l data/aether/audits/
+```
+
+**Fix**:
+```bash
+# If pdfkit is missing (shouldn't happen)
+npm install pdfkit
+
+# Ensure write permissions
+chmod -R 755 data/aether/audits/
+
+# Restart server
+npm run dev
+```
+
+## Audit Token Budget Tips
+
+### Token Optimization Strategies
+
+1. **Use Mock Mode for Testing**
+   ```bash
+   # Set cap to 1 to force mocks
+   export AETHER_DAILY_TOKEN_CAP=1
+   npm run dev
+   ```
+
+2. **Monitor Token Usage Per Audit**
+   ```bash
+   # Each audit logs token consumption
+   cat data/aether/agent.log | grep "tokens_used" | tail -10
+   ```
+
+3. **Configure Audit Scope**
+   - Run specific modules only (not all 5)
+   - Limit pages analyzed per audit
+   - Adjust in `server/config/auditWeights.json`
+
+4. **GEO Correlation Fallback**
+   - GEO checker uses existing sweep data (no API calls)
+   - If `data/aether/sweeps.json` is empty, uses deterministic mocks
+   - No token cost for GEO correlation module
+
+5. **Expected Token Usage Per Module**
+   - **Indexability**: 0 tokens (file-based)
+   - **Schema**: 0 tokens (HTML parsing)
+   - **Content**: 0 tokens (heuristic analysis)
+   - **Performance**: 0 tokens (deterministic scoring)
+   - **GEO Correlation**: 0 tokens (uses existing sweep data)
+   - **Total Per Audit**: ~0-50 tokens (if external APIs are integrated later)
+
+### Audit Testing Without Token Costs
+
+```bash
+# 1. Run in mock mode
+export AETHER_DAILY_TOKEN_CAP=1
+npm run dev
+
+# 2. Run unit tests (no API calls)
+cd server/test/aether
+node runTests.js
+
+# 3. Test individual modules
+node schemaChecker.test.js
+node indexabilityChecker.test.js
+```
+
+### Audit Monitoring
+
+Add to daily health check:
+```bash
+# Check audit statistics
+curl -s http://localhost:5000/api/aether/audits | jq '.total'
+
+# Recent audit scores
+cat data/aether/audits.json | jq '.audits[-5:] | .[] | {id: .audit_id, score: .score, timestamp: .timestamp}'
+
+# Audit success rate
+TOTAL=$(cat data/aether/audits.json | jq '.audits | length')
+COMPLETED=$(cat data/aether/audits.json | jq '.audits | map(select(.status == "completed")) | length')
+echo "Audit Success Rate: $COMPLETED/$TOTAL"
+```
+
 ## Appendix: Useful Commands
 
 ```bash
@@ -445,4 +615,11 @@ rm data/aether/.initial_sweep.lock
 
 # Force mock mode (testing)
 unset OPENAI_API_KEY && npm run dev
+
+# Audit commands
+curl -s http://localhost:5000/api/aether/audits | jq '.total'
+curl -X POST http://localhost:5000/api/aether/audit/run \
+  -H "Content-Type: application/json" \
+  -H "x-aether-admin-key: $AETHER_ADMIN_KEY" \
+  -d '{"url": "https://cararth.com"}'
 ```
