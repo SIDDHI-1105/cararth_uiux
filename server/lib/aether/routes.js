@@ -395,6 +395,22 @@ router.post('/audit/run', asyncHandler(async (req, res) => {
 }));
 
 /**
+ * GET /audit/weights
+ * Get current AETHER learning weights for audit modules
+ * IMPORTANT: Must be before /:audit_id wildcard route
+ */
+router.get('/audit/weights', asyncHandler(async (req, res) => {
+  const { getWeights } = await import('./aetherLearn.js');
+  const weights = getWeights();
+  
+  res.json({
+    weights,
+    learningEnabled: process.env.AETHER_LEARNING_MODE === 'true',
+    description: 'Adaptive weights for SEO audit module impact correlation'
+  });
+}));
+
+/**
  * GET /audit/:audit_id
  * Get audit results by ID
  */

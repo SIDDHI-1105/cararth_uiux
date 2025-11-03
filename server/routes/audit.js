@@ -55,6 +55,52 @@ router.post('/run', aetherAuthMiddleware, async (req, res) => {
 });
 
 /**
+ * GET /api/aether/audit/weights
+ * Get current AETHER learning weights for audit modules
+ * IMPORTANT: Must be before /:audit_id wildcard route
+ */
+router.get('/weights', aetherAuthMiddleware, async (req, res) => {
+  try {
+    const weights = getWeights();
+    
+    res.json({
+      weights,
+      learningEnabled: process.env.AETHER_LEARNING_MODE === 'true',
+      description: 'Adaptive weights for SEO audit module impact correlation'
+    });
+  } catch (error) {
+    console.error('[AuditAPI] Error fetching weights:', error);
+    res.status(500).json({
+      error: 'Failed to fetch learning weights',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/aether/audit/weights/reset
+ * Reset learning weights to defaults (admin only)
+ * IMPORTANT: Must be before /:audit_id wildcard route
+ */
+router.post('/weights/reset', aetherAuthMiddleware, async (req, res) => {
+  try {
+    const weights = resetAuditWeights();
+    
+    res.json({
+      success: true,
+      weights,
+      message: 'Learning weights reset to defaults'
+    });
+  } catch (error) {
+    console.error('[AuditAPI] Error resetting weights:', error);
+    res.status(500).json({
+      error: 'Failed to reset weights',
+      message: error.message
+    });
+  }
+});
+
+/**
  * GET /api/aether/audit/:audit_id
  * Get audit results by ID
  */
@@ -139,50 +185,6 @@ router.get('/', aetherAuthMiddleware, async (req, res) => {
     console.error('[AuditAPI] Error listing audits:', error);
     res.status(500).json({
       error: 'Failed to list audits',
-      message: error.message
-    });
-  }
-});
-
-/**
- * GET /api/aether/weights
- * Get current AETHER learning weights for audit modules
- */
-router.get('/weights', aetherAuthMiddleware, async (req, res) => {
-  try {
-    const weights = getWeights();
-    
-    res.json({
-      weights,
-      learningEnabled: process.env.AETHER_LEARNING_MODE === 'true',
-      description: 'Adaptive weights for SEO audit module impact correlation'
-    });
-  } catch (error) {
-    console.error('[AuditAPI] Error fetching weights:', error);
-    res.status(500).json({
-      error: 'Failed to fetch learning weights',
-      message: error.message
-    });
-  }
-});
-
-/**
- * POST /api/aether/weights/reset
- * Reset learning weights to defaults (admin only)
- */
-router.post('/weights/reset', aetherAuthMiddleware, async (req, res) => {
-  try {
-    const weights = resetAuditWeights();
-    
-    res.json({
-      success: true,
-      weights,
-      message: 'Learning weights reset to defaults'
-    });
-  } catch (error) {
-    console.error('[AuditAPI] Error resetting weights:', error);
-    res.status(500).json({
-      error: 'Failed to reset weights',
       message: error.message
     });
   }
