@@ -266,7 +266,7 @@ export function getWeights() {
  */
 export function updateWeights(observedImpact) {
   const current = getWeights();
-  const alpha = 0.2; // smoothing factor for exponential moving average
+  const alpha = 0.1; // smoothing factor for exponential moving average (learning rate)
   
   // Update weights using exponential moving average
   for (const key of Object.keys(current)) {

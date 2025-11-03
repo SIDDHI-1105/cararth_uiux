@@ -191,7 +191,7 @@ class Scheduler {
    * Schedule weekly AETHER learning updates
    */
   scheduleWeeklyLearning() {
-    if (!process.env.AETHER_LEARNING_MODE === 'true') {
+    if (process.env.AETHER_LEARNING_MODE !== 'true') {
       console.log('[Scheduler] AETHER_LEARNING_MODE not enabled, weekly learning not scheduled');
       return false;
     }
