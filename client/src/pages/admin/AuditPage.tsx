@@ -108,7 +108,7 @@ export default function AuditPage() {
             <Label htmlFor="audit-url">URL to Audit</Label>
             <Input
               id="audit-url"
-              type="url"
+              type="text"
               placeholder="https://www.cararth.com"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
