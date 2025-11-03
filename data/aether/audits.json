@@ -1,5 +1,14 @@
 [
   {
+    "audit_id": "audit_20251103065426_120e",
+    "url": "https://www.cararth.com",
+    "status": "completed",
+    "score": 20,
+    "timestamp": "2025-11-03T06:54:26.508Z",
+    "duration": 1867,
+    "issueCount": 22
+  },
+  {
     "audit_id": "audit_20251103064034_c7e0",
     "url": "https://www.cararth.com",
     "status": "completed",
