@@ -3,6 +3,12 @@
  * Checks for admin role or AETHER_ADMIN_KEY header
  */
 export function aetherAuthMiddleware(req, res, next) {
+  // DEVELOPMENT MODE: Bypass authentication
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔓 Development mode: Bypassing AETHER auth check');
+    return next();
+  }
+
   // Check for AETHER_ADMIN_KEY in header (for CI/scripted access)
   const adminKey = process.env.AETHER_ADMIN_KEY;
   const providedKey = req.headers['x-aether-admin-key'];
