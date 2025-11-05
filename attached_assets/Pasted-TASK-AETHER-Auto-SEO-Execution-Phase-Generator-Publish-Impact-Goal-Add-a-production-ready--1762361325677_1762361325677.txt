@@ -1,0 +1,101 @@
+TASK: AETHER — Auto-SEO Execution Phase (Generator + Publish + Impact)
+Goal: Add a production-ready Auto-SEO Content Generator that creates fully-formed, hyperlocal, sector-specific articles (HTML + meta + schema + internal links + CTAs + GEO-friendly intro). Support Mode A (manual export) and Mode B (one-click CMS publish) via env flag. Track post-publish impact (GSC/GA4/GEO) and visualize “needle movement” in the UI.
+ENV (read-only; never commit)
+AETHER_PUBLISH_MODE=A|B (A=manual export ZIP, B=push to CMS)
+AETHER_CITY_DEFAULT=Hyderabad
+CMS_API_BASE (Mode B)
+CMS_API_KEY (Mode B)
+GSC_SERVICE_ACCOUNT_JSON (optional)
+GA4_SERVICE_ACCOUNT_JSON (optional), GA4_PROPERTY_ID
+OPENAI_API_KEY (optional; fall back to mock)
+AETHER_DAILY_TOKEN_CAP, AETHER_ADMIN_KEY
+DATABASE_URL, REDIS_URL, S3_BUCKET_URL
+Respect mock mode when any key is missing; return mock:true in API payloads.
+DB Migrations (server/db/migrations)
+Create only new tables (do not touch existing):
+aether_articles ( id uuid pk, city text, topic text, slug text unique, meta jsonb, schema jsonb, content_html text, geo_intro text, internal_links jsonb, cta jsonb, seo_checklist jsonb, status text default 'draft', cms_ref text, created_at timestamptz default now(), updated_at timestamptz default now() )
+aether_article_impacts ( id uuid pk, article_id uuid references aether_articles(id), date date, gsc jsonb, ga4 jsonb, geo jsonb, created_at timestamptz default now() )
+Indexes: (slug), (city, created_at), (status), (article_id,date).
+Types (TS or JSDoc) — server/lib/aether/content/types.d.ts
+export type GeneratedArticle = {
+  id: string; city: string; topic: string; slug: string;
+  meta: { title: string; description: string; robots: string; canonical: string; ogImage?: string; };
+  geoIntroQA: string;         // GEO-friendly intro (120–180 words)
+  contentHtml: string;        // Full HTML with H1–H3, tables, lists
+  schema: { faq?: object; breadcrumb?: object; vehicleOfferBlocks?: object[]; localBusiness?: object; };
+  internalLinks: { href: string; anchor: string; rel?: string }[];
+  cta: { text: string; href: string };
+  seoChecklist: { pass: string[]; warn: string[] };
+  assets: { s3Paths: string[] };
+  createdAt: string;
+};
+Backend — Generator / Publisher / Impact
+Dir: server/lib/aether/content/
+generator.js
+Input: { topic, city = process.env.AETHER_CITY_DEFAULT }
+Steps:
+Build outline (LLM or deterministic mock): H1–H3, entities (brands/models/neighborhoods/finance), FAQs, tables.
+Create GEO intro (Q&A style) optimized for AI engines.
+Generate meta (≤60 char title, 150–160 desc, robots:index,follow, canonical from slug).
+Generate schema: FAQPage, BreadcrumbList, and Vehicle+Offer example blocks (2+) with placeholders.
+Build internalLinks from watchlist/bench clusters (city → hub → listing).
+Add CTA (e.g., “View cars under ₹7L in Hyderabad → /used-cars/hyderabad?priceMax=700000”).
+Run SEO checklist: single H1, title length ok, desc length ok, canonical present, ≥2 internal links, ≥1000 words, table present, schema present.
+Save HTML & JSON assets to S3 aether/articles/{uuid}/... and create aether_articles row (status='draft').
+Respect AETHER_DAILY_TOKEN_CAP; cache by (city+topic) hash.
+publisher.js
+Mode A: bundle ZIP (HTML + meta.json + schema.json + links.json) → S3; update article status='ready_for_manual'.
+Mode B: POST to ${CMS_API_BASE}/articles with { slug, meta, content_html, schema, internal_links, cta, status:'draft' }; store cms_ref. Endpoints to publish, unpublish, rollback (keep last 3 versions in S3).
+impactTracker.js
+Nightly job: for published articles in last 30d, pull:
+GSC (clicks, impressions, ctr, position by page)
+GA4 (views, engagedSessions, conversions by page + city)
+GEO (ai_mention_rate for topic prompts)
+Upsert daily rows into aether_article_impacts; compute 7d/28d deltas; update article warnings (remove warns on improvement).
+hyperlocal.js
+Load cities/hyderabad.json (seed file) for: neighborhoods list, RTO addresses, typical price bands, EMI ranges, notable dealers; helpers to inject these into outlines/FAQs.
+API Routes — server/routes/content.js (mount /api/aether/content)
+POST /generate { topic, city? } → returns GeneratedArticle + DB id
+GET /preview/:id → { meta, slug, html, schema, internalLinks, checklist }
+POST /publish/:id → Mode A: returns ZIP URL; Mode B: creates CMS draft; ?publish=true to publish
+POST /unpublish/:id (Mode B)
+GET /diff/:id (Mode B) → compares current draft vs CMS live (title/desc/H1/wordcount/schema presence)
+GET /impact/:id?range=28d → merged time-series + % deltas (GSC/GA4/GEO)
+All routes admin-protected (existing middleware or AETHER_ADMIN_KEY).
+UI — add “Create” and “Needle Movement”
+Files (React/Vite under /src/admin/aether/):
+CreateArticle.jsx
+Form: Topic, City (default Hyderabad)
+Buttons: Generate, then Preview pane (left: rendered HTML; right: Meta/Slug/Schema toggles, Internal links, SEO checklist ✅/⚠️)
+Publish Section:
+Mode A: Download ZIP + Copy meta + Copy FAQ JSON-LD + Copy Vehicle+Offer JSON-LD
+Mode B: Publish / Unpublish / Diff / Rollback
+Impact mini-panel (if published): 7/28-day deltas with arrows for GSC Impressions, GEO Mention Rate, GA4 Conversions
+NeedleMovement.jsx (Overview tab widget, above “Top-5 Actions”)
+Shows 7-day deltas for SEO (GSC impressions), GEO (AI mentions), ENG (GA4 conversions) with up/down arrows and % change
+Data from /api/aether/content/impact/:id OR aggregated last 5 published articles
+Add “Create” tab to navbar: Today | Audit | Sweep | Benchmark | Create
+Keep styling consistent (your purple gradient). No heavy layout changes.
+Jobs / Cron (BullMQ)
+Queue: contentQueue
+Nightly impactTracker at 20 3 * * * (03:20 IST)
+Tests (server/test/aether/content/*.test.js)
+generator.test.js → verifies title/desc lengths, single H1, min wordcount, schema present, ≥2 internal links
+publisher.test.js → Mode A ZIP path; Mode B mock CMS returns cms_ref
+impact.test.js → merges mock GSC/GA4/GEO and computes deltas correctly
+Add script: "aether:test-content": "jest server/test/aether/content/*.test.js"
+Acceptance Criteria
+POST /api/aether/content/generate returns a complete article object with meta, schema, links, CTA, checklist ≥90% green (or actionable warns)
+Preview renders; copy buttons work
+Mode A: POST /publish/:id returns S3 ZIP link; article status updates
+Mode B: POST /publish/:id?publish=true creates/publishes CMS article; unpublish/rollback/diff operational
+Impact endpoint returns valid series with % deltas; NeedleMovement + Create UI display these
+Jobs respect AETHER_DAILY_TOKEN_CAP; mock mode works when keys missing
+All tests pass
+Post-Build Report (paste here)
+✅ AUTO-SEO EXECUTION LIVE
+Created/modified files list
+Example JSON from /api/aether/content/preview/:id (redact long HTML)
+Mode A ZIP URL or Mode B cms_ref
+Screenshot/JSON of Impact mini-panel (deltas)
+Notes to extend to new cities (/cities/<city>.json seed)
