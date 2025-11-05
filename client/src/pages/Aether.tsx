@@ -24,6 +24,7 @@ import {
   ShieldCheck
 } from "lucide-react";
 import AuditPage from "./admin/AuditPage";
+import Top5Today from "./admin/Top5Today";
 
 export default function Aether() {
   const [promptText, setPromptText] = useState("");
@@ -223,6 +224,9 @@ export default function Aether() {
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
+            {/* Top 5 Actions Today */}
+            <Top5Today />
+
             {/* Premium Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {/* Total Sweeps Card */}

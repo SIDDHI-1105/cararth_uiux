@@ -1,0 +1,112 @@
+[
+  {
+    "id": "faq_schema_missing",
+    "pillar": "Schema",
+    "title": "Add FAQ Schema to Increase AI Visibility",
+    "condition": "faq_schema_present === false",
+    "do": "Add FAQPage JSON-LD with 5-8 common questions about used cars in Hyderabad",
+    "dont": "Don't stuff keywords or create irrelevant questions",
+    "expected_uplift": 12,
+    "effort": "low",
+    "city_bias": 1.15
+  },
+  {
+    "id": "vehicle_schema_incomplete",
+    "pillar": "Schema",
+    "title": "Complete Vehicle Schema for Google Vehicle Listings",
+    "condition": "vehicle_schema_complete === false",
+    "do": "Add complete Vehicle + Offer schema with VIN, mileage, price, dealer info",
+    "dont": "Don't use placeholder values or missing required fields",
+    "expected_uplift": 15,
+    "effort": "medium",
+    "city_bias": 1.15
+  },
+  {
+    "id": "content_thin",
+    "pillar": "Content",
+    "title": "Expand Content with Hyderabad-Specific Insights",
+    "condition": "word_count < 800",
+    "do": "Add 300-500 words of local market data, popular models, price ranges for Hyderabad",
+    "dont": "Don't duplicate content from other cities or use generic filler",
+    "expected_uplift": 8,
+    "effort": "medium",
+    "city_bias": 1.2
+  },
+  {
+    "id": "internal_links_weak",
+    "pillar": "Internal Linking",
+    "title": "Add Strategic Internal Links to Related Pages",
+    "condition": "internal_link_count < 3",
+    "do": "Link to 4-6 related pages: other cities, popular brands, guides",
+    "dont": "Don't use generic anchor text or link to irrelevant pages",
+    "expected_uplift": 6,
+    "effort": "low",
+    "city_bias": 1.0
+  },
+  {
+    "id": "geo_mention_low",
+    "pillar": "Content",
+    "title": "Improve AI Mention Rate with Entity Optimization",
+    "condition": "ai_mention_rate < 0.15",
+    "do": "Add prominent mentions of 'CarArth', entity-rich content, trust signals",
+    "dont": "Don't overstuff brand name or create unnatural content",
+    "expected_uplift": 18,
+    "effort": "high",
+    "city_bias": 1.15
+  },
+  {
+    "id": "lcp_slow",
+    "pillar": "Performance",
+    "title": "Optimize LCP for Better Core Web Vitals",
+    "condition": "lcp_p75 > 2.5",
+    "do": "Optimize hero image loading, use priority hints, reduce render-blocking resources",
+    "dont": "Don't lazy-load above-the-fold images",
+    "expected_uplift": 5,
+    "effort": "medium",
+    "city_bias": 1.0
+  },
+  {
+    "id": "canonical_missing",
+    "pillar": "Schema",
+    "title": "Add Canonical URL to Prevent Duplicate Content",
+    "condition": "canonical_present === false",
+    "do": "Add proper canonical tag pointing to the preferred URL version",
+    "dont": "Don't point canonical to different domain or wrong protocol",
+    "expected_uplift": 7,
+    "effort": "low",
+    "city_bias": 1.0
+  },
+  {
+    "id": "meta_description_weak",
+    "pillar": "Content",
+    "title": "Optimize Meta Description for Higher CTR",
+    "condition": "meta_description_length < 120",
+    "do": "Write compelling 150-160 char description with Hyderabad mention and value prop",
+    "dont": "Don't exceed 160 chars or duplicate title tag content",
+    "expected_uplift": 4,
+    "effort": "low",
+    "city_bias": 1.1
+  },
+  {
+    "id": "h1_missing_location",
+    "pillar": "Content",
+    "title": "Add Location to H1 for Local SEO",
+    "condition": "h1_has_city === false",
+    "do": "Include 'Hyderabad' in the H1 heading naturally",
+    "dont": "Don't make it sound awkward or forced",
+    "expected_uplift": 6,
+    "effort": "low",
+    "city_bias": 1.2
+  },
+  {
+    "id": "image_alt_missing",
+    "pillar": "Content",
+    "title": "Add Descriptive Alt Text to Images",
+    "condition": "images_with_alt < 0.5",
+    "do": "Add descriptive alt text mentioning vehicle type and Hyderabad when relevant",
+    "dont": "Don't keyword stuff or use 'image' or 'photo' in alt text",
+    "expected_uplift": 3,
+    "effort": "low",
+    "city_bias": 1.0
+  }
+]
