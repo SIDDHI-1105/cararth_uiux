@@ -2423,6 +2423,86 @@ export const aetherExperiments = pgTable("aether_experiments", {
   index("idx_aether_experiments_outcome").on(table.outcome),
 ]);
 
+// AETHER Top-5 Action Engine Tables
+export const aetherWatchlist = pgTable("aether_watchlist", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  page: text("page").notNull(),
+  city: text("city").notNull(),
+  intent: text("intent"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_watchlist_city").on(table.city),
+  index("idx_watchlist_active").on(table.isActive),
+]);
+
+export const aetherDeltas = pgTable("aether_deltas", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  date: timestamp("date").notNull(),
+  page: text("page"),
+  city: text("city"),
+  source: text("source").notNull(), // 'gsc' | 'ga4' | 'geo' | 'audit'
+  metric: text("metric").notNull(), // 'clicks', 'ctr', 'position', 'conversions', 'ai_mention_rate', etc.
+  value: decimal("value", { precision: 10, scale: 4 }),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_deltas_date_city").on(table.date, table.city),
+  index("idx_deltas_page_city").on(table.page, table.city),
+  index("idx_deltas_source").on(table.source),
+]);
+
+export const aetherActions = pgTable("aether_actions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  date: timestamp("date").notNull(),
+  priority: integer("priority"), // 1-5 rank
+  page: text("page"),
+  city: text("city"),
+  pillar: text("pillar"), // 'Schema' | 'Content' | 'Performance' | 'Internal Linking'
+  title: text("title"),
+  do: text("do"), // What to do
+  dont: text("dont"), // What not to do
+  suggestedFix: text("suggested_fix"),
+  expectedUplift: decimal("expected_uplift", { precision: 5, scale: 2 }),
+  effort: text("effort"), // 'low' | 'medium' | 'high'
+  confidence: decimal("confidence", { precision: 3, scale: 2 }), // 0-1
+  evidence: jsonb("evidence").default({}),
+  status: text("status").default('open'), // 'open' | 'in_progress' | 'completed' | 'dismissed'
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_actions_date_city").on(table.date, table.city),
+  index("idx_actions_status").on(table.status),
+  index("idx_actions_priority").on(table.priority),
+]);
+
+export const aetherActionExperiments = pgTable("aether_action_experiments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  actionId: varchar("action_id"), // references aether_actions(id)
+  page: text("page"),
+  city: text("city"),
+  startedAt: timestamp("started_at"),
+  status: text("status").default('running'), // 'running' | 'completed' | 'no_effect' | 'regress'
+  targetMetrics: jsonb("target_metrics").default({}),
+  baseline: jsonb("baseline").default({}),
+  variant: jsonb("variant").default({}),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_action_experiments_action").on(table.actionId),
+  index("idx_action_experiments_status").on(table.status),
+]);
+
+export const aetherDailyDigest = pgTable("aether_daily_digest", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  runAt: timestamp("run_at").notNull(),
+  city: text("city").notNull(),
+  actions: jsonb("actions").default([]), // Array of action objects
+  tokenCostUsd: decimal("token_cost_usd", { precision: 8, scale: 4 }),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_daily_digest_city_date").on(table.city, table.runAt),
+]);
+
 // Insert schemas
 export const insertDealerSchema = createInsertSchema(dealers).omit({
   id: true,
@@ -2471,6 +2551,32 @@ export const insertAetherExperimentSchema = createInsertSchema(aetherExperiments
   updatedAt: true,
 });
 
+// AETHER Top-5 Action Engine Insert schemas
+export const insertAetherWatchlistSchema = createInsertSchema(aetherWatchlist).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAetherDeltasSchema = createInsertSchema(aetherDeltas).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAetherActionsSchema = createInsertSchema(aetherActions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAetherActionExperimentsSchema = createInsertSchema(aetherActionExperiments).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAetherDailyDigestSchema = createInsertSchema(aetherDailyDigest).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Type exports
 export type InsertDealer = z.infer<typeof insertDealerSchema>;
 export type Dealer = typeof dealers.$inferSelect;
@@ -2490,3 +2596,15 @@ export type InsertSeoAudit = z.infer<typeof insertSeoAuditSchema>;
 export type SeoAudit = typeof seoAudits.$inferSelect;
 export type InsertAetherExperiment = z.infer<typeof insertAetherExperimentSchema>;
 export type AetherExperiment = typeof aetherExperiments.$inferSelect;
+
+// AETHER Top-5 Action Engine Type exports
+export type InsertAetherWatchlist = z.infer<typeof insertAetherWatchlistSchema>;
+export type AetherWatchlist = typeof aetherWatchlist.$inferSelect;
+export type InsertAetherDeltas = z.infer<typeof insertAetherDeltasSchema>;
+export type AetherDeltas = typeof aetherDeltas.$inferSelect;
+export type InsertAetherActions = z.infer<typeof insertAetherActionsSchema>;
+export type AetherActions = typeof aetherActions.$inferSelect;
+export type InsertAetherActionExperiments = z.infer<typeof insertAetherActionExperimentsSchema>;
+export type AetherActionExperiments = typeof aetherActionExperiments.$inferSelect;
+export type InsertAetherDailyDigest = z.infer<typeof insertAetherDailyDigestSchema>;
+export type AetherDailyDigest = typeof aetherDailyDigest.$inferSelect;

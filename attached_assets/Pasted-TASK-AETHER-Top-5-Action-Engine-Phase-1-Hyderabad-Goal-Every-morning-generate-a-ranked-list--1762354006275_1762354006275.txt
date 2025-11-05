@@ -1,0 +1,90 @@
+TASK: AETHER — Top-5 Action Engine (Phase-1: Hyderabad)
+Goal: Every morning, generate a ranked list of the Top 5 actions for Hyderabad with expected uplift, do/don’t guidance, one-click assets (FAQ JSON-LD / schema snippet / content brief / internal link targets), and a “Start Experiment” tracker. Reuse existing modules (audits, learning, rules.json, briefs, GEO sweeps). Keep mock mode if keys absent.
+ENV (read-only; never commit)
+AETHER_ADMIN_KEY, AETHER_LEARNING_MODE, AETHER_DAILY_TOKEN_CAP,
+DATABASE_URL, REDIS_URL, S3_BUCKET_URL,
+GSC_SERVICE_ACCOUNT_JSON (optional), GA4_SERVICE_ACCOUNT_JSON + GA4_PROPERTY_ID (optional)
+1) DB Migrations (server/db/migrations)
+Create tables + indexes:
+aether_watchlist(id uuid pk, page text not null, city text not null, intent text, is_active boolean default true, created_at timestamptz default now())
+aether_deltas(id uuid pk, date date not null, page text, city text, source text not null, metric text not null, value numeric, created_at timestamptz default now())
+aether_actions(id uuid pk, date date not null, priority int, page text, city text, pillar text, title text, do text, dont text, suggested_fix text, expected_uplift numeric, effort text, confidence numeric, evidence jsonb, status text default 'open', created_at timestamptz default now())
+aether_experiments(id uuid pk, action_id uuid references aether_actions(id), page text, city text, started_at timestamptz, status text default 'running', target_metrics jsonb, baseline jsonb, variant jsonb, notes text)
+aether_daily_digest(id uuid pk, run_at timestamptz, city text, actions jsonb, token_cost_usd numeric, notes text)
+Indexes: on (date, city), (page, city), (status).
+Seed aether_watchlist with at least: '/', '/used-cars/hyderabad', 3–5 key guides.
+2) Signal Ingestion + Ranking (BullMQ queues under server/lib/aether/today/)
+Files to add:
+collectSignals.js
+Inputs: last 7/28 days; city='Hyderabad'
+Pull from: GSC (clicks/impressions/ctr/position by page), GA4 (conversions/engagedSessions by page + city), GEO sweeps (ai_mention_rate, first_mention_share), latest audit snapshots (schema/perf/indexability content metrics).
+Normalize and upsert rows into aether_deltas (one row per source × metric × date × page × city).
+Mock when creds missing (deterministic values).
+rankActions.js
+Load rules.json, current learning weights/confidence.
+For each watchlist page, evaluate rule conditions against current KPIs (schema_coverage, lcp_p75, entity_density, faq_presence, ai_mention_rate, etc.) assembled from aether_deltas + last audit snapshot.
+Score formula: score = gap × learned_weight × city_bias; city_bias = 1.15 for Hyderabad; break ties by effort (low first).
+Create Top 5 aether_actions for today with: pillar, title, do, dont, suggested_fix, expected_uplift = rule.expected_uplift_default * learned_weight, effort, confidence, evidence (KPI snippets + links to module views).
+generateAssets.js
+For each action:
+If pillar in ['Schema'] and rule mentions FAQ → generate FAQPage JSON-LD tailored to page; store to S3 aether/{action_id}/faq.json.
+If pillar='Schema' Vehicle/Offer → generate Vehicle+Offer JSON-LD stub with placeholders; to S3 .../vehicle_offer.json.
+If pillar='Content' → create content brief (brief.md with H1–H3, entities, FAQs, internal links); to S3 .../brief.md.
+If pillar='Internal Linking' → compute 4–6 internal link targets from same cluster; store links.json.
+Respect AETHER_DAILY_TOKEN_CAP; cache LLM outputs; add asset URLs back to aether_actions.evidence.
+startExperiment.js
+Given action_id, capture baseline (last 14d): GSC clicks/CTR/position; GA4 conversions; GEO mentions.
+Insert into aether_experiments with target_metrics (these KPIs), status='running'.
+digestJob.js
+Compose daily digest for Hyderabad: 5 actions (+ asset links + uplift + effort + confidence + short evidence).
+Insert into aether_daily_digest with token cost and notes.
+Queue wiring: todayQueue → chain jobs: collectSignals → rankActions → generateAssets → digestJob.
+Cron: 30 8 * * * (08:30 IST daily) and on-demand trigger.
+3) API Routes (server/routes/today.js, mount /api/aether/today)
+POST /run?city=Hyderabad → enqueue run; returns { run_id, status:'queued' }.
+GET /digest?city=Hyderabad&date=YYYY-MM-DD → latest digest JSON with actions + assets.
+GET /actions?status=open&city=Hyderabad → list open actions (paginated).
+POST /actions/:id/experiment → startExperiment; return experiment record.
+GET /experiments/:id → show baseline & current metrics (joins deltas).
+All routes enforce admin middleware or AETHER_ADMIN_KEY.
+4) UI (React under /admin/aether)
+Components to add:
+src/admin/aether/components/Top5Today.jsx
+Header: “🔥 Top 5 Actions — Hyderabad (Today)”
+For each action (card): Pillar chip, Title, Expected Uplift (e.g., “+8–12%”), Effort badge, Confidence %, Do/Don’t bullets, small evidence (e.g., “FAQ schema missing on /used-cars/hyderabad”), Asset buttons (Copy FAQ JSON-LD / Open Brief / Copy Schema / View Links), Start Experiment CTA.
+Pull data from GET /api/aether/today/digest.
+Add this panel to Overview tab (top block).
+On Structural Audit page, if a URL is selected, show sidebar “Related Today Actions” (filter by page).
+On Strategic Briefs, add “Suggested Topics for Hyderabad” sourced from actions where pillar='Content'.
+5) Experiment Evaluation (nightly)
+Add job server/lib/aether/today/evaluateExperiments.js:
+For experiments ≥ 7 days old, compute delta vs baseline for:
+GSC: clicks, CTR, avg position
+GA4: conversions
+GEO: ai_mention_rate
+Mark status: 'completed' | 'no_effect' | 'regress' and emit learning update: call existing learning engine with observed impacts for the relevant pillar. Log [AETHER_LEARN][EXPERIMENT].
+Cron: 15 3 * * *.
+6) Tests (server/test/aether/today/*.test.js)
+rankActions.test.js — given mock KPIs + rules, returns 5 ranked actions with fields set; expected_uplift > 0.
+generateAssets.test.js — returns brief / faq / schema JSON; respects token cap with cache.
+experiments.test.js — baseline aggregation + evaluation status logic.
+Add npm script: "aether:test-today": "jest server/test/aether/today/*.test.js".
+7) Health, Logging, Safety
+Extend /api/aether/health to include todayQueue + last digest time.
+Structured logs with correlation IDs at each stage; write to /data/aether/agent.log.
+If any connector (GSC/GA4) missing → run in mock mode with explicit mock:true flags in responses.
+8) Acceptance Criteria
+POST /api/aether/today/run?city=Hyderabad completes and writes one row to aether_daily_digest with 5 actions and asset links.
+GET /api/aether/today/digest renders in Top5Today.jsx on the Overview tab.
+“Start Experiment” creates experiment with baseline metrics.
+After 7 days, evaluation updates experiment status and triggers learning update.
+Token usage stays within AETHER_DAILY_TOKEN_CAP; cached assets reused.
+All tests pass.
+9) Post-Build Report (paste here)
+✅ TOP-5 ACTION ENGINE LIVE (HYD) or error with excerpts.
+List of files created/modified.
+Sample JSON from /api/aether/today/digest?city=Hyderabad.
+Screenshot/description of Top5Today UI.
+One example action with its S3 asset URL.
+Notes on how to add more cities (watchlist seed + city_bias config).
+END OF PROMPT
