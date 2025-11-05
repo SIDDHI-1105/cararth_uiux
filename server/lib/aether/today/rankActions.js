@@ -11,14 +11,39 @@ const __dirname = path.dirname(__filename);
 
 /**
  * Evaluate rule condition against page metrics
+ * Supports both simple JavaScript expressions and KPI-based conditions
  */
 function evaluateCondition(condition, metrics) {
   try {
-    // Create a safe evaluation context
-    const context = { ...metrics };
-    // Simple condition evaluation for MVP
-    const func = new Function(...Object.keys(context), `return ${condition}`);
-    return func(...Object.values(context));
+    // New format: KPI-based condition { kpi, op, value }
+    if (typeof condition === 'object' && condition.kpi) {
+      const kpiValue = metrics[condition.kpi];
+      if (kpiValue === undefined || kpiValue === null) return false;
+      
+      switch (condition.op) {
+        case '>': return kpiValue > condition.value;
+        case '>=': return kpiValue >= condition.value;
+        case '<': return kpiValue < condition.value;
+        case '<=': return kpiValue <= condition.value;
+        case '==': return kpiValue == condition.value;
+        case '===': return kpiValue === condition.value;
+        case '!=': return kpiValue != condition.value;
+        case '!==': return kpiValue !== condition.value;
+        default:
+          console.warn('[RankActions] Unknown operator:', condition.op);
+          return false;
+      }
+    }
+    
+    // Old format: Simple JavaScript expression string
+    if (typeof condition === 'string') {
+      const context = { ...metrics };
+      const func = new Function(...Object.keys(context), `return ${condition}`);
+      return func(...Object.values(context));
+    }
+    
+    console.warn('[RankActions] Invalid condition format:', condition);
+    return false;
   } catch (err) {
     console.warn('[RankActions] Failed to evaluate condition:', condition, err.message);
     return false;
@@ -30,11 +55,23 @@ function evaluateCondition(condition, metrics) {
  * Larger gap = higher priority
  */
 function calculateGap(rule, metrics) {
-  // Simple gap scoring based on expected uplift
-  if (rule.id.includes('schema')) return rule.expected_uplift * 1.2;
-  if (rule.id.includes('geo') || rule.id.includes('ai')) return rule.expected_uplift * 1.5;
-  if (rule.id.includes('content')) return rule.expected_uplift * 1.1;
-  return rule.expected_uplift;
+  // Get expected uplift (support both old and new format)
+  const uplift = rule.expected_uplift_default ?? rule.expected_uplift ?? 0.05;
+  
+  // Severity multiplier (new format)
+  let severityMultiplier = 1.0;
+  if (rule.severity === 'critical') severityMultiplier = 1.5;
+  else if (rule.severity === 'high') severityMultiplier = 1.3;
+  else if (rule.severity === 'medium') severityMultiplier = 1.1;
+  else if (rule.severity === 'low') severityMultiplier = 0.9;
+  
+  // Pillar-based boost
+  let pillarBoost = 1.0;
+  if (rule.id.includes('schema') || rule.pillar === 'Schema') pillarBoost = 1.2;
+  if (rule.id.includes('geo') || rule.pillar === 'GEO') pillarBoost = 1.5;
+  if (rule.id.includes('perf') || rule.pillar === 'Performance') pillarBoost = 1.1;
+  
+  return uplift * severityMultiplier * pillarBoost;
 }
 
 /**
@@ -48,12 +85,22 @@ function getLearningWeight(pillar) {
     
     const weights = JSON.parse(fs.readFileSync(weightsPath, 'utf8'));
     
-    // Map pillars to learning weight categories
+    // Map all pillars to learning weight categories
     const mapping = {
+      // Core pillars (from audit_weights.json)
       'Schema': weights.schema || 0.2,
       'Content': weights.content || 0.25,
       'Performance': weights.performance || 0.2,
-      'Internal Linking': weights.content || 0.25
+      'Internal Linking': weights.content || 0.25,
+      
+      // New pillars from enhanced ruleset
+      'Indexability': weights.technical || weights.schema || 0.22,
+      'GEO': weights.content || 0.28, // Higher weight for AI mentions
+      'Commerce': weights.schema || 0.2,
+      'Analytics': 0.18,
+      'Trust (E-E-A-T)': weights.content || 0.24,
+      'Accessibility': 0.15,
+      'Sharing': 0.16
     };
     
     return mapping[pillar] || 1.0;
@@ -110,15 +157,20 @@ export async function rankActionsForCity(city = 'Hyderabad') {
           const effortMultiplier = rule.effort === 'low' ? 1.2 : rule.effort === 'high' ? 0.8 : 1.0;
           const finalScore = score * effortMultiplier;
           
+          // Support both old and new rule formats
+          const uplift = rule.expected_uplift_default ?? rule.expected_uplift ?? 0.05;
+          const title = rule.title || rule.suggested_fix?.substring(0, 80) || rule.do?.substring(0, 80);
+          const suggestedFix = rule.suggested_fix || `Apply this fix to ${watchlistPage.page}`;
+          
           candidateActions.push({
             page: watchlistPage.page,
             city,
             pillar: rule.pillar,
-            title: rule.title,
+            title,
             do: rule.do,
             dont: rule.dont,
-            suggestedFix: `Apply this fix to ${watchlistPage.page}`,
-            expectedUplift: rule.expected_uplift * learningWeight,
+            suggestedFix,
+            expectedUplift: uplift * learningWeight,
             effort: rule.effort,
             confidence: learningWeight,
                 evidence: {
