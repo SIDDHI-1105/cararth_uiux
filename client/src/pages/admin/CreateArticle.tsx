@@ -176,19 +176,19 @@ export default function CreateArticle() {
 === ${generatedArticle.topic} ===
 
 HTML Content:
-${generatedArticle.contentHtml}
+${generatedArticle.contentHtml || ''}
 
 Meta Tags:
-Title: ${generatedArticle.meta.title}
-Description: ${generatedArticle.meta.description}
-Canonical: ${generatedArticle.meta.canonical}
-Robots: ${generatedArticle.meta.robots}
+Title: ${generatedArticle.meta?.title || 'N/A'}
+Description: ${generatedArticle.meta?.description || 'N/A'}
+Canonical: ${generatedArticle.meta?.canonical || 'N/A'}
+Robots: ${generatedArticle.meta?.robots || 'N/A'}
 
 Schema JSON-LD:
-${JSON.stringify(generatedArticle.schema, null, 2)}
+${JSON.stringify(generatedArticle.schema || {}, null, 2)}
 
 Internal Links:
-${generatedArticle.internalLinks.map(link => `- ${link.anchorText}: ${link.url}`).join('\n')}
+${(generatedArticle.internalLinks || []).map(link => `- ${link.anchorText}: ${link.url}`).join('\n')}
 `;
 
     const blob = new Blob([bundle], { type: 'text/plain' });
@@ -343,54 +343,60 @@ ${generatedArticle.internalLinks.map(link => `- ${link.anchorText}: ${link.url}`
                 </CardHeader>
                 <CardContent>
                   <TabsContent value="meta" className="space-y-3">
-                    <div>
-                      <label className="text-xs font-semibold text-muted-foreground">Title</label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <code className="flex-1 text-xs bg-slate-100 dark:bg-slate-800 p-2 rounded block overflow-x-auto" data-testid="text-meta-title">
-                          {generatedArticle.meta.title}
-                        </code>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleCopy(generatedArticle.meta.title, 'Title')}
-                          data-testid="button-copy-title"
-                        >
-                          <Copy className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold text-muted-foreground">Description</label>
-                      <div className="flex items-start gap-2 mt-1">
-                        <code className="flex-1 text-xs bg-slate-100 dark:bg-slate-800 p-2 rounded block overflow-x-auto" data-testid="text-meta-description">
-                          {generatedArticle.meta.description}
-                        </code>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleCopy(generatedArticle.meta.description, 'Description')}
-                          data-testid="button-copy-description"
-                        >
-                          <Copy className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold text-muted-foreground">Canonical</label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <code className="flex-1 text-xs bg-slate-100 dark:bg-slate-800 p-2 rounded block overflow-x-auto" data-testid="text-meta-canonical">
-                          {generatedArticle.meta.canonical}
-                        </code>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold text-muted-foreground">Robots</label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <code className="flex-1 text-xs bg-slate-100 dark:bg-slate-800 p-2 rounded block overflow-x-auto" data-testid="text-meta-robots">
-                          {generatedArticle.meta.robots}
-                        </code>
-                      </div>
-                    </div>
+                    {generatedArticle.meta ? (
+                      <>
+                        <div>
+                          <label className="text-xs font-semibold text-muted-foreground">Title</label>
+                          <div className="flex items-center gap-2 mt-1">
+                            <code className="flex-1 text-xs bg-slate-100 dark:bg-slate-800 p-2 rounded block overflow-x-auto" data-testid="text-meta-title">
+                              {generatedArticle.meta.title}
+                            </code>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleCopy(generatedArticle.meta.title, 'Title')}
+                              data-testid="button-copy-title"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-muted-foreground">Description</label>
+                          <div className="flex items-start gap-2 mt-1">
+                            <code className="flex-1 text-xs bg-slate-100 dark:bg-slate-800 p-2 rounded block overflow-x-auto" data-testid="text-meta-description">
+                              {generatedArticle.meta.description}
+                            </code>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleCopy(generatedArticle.meta.description, 'Description')}
+                              data-testid="button-copy-description"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-muted-foreground">Canonical</label>
+                          <div className="flex items-center gap-2 mt-1">
+                            <code className="flex-1 text-xs bg-slate-100 dark:bg-slate-800 p-2 rounded block overflow-x-auto" data-testid="text-meta-canonical">
+                              {generatedArticle.meta.canonical}
+                            </code>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-muted-foreground">Robots</label>
+                          <div className="flex items-center gap-2 mt-1">
+                            <code className="flex-1 text-xs bg-slate-100 dark:bg-slate-800 p-2 rounded block overflow-x-auto" data-testid="text-meta-robots">
+                              {generatedArticle.meta.robots}
+                            </code>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-sm text-muted-foreground">No meta tags available</div>
+                    )}
                   </TabsContent>
 
                   <TabsContent value="schema">
