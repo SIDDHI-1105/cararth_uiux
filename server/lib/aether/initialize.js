@@ -3,6 +3,7 @@ import { aetherAuthMiddleware } from './rbacMiddleware.js';
 import { scheduler } from './scheduler.js';
 import { productionAetherService } from './productionService.js';
 import { startBenchmarkScheduler, getSchedulerStatus } from './bench/scheduler.js';
+import { contentScheduler } from './content/scheduler.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -91,6 +92,13 @@ export async function initializeAether(app) {
       }
     } catch (error) {
       console.error('[AETHER_BENCH] ✗ Failed to start benchmark scheduler:', error.message);
+    }
+
+    // Initialize content impact tracking scheduler
+    try {
+      contentScheduler.init();
+    } catch (error) {
+      console.error('[AETHER_CONTENT] ✗ Failed to start content scheduler:', error.message);
     }
 
     console.log('[AETHER] ✓ Production system initialized');

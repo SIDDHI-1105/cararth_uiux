@@ -6,6 +6,8 @@
 import express from 'express';
 import { z } from 'zod';
 import { contentGenerator } from './generator.js';
+import { contentPublisher } from './publisher.js';
+import { impactTracker } from './impactTracker.js';
 import { aetherAuthMiddleware } from '../rbacMiddleware.js';
 
 const router = express.Router();
@@ -91,7 +93,7 @@ router.post('/generate', async (req, res) => {
       message: error.message
     });
   }
-}));
+});
 
 /**
  * GET /api/aether/content/preview/:id
@@ -147,7 +149,7 @@ router.get('/preview/:id', async (req, res) => {
       message: error.message
     });
   }
-}));
+});
 
 /**
  * GET /api/aether/content/list
@@ -192,7 +194,7 @@ router.get('/list', async (req, res) => {
       message: error.message
     });
   }
-}));
+});
 
 /**
  * GET /api/aether/content/:id
@@ -250,6 +252,269 @@ router.get('/:id', async (req, res) => {
       message: error.message
     });
   }
-}));
+});
+
+/**
+ * POST /api/aether/content/publish/:id
+ * Publish article (Mode A: JSON bundle, Mode B: CMS push)
+ */
+router.post('/publish/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Article ID is required'
+      });
+    }
+    
+    console.log(`[AETHER Content API] Publish request: ${id}`);
+    
+    const result = await contentPublisher.publishArticle(id);
+    
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('[AETHER Content API] Publish error:', error);
+    
+    if (error.message.includes('not found')) {
+      return res.status(404).json({
+        success: false,
+        error: error.message
+      });
+    }
+    
+    if (error.message.includes('already published')) {
+      return res.status(409).json({
+        success: false,
+        error: error.message
+      });
+    }
+    
+    res.status(500).json({
+      success: false,
+      error: 'Failed to publish article',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/aether/content/unpublish/:id
+ * Unpublish article (Mode B only)
+ */
+router.post('/unpublish/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Article ID is required'
+      });
+    }
+    
+    console.log(`[AETHER Content API] Unpublish request: ${id}`);
+    
+    const result = await contentPublisher.unpublishArticle(id);
+    
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('[AETHER Content API] Unpublish error:', error);
+    
+    if (error.message.includes('not found')) {
+      return res.status(404).json({
+        success: false,
+        error: error.message
+      });
+    }
+    
+    if (error.message.includes('only available in Mode B')) {
+      return res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+    
+    if (error.message.includes('not published')) {
+      return res.status(409).json({
+        success: false,
+        error: error.message
+      });
+    }
+    
+    res.status(500).json({
+      success: false,
+      error: 'Failed to unpublish article',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/aether/content/diff/:id
+ * Compare draft vs published version (Mode B only)
+ */
+router.get('/diff/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Article ID is required'
+      });
+    }
+    
+    console.log(`[AETHER Content API] Version diff request: ${id}`);
+    
+    const diff = await contentPublisher.getVersionDiff(id);
+    
+    res.status(200).json({
+      success: true,
+      ...diff
+    });
+  } catch (error) {
+    console.error('[AETHER Content API] Version diff error:', error);
+    
+    if (error.message.includes('not found')) {
+      return res.status(404).json({
+        success: false,
+        error: error.message
+      });
+    }
+    
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get version diff',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/aether/content/impact/aggregate
+ * Get aggregated impact metrics from last 5 published articles (for Needle Movement widget)
+ */
+router.get('/impact/aggregate', async (req, res) => {
+  try {
+    console.log(`[AETHER Content API] Impact metrics request: aggregate`);
+    
+    const impact = await impactTracker.getAggregateImpact();
+    
+    res.status(200).json({
+      success: true,
+      ...impact
+    });
+  } catch (error) {
+    console.error('[AETHER Content API] Aggregate impact error:', error);
+    
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get aggregate impact metrics',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/aether/content/impact/:id
+ * Get impact metrics with deltas for specific article
+ */
+router.get('/impact/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Article ID is required'
+      });
+    }
+    
+    console.log(`[AETHER Content API] Impact metrics request: ${id}`);
+    
+    const impact = await impactTracker.getArticleImpact(id);
+    
+    res.status(200).json({
+      success: true,
+      ...impact
+    });
+  } catch (error) {
+    console.error('[AETHER Content API] Impact metrics error:', error);
+    
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get impact metrics',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/aether/content/track-impact/:id
+ * Manually trigger impact tracking for specific article
+ */
+router.post('/track-impact/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Article ID is required'
+      });
+    }
+    
+    console.log(`[AETHER Content API] Track impact request: ${id}`);
+    
+    const result = await impactTracker.trackArticleImpact(id);
+    
+    res.status(200).json({
+      success: true,
+      ...result
+    });
+  } catch (error) {
+    console.error('[AETHER Content API] Track impact error:', error);
+    
+    if (error.message.includes('not found')) {
+      return res.status(404).json({
+        success: false,
+        error: error.message
+      });
+    }
+    
+    res.status(500).json({
+      success: false,
+      error: 'Failed to track impact',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/aether/content/track-all-impacts
+ * Track impact for all published articles (last 30 days)
+ */
+router.post('/track-all-impacts', async (req, res) => {
+  try {
+    console.log('[AETHER Content API] Track all impacts request');
+    
+    const results = await impactTracker.trackAllArticles();
+    
+    res.status(200).json({
+      success: true,
+      ...results
+    });
+  } catch (error) {
+    console.error('[AETHER Content API] Track all impacts error:', error);
+    
+    res.status(500).json({
+      success: false,
+      error: 'Failed to track all impacts',
+      message: error.message
+    });
+  }
+});
 
 export default router;

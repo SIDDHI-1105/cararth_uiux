@@ -26,6 +26,8 @@ import {
 import AuditPage from "./admin/AuditPage";
 import Top5Today from "./admin/Top5Today";
 import Benchmark from "./admin/Benchmark";
+import CreateArticle from "./admin/CreateArticle";
+import NeedleMovement from "@/components/admin/NeedleMovement";
 
 export default function Aether() {
   const [promptText, setPromptText] = useState("");
@@ -184,34 +186,27 @@ export default function Aether() {
 
         {/* Main Tabs - Premium Navigation */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 gap-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm p-2 rounded-xl shadow-lg border-2 border-slate-200 dark:border-slate-800">
+          <TabsList className="grid w-full grid-cols-7 gap-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm p-2 rounded-xl shadow-lg border-2 border-slate-200 dark:border-slate-800">
             <TabsTrigger 
               value="overview" 
               className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white font-semibold rounded-lg transition-all"
             >
               <Eye className="h-4 w-4" />
-              Overview
-            </TabsTrigger>
-            <TabsTrigger 
-              value="geo" 
-              className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white font-semibold rounded-lg transition-all"
-            >
-              <Search className="h-4 w-4" />
-              Perception Map
+              Today
             </TabsTrigger>
             <TabsTrigger 
               value="seo" 
               className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white font-semibold rounded-lg transition-all"
             >
               <FileSearch className="h-4 w-4" />
-              Structural Audit
+              Audit
             </TabsTrigger>
             <TabsTrigger 
-              value="content" 
+              value="geo" 
               className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white font-semibold rounded-lg transition-all"
             >
-              <TrendingUp className="h-4 w-4" />
-              Strategic Briefs
+              <Search className="h-4 w-4" />
+              Sweep
             </TabsTrigger>
             <TabsTrigger 
               value="benchmark" 
@@ -219,6 +214,20 @@ export default function Aether() {
             >
               <ShieldCheck className="h-4 w-4" />
               Benchmark
+            </TabsTrigger>
+            <TabsTrigger 
+              value="create" 
+              className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white font-semibold rounded-lg transition-all"
+            >
+              <Sparkles className="h-4 w-4" />
+              Create
+            </TabsTrigger>
+            <TabsTrigger 
+              value="content" 
+              className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white font-semibold rounded-lg transition-all"
+            >
+              <TrendingUp className="h-4 w-4" />
+              Briefs
             </TabsTrigger>
             <TabsTrigger 
               value="settings" 
@@ -232,6 +241,9 @@ export default function Aether() {
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
+            {/* Needle Movement Widget */}
+            <NeedleMovement />
+            
             {/* Top 5 Actions Today */}
             <Top5Today />
 
@@ -696,6 +708,11 @@ export default function Aether() {
           {/* Benchmark Tab */}
           <TabsContent value="benchmark" className="space-y-6">
             <Benchmark />
+          </TabsContent>
+
+          {/* Create Tab */}
+          <TabsContent value="create" className="space-y-6">
+            <CreateArticle />
           </TabsContent>
 
           <TabsContent value="settings">
