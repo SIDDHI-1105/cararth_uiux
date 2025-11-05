@@ -2,6 +2,7 @@ import aetherRoutes from './routes.js';
 import { aetherAuthMiddleware } from './rbacMiddleware.js';
 import { scheduler } from './scheduler.js';
 import { productionAetherService } from './productionService.js';
+import { startBenchmarkScheduler, getSchedulerStatus } from './bench/scheduler.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -78,6 +79,18 @@ export async function initializeAether(app) {
       console.log('[AETHER] ✓ Weekly sweeps scheduled');
     } else {
       console.log('[AETHER] ⊙ Weekly sweeps disabled (AETHER_CRON_ENABLED=false)');
+    }
+
+    // Initialize competitive benchmarking scheduler
+    try {
+      const benchStatus = startBenchmarkScheduler();
+      if (benchStatus.enabled) {
+        console.log(`[AETHER_BENCH] ✓ Nightly benchmark scheduler started (${benchStatus.schedule})`);
+      } else {
+        console.log('[AETHER_BENCH] ⊙ Benchmark scheduler disabled');
+      }
+    } catch (error) {
+      console.error('[AETHER_BENCH] ✗ Failed to start benchmark scheduler:', error.message);
     }
 
     console.log('[AETHER] ✓ Production system initialized');

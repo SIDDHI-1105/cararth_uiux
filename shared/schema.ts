@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, decimal, timestamp, boolean, index, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, decimal, timestamp, boolean, index, jsonb, serial, numeric } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -2589,6 +2589,94 @@ export type ValidationReport = typeof validationReports.$inferSelect;
 export type InsertGoogleVehicleFeed = z.infer<typeof insertGoogleVehicleFeedSchema>;
 export type GoogleVehicleFeed = typeof googleVehicleFeeds.$inferSelect;
 
+// AETHER Competitive Benchmarking Tables
+export const aetherCompetitors = pgTable("aether_competitors", {
+  id: serial("id").primaryKey(),
+  domain: varchar("domain", { length: 255 }).notNull().unique(),
+  label: varchar("label", { length: 255 }).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const aetherCompetitorSnapshots = pgTable("aether_competitor_snapshots", {
+  id: serial("id").primaryKey(),
+  domain: varchar("domain", { length: 255 }).notNull(),
+  date: timestamp("date").notNull(),
+  kpis: jsonb("kpis").notNull().$type<{
+    schema_coverage?: number;
+    lcp_p75?: number;
+    cls_p75?: number;
+    inp_p75?: number;
+    pages_sampled?: number;
+    sop_internal_link_depth?: number;
+    topic_count?: number;
+    ai_mention_rate?: number;
+    canonical_sitemap_mismatch_rate?: number;
+    vehicle_schema_coverage?: number;
+    avg_city_page_wordcount?: number;
+    entity_density_score?: number;
+    [key: string]: any;
+  }>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  dateIdx: index("competitor_snapshots_date_idx").on(table.date),
+  domainDateIdx: index("competitor_snapshots_domain_date_idx").on(table.domain, table.date),
+}));
+
+export const aetherBenchmarkScores = pgTable("aether_benchmark_scores", {
+  id: serial("id").primaryKey(),
+  date: timestamp("date").notNull(),
+  domain: varchar("domain", { length: 255 }).notNull(),
+  pillar: varchar("pillar", { length: 100 }).notNull(),
+  score: numeric("score", { precision: 5, scale: 2 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  dateIdx: index("benchmark_scores_date_idx").on(table.date),
+  pillarDateIdx: index("benchmark_scores_pillar_date_idx").on(table.pillar, table.date),
+  domainDateIdx: index("benchmark_scores_domain_date_idx").on(table.domain, table.date),
+}));
+
+export const aetherBenchRecommendations = pgTable("aether_bench_recommendations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  date: timestamp("date").notNull(),
+  pillar: varchar("pillar", { length: 100 }).notNull(),
+  severity: varchar("severity", { length: 50 }).notNull(),
+  title: text("title").notNull(),
+  do: text("do").notNull(),
+  dont: text("dont").notNull(),
+  evidence: jsonb("evidence"),
+  expectedUplift: numeric("expected_uplift", { precision: 5, scale: 3 }).notNull(),
+  effort: varchar("effort", { length: 50 }).notNull(),
+  confidence: numeric("confidence", { precision: 5, scale: 3 }).notNull(),
+  status: varchar("status", { length: 50 }).default('pending').notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  dateIdx: index("bench_recommendations_date_idx").on(table.date),
+  pillarDateIdx: index("bench_recommendations_pillar_date_idx").on(table.pillar, table.date),
+  statusIdx: index("bench_recommendations_status_idx").on(table.status),
+}));
+
+// Benchmark Insert/Select Schemas
+export const insertAetherCompetitorsSchema = createInsertSchema(aetherCompetitors).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAetherCompetitorSnapshotsSchema = createInsertSchema(aetherCompetitorSnapshots).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAetherBenchmarkScoresSchema = createInsertSchema(aetherBenchmarkScores).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAetherBenchRecommendationsSchema = createInsertSchema(aetherBenchRecommendations).omit({
+  id: true,
+  createdAt: true,
+});
+
 // AETHER Type exports
 export type InsertGeoSweep = z.infer<typeof insertGeoSweepSchema>;
 export type GeoSweep = typeof geoSweeps.$inferSelect;
@@ -2596,6 +2684,16 @@ export type InsertSeoAudit = z.infer<typeof insertSeoAuditSchema>;
 export type SeoAudit = typeof seoAudits.$inferSelect;
 export type InsertAetherExperiment = z.infer<typeof insertAetherExperimentSchema>;
 export type AetherExperiment = typeof aetherExperiments.$inferSelect;
+
+// AETHER Competitive Benchmarking Type exports
+export type InsertAetherCompetitors = z.infer<typeof insertAetherCompetitorsSchema>;
+export type AetherCompetitors = typeof aetherCompetitors.$inferSelect;
+export type InsertAetherCompetitorSnapshots = z.infer<typeof insertAetherCompetitorSnapshotsSchema>;
+export type AetherCompetitorSnapshots = typeof aetherCompetitorSnapshots.$inferSelect;
+export type InsertAetherBenchmarkScores = z.infer<typeof insertAetherBenchmarkScoresSchema>;
+export type AetherBenchmarkScores = typeof aetherBenchmarkScores.$inferSelect;
+export type InsertAetherBenchRecommendations = z.infer<typeof insertAetherBenchRecommendationsSchema>;
+export type AetherBenchRecommendations = typeof aetherBenchRecommendations.$inferSelect;
 
 // AETHER Top-5 Action Engine Type exports
 export type InsertAetherWatchlist = z.infer<typeof insertAetherWatchlistSchema>;

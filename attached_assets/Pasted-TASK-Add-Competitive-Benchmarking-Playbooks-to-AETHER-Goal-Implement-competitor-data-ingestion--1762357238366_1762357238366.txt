@@ -1,0 +1,55 @@
+TASK: Add Competitive Benchmarking & Playbooks to AETHER
+Goal: Implement competitor data ingestion (public-web), benchmarking scores, “win/lose” analysis, and a Do/Don’t recommender driven by AETHER’s learning weights. Deliver APIs, DB, nightly jobs, and a new Benchmark tab under /admin/aether.
+ENV (read-only)
+SERP_API_KEY (optional; if absent, use deterministic mock & LLM sweep history)
+FIRECRAWL_KEY, APIFY_TOKEN (optional; mock if absent)
+LIGHTHOUSE_API_MODE + PSI_API_KEY (optional)
+DATABASE_URL, REDIS_URL, S3_BUCKET_URL
+AETHER_ADMIN_KEY, AETHER_LEARNING_MODE
+DB Migrations (server/db/migrations)
+aether_competitors(id, domain, label, is_active) seed with top 6.
+aether_competitor_snapshots(id, domain, date, kpis jsonb)
+kpis keys (examples): { schema_coverage: 0–1, lcp_p75: ms, cls_p75, pages_sampled, sop_internal_link_depth, topic_count, ai_mention_rate }
+aether_benchmark_scores(date, domain, pillar, score)
+aether_recommendations(id, date, pillar, severity, title, do, dont, evidence jsonb, expected_uplift numeric, effort text, confidence numeric, status)
+Indexes on (date, domain), (pillar, date).
+Ingestion Workers (server/lib/aether/bench/)
+crawlSnapshot.js — for each competitor domain (respect robots; sample up to N pages):
+Parse sitemap; sample category/listing/content pages.
+Extract: canonical, schema presence/types, word count, H1/H2, FAQ blocks, internal links.
+Run Lighthouse (CLI/PSI) on 3 key templates (home, category, listing).
+Save aggregated KPIs to aether_competitor_snapshots.
+aiVisibilityProbe.js — reuse AETHER sweeps to compute ai_mention_rate per domain for tracked prompts; if SERP_API_KEY present, enrich with SERP SoV for a small keyword set.
+scoreBenchmarks.js — compute ABS per pillar using normalized metrics + current learning weights; write to aether_benchmark_scores.
+recommendations.js — rules + uplift ordering: generate Do/Don’t items into aether_recommendations. Use AETHER weights/confidence for sorting.
+Schedule nightly with BullMQ cron 0 2 * * *.
+Mock mode: synthesize realistic kpis if connectors missing.
+API Routes (admin-protected)
+GET /api/aether/bench/overview?date= → pillars with Cararth vs leader: { pillar, cararth, leader, diff, status }.
+GET /api/aether/bench/competitors → list with latest ABS and ai_mention_rate.
+GET /api/aether/bench/recommendations?pillar=&status= → top Do/Don’t cards with evidence & expected_uplift.
+POST /api/aether/bench/run → enqueue fresh snapshot (domain list optional).
+UI (React)
+New tab: Benchmark (src/admin/aether/BenchmarkPage.jsx)
+Top strip: Pillar score cards with Win/Parity/Lose chips.
+Comparison table: Cararth vs each competitor (sortable).
+Opportunity Gaps: Top 10 (diff × learned_weight), “Create Brief” or “Open Audit” CTAs.
+Do/Don’t Playbooks: cards grouped by pillar with “Apply” CTAs (wire to existing Brief generator / Audit links).
+Run Benchmark: button to trigger POST /run.
+Rules (seed file server/lib/aether/bench/rules.json)
+Encode 25+ common SEO/GEO rules mapping KPI thresholds → Do/Don’t text and fix hints.
+The engine should enrich each rule with Expected uplift from AETHER weights (fallback to defaults).
+Acceptance Criteria
+Nightly snapshots populate aether_competitor_snapshots with at least: schema_coverage, lcp_p75, cls_p75, topic_count, ai_mention_rate.
+ABS scores computed for 5 pillars and stored.
+Recommendations endpoint returns ≥10 actionable items with evidence and ordered by expected_uplift.
+Benchmark tab renders: score strip, comparison table, gaps, playbooks; CTAs work.
+Mock mode produces stable demo data if no keys.
+Logs show crawl counts, Lighthouse runs, AI mention computation.
+Post-Build Report
+✅ BENCHMARKING & PLAYBOOKS ENABLED or errors with excerpts.
+Created/modified files list.
+Sample JSON from /bench/overview and /bench/recommendations.
+Screenshot of the Benchmark tab.
+Next steps to tune rules & weights.
+END OF PROMPT

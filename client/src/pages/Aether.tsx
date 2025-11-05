@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import AuditPage from "./admin/AuditPage";
 import Top5Today from "./admin/Top5Today";
+import Benchmark from "./admin/Benchmark";
 
 export default function Aether() {
   const [promptText, setPromptText] = useState("");
@@ -183,7 +184,7 @@ export default function Aether() {
 
         {/* Main Tabs - Premium Navigation */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 gap-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm p-2 rounded-xl shadow-lg border-2 border-slate-200 dark:border-slate-800">
+          <TabsList className="grid w-full grid-cols-6 gap-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm p-2 rounded-xl shadow-lg border-2 border-slate-200 dark:border-slate-800">
             <TabsTrigger 
               value="overview" 
               className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white font-semibold rounded-lg transition-all"
@@ -211,6 +212,13 @@ export default function Aether() {
             >
               <TrendingUp className="h-4 w-4" />
               Strategic Briefs
+            </TabsTrigger>
+            <TabsTrigger 
+              value="benchmark" 
+              className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white font-semibold rounded-lg transition-all"
+            >
+              <ShieldCheck className="h-4 w-4" />
+              Benchmark
             </TabsTrigger>
             <TabsTrigger 
               value="settings" 
@@ -683,6 +691,11 @@ export default function Aether() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Benchmark Tab */}
+          <TabsContent value="benchmark" className="space-y-6">
+            <Benchmark />
           </TabsContent>
 
           <TabsContent value="settings">

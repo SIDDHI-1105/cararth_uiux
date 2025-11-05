@@ -9,6 +9,7 @@ import { scheduler } from './scheduler.js';
 import { auditEngine } from './auditEngine.js';
 import { reportGenerator } from './reportGenerator.js';
 import todayRoutes from './today/routes.js';
+import benchRoutes from './bench/routes.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -20,6 +21,9 @@ const router = express.Router();
 
 // Mount Top-5 Action Engine routes
 router.use('/today', todayRoutes);
+
+// Mount Competitive Benchmarking routes
+router.use('/', benchRoutes);
 
 /**
  * Async handler wrapper
