@@ -418,8 +418,8 @@ ${(generatedArticle.internalLinks || []).map(link => `- ${link.anchorText}: ${li
                   </TabsContent>
 
                   <TabsContent value="links" className="space-y-2">
-                    <label className="text-xs font-semibold text-muted-foreground">Internal Links ({generatedArticle.internalLinks.length})</label>
-                    {generatedArticle.internalLinks.map((link, idx) => (
+                    <label className="text-xs font-semibold text-muted-foreground">Internal Links ({generatedArticle.internalLinks?.length || 0})</label>
+                    {(generatedArticle.internalLinks || []).map((link, idx) => (
                       <div key={idx} className="p-2 bg-slate-50 dark:bg-slate-800 rounded" data-testid={`internal-link-${idx}`}>
                         <div className="flex items-start gap-2">
                           <LinkIcon className="h-3 w-3 mt-0.5 text-blue-600" />

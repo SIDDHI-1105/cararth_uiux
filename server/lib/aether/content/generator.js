@@ -38,8 +38,18 @@ class ContentGenerator {
     const rtos = await hyperlocalService.getRTOInfo(city);
     const insights = await hyperlocalService.getMarketInsights(city);
 
-    // Generate slug
-    const slug = this.generateSlug(topic, city);
+    // Generate slug (check if it exists and make it unique)
+    let slug = this.generateSlug(topic, city);
+    
+    // Check if slug already exists, if so append timestamp
+    const existingArticle = await db.query.aetherArticles.findFirst({
+      where: (articles, { eq }) => eq(articles.slug, slug)
+    });
+    
+    if (existingArticle) {
+      console.log(`[AETHER Content] Slug already exists: ${slug}, appending timestamp`);
+      slug = `${slug}-${Date.now()}`;
+    }
 
     // Generate content
     const isMock = openaiClient.isMockMode();
