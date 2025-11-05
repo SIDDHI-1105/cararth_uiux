@@ -1,0 +1,115 @@
+{
+  "city": "Hyderabad",
+  "state": "Telangana",
+  "neighborhoods": [
+    "Banjara Hills",
+    "Jubilee Hills",
+    "Gachibowli",
+    "HITEC City",
+    "Kondapur",
+    "Madhapur",
+    "Kukatpally",
+    "Miyapur",
+    "Secunderabad",
+    "Begumpet",
+    "Ameerpet",
+    "SR Nagar",
+    "Mehdipatnam",
+    "Tolichowki",
+    "LB Nagar",
+    "Dilsukhnagar",
+    "Malakpet",
+    "Charminar",
+    "Attapur",
+    "Manikonda"
+  ],
+  "rtoAddresses": [
+    {
+      "code": "TS 09",
+      "address": "Khairatabad RTO Office, Nampally, Hyderabad",
+      "district": "Hyderabad"
+    },
+    {
+      "code": "TS 07",
+      "address": "Secunderabad RTO Office, Mettuguda, Secunderabad",
+      "district": "Secunderabad"
+    },
+    {
+      "code": "TS 08",
+      "address": "LB Nagar RTO Office, Saroornagar, Hyderabad",
+      "district": "Hyderabad"
+    },
+    {
+      "code": "TS 12",
+      "address": "Kukatpally RTO Office, Kukatpally, Hyderabad",
+      "district": "Hyderabad"
+    }
+  ],
+  "priceBands": {
+    "budget": [2, 6],
+    "midRange": [6, 12],
+    "premium": [12, 25],
+    "luxury": [25, 100]
+  },
+  "emiRanges": {
+    "tenure36": [5500, 35000],
+    "tenure48": [4500, 28000],
+    "tenure60": [3800, 23000]
+  },
+  "popularDealers": [
+    {
+      "name": "Cars24 Hyderabad Hub",
+      "area": "HITEC City",
+      "specialization": "Multi-brand certified cars"
+    },
+    {
+      "name": "Spinny Car Hub",
+      "area": "Gachibowli",
+      "specialization": "Premium used cars"
+    },
+    {
+      "name": "CarDekho Gaadi Store",
+      "area": "Kondapur",
+      "specialization": "Wide inventory"
+    },
+    {
+      "name": "True Value (Maruti Suzuki)",
+      "area": "Multiple locations",
+      "specialization": "Maruti certified pre-owned"
+    },
+    {
+      "name": "H Promise (Honda)",
+      "area": "Jubilee Hills",
+      "specialization": "Honda certified cars"
+    }
+  ],
+  "marketInsights": {
+    "topBrands": [
+      "Maruti Suzuki",
+      "Hyundai",
+      "Honda",
+      "Mahindra",
+      "Tata",
+      "Toyota",
+      "Kia",
+      "Volkswagen"
+    ],
+    "avgPrice": 750000,
+    "avgMileage": 42000,
+    "demandScore": 0.82,
+    "popularModels": [
+      "Swift",
+      "i20",
+      "City",
+      "Creta",
+      "Venue",
+      "WagonR",
+      "Seltos",
+      "XUV500"
+    ],
+    "priceAppreciation": {
+      "annual": -12.5,
+      "description": "Hyderabad used car prices depreciate approximately 12-15% annually"
+    }
+  }
+}
