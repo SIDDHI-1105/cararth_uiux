@@ -54,7 +54,7 @@ export default function Top5Today() {
         title: "✓ Top 5 Actions Generated",
         description: `Generated new recommendations for ${city}`,
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/aether/today/digest'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/aether/today/digest', city] });
       refetch();
     },
     onError: (error: Error) => {
