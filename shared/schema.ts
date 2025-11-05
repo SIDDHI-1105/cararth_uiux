@@ -2656,6 +2656,74 @@ export const aetherBenchRecommendations = pgTable("aether_bench_recommendations"
   statusIdx: index("bench_recommendations_status_idx").on(table.status),
 }));
 
+// AETHER Auto-SEO Content Generation Tables
+export const aetherArticles = pgTable("aether_articles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  city: text("city").notNull(),
+  topic: text("topic").notNull(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  meta: jsonb("meta").notNull().$type<{
+    title: string;
+    description: string;
+    robots: string;
+    canonical: string;
+    ogImage?: string;
+  }>(),
+  schema: jsonb("schema").$type<{
+    faq?: any;
+    breadcrumb?: any;
+    vehicleOfferBlocks?: any[];
+    localBusiness?: any;
+  }>(),
+  contentHtml: text("content_html").notNull(),
+  geoIntro: text("geo_intro"),
+  internalLinks: jsonb("internal_links").default([]).$type<Array<{
+    href: string;
+    anchor: string;
+    rel?: string;
+  }>>(),
+  cta: jsonb("cta").$type<{
+    text: string;
+    href: string;
+  }>(),
+  seoChecklist: jsonb("seo_checklist").$type<{
+    pass: string[];
+    warn: string[];
+  }>(),
+  status: varchar("status", { length: 50 }).default('draft').notNull(),
+  cmsRef: text("cms_ref"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  slugIdx: index("articles_slug_idx").on(table.slug),
+  cityCreatedIdx: index("articles_city_created_idx").on(table.city, table.createdAt),
+  statusIdx: index("articles_status_idx").on(table.status),
+}));
+
+export const aetherArticleImpacts = pgTable("aether_article_impacts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  articleId: varchar("article_id").notNull().references(() => aetherArticles.id),
+  date: timestamp("date").notNull(),
+  gsc: jsonb("gsc").$type<{
+    clicks?: number;
+    impressions?: number;
+    ctr?: number;
+    position?: number;
+  }>(),
+  ga4: jsonb("ga4").$type<{
+    views?: number;
+    engagedSessions?: number;
+    conversions?: number;
+  }>(),
+  geo: jsonb("geo").$type<{
+    aiMentionRate?: number;
+  }>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  articleIdDateIdx: index("article_impacts_article_date_idx").on(table.articleId, table.date),
+  dateIdx: index("article_impacts_date_idx").on(table.date),
+}));
+
 // Benchmark Insert/Select Schemas
 export const insertAetherCompetitorsSchema = createInsertSchema(aetherCompetitors).omit({
   id: true,
@@ -2673,6 +2741,18 @@ export const insertAetherBenchmarkScoresSchema = createInsertSchema(aetherBenchm
 });
 
 export const insertAetherBenchRecommendationsSchema = createInsertSchema(aetherBenchRecommendations).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Auto-SEO Content Insert/Select Schemas
+export const insertAetherArticlesSchema = createInsertSchema(aetherArticles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertAetherArticleImpactsSchema = createInsertSchema(aetherArticleImpacts).omit({
   id: true,
   createdAt: true,
 });
@@ -2706,3 +2786,9 @@ export type InsertAetherActionExperiments = z.infer<typeof insertAetherActionExp
 export type AetherActionExperiments = typeof aetherActionExperiments.$inferSelect;
 export type InsertAetherDailyDigest = z.infer<typeof insertAetherDailyDigestSchema>;
 export type AetherDailyDigest = typeof aetherDailyDigest.$inferSelect;
+
+// AETHER Auto-SEO Content Type exports
+export type InsertAetherArticles = z.infer<typeof insertAetherArticlesSchema>;
+export type AetherArticles = typeof aetherArticles.$inferSelect;
+export type InsertAetherArticleImpacts = z.infer<typeof insertAetherArticleImpactsSchema>;
+export type AetherArticleImpacts = typeof aetherArticleImpacts.$inferSelect;
