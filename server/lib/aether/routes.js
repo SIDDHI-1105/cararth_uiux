@@ -10,6 +10,7 @@ import { auditEngine } from './auditEngine.js';
 import { reportGenerator } from './reportGenerator.js';
 import todayRoutes from './today/routes.js';
 import benchRoutes from './bench/routes.js';
+import contentRoutes from './content/routes.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -24,6 +25,15 @@ router.use('/today', todayRoutes);
 
 // Mount Competitive Benchmarking routes
 router.use('/', benchRoutes);
+
+// Mount Auto-SEO Content Generation routes
+router.use('/content', contentRoutes);
+
+// Test route to verify content path works
+router.get('/content/test', (req, res) => {
+  console.log('[AETHER] Test route hit!');
+  res.json({ test: 'success', path: '/api/aether/content/test' });
+});
 
 /**
  * Async handler wrapper
