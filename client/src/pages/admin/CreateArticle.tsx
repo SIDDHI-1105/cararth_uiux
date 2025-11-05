@@ -435,7 +435,7 @@ ${(generatedArticle.internalLinks || []).map(link => `- ${link.anchorText}: ${li
 
                   <TabsContent value="checklist" className="space-y-2">
                     <label className="text-xs font-semibold text-muted-foreground">SEO Checklist</label>
-                    {generatedArticle.seoChecklist.map((item, idx) => (
+                    {(generatedArticle.seoChecklist || []).map((item, idx) => (
                       <div key={idx} className="flex items-start gap-2 p-2 bg-slate-50 dark:bg-slate-800 rounded" data-testid={`checklist-item-${idx}`}>
                         {item.status === 'pass' ? (
                           <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5" />
