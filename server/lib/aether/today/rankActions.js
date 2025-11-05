@@ -4,68 +4,10 @@ import { fileURLToPath } from 'url';
 import { db } from '../../../db.js';
 import { aetherActions, aetherWatchlist } from '../../../../shared/schema.js';
 import { eq, and, desc } from 'drizzle-orm';
+import { getMetricsAggregator } from './data-sources/metricsAggregator.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-/**
- * Mock page metrics for MVP
- * In production, these would come from GSC, GA4, GEO sweeps, and audits
- */
-function getMockPageMetrics(page) {
-  const metrics = {
-    '/': {
-      faq_schema_present: false,
-      vehicle_schema_complete: false,
-      word_count: 650,
-      internal_link_count: 4,
-      ai_mention_rate: 0.12,
-      lcp_p75: 2.1,
-      canonical_present: true,
-      meta_description_length: 145,
-      h1_has_city: false,
-      images_with_alt: 0.7
-    },
-    '/used-cars/hyderabad': {
-      faq_schema_present: false,
-      vehicle_schema_complete: true,
-      word_count: 1200,
-      internal_link_count: 2,
-      ai_mention_rate: 0.18,
-      lcp_p75: 1.8,
-      canonical_present: true,
-      meta_description_length: 110,
-      h1_has_city: true,
-      images_with_alt: 0.85
-    },
-    '/guides/ai-verified-used-car-trust-india': {
-      faq_schema_present: true,
-      vehicle_schema_complete: false,
-      word_count: 2800,
-      internal_link_count: 8,
-      ai_mention_rate: 0.22,
-      lcp_p75: 3.2,
-      canonical_present: true,
-      meta_description_length: 158,
-      h1_has_city: false,
-      images_with_alt: 0.6
-    },
-    '/sell': {
-      faq_schema_present: false,
-      vehicle_schema_complete: false,
-      word_count: 580,
-      internal_link_count: 3,
-      ai_mention_rate: 0.08,
-      lcp_p75: 2.4,
-      canonical_present: false,
-      meta_description_length: 95,
-      h1_has_city: false,
-      images_with_alt: 0.4
-    }
-  };
-  
-  return metrics[page] || metrics['/'];
-}
 
 /**
  * Evaluate rule condition against page metrics
@@ -143,11 +85,16 @@ export async function rankActionsForCity(city = 'Hyderabad') {
     
     console.log(`[RankActions] Found ${watchlistPages.length} watchlist pages`);
     
+    // Fetch real metrics for all watchlist pages
+    const aggregator = getMetricsAggregator();
+    const pageUrls = watchlistPages.map(wp => wp.page);
+    const allMetrics = await aggregator.getPageMetrics(pageUrls, city);
+    
     // Evaluate rules for each page
     const candidateActions = [];
     
     for (const watchlistPage of watchlistPages) {
-      const metrics = getMockPageMetrics(watchlistPage.page);
+      const metrics = allMetrics[watchlistPage.page];
       
       for (const rule of rules) {
         // Check if condition matches
