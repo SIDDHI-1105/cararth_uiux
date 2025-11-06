@@ -1,0 +1,530 @@
+{
+  "audit_id": "audit_20251106055641_b705",
+  "url": "https://www.cararth.com",
+  "status": "completed",
+  "correlation_id": "1f596f8f-a9b0-4035-b639-a5378b24ad8b",
+  "timestamp": "2025-11-06T05:56:41.110Z",
+  "score": 20,
+  "modules": {
+    "indexability": {
+      "category": "Indexability",
+      "issues": [
+        {
+          "id": "robots_disallow_all",
+          "page": "/robots.txt",
+          "severity": "critical",
+          "description": "robots.txt blocks all pages from indexing",
+          "impact_score": 0.95,
+          "suggested_fix": "Remove \"Disallow: /\" to allow search engine indexing"
+        }
+      ],
+      "categoryScore": 5,
+      "duration": 1259,
+      "correlationId": "1f596f8f-a9b0-4035-b639-a5378b24ad8b"
+    },
+    "schema": {
+      "category": "Schema",
+      "issues": [
+        {
+          "id": "schema_missing_organization__",
+          "page": "/",
+          "severity": "high",
+          "description": "Missing Organization schema JSON-LD",
+          "impact_score": 0.65,
+          "suggested_fix": "Add schema.org/Organization structured data"
+        },
+        {
+          "id": "schema_missing_website__",
+          "page": "/",
+          "severity": "high",
+          "description": "Missing WebSite schema JSON-LD",
+          "impact_score": 0.65,
+          "suggested_fix": "Add schema.org/WebSite structured data"
+        },
+        {
+          "id": "schema_missing_product__used-cars",
+          "page": "/used-cars",
+          "severity": "critical",
+          "description": "Missing Product schema JSON-LD",
+          "impact_score": 0.85,
+          "suggested_fix": "Add schema.org/Product structured data"
+        },
+        {
+          "id": "schema_missing_vehicle__used-cars",
+          "page": "/used-cars",
+          "severity": "critical",
+          "description": "Missing Vehicle schema JSON-LD",
+          "impact_score": 0.85,
+          "suggested_fix": "Add schema.org/Vehicle structured data"
+        },
+        {
+          "id": "schema_missing_article__news",
+          "page": "/news",
+          "severity": "high",
+          "description": "Missing Article schema JSON-LD",
+          "impact_score": 0.65,
+          "suggested_fix": "Add schema.org/Article structured data"
+        },
+        {
+          "id": "schema_missing_newsarticle__news",
+          "page": "/news",
+          "severity": "high",
+          "description": "Missing NewsArticle schema JSON-LD",
+          "impact_score": 0.65,
+          "suggested_fix": "Add schema.org/NewsArticle structured data"
+        }
+      ],
+      "categoryScore": 0,
+      "duration": 205,
+      "correlationId": "1f596f8f-a9b0-4035-b639-a5378b24ad8b"
+    },
+    "content": {
+      "category": "Content",
+      "issues": [
+        {
+          "id": "content_thin__",
+          "page": "/",
+          "severity": "high",
+          "description": "Thin content detected (5 words, recommended: 300+)",
+          "impact_score": 0.75,
+          "suggested_fix": "Add more descriptive content to improve relevance and engagement"
+        },
+        {
+          "id": "content_readability__",
+          "page": "/",
+          "severity": "medium",
+          "description": "Low readability score (0/100)",
+          "impact_score": 0.45,
+          "suggested_fix": "Simplify language and use shorter sentences for better readability"
+        },
+        {
+          "id": "content_keywords__",
+          "page": "/",
+          "severity": "medium",
+          "description": "Low automotive keyword density",
+          "impact_score": 0.4,
+          "suggested_fix": "Include more relevant keywords like \"used cars\", \"car inspection\", \"verified listings\""
+        },
+        {
+          "id": "content_no_h1__",
+          "page": "/",
+          "severity": "critical",
+          "description": "Missing H1 heading tag",
+          "impact_score": 0.8,
+          "suggested_fix": "Add a descriptive H1 heading to the page"
+        },
+        {
+          "id": "content_thin__about",
+          "page": "/about",
+          "severity": "high",
+          "description": "Thin content detected (5 words, recommended: 300+)",
+          "impact_score": 0.75,
+          "suggested_fix": "Add more descriptive content to improve relevance and engagement"
+        },
+        {
+          "id": "content_readability__about",
+          "page": "/about",
+          "severity": "medium",
+          "description": "Low readability score (0/100)",
+          "impact_score": 0.45,
+          "suggested_fix": "Simplify language and use shorter sentences for better readability"
+        },
+        {
+          "id": "content_keywords__about",
+          "page": "/about",
+          "severity": "medium",
+          "description": "Low automotive keyword density",
+          "impact_score": 0.4,
+          "suggested_fix": "Include more relevant keywords like \"used cars\", \"car inspection\", \"verified listings\""
+        },
+        {
+          "id": "content_no_h1__about",
+          "page": "/about",
+          "severity": "critical",
+          "description": "Missing H1 heading tag",
+          "impact_score": 0.8,
+          "suggested_fix": "Add a descriptive H1 heading to the page"
+        },
+        {
+          "id": "content_thin__used-cars",
+          "page": "/used-cars",
+          "severity": "high",
+          "description": "Thin content detected (5 words, recommended: 300+)",
+          "impact_score": 0.75,
+          "suggested_fix": "Add more descriptive content to improve relevance and engagement"
+        },
+        {
+          "id": "content_readability__used-cars",
+          "page": "/used-cars",
+          "severity": "medium",
+          "description": "Low readability score (0/100)",
+          "impact_score": 0.45,
+          "suggested_fix": "Simplify language and use shorter sentences for better readability"
+        },
+        {
+          "id": "content_keywords__used-cars",
+          "page": "/used-cars",
+          "severity": "medium",
+          "description": "Low automotive keyword density",
+          "impact_score": 0.4,
+          "suggested_fix": "Include more relevant keywords like \"used cars\", \"car inspection\", \"verified listings\""
+        },
+        {
+          "id": "content_no_h1__used-cars",
+          "page": "/used-cars",
+          "severity": "critical",
+          "description": "Missing H1 heading tag",
+          "impact_score": 0.8,
+          "suggested_fix": "Add a descriptive H1 heading to the page"
+        }
+      ],
+      "categoryScore": 0,
+      "duration": 179,
+      "correlationId": "1f596f8f-a9b0-4035-b639-a5378b24ad8b"
+    },
+    "performance": {
+      "category": "Performance",
+      "issues": [
+        {
+          "id": "performance_moderate_tbt",
+          "page": "/",
+          "severity": "medium",
+          "description": "Moderate Total Blocking Time (303ms, target: <200ms)",
+          "impact_score": 0.35,
+          "suggested_fix": "Optimize JavaScript bundles"
+        }
+      ],
+      "categoryScore": 95,
+      "metrics": {
+        "fcp": {
+          "value": 1149,
+          "unit": "ms",
+          "name": "First Contentful Paint"
+        },
+        "lcp": {
+          "value": 1576,
+          "unit": "ms",
+          "name": "Largest Contentful Paint"
+        },
+        "cls": {
+          "value": 0.01,
+          "unit": "",
+          "name": "Cumulative Layout Shift"
+        },
+        "tbt": {
+          "value": 303,
+          "unit": "ms",
+          "name": "Total Blocking Time"
+        },
+        "si": {
+          "value": 2149,
+          "unit": "ms",
+          "name": "Speed Index"
+        },
+        "tti": {
+          "value": 3230,
+          "unit": "ms",
+          "name": "Time to Interactive"
+        }
+      },
+      "duration": 0,
+      "correlationId": "1f596f8f-a9b0-4035-b639-a5378b24ad8b",
+      "mock": true
+    },
+    "geo": {
+      "category": "GEO Visibility",
+      "issues": [
+        {
+          "id": "geo_low_mention_rate",
+          "page": "Overall visibility",
+          "severity": "critical",
+          "description": "Very low AI mention rate (0.00%, target: >20%)",
+          "impact_score": 0.9,
+          "suggested_fix": "Improve structured data, content authority, and backlink profile to increase AI visibility"
+        },
+        {
+          "id": "geo_large_competitor_gap",
+          "page": "Competitive position",
+          "severity": "critical",
+          "description": "Large visibility gap with CarDekho (100.0% difference)",
+          "impact_score": 0.85,
+          "suggested_fix": "Analyze competitor SEO strategy and implement similar structured data patterns"
+        }
+      ],
+      "categoryScore": 0,
+      "analysis": {
+        "totalSweeps": 3,
+        "mentionedSweeps": 0,
+        "mentionRate": "0.00",
+        "topCompetitors": [
+          {
+            "name": "CarDekho",
+            "mentions": 3,
+            "rate": 100
+          },
+          {
+            "name": "Cars24",
+            "mentions": 3,
+            "rate": 100
+          },
+          {
+            "name": "OLX",
+            "mentions": 3,
+            "rate": 100
+          },
+          {
+            "name": "CARS24",
+            "mentions": 3,
+            "rate": 100
+          },
+          {
+            "name": "CarWale",
+            "mentions": 1,
+            "rate": 33.33333333333333
+          }
+        ],
+        "categoryBreakdown": {
+          "general_search": {
+            "total": 1,
+            "mentioned": 0
+          },
+          "location_specific": {
+            "total": 1,
+            "mentioned": 0
+          },
+          "trust_safety": {
+            "total": 1,
+            "mentioned": 0
+          }
+        },
+        "averageCompetitorRate": "86.67"
+      },
+      "duration": 3,
+      "correlationId": "1f596f8f-a9b0-4035-b639-a5378b24ad8b"
+    }
+  },
+  "impactMatrix": [
+    {
+      "id": "robots_disallow_all",
+      "page": "/robots.txt",
+      "severity": "critical",
+      "description": "robots.txt blocks all pages from indexing",
+      "impact_score": 0.95,
+      "suggested_fix": "Remove \"Disallow: /\" to allow search engine indexing",
+      "module": "indexability",
+      "impactRank": 0.95
+    },
+    {
+      "id": "geo_low_mention_rate",
+      "page": "Overall visibility",
+      "severity": "critical",
+      "description": "Very low AI mention rate (0.00%, target: >20%)",
+      "impact_score": 0.9,
+      "suggested_fix": "Improve structured data, content authority, and backlink profile to increase AI visibility",
+      "module": "geo",
+      "impactRank": 0.9
+    },
+    {
+      "id": "schema_missing_product__used-cars",
+      "page": "/used-cars",
+      "severity": "critical",
+      "description": "Missing Product schema JSON-LD",
+      "impact_score": 0.85,
+      "suggested_fix": "Add schema.org/Product structured data",
+      "module": "schema",
+      "impactRank": 0.85
+    },
+    {
+      "id": "schema_missing_vehicle__used-cars",
+      "page": "/used-cars",
+      "severity": "critical",
+      "description": "Missing Vehicle schema JSON-LD",
+      "impact_score": 0.85,
+      "suggested_fix": "Add schema.org/Vehicle structured data",
+      "module": "schema",
+      "impactRank": 0.85
+    },
+    {
+      "id": "geo_large_competitor_gap",
+      "page": "Competitive position",
+      "severity": "critical",
+      "description": "Large visibility gap with CarDekho (100.0% difference)",
+      "impact_score": 0.85,
+      "suggested_fix": "Analyze competitor SEO strategy and implement similar structured data patterns",
+      "module": "geo",
+      "impactRank": 0.85
+    },
+    {
+      "id": "content_no_h1__",
+      "page": "/",
+      "severity": "critical",
+      "description": "Missing H1 heading tag",
+      "impact_score": 0.8,
+      "suggested_fix": "Add a descriptive H1 heading to the page",
+      "module": "content",
+      "impactRank": 0.8
+    },
+    {
+      "id": "content_no_h1__about",
+      "page": "/about",
+      "severity": "critical",
+      "description": "Missing H1 heading tag",
+      "impact_score": 0.8,
+      "suggested_fix": "Add a descriptive H1 heading to the page",
+      "module": "content",
+      "impactRank": 0.8
+    },
+    {
+      "id": "content_no_h1__used-cars",
+      "page": "/used-cars",
+      "severity": "critical",
+      "description": "Missing H1 heading tag",
+      "impact_score": 0.8,
+      "suggested_fix": "Add a descriptive H1 heading to the page",
+      "module": "content",
+      "impactRank": 0.8
+    },
+    {
+      "id": "content_thin__",
+      "page": "/",
+      "severity": "high",
+      "description": "Thin content detected (5 words, recommended: 300+)",
+      "impact_score": 0.75,
+      "suggested_fix": "Add more descriptive content to improve relevance and engagement",
+      "module": "content",
+      "impactRank": 0.5249999999999999
+    },
+    {
+      "id": "content_thin__about",
+      "page": "/about",
+      "severity": "high",
+      "description": "Thin content detected (5 words, recommended: 300+)",
+      "impact_score": 0.75,
+      "suggested_fix": "Add more descriptive content to improve relevance and engagement",
+      "module": "content",
+      "impactRank": 0.5249999999999999
+    },
+    {
+      "id": "content_thin__used-cars",
+      "page": "/used-cars",
+      "severity": "high",
+      "description": "Thin content detected (5 words, recommended: 300+)",
+      "impact_score": 0.75,
+      "suggested_fix": "Add more descriptive content to improve relevance and engagement",
+      "module": "content",
+      "impactRank": 0.5249999999999999
+    },
+    {
+      "id": "schema_missing_organization__",
+      "page": "/",
+      "severity": "high",
+      "description": "Missing Organization schema JSON-LD",
+      "impact_score": 0.65,
+      "suggested_fix": "Add schema.org/Organization structured data",
+      "module": "schema",
+      "impactRank": 0.45499999999999996
+    },
+    {
+      "id": "schema_missing_website__",
+      "page": "/",
+      "severity": "high",
+      "description": "Missing WebSite schema JSON-LD",
+      "impact_score": 0.65,
+      "suggested_fix": "Add schema.org/WebSite structured data",
+      "module": "schema",
+      "impactRank": 0.45499999999999996
+    },
+    {
+      "id": "schema_missing_article__news",
+      "page": "/news",
+      "severity": "high",
+      "description": "Missing Article schema JSON-LD",
+      "impact_score": 0.65,
+      "suggested_fix": "Add schema.org/Article structured data",
+      "module": "schema",
+      "impactRank": 0.45499999999999996
+    },
+    {
+      "id": "schema_missing_newsarticle__news",
+      "page": "/news",
+      "severity": "high",
+      "description": "Missing NewsArticle schema JSON-LD",
+      "impact_score": 0.65,
+      "suggested_fix": "Add schema.org/NewsArticle structured data",
+      "module": "schema",
+      "impactRank": 0.45499999999999996
+    },
+    {
+      "id": "content_readability__",
+      "page": "/",
+      "severity": "medium",
+      "description": "Low readability score (0/100)",
+      "impact_score": 0.45,
+      "suggested_fix": "Simplify language and use shorter sentences for better readability",
+      "module": "content",
+      "impactRank": 0.18000000000000002
+    },
+    {
+      "id": "content_readability__about",
+      "page": "/about",
+      "severity": "medium",
+      "description": "Low readability score (0/100)",
+      "impact_score": 0.45,
+      "suggested_fix": "Simplify language and use shorter sentences for better readability",
+      "module": "content",
+      "impactRank": 0.18000000000000002
+    },
+    {
+      "id": "content_readability__used-cars",
+      "page": "/used-cars",
+      "severity": "medium",
+      "description": "Low readability score (0/100)",
+      "impact_score": 0.45,
+      "suggested_fix": "Simplify language and use shorter sentences for better readability",
+      "module": "content",
+      "impactRank": 0.18000000000000002
+    },
+    {
+      "id": "content_keywords__",
+      "page": "/",
+      "severity": "medium",
+      "description": "Low automotive keyword density",
+      "impact_score": 0.4,
+      "suggested_fix": "Include more relevant keywords like \"used cars\", \"car inspection\", \"verified listings\"",
+      "module": "content",
+      "impactRank": 0.16000000000000003
+    },
+    {
+      "id": "content_keywords__about",
+      "page": "/about",
+      "severity": "medium",
+      "description": "Low automotive keyword density",
+      "impact_score": 0.4,
+      "suggested_fix": "Include more relevant keywords like \"used cars\", \"car inspection\", \"verified listings\"",
+      "module": "content",
+      "impactRank": 0.16000000000000003
+    },
+    {
+      "id": "content_keywords__used-cars",
+      "page": "/used-cars",
+      "severity": "medium",
+      "description": "Low automotive keyword density",
+      "impact_score": 0.4,
+      "suggested_fix": "Include more relevant keywords like \"used cars\", \"car inspection\", \"verified listings\"",
+      "module": "content",
+      "impactRank": 0.16000000000000003
+    },
+    {
+      "id": "performance_moderate_tbt",
+      "page": "/",
+      "severity": "medium",
+      "description": "Moderate Total Blocking Time (303ms, target: <200ms)",
+      "impact_score": 0.35,
+      "suggested_fix": "Optimize JavaScript bundles",
+      "module": "performance",
+      "impactRank": 0.13999999999999999
+    }
+  ],
+  "startTime": 1762408601110,
+  "duration": 1649
+}

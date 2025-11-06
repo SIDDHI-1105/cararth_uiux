@@ -12,6 +12,7 @@ import todayRoutes from './today/routes.js';
 import benchRoutes from './bench/routes.js';
 import contentRoutes from './content/routes.js';
 import googleIntegrationRoutes from '../integrations/google/routes.js';
+import topicRoutes from '../../routes/topic.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -32,6 +33,9 @@ router.use('/content', contentRoutes);
 
 // Mount Google Integration routes (GSC + GA4)
 router.use('/integrations/google', googleIntegrationRoutes);
+
+// Mount Topic Explorer routes (SEO/GEO winnability)
+router.use('/topic', topicRoutes);
 
 // Test route to verify content path works
 router.get('/content/test', (req, res) => {

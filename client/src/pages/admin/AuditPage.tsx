@@ -45,7 +45,7 @@ export default function AuditPage() {
   });
 
   // Poll current audit status
-  const { data: currentAudit } = useQuery({
+  const { data: currentAudit } = useQuery<any>({
     queryKey: ['/api/aether/audit', currentAuditId],
     enabled: pollingEnabled && !!currentAuditId,
     refetchInterval: 2000, // Poll every 2 seconds

@@ -27,6 +27,7 @@ import AuditPage from "./admin/AuditPage";
 import Top5Today from "./admin/Top5Today";
 import Benchmark from "./admin/Benchmark";
 import CreateArticle from "./admin/CreateArticle";
+import TopicExplorer from "./admin/TopicExplorer";
 import NeedleMovement from "@/components/admin/NeedleMovement";
 import GoogleMetrics from "@/components/aether/GoogleMetrics";
 import GoogleIntegrationSettings from "@/components/aether/GoogleIntegrationSettings";
@@ -188,7 +189,7 @@ export default function Aether() {
 
         {/* Main Tabs - Premium Navigation */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7 gap-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm p-2 rounded-xl shadow-lg border-2 border-slate-200 dark:border-slate-800">
+          <TabsList className="grid w-full grid-cols-8 gap-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm p-2 rounded-xl shadow-lg border-2 border-slate-200 dark:border-slate-800">
             <TabsTrigger 
               value="overview" 
               className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white font-semibold rounded-lg transition-all"
@@ -230,6 +231,13 @@ export default function Aether() {
             >
               <TrendingUp className="h-4 w-4" />
               Briefs
+            </TabsTrigger>
+            <TabsTrigger 
+              value="topic" 
+              className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white font-semibold rounded-lg transition-all"
+            >
+              <Search className="h-4 w-4" />
+              Topics
             </TabsTrigger>
             <TabsTrigger 
               value="settings" 
@@ -717,6 +725,11 @@ export default function Aether() {
           {/* Create Tab */}
           <TabsContent value="create" className="space-y-6">
             <CreateArticle />
+          </TabsContent>
+
+          {/* Topic Explorer Tab */}
+          <TabsContent value="topic" className="space-y-6">
+            <TopicExplorer />
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">
