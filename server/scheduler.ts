@@ -1177,6 +1177,90 @@ export class InternalScheduler {
         break;
       }
       
+      case 'OLX':
+      case 'OLX hyderabad':
+      case 'OLX bangalore':
+      case 'OLX mumbai':
+      case 'OLX delhi':
+      case 'OLX pune':
+      case 'OLX chennai': {
+        const apiToken = process.env.APIFY_API_TOKEN;
+        if (!apiToken) {
+          console.error('❌ APIFY_API_TOKEN not configured - skipping OLX retry');
+          break;
+        }
+        
+        const runId = await scraperHealthMonitor.startRun(scraperName, 'classifieds');
+        try {
+          const { ApifyOlxScraper } = await import('./apifyOlxScraper.js');
+          const { storage } = await import('./storage.js');
+          const olxScraper = new ApifyOlxScraper(apiToken, storage);
+          
+          // Extract city from scraper name (e.g., "OLX hyderabad" -> "hyderabad")
+          const city = scraperName.toLowerCase().replace('olx ', '').trim() || 'hyderabad';
+          
+          const result = await olxScraper.scrapeOlxCars(city, 50);
+          
+          await scraperHealthMonitor.completeRun(runId, {
+            success: result.success,
+            totalFound: result.scrapedCount,
+            newListingsSaved: result.savedCount,
+            error: result.errors.length > 0 ? result.errors.join(', ') : undefined
+          });
+        } catch (error) {
+          await scraperHealthMonitor.completeRun(runId, {
+            success: false,
+            totalFound: 0,
+            newListingsSaved: 0,
+            error: error instanceof Error ? error.message : String(error),
+            errorStack: error instanceof Error ? error.stack : undefined
+          });
+        }
+        break;
+      }
+      
+      case 'Facebook Marketplace':
+      case 'Facebook Marketplace hyderabad':
+      case 'Facebook Marketplace bangalore':
+      case 'Facebook Marketplace mumbai':
+      case 'Facebook Marketplace delhi':
+      case 'Facebook Marketplace pune':
+      case 'Facebook Marketplace chennai': {
+        const apiToken = process.env.APIFY_API_TOKEN;
+        if (!apiToken) {
+          console.error('❌ APIFY_API_TOKEN not configured - skipping Facebook Marketplace retry');
+          break;
+        }
+        
+        const runId = await scraperHealthMonitor.startRun(scraperName, 'marketplace');
+        try {
+          const { ApifyFacebookScraper } = await import('./apifyFacebookScraper.js');
+          const { storage } = await import('./storage.js');
+          const fbScraper = new ApifyFacebookScraper(apiToken, storage);
+          
+          // Extract city from scraper name
+          const city = scraperName.toLowerCase().replace('facebook marketplace ', '').trim() || 'hyderabad';
+          
+          const result = await fbScraper.scrapeFacebookCars(city, 50);
+          
+          await scraperHealthMonitor.completeRun(runId, {
+            success: result.success,
+            totalFound: result.scrapedCount,
+            newListingsSaved: result.savedCount,
+            error: result.errors.length > 0 ? result.errors.join(', ') : undefined
+          });
+        } catch (error) {
+          await scraperHealthMonitor.completeRun(runId, {
+            success: false,
+            totalFound: 0,
+            newListingsSaved: 0,
+            error: error instanceof Error ? error.message : String(error),
+            errorStack: error instanceof Error ? error.stack : undefined
+          });
+        }
+        break;
+      }
+      
       default:
         console.warn(`⚠️ Unknown scraper for retry: ${scraperName}`);
     }
