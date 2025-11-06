@@ -69,13 +69,35 @@ export default function CreateArticle() {
   const generateMutation = useMutation({
     mutationFn: async (data: { topic: string; city: string }) => {
       const response = await apiRequest('POST', '/api/aether/content/generate', data);
-      return await response.json();
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || result.message || 'Failed to generate article');
+      }
+      
+      return result;
     },
     onSuccess: (data) => {
-      setGeneratedArticle(data);
+      // Verify article data exists
+      if (!data.article) {
+        toast({
+          variant: 'destructive',
+          title: 'Generation Failed',
+          description: 'Article data missing from response',
+        });
+        return;
+      }
+      
+      // Extract article from envelope and merge with metadata
+      const article = {
+        ...data.article,
+        mode: data.mode || 'A',
+        mock: data.mock || false
+      };
+      setGeneratedArticle(article);
       toast({
         title: '✓ Article Generated',
-        description: `Created SEO-optimized content for "${data.topic}"`,
+        description: `Created SEO-optimized content for "${article.topic}"`,
       });
     },
     onError: (error: Error) => {
@@ -90,16 +112,46 @@ export default function CreateArticle() {
   // Publish mutation
   const publishMutation = useMutation({
     mutationFn: async (articleId: string) => {
-      const response = await apiRequest('POST', '/api/aether/content/publish', { articleId });
-      return await response.json();
+      const response = await apiRequest('POST', `/api/aether/content/publish/${articleId}`, {});
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || result.message || 'Failed to publish article');
+      }
+      
+      return result;
     },
-    onSuccess: (data) => {
-      setGeneratedArticle(data);
-      toast({
-        title: '✓ Article Published',
-        description: `Published to ${data.publishedUrl}`,
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/aether/content/impact/aggregate'] });
+    onSuccess: async (data) => {
+      try {
+        // Refetch full article to sync preview
+        const response = await apiRequest('GET', `/api/aether/content/${data.articleId}`);
+        const fullData = await response.json();
+        
+        if (!response.ok || !fullData.article) {
+          throw new Error('Failed to refetch article data');
+        }
+        
+        // Use mode/mock from refetched data if available, preserve from publish response as fallback
+        const article = {
+          ...fullData.article,
+          mode: fullData.article.mode || data.mode || generatedArticle?.mode || 'A',
+          mock: fullData.article.mock !== undefined ? fullData.article.mock : (data.mock || generatedArticle?.mock || false),
+          publishedUrl: data.publishedUrl
+        };
+        setGeneratedArticle(article);
+        
+        toast({
+          title: '✓ Article Published',
+          description: data.publishedUrl ? `Published to ${data.publishedUrl}` : 'Article published successfully',
+        });
+        queryClient.invalidateQueries({ queryKey: ['/api/aether/content/impact/aggregate'] });
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Refetch Failed',
+          description: 'Article published but preview could not be updated',
+        });
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -113,15 +165,44 @@ export default function CreateArticle() {
   // Unpublish mutation
   const unpublishMutation = useMutation({
     mutationFn: async (articleId: string) => {
-      const response = await apiRequest('POST', '/api/aether/content/unpublish', { articleId });
-      return await response.json();
+      const response = await apiRequest('POST', `/api/aether/content/unpublish/${articleId}`, {});
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || result.message || 'Failed to unpublish article');
+      }
+      
+      return result;
     },
-    onSuccess: (data) => {
-      setGeneratedArticle(data);
-      toast({
-        title: '✓ Article Unpublished',
-        description: 'Article removed from live site',
-      });
+    onSuccess: async (data) => {
+      try {
+        // Refetch full article to sync preview
+        const response = await apiRequest('GET', `/api/aether/content/${data.articleId}`);
+        const fullData = await response.json();
+        
+        if (!response.ok || !fullData.article) {
+          throw new Error('Failed to refetch article data');
+        }
+        
+        // Use mode/mock from refetched data, with fallbacks to current state
+        const article = {
+          ...fullData.article,
+          mode: fullData.article.mode || generatedArticle?.mode || 'A',
+          mock: fullData.article.mock !== undefined ? fullData.article.mock : (generatedArticle?.mock || false)
+        };
+        setGeneratedArticle(article);
+        
+        toast({
+          title: '✓ Article Unpublished',
+          description: 'Article removed from live site',
+        });
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Refetch Failed',
+          description: 'Article unpublished but preview could not be updated',
+        });
+      }
     },
     onError: (error: Error) => {
       toast({
