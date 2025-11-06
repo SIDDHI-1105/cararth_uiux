@@ -5,10 +5,11 @@
 
 import crypto from 'crypto';
 import { db } from '../../../db.js';
-import { aetherArticles } from '../../../../shared/schema.js';
+import { aetherArticles, cars } from '../../../../shared/schema.js';
 import { hyperlocalService } from './hyperlocal.js';
 import { openaiClient } from '../openaiClient.js';
 import { tokenBudget } from '../tokenBudget.js';
+import { eq, and, gte, lte, sql, desc } from 'drizzle-orm';
 
 class ContentGenerator {
   constructor() {
@@ -37,6 +38,13 @@ class ContentGenerator {
     const neighborhoods = await hyperlocalService.getRandomNeighborhoods(city, 5);
     const rtos = await hyperlocalService.getRTOInfo(city);
     const insights = await hyperlocalService.getMarketInsights(city);
+    
+    // Query inventory for matching cars
+    const filters = this.parseTopicFilters(topic);
+    const inventoryCars = await this.queryInventory(city, filters, 8);
+    const competitorLinks = this.generateCompetitorLinks(topic, city, filters);
+    
+    console.log(`[AETHER Content] Inventory: ${inventoryCars.length} cars found, filters:`, filters);
 
     // Generate slug (check if it exists and make it unique)
     let slug = this.generateSlug(topic, city);
@@ -57,11 +65,11 @@ class ContentGenerator {
 
     if (isMock) {
       console.log('[AETHER Content] Using mock mode (no OPENAI_API_KEY)');
-      const mockContent = this.generateMockContent({ topic, city, cityData, neighborhoods, rtos, insights, faqs });
+      const mockContent = this.generateMockContent({ topic, city, cityData, neighborhoods, rtos, insights, faqs, inventoryCars, competitorLinks });
       contentHtml = mockContent.html;
       geoIntroQA = mockContent.intro;
     } else {
-      const aiContent = await this.generateAIContent({ topic, city, cityData, neighborhoods, rtos, insights, faqs });
+      const aiContent = await this.generateAIContent({ topic, city, cityData, neighborhoods, rtos, insights, faqs, inventoryCars, competitorLinks });
       contentHtml = aiContent.html;
       geoIntroQA = aiContent.intro;
     }
@@ -116,7 +124,7 @@ class ContentGenerator {
   /**
    * Generate mock content using templates
    */
-  generateMockContent({ topic, city, cityData, neighborhoods, rtos, insights, faqs }) {
+  generateMockContent({ topic, city, cityData, neighborhoods, rtos, insights, faqs, inventoryCars = [], competitorLinks = [] }) {
     const topicLower = topic.toLowerCase();
     const topBrands = insights.topBrands || ['Maruti Suzuki', 'Hyundai', 'Honda'];
     const avgPrice = insights.avgPrice || 750000;
@@ -175,6 +183,42 @@ class ContentGenerator {
         </tbody>
       </table>
 
+      ${inventoryCars.length > 0 ? `
+      <h2>🚗 Featured ${topic} Available Now on CarArth</h2>
+      <p>We currently have <strong>${inventoryCars.length} verified ${topic.toLowerCase()}</strong> available in ${city}. Here are some top picks:</p>
+      
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
+        ${inventoryCars.slice(0, 6).map(car => `
+          <div style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; background: #f9f9f9;">
+            <h3 style="margin: 0 0 10px 0; font-size: 18px;">${car.year} ${car.brand} ${car.model}</h3>
+            <div style="margin-bottom: 10px;">
+              <strong style="font-size: 20px; color: #2563eb;">₹${(parseFloat(car.price) / 100000).toFixed(2)} Lakh</strong>
+            </div>
+            <div style="font-size: 14px; color: #666; margin-bottom: 10px;">
+              <div>📍 ${car.location}</div>
+              <div>⛽ ${car.fuelType} | ${car.transmission}</div>
+              <div>📏 ${car.mileage.toLocaleString()} km | ${car.owners} Owner</div>
+            </div>
+            <a href="https://www.cararth.com/car/${car.id}" style="display: inline-block; background: #2563eb; color: white; padding: 8px 16px; border-radius: 4px; text-decoration: none; font-size: 14px;">View Details →</a>
+          </div>
+        `).join('\n        ')}
+      </div>
+      
+      <p style="margin: 20px 0;"><a href="https://www.cararth.com/?city=${encodeURIComponent(city)}" style="color: #2563eb; font-weight: bold;">→ View all ${topic} in ${city} on CarArth</a></p>
+      ` : ''}
+
+      ${inventoryCars.length === 0 && competitorLinks.length > 0 ? `
+      <h2>Where to Find ${topic} in ${city}</h2>
+      <p>While we don't currently have this specific car in our inventory, you can check these trusted platforms:</p>
+      <div style="margin: 20px 0;">
+        ${competitorLinks.map(comp => `
+          <div style="margin-bottom: 10px; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
+            <strong>${comp.name}</strong> - <a href="${comp.url}" target="_blank" rel="noopener" style="color: #2563eb;">Browse ${topic} in ${city}</a>
+          </div>
+        `).join('\n        ')}
+      </div>
+      ` : ''}
+
       <h2>Where to Buy ${topic} in ${city}</h2>
       <p>${city} has ${rtos.length} major RTO zones covering different areas:</p>
       <ul>
@@ -224,7 +268,7 @@ class ContentGenerator {
   /**
    * Generate AI-powered content (when OpenAI key is available)
    */
-  async generateAIContent({ topic, city, cityData, neighborhoods, rtos, insights, faqs }) {
+  async generateAIContent({ topic, city, cityData, neighborhoods, rtos, insights, faqs, inventoryCars = [], competitorLinks = [] }) {
     const prompt = `You are an expert SEO content writer for used cars in India. Generate a comprehensive, SEO-optimized article about "${topic} in ${city}".
 
 CONTEXT:
@@ -272,11 +316,61 @@ Generate the complete article HTML (intro + main content):`;
     });
 
     // Parse intro and full HTML from AI response
-    const fullHtml = result.content;
+    let fullHtml = result.content;
     
     // Extract intro (first Q&A section)
     const introMatch = fullHtml.match(/<div class="geo-intro">[\s\S]*?<\/div>|<h2>Q:[\s\S]*?<\/p>/);
     const intro = introMatch ? introMatch[0] : fullHtml.substring(0, 500);
+    
+    // Add Featured Listings section (same as mock mode)
+    const featuredListingsHtml = `
+      ${inventoryCars.length > 0 ? `
+      <h2>🚗 Featured ${topic} Available Now on CarArth</h2>
+      <p>We currently have <strong>${inventoryCars.length} verified ${topic.toLowerCase()}</strong> available in ${city}. Here are some top picks:</p>
+      
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
+        ${inventoryCars.slice(0, 6).map(car => `
+          <div style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; background: #f9f9f9;">
+            <h3 style="margin: 0 0 10px 0; font-size: 18px;">${car.year} ${car.brand} ${car.model}</h3>
+            <div style="margin-bottom: 10px;">
+              <strong style="font-size: 20px; color: #2563eb;">₹${(parseFloat(car.price) / 100000).toFixed(2)} Lakh</strong>
+            </div>
+            <div style="font-size: 14px; color: #666; margin-bottom: 10px;">
+              <div>📍 ${car.location}</div>
+              <div>⛽ ${car.fuelType} | ${car.transmission}</div>
+              <div>📏 ${car.mileage.toLocaleString()} km | ${car.owners} Owner</div>
+            </div>
+            <a href="https://www.cararth.com/car/${car.id}" style="display: inline-block; background: #2563eb; color: white; padding: 8px 16px; border-radius: 4px; text-decoration: none; font-size: 14px;">View Details →</a>
+          </div>
+        `).join('\n        ')}
+      </div>
+      
+      <p style="margin: 20px 0;"><a href="https://www.cararth.com/?city=${encodeURIComponent(city)}" style="color: #2563eb; font-weight: bold;">→ View all ${topic} in ${city} on CarArth</a></p>
+      ` : ''}
+
+      ${inventoryCars.length === 0 && competitorLinks.length > 0 ? `
+      <h2>Where to Find ${topic} in ${city}</h2>
+      <p>While we don't currently have this specific car in our inventory, you can check these trusted platforms:</p>
+      <div style="margin: 20px 0;">
+        ${competitorLinks.map(comp => `
+          <div style="margin-bottom: 10px; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
+            <strong>${comp.name}</strong> - <a href="${comp.url}" target="_blank" rel="noopener" style="color: #2563eb;">Browse ${topic} in ${city}</a>
+          </div>
+        `).join('\n        ')}
+      </div>
+      ` : ''}
+    `.trim();
+    
+    // Insert Featured Listings section before the FAQ section if it exists
+    if (fullHtml.includes('Frequently Asked Questions') || fullHtml.includes('<h2>FAQs</h2>') || fullHtml.includes('<h2>FAQ</h2>')) {
+      fullHtml = fullHtml.replace(
+        /(<h2>Frequently Asked Questions|<h2>FAQs?<\/h2>)/i,
+        `${featuredListingsHtml}\n\n$1`
+      );
+    } else {
+      // If no FAQ section, append at the end
+      fullHtml = fullHtml + '\n\n' + featuredListingsHtml;
+    }
     
     return {
       html: fullHtml,
@@ -477,6 +571,115 @@ Generate the complete article HTML (intro + main content):`;
       .substring(0, 200);
     
     return base;
+  }
+
+  /**
+   * Parse topic to extract filters for inventory query
+   */
+  parseTopicFilters(topic) {
+    const topicLower = topic.toLowerCase();
+    const filters = {};
+    
+    // Extract price range
+    const priceMatch = topicLower.match(/under (\d+) lakh/i);
+    if (priceMatch) {
+      filters.maxPrice = parseInt(priceMatch[1]) * 100000;
+    }
+    
+    // Extract car type
+    if (topicLower.includes('sedan')) filters.bodyType = 'Sedan';
+    if (topicLower.includes('suv')) filters.bodyType = 'SUV';
+    if (topicLower.includes('hatchback')) filters.bodyType = 'Hatchback';
+    if (topicLower.includes('muv') || topicLower.includes('mpv')) filters.bodyType = 'MUV';
+    
+    // Extract specific brands
+    const brands = ['Maruti', 'Hyundai', 'Honda', 'Toyota', 'Tata', 'Mahindra', 'Ford', 'Renault', 'Nissan', 'Volkswagen', 'Skoda', 'Kia', 'MG'];
+    for (const brand of brands) {
+      if (topicLower.includes(brand.toLowerCase())) {
+        filters.brand = brand;
+        break;
+      }
+    }
+    
+    // Extract fuel type
+    if (topicLower.includes('diesel')) filters.fuelType = 'Diesel';
+    if (topicLower.includes('petrol')) filters.fuelType = 'Petrol';
+    if (topicLower.includes('cng')) filters.fuelType = 'CNG';
+    if (topicLower.includes('electric') || topicLower.includes('ev')) filters.fuelType = 'Electric';
+    
+    return filters;
+  }
+  
+  /**
+   * Query inventory for matching cars
+   */
+  async queryInventory(city, filters, limit = 10) {
+    const conditions = [eq(cars.city, city)];
+    
+    if (filters.maxPrice) {
+      // Use raw SQL for numeric comparison since price is decimal
+      conditions.push(sql`CAST(${cars.price} AS NUMERIC) <= ${filters.maxPrice}`);
+    }
+    
+    if (filters.brand) {
+      conditions.push(eq(cars.brand, filters.brand));
+    }
+    
+    if (filters.fuelType) {
+      conditions.push(eq(cars.fuelType, filters.fuelType));
+    }
+    
+    if (filters.bodyType) {
+      conditions.push(eq(cars.bodyType, filters.bodyType));
+    }
+    
+    try {
+      const matchingCars = await db
+        .select()
+        .from(cars)
+        .where(and(...conditions))
+        .orderBy(desc(cars.trustScore))
+        .limit(limit);
+      
+      console.log(`[AETHER Content] Found ${matchingCars.length} matching cars in inventory`);
+      return matchingCars;
+    } catch (error) {
+      console.error(`[AETHER Content] Error querying inventory:`, error);
+      return [];
+    }
+  }
+  
+  /**
+   * Generate competitor fallback links
+   */
+  generateCompetitorLinks(topic, city, filters) {
+    const citySlug = city.toLowerCase().replace(/\s+/g, '-');
+    const topicSlug = topic.toLowerCase().replace(/\s+/g, '-');
+    
+    const competitors = [
+      {
+        name: 'CarDekho',
+        url: `https://www.cardekho.com/used-cars+in+${citySlug}`,
+        logo: 'https://www.cardekho.com/images/logo-new.svg'
+      },
+      {
+        name: 'Spinny',
+        url: `https://www.spinny.com/${citySlug}`,
+        logo: 'https://www.spinny.com/static/images/spinny-logo.svg'
+      },
+      {
+        name: 'Cars24',
+        url: `https://www.cars24.com/buy-used-car?f=ft%3A%3Bloc%3A%3A${citySlug}`,
+        logo: 'https://fastly-production.24c.in/cars24/static/1.5.4/images/logo.svg'
+      },
+      {
+        name: 'OLX',
+        url: `https://www.olx.in/${citySlug}/cars_c84`,
+        logo: 'https://www.olx.in/assets/olxin-logo.svg'
+      }
+    ];
+    
+    return competitors;
   }
 
   /**
