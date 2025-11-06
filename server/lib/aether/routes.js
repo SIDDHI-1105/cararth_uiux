@@ -11,6 +11,7 @@ import { reportGenerator } from './reportGenerator.js';
 import todayRoutes from './today/routes.js';
 import benchRoutes from './bench/routes.js';
 import contentRoutes from './content/routes.js';
+import googleIntegrationRoutes from '../integrations/google/routes.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -28,6 +29,9 @@ router.use('/', benchRoutes);
 
 // Mount Auto-SEO Content Generation routes
 router.use('/content', contentRoutes);
+
+// Mount Google Integration routes (GSC + GA4)
+router.use('/integrations/google', googleIntegrationRoutes);
 
 // Test route to verify content path works
 router.get('/content/test', (req, res) => {
