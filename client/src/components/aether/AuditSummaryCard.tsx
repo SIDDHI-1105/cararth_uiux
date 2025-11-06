@@ -1,7 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { TrendingUp, AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { TrendingUp, AlertTriangle, CheckCircle2, XCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { useState } from "react";
 
 interface AuditSummaryCardProps {
   score: number;
@@ -10,10 +12,21 @@ interface AuditSummaryCardProps {
     id: string;
     severity: string;
     description: string;
+    module?: string;
+    page?: string;
+  }>;
+  allIssues?: Array<{
+    id: string;
+    severity: string;
+    description: string;
+    module?: string;
+    page?: string;
   }>;
 }
 
-export default function AuditSummaryCard({ score, timestamp, topIssues }: AuditSummaryCardProps) {
+export default function AuditSummaryCard({ score, timestamp, topIssues, allIssues }: AuditSummaryCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
   const getScoreColor = (score: number) => {
     if (score >= 90) return "text-green-600 dark:text-green-400";
     if (score >= 75) return "text-blue-600 dark:text-blue-400";
@@ -35,6 +48,24 @@ export default function AuditSummaryCard({ score, timestamp, topIssues }: AuditS
     if (score >= 40) return <AlertTriangle className="h-8 w-8" />;
     return <XCircle className="h-8 w-8" />;
   };
+  
+  // Group issues by severity (normalize to lowercase)
+  const issuesBySeverity = (allIssues || topIssues || []).reduce((acc, issue) => {
+    const severity = (issue.severity || 'low').toLowerCase();
+    if (!acc[severity]) acc[severity] = [];
+    acc[severity].push(issue);
+    return acc;
+  }, {} as Record<string, typeof topIssues>);
+  
+  // Use all found severities, sorted by priority
+  const knownOrder = ['critical', 'high', 'medium', 'low', 'info', 'warning'];
+  const foundSeverities = Object.keys(issuesBySeverity);
+  const severityOrder = [
+    ...knownOrder.filter(s => foundSeverities.includes(s)),
+    ...foundSeverities.filter(s => !knownOrder.includes(s)).sort()
+  ];
+  
+  const totalIssues = (allIssues || topIssues || []).length;
 
   return (
     <Card data-testid="card-audit-summary">
@@ -68,29 +99,84 @@ export default function AuditSummaryCard({ score, timestamp, topIssues }: AuditS
           Last run: {new Date(timestamp).toLocaleString()}
         </div>
 
-        {topIssues && topIssues.length > 0 && (
-          <div className="space-y-2">
-            <div className="text-sm font-medium">Top Issues</div>
-            {topIssues.slice(0, 3).map((issue, idx) => (
-              <div
-                key={issue.id}
-                className="flex items-start gap-2 text-sm"
-                data-testid={`issue-top-${idx}`}
+        {totalIssues > 0 && (
+          <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+            <CollapsibleTrigger asChild>
+              <button
+                className="flex items-center justify-between w-full p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors"
+                data-testid="button-toggle-issues"
               >
-                <Badge
-                  variant={
-                    issue.severity === "critical" || issue.severity === "high"
-                      ? "destructive"
-                      : "secondary"
-                  }
-                  data-testid={`badge-severity-${issue.severity}`}
-                >
-                  {issue.severity}
-                </Badge>
-                <span className="text-muted-foreground flex-1">{issue.description}</span>
-              </div>
-            ))}
-          </div>
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                  <span className="text-sm font-medium">
+                    {totalIssues} Issue{totalIssues !== 1 ? 's' : ''} Found
+                  </span>
+                </div>
+                {isExpanded ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </button>
+            </CollapsibleTrigger>
+            
+            <CollapsibleContent className="mt-3 space-y-3">
+              {severityOrder.map(severity => {
+                const issues = issuesBySeverity[severity];
+                if (!issues || issues.length === 0) return null;
+                
+                return (
+                  <div key={severity} className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant={
+                          severity === "critical" || severity === "high"
+                            ? "destructive"
+                            : severity === "medium"
+                            ? "default"
+                            : "secondary"
+                        }
+                        className="capitalize"
+                      >
+                        {severity}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {issues.length} issue{issues.length !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                    
+                    <div className="space-y-2 pl-2 border-l-2 border-muted">
+                      {issues.map((issue, idx) => (
+                        <div
+                          key={issue.id || idx}
+                          className="text-sm text-muted-foreground pl-3"
+                          data-testid={`issue-${severity}-${idx}`}
+                        >
+                          <div className="font-medium text-foreground mb-1">
+                            {issue.description}
+                          </div>
+                          {(issue.module || issue.page) && (
+                            <div className="text-xs flex gap-3">
+                              {issue.module && (
+                                <span className="text-blue-600 dark:text-blue-400">
+                                  {issue.module}
+                                </span>
+                              )}
+                              {issue.page && (
+                                <span className="text-muted-foreground truncate max-w-[200px]">
+                                  {issue.page}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </CollapsibleContent>
+          </Collapsible>
         )}
       </CardContent>
     </Card>

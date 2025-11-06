@@ -208,7 +208,8 @@ export default function AuditPage() {
               <AuditSummaryCard
                 score={currentAudit?.score || latestAudit?.score || 0}
                 timestamp={currentAudit?.timestamp || latestAudit?.timestamp || new Date().toISOString()}
-                topIssues={currentAudit?.impactMatrix?.slice(0, 3) || []}
+                topIssues={currentAudit?.impactMatrix?.slice(0, 3) || latestAudit?.impactMatrix?.slice(0, 3) || []}
+                allIssues={currentAudit?.impactMatrix || latestAudit?.impactMatrix || []}
               />
             </div>
 
