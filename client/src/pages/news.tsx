@@ -1333,7 +1333,7 @@ export default function ThrottleTalkPage() {
                           Learn when to use each approach, their strengths and limitations, and how they work together for maximum buyer confidence.
                         </p>
                         <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mb-3">
-                          <span>By Kritarth Pattnaik</span>
+                          <span>By CarArth Team</span>
                           <Badge variant="outline" className="text-xs">Inspection Methods</Badge>
                           <Badge variant="outline" className="text-xs">Hybrid Approach</Badge>
                         </div>
