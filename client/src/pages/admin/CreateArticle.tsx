@@ -41,7 +41,10 @@ interface GeneratedArticle {
   };
   schema: any;
   internalLinks: Array<{ url: string; anchorText: string; relevance: string }>;
-  seoChecklist: Array<{ item: string; status: 'pass' | 'warn'; note?: string }>;
+  seoChecklist: {
+    pass: string[];
+    warn: string[];
+  };
   mode: 'A' | 'B';
   mock: boolean;
   publishedUrl?: string;
@@ -516,21 +519,30 @@ ${(generatedArticle.internalLinks || []).map(link => `- ${link.anchorText}: ${li
 
                   <TabsContent value="checklist" className="space-y-2">
                     <label className="text-xs font-semibold text-muted-foreground">SEO Checklist</label>
-                    {(generatedArticle.seoChecklist || []).map((item, idx) => (
-                      <div key={idx} className="flex items-start gap-2 p-2 bg-slate-50 dark:bg-slate-800 rounded" data-testid={`checklist-item-${idx}`}>
-                        {item.status === 'pass' ? (
-                          <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5" />
-                        ) : (
-                          <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5" />
-                        )}
-                        <div className="flex-1">
-                          <div className="text-xs font-medium">{item.item}</div>
-                          {item.note && (
-                            <div className="text-xs text-muted-foreground mt-0.5">{item.note}</div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                    {generatedArticle.seoChecklist && typeof generatedArticle.seoChecklist === 'object' ? (
+                      <>
+                        {/* Pass items */}
+                        {(generatedArticle.seoChecklist.pass || []).map((item, idx) => (
+                          <div key={`pass-${idx}`} className="flex items-start gap-2 p-2 bg-slate-50 dark:bg-slate-800 rounded" data-testid={`checklist-item-pass-${idx}`}>
+                            <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5" />
+                            <div className="flex-1">
+                              <div className="text-xs font-medium">{item}</div>
+                            </div>
+                          </div>
+                        ))}
+                        {/* Warn items */}
+                        {(generatedArticle.seoChecklist.warn || []).map((item, idx) => (
+                          <div key={`warn-${idx}`} className="flex items-start gap-2 p-2 bg-slate-50 dark:bg-slate-800 rounded" data-testid={`checklist-item-warn-${idx}`}>
+                            <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5" />
+                            <div className="flex-1">
+                              <div className="text-xs font-medium">{item}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </>
+                    ) : (
+                      <div className="text-sm text-muted-foreground">No SEO checklist available</div>
+                    )}
                   </TabsContent>
                 </CardContent>
               </Tabs>
