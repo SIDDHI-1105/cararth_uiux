@@ -2899,3 +2899,97 @@ export type InsertAetherMetaTokens = z.infer<typeof insertAetherMetaTokensSchema
 export type AetherMetaTokens = typeof aetherMetaTokens.$inferSelect;
 export type InsertAetherProperties = z.infer<typeof insertAetherPropertiesSchema>;
 export type AetherProperties = typeof aetherProperties.$inferSelect;
+
+// ============================================================================
+// AETHER TOPIC EXPLORER
+// SEO/GEO topic discovery and winnability scoring
+// ============================================================================
+
+// Topics table - stores discovered topics for SEO/GEO optimization
+export const aetherTopics = pgTable("aether_topics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  query: text("query").notNull(),
+  city: text("city").notNull(),
+  cluster: text("cluster"), // topic cluster for grouping
+  intent: text("intent"), // search intent: informational, commercial, transactional
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_aether_topics_city_query").on(table.city, table.query),
+  index("idx_aether_topics_cluster").on(table.cluster),
+]);
+
+// Topic sources - SERP results and competitor pages for each topic
+export const aetherTopicSources = pgTable("aether_topic_sources", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  topicId: varchar("topic_id").notNull().references(() => aetherTopics.id),
+  url: text("url").notNull(),
+  title: text("title"),
+  domain: text("domain"),
+  serpPosition: integer("serp_position"),
+  estTraffic: numeric("est_traffic"),
+  backlinks: integer("backlinks"),
+  wordcount: integer("wordcount"),
+  entities: jsonb("entities"), // detected entities: make, model, year, city, etc.
+  lastCrawled: timestamp("last_crawled").defaultNow(),
+}, (table) => [
+  index("idx_aether_topic_sources_topic").on(table.topicId),
+  index("idx_aether_topic_sources_url").on(table.url),
+]);
+
+// Topic scores - winnability metrics for each topic
+export const aetherTopicScores = pgTable("aether_topic_scores", {
+  topicId: varchar("topic_id").primaryKey().references(() => aetherTopics.id),
+  seoScore: numeric("seo_score").notNull(),
+  geoScore: numeric("geo_score").notNull(),
+  competition: numeric("competition").notNull(),
+  difficulty: numeric("difficulty").notNull(),
+  winScore: numeric("win_score").notNull(),
+  details: jsonb("details"), // detailed breakdown of scores
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_aether_topic_scores_win").on(table.winScore),
+]);
+
+// Topic recommendations - actionable next steps for each topic
+export const aetherTopicRecos = pgTable("aether_topic_recos", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  topicId: varchar("topic_id").notNull().references(() => aetherTopics.id),
+  recoType: text("reco_type").notNull(), // 'generate_brief' | 'generate_article' | 'generate_lp'
+  payload: jsonb("payload").notNull(), // action-specific data
+  expectedUplift: numeric("expected_uplift"), // estimated SEO/GEO improvement
+  effort: text("effort"), // 'low' | 'medium' | 'high'
+  confidence: numeric("confidence"), // 0-1 confidence score
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_aether_topic_recos_topic").on(table.topicId),
+]);
+
+// Insert schemas for Topic Explorer tables
+export const insertAetherTopicsSchema = createInsertSchema(aetherTopics).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAetherTopicSourcesSchema = createInsertSchema(aetherTopicSources).omit({
+  id: true,
+  lastCrawled: true,
+});
+
+export const insertAetherTopicScoresSchema = createInsertSchema(aetherTopicScores).omit({
+  updatedAt: true,
+});
+
+export const insertAetherTopicRecosSchema = createInsertSchema(aetherTopicRecos).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Type exports for Topic Explorer
+export type InsertAetherTopics = z.infer<typeof insertAetherTopicsSchema>;
+export type AetherTopics = typeof aetherTopics.$inferSelect;
+export type InsertAetherTopicSources = z.infer<typeof insertAetherTopicSourcesSchema>;
+export type AetherTopicSources = typeof aetherTopicSources.$inferSelect;
+export type InsertAetherTopicScores = z.infer<typeof insertAetherTopicScoresSchema>;
+export type AetherTopicScores = typeof aetherTopicScores.$inferSelect;
+export type InsertAetherTopicRecos = z.infer<typeof insertAetherTopicRecosSchema>;
+export type AetherTopicRecos = typeof aetherTopicRecos.$inferSelect;

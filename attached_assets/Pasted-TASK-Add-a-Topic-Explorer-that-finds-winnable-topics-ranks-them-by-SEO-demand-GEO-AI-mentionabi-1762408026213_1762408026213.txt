@@ -1,0 +1,84 @@
+TASK: Add a Topic Explorer that finds winnable topics, ranks them by SEO demand + GEO (AI mentionability), shows competitors, and offers one-click Generate Brief / Article / Landing Page. Include ingestion via Firecrawl/Apify, SERP-lite proxies, AI visibility sweeps (cached), cost controls, and testable scoring. Must work in mock mode when keys are missing.
+ENV (read-only; never commit)
+AETHER_ADMIN_KEY
+OPENAI_API_KEY (optional; mock if missing)
+FIRECRAWL_KEY (optional)
+APIFY_TOKEN (optional)
+AETHER_DAILY_TOKEN_CAP (respect global cap)
+AETHER_CITY_DEFAULT=Hyderabad
+DATABASE_URL, REDIS_URL, S3_BUCKET_URL
+DATA MODEL (DB migrations in server/db/migrations)
+aether_topics ( id uuid pk, query text, city text, cluster text, intent text, created_at timestamptz default now() )
+aether_topic_sources ( id uuid pk, topic_id uuid, url text, title text, domain text, serp_position int, est_traffic numeric, backlinks int, wordcount int, entities jsonb, last_crawled timestamptz )
+aether_topic_scores ( topic_id uuid pk, seo_score numeric, geo_score numeric, competition numeric, difficulty numeric, win_score numeric, details jsonb, updated_at timestamptz )
+aether_topic_recos ( id uuid pk, topic_id uuid, reco_type text, payload jsonb, expected_uplift numeric, effort text, confidence numeric, created_at timestamptz )
+Indexes: (city, query), (topic_id), (url), (win_score desc).
+BACKEND (dir: server/lib/aether/topic/)
+ingest.js
+Input: { query, city=AETHER_CITY_DEFAULT }
+Steps:
+Build query variants (plural/singular/budget ranges; add city).
+SERP-lite fetch: use Firecrawl/Apify to get top 20 URLs per variant (title, snippet). If neither key present, use deterministic fixture.
+Crawl page heads (fast): pull <title>, <meta>, wordcount (approx), H1, and detect schema types & entities (make/model/year/city).
+Attempt backlink count (proxy): count referring domains using public signals (if available) or set to heuristic buckets.
+Store rows into aether_topics + aether_topic_sources.
+aiVisibility.js
+For the query, run GEO sweeps across available adapters (OpenAI; add others later) with strong caching key = provider|model|query.
+Compute ai_mention_rate by domain and first-mention share.
+Return { geo_score_raw, mentions_by_domain }. Respect AETHER_DAILY_TOKEN_CAP.
+score.js
+Compute:
+seo_score = normalized mix of SERP positions, est_traffic proxy, schema richness, content depth.
+geo_score = normalized AI visibility signal (mention rate + first-mention share).
+competition = normalized blend of domain strength proxy (ref domains/backlinks) + content depth of top 5.
+difficulty = function(competition, variability).
+win_score = (seo_weight * seo_gap + geo_weight * geo_gap) / (1 + difficulty); weights pulled from Learning (fallback: 0.6 SEO / 0.4 GEO). City bias +15% for AETHER_CITY_DEFAULT.
+Save to aether_topic_scores.details the normalized components.
+recommend.js
+Output 2–4 actionable recos per topic:
+generate_brief → payload: outline/entities/FAQs
+generate_article → payload seeds for Auto-SEO generator
+generate_lp → payload for Landing Page generator (city × model)
+Compute expected_uplift using Learning weights × observed gaps; effort (low/med/high).
+jobs.js (BullMQ queue: topicQueue)
+Chain: ingest → aiVisibility → score → recommend.
+Add cron: none by default; on-demand only. Later can add weekly refresh.
+API (mount server/routes/topic.js at /api/aether/topic)
+POST /explore { query, city? } → kicks queue; returns { topicId, status:'queued' }
+GET /result/:id → { topic, sources[], scores, recos[] }
+GET /suggest?city=&cluster= → top 20 topics by win_score (recent)
+POST /action/:id/brief → calls existing Content Brief generator using payload; returns S3 link/id
+POST /action/:id/article → calls Auto-SEO Article generator; returns article id
+POST /action/:id/lp → calls LP Generator; returns lp id
+All protected by existing admin middleware / AETHER_ADMIN_KEY.
+Always include mock:true when using fixtures.
+UI (React/Vite under /src/admin/aether/TopicExplorer.jsx)
+Search bar (query, city select default Hyderabad) + Explore button.
+Result layout:
+Left: “Winnability Panel” → Win Score (big), SEO score, GEO score, Difficulty (chips) + short rationale.
+Middle: Top Sources Table → URL, Est Traffic, Backlinks (proxy), Wordcount, Schema types, Appears in AI? (✓/–)
+Right: Actions → “Generate Brief”, “Generate Article”, “Generate Landing Page” (buttons show expected uplift & effort).
+Saved topics list (recent explores) with sorting by Win Score.
+Cost badge (tokens used for GEO) and cache indicator.
+Reuse existing styles (purple gradient, cards). Keep fast & minimal.
+COST & CACHING
+Cache SERP-lite and AI sweeps for 7 days (Redis; also persist summarized results).
+Enforce AETHER_DAILY_TOKEN_CAP; if cap near 80%, disable fresh sweeps and use cached GEO data with warning.
+TESTS (server/test/aether/topic/*.test.js)
+ingest.test.js → parses sources; stores rows; handles mock mode.
+aiVisibility.test.js → returns stable mention rates w/ cache; respects token cap.
+score.test.js → deterministic scoring given fixtures; win_score ordering makes sense.
+recommend.test.js → emits 2–4 recos with expected fields & nonzero expected_uplift.
+Add script: "aether:test-topic": "jest server/test/aether/topic/*.test.js".
+ACCEPTANCE CRITERIA
+POST /api/aether/topic/explore returns a topic id; within the same session, GET /result/:id returns sources + scores + recos (mock or live).
+UI shows Win Score, SEO/GEO scores, top sources table, and action buttons.
+Clicking Generate Brief/Article/LP creates assets via existing modules and returns ids/S3 links.
+Token use stays within cap; cache hit rate visible; mock mode fully functional without keys.
+Tests pass.
+POST-BUILD REPORT (paste here)
+✅ TOPIC EXPLORER (SEO+GEO) LIVE
+Created/modified files list
+Example payload from /api/aether/topic/result/:id
+Screenshot/JSON of UI state for a sample query (Hyderabad)
+Notes on weights used and next tunings
