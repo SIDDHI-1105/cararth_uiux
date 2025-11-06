@@ -1175,40 +1175,49 @@ export class DatabaseStorage implements IStorage {
       );
     }
 
-    // Determine sorting - prioritize quality for general searches
+    // Determine sorting - prioritize listings with images and quality for general searches
     let orderByClause;
     const isDesc = filters.sortOrder === 'desc';
     
+    // Prioritize listings with images first, then by quality score (NULL scores last)
+    const hasImagesOrder = sql`CASE WHEN ${cachedPortalListings.images} IS NOT NULL AND jsonb_array_length(${cachedPortalListings.images}) > 0 THEN 0 ELSE 1 END`;
+    const qualityScoreOrder = sql`${cachedPortalListings.qualityScore} DESC NULLS LAST`;
+    
     switch (filters.sortBy) {
       case 'price':
-        // For price searches, still prioritize quality but respect price sorting
+        // For price searches, prioritize images & quality but respect price sorting
         orderByClause = [
-          desc(cachedPortalListings.qualityScore),
+          hasImagesOrder,
+          qualityScoreOrder,
           isDesc ? desc(cachedPortalListings.price) : asc(cachedPortalListings.price)
         ];
         break;
       case 'year':
         orderByClause = [
-          desc(cachedPortalListings.qualityScore),
+          hasImagesOrder,
+          qualityScoreOrder,
           isDesc ? desc(cachedPortalListings.year) : asc(cachedPortalListings.year)
         ];
         break;
       case 'mileage':
         orderByClause = [
-          desc(cachedPortalListings.qualityScore),
+          hasImagesOrder,
+          qualityScoreOrder,
           isDesc ? desc(cachedPortalListings.mileage) : asc(cachedPortalListings.mileage)
         ];
         break;
       case 'date':
         orderByClause = [
-          desc(cachedPortalListings.qualityScore),
+          hasImagesOrder,
+          qualityScoreOrder,
           desc(cachedPortalListings.listingDate)
         ];
         break;
       default:
-        // For general searches, prioritize quality score above all
+        // For general searches, prioritize images & quality score above all
         orderByClause = [
-          desc(cachedPortalListings.qualityScore),
+          hasImagesOrder,
+          qualityScoreOrder,
           desc(cachedPortalListings.listingDate)
         ];
         break;
