@@ -1,0 +1,106 @@
+How it works (user flow)
+Sign in with Google → user approves:
+Email / profile (identify tenant)
+GSC read scope
+GA4 read scope
+AETHER stores Google refresh token securely and pulls:
+User’s verified sites (GSC)
+User’s GA4 properties (account → property → web data stream)
+User lands in AETHER dashboard, auto-populated:
+Today panel + KPIs from their GSC/GA4 (and our GEO/Audit engines if enabled)
+Optional: Link Meta → click “Continue with Facebook”
+AETHER stores Meta system user token and fetches Ads Insights
+Scopes you’ll request (least-privilege)
+Google OAuth:
+openid email profile
+https://www.googleapis.com/auth/webmasters.readonly (GSC)
+https://www.googleapis.com/auth/analytics.readonly (GA4)
+Meta (when they click “Link Meta”):
+ads_read, read_insights, business_management (Marketing API)
+Data model (per-tenant)
+aether_users(id, email, name, picture, provider='google', google_sub, created_at)
+aether_google_tokens(user_id, access_token, refresh_token, expiry, scopes[])
+aether_meta_tokens(user_id, access_token, token_type, expires_at, permissions[])
+aether_properties(user_id, source, external_id, display_name, kind)
+e.g., ('google','sc-domain:cararth.com','CarArth GSC','gsc'), ('google','GA4:1234','CarArth GA4','ga4')
+Optional multitenancy: orgs, user_orgs, org_properties
+Security & privacy
+Store refresh tokens encrypted at rest (KMS or libsodium).
+Rotate tokens; handle revocation gracefully.
+Tenant isolation on every API call (user_id/org_id filters).
+“Disconnect” buttons to revoke Google/Meta tokens.
+Audit log: log who linked, when, scopes, last sync.
+UI touches
+Login page: “Continue with Google”
+First-run wizard:
+Pick GSC site(s)
+Pick GA4 property/stream
+(Optional) Link Meta
+Dashboard auto-fills the Growth Strip (Impressions, Conversions, Spend) and powers Top-5 Actions for their site.
+Copy-paste Replit Agent prompt (implements SSO + connectors)
+TASK: AETHER — Google SSO + GSC/GA4 auto-link, optional Meta link
+Goal: Add “Continue with Google” login. On first login, list and let the user select their GSC sites and GA4 properties. Store tokens securely. Populate the AETHER dashboard with their data. Provide a separate Connect Meta button. All features must work in mock mode if tokens are missing.
+ENV
+GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI
+JWT_SECRET (for AETHER session)
+META_APP_ID, META_APP_SECRET, META_REDIRECT_URI (optional)
+DATABASE_URL, AETHER_BASE_URL, AETHER_ADMIN_KEY
+Backend (Node/Express)
+Auth routes (/api/auth/google):
+GET /google/start → redirect to Google OAuth with scopes: openid email profile webmasters.readonly analytics.readonly
+GET /google/callback → exchange code → store tokens (encrypt refresh), upsert aether_users; issue AETHER JWT cookie; redirect to /admin/aether/onboarding
+Meta routes (/api/auth/meta):
+GET /start → redirect to FB OAuth (scopes: ads_read,read_insights,business_management)
+GET /callback → exchange code → store token; redirect to /admin/aether/settings?meta=linked
+Token store utils:
+Encrypt refresh tokens; auto-refresh when expired
+Google connectors:
+GET /api/integrations/google/gsc/sites → list verified sites for user
+GET /api/integrations/google/ga4/properties → list GA4 properties + web data streams
+POST /api/integrations/google/save { gscSiteIds[], ga4PropertyId, ga4StreamId } → persist selections to aether_properties
+Nightly sync jobs write to your existing GSC/GA4 tables (or use live calls for summaries)
+Meta connector:
+GET /api/integrations/meta/adaccounts → list ad accounts (if linked)
+POST /api/integrations/meta/save { adAccountId }
+Session middleware:
+Verify JWT; attach req.user; protect /api/aether/* routes; add org_id later if needed
+Database migrations
+aether_users(id uuid pk, email text unique, name text, picture text, provider text, google_sub text, created_at timestamptz default now())
+aether_google_tokens(user_id uuid references aether_users(id), access_token text, refresh_token text, expiry timestamptz, scopes jsonb, updated_at timestamptz default now())
+aether_meta_tokens(user_id uuid references aether_users(id), access_token text, token_type text, expires_at timestamptz, permissions jsonb, updated_at timestamptz default now())
+aether_properties(id uuid pk, user_id uuid, source text, external_id text, display_name text, kind text, PRIMARY KEY(id))
+Indexes: (user_id), (source, external_id)
+Frontend (React/Vite)
+/login: “Continue with Google” button → /api/auth/google/start
+/admin/aether/onboarding (wizard):
+Welcome + user email
+Pick GSC site(s) (checkbox list)
+Pick GA4 property/stream (dropdowns)
+(Optional) Connect Meta button
+Finish → save selections → redirect to dashboard
+Settings → Integrations page:
+Shows linked Google account (email), GSC sites, GA4 property; Disconnect buttons
+Shows Meta status; Connect / Disconnect
+Dashboard:
+Growth Strip pulls live summaries from selected GSC/GA4 (or mock), then your Top-5 Actions runs with real signals for that user
+Security
+HttpOnly secure cookie for AETHER JWT
+CSRF protection on POSTs
+Encrypt refresh tokens (AES-GCM via KMS or libsodium sealed boxes)
+Token revocation & “Disconnect” endpoints
+Mock mode
+If no tokens, endpoints return { mock:true, data:[…] } with deterministic fixtures so UI always works.
+Acceptance Criteria
+User logs in with Google → lands in onboarding wizard
+Wizard lists their GSC/GA4 assets; saving persists to DB
+Dashboard pulls GSC impressions & GA4 conversions for chosen assets (or mock)
+“Connect Meta” completes and lists ad accounts (if provided)
+Disconnect removes tokens and hides data
+All protected routes require JWT session
+Post-Build Report
+✅ GOOGLE SSO + INTEGRATIONS LIVE
+Client IDs configured? (Y/N)
+Screenshots/JSON: /login, /onboarding, /settings/integrations
+Example payload from /api/integrations/google/gsc/sites
+Notes on enabling nightly syncs vs live summaries
+END OF TASK

@@ -1,0 +1,168 @@
+Schema Coverage Meter: “70 / 100 listings have valid Vehicle+Offer schema” + progress bar.
+Auto-Fix Trigger: When a new/updated listing enters CarArth, AETHER auto-generates JSON-LD from listing data and attaches it.
+One-Click Remediation: “Fix remaining 30” → queues jobs → writes schema → re-validates.
+Deterministic Generator (no tokens): Pure mapping from listing fields → Schema.org Vehicle, Offer, plus BreadcrumbList & optional LocalBusiness.
+Validator + Rollback: Validate before/after (Google SDTT-compatible ruleset). Save versions; revert with one click.
+GEO Assist (optional): If listing lacks minimal FAQ, add a tiny FAQ schema (2 Qs) from a safe template (still no LLM).
+Data-to-Schema mapping (core fields)
+Listing field	JSON-LD path
+make, model, variant, year	Vehicle.brand/name, model, vehicleModelDate
+fuel, transmission	fuelType, vehicleTransmission
+kms, owners	mileageFromOdometer, numberOfPreviousOwners
+color, bodyType	color, bodyType
+price (₹)	Offer.price, Offer.priceCurrency="INR"
+condition	Offer.itemCondition="https://schema.org/UsedCondition"
+availability	Offer.availability (InStock/OutOfStock)
+city	Vehicle.address.addressLocality (if you store it), or attach LocalBusiness.address on dealer pages
+photos	image (array of absolute URLs)
+URL, canonical	mainEntityOfPage, url
+listing id	sku or productID
+Also include:
+@type: Vehicle (root) with nested offers: { "@type": "Offer", ... }
+BreadcrumbList: Home → Used Cars → City → Make/Model → Listing
+Optional: LocalBusiness on dealer pages (NAP consistency)
+UI (AETHER → “Schema Coverage”)
+Coverage bar (e.g., 70% valid) + counters: Valid / Missing / Invalid.
+Filters: City, Make, Model, Status (Missing/Invalid).
+Table: Listing URL, reason (e.g., “missing price”, “invalid JSON”), last checked, Fix button.
+Buttons: Fix All Missing, Re-validate All, Export report.
+Settings: toggle auto-attach on publish/update; choose JSON-LD injection method (server-side render vs CMS field).
+Safety & Ops
+Dry run mode (preview JSON-LD without attaching).
+Versioning: store every schema blob with checksum and timestamp; Rollback per listing.
+Strict validator: JSON schema + structured-data rules; fail closed if required fields missing.
+Low cost: No LLM calls; pure deterministic generation.
+One copy-paste build prompt (Replit agent)
+TASK: AETHER Schema Enforcement Engine — “100/100 coverage for all listings”
+
+Goal:
+Enforce Vehicle + Offer JSON-LD on every car listing. Provide coverage dashboard, auto triggers on listing create/update, one-click “Fix All”, validation, and rollback. Deterministic generation (no LLM).
+
+ENV (read-only):
+- DATABASE_URL, REDIS_URL, S3_BUCKET_URL
+- AETHER_ADMIN_KEY
+- CMS_API_BASE, CMS_API_KEY  (if schema is stored/published via CMS)
+- AETHER_SCHEMA_AUTO_ATTACH=true|false (default true)
+- AETHER_SCHEMA_INJECTION_MODE=“cms”|“render”  (cms=push to CMS field; render=inject via server template/middleware)
+
+DB (migrations):
+- listings (assume exists or add minimal mirror: id, slug, url, city, make, model, year, variant, fuel, transmission, kms, owners, color, bodyType, price, currency, images jsonb, dealer jsonb, updated_at)
+- aether_schema_states(
+    id uuid pk,
+    listing_id text not null,
+    status text check in ('valid','missing','invalid','held') not null,
+    last_checked timestamptz,
+    reason text,
+    current_checksum text,
+    versions jsonb,                  -- [{ts, checksum, s3Path, status}]
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+  )
+Indexes: (listing_id), (status), (updated_at)
+
+Backend files:
+server/lib/aether/schema/
+  - mapper.js         // map listing -> JSON-LD object (Vehicle+Offer, BreadcrumbList, optional LocalBusiness)
+  - validator.js      // JSON schema + structured-data rules; returns {ok, errors[], warnings[]}
+  - injector.js       // mode=’cms’: PUT CMS custom field; mode=’render’: register server-side injector by URL
+  - versioner.js      // save JSON-LD to S3 (aether/schema/{listingId}/{checksum}.json), update versions array, expose rollback
+  - checker.js        // checks coverage for a batch; writes aether_schema_states rows
+  - batchFix.js       // given list of listingIds -> generate -> validate -> inject -> re-validate -> version -> update state
+  - trigger.js        // webhook/queue handler for listing create/update events
+
+Queues (BullMQ):
+- schemaQueue:
+   jobs: checkCoverage(batch), fixListing(listingId), fixAll(filter)
+
+API routes (admin protected; mount /api/aether/schema):
+- GET  /coverage?city=&make=&status= -> { total, valid, missing, invalid, held, pct, sample[] }
+- POST /check -> enqueue coverage check for latest listings (or filter)
+- POST /fix/:listingId -> run batchFix for one listing
+- POST /fix-all -> body { filter } -> enqueue batchFix for all matching
+- POST /rollback/:listingId -> body { toChecksum } -> restore previous schema blob and re-validate
+- GET  /preview/:listingId -> returns current mapped JSON-LD and validator results (dry-run, no write)
+- GET  /state/:listingId -> current state row + versions
+
+UI (React, under /src/admin/aether/):
+- New tab: “Schema Coverage”
+  - CoverageBar: big progress bar (e.g., 70/100 = 70%)
+  - Filters: City, Make, Model, Status
+  - Table: [Listing URL | Status chip | Reason | Last checked | Actions: Preview, Fix, Rollback (if versions>1)]
+  - Primary actions: [Fix All Missing] [Re-validate All]
+  - Drawer: “Preview JSON-LD” (editable preview disabled; read-only with copy)
+  - Toasts for job status; background progress via SSE/WebSocket (optional)
+
+Mapper rules (mapper.js):
+- Root: {"@context":"https://schema.org","@type":"Vehicle", ...}
+- Required mapping:
+  - brand/name=make; model=model; vehicleModelDate=year
+  - fuelType, vehicleTransmission
+  - mileageFromOdometer: {"@type":"QuantitativeValue","value":kms,"unitCode":"KMT"} when kms available
+  - numberOfPreviousOwners=owners
+  - color, bodyType
+  - image=[absolute URLs]
+  - sku or productID = listingId
+  - mainEntityOfPage=url; url=url
+  - offers: {"@type":"Offer","price":price,"priceCurrency":"INR","itemCondition":"https://schema.org/UsedCondition","availability":"https://schema.org/InStock"}
+- Add BreadcrumbList (Home -> Used Cars -> City -> Make/Model -> Listing)
+- Optional LocalBusiness on dealer page: name, telephone, address (from dealer jsonb if present)
+- If any REQUIRED field missing (price OR make OR model OR url): mapper returns {hold:true, reason:"missing X"} and sets robots "noindex,nofollow" suggestion in metaHints
+
+Validator (validator.js):
+- JSON Schema validation (types, required)
+- Business rules:
+  - price > 0, currency=“INR”
+  - year within [1995..next year]
+  - images length >=1
+  - url canonical (no utm)
+- Output: {ok, errors[], warnings[]}
+
+Injector (injector.js):
+- mode=cms: PUT `${CMS_API_BASE}/listings/:id/custom_fields/schema_jsonld` with blob; return version ref
+- mode=render: register a server middleware keyed by URL to inject <script type="application/ld+json">...</script> into HTML response (if feasible in current stack)
+
+Versioner (versioner.js):
+- compute checksum sha256(JSON.stringify(jsonld))
+- save blob to S3 path
+- append versions entry and mark current_checksum
+
+Triggers (trigger.js):
+- Expose POST /api/aether/schema/onListingEvent that accepts {listingId, type:'created'|'updated'} → enqueue fixListing(listingId)
+- Optionally subscribe to internal event bus if already present
+
+Cron:
+- Nightly coverage check for deltas; re-validate invalid; email/Slack summary optional
+
+Acceptance Criteria:
+- Coverage tab shows accurate counts and %; loads within 1s for 1k listings
+- Clicking “Fix All Missing” schedules jobs; after completion, coverage % increases accordingly
+- New/updated listing triggers auto injection when AETHER_SCHEMA_AUTO_ATTACH=true
+- Preview shows deterministic JSON-LD; no LLM calls
+- Rollback restores previous schema blob and validator passes
+- All injected pages pass validator; invalid reasons are clear (e.g., “missing price”)
+- No page ships with conflicting duplicate JSON-LD (injector de-duplicates by checksum)
+
+Tests (server/test/aether/schema/*.test.js):
+- mapper.test.js → required fields mapped, missing fields → hold
+- validator.test.js → invalid shapes flagged; valid passes
+- injector.test.js (mock CMS or render) → writes and idempotent
+- batchFix.test.js → Fix All flow updates states, increases coverage
+
+Reporting:
+- Add to Today/Overview: “Schema Coverage: 70% → +18% after Fix All”
+- Include time-to-fix and any held items count with reasons
+
+END OF TASK
+Rollout playbook (fast + safe)
+Wire the coverage tab (read-only first).
+Run preview on 100 listings; verify JSON-LD correctness.
+Enable auto-attach on new/updated listings.
+Click “Fix All Missing” in off-peak hours; monitor re-validation.
+Audit random sample in Google’s Rich Results Test (manual spot-checks).
+Track uplift: monitor impressions/click-throughs on listing pages (GSC).
+Lock policy: no listing goes live without schema (block publish if mapper returns hold:true).
+Why this moves the needle
+Rich results eligibility → higher CTR on listings.
+Better AI comprehension (GEO) → more mentions in generative answers.
+Deterministic, no token spend → cheap and reliable.
+“Fix All” turns a messy backlog into green coverage in hours.
