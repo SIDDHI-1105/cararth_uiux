@@ -28,6 +28,7 @@ import Top5Today from "./admin/Top5Today";
 import Benchmark from "./admin/Benchmark";
 import CreateArticle from "./admin/CreateArticle";
 import NeedleMovement from "@/components/admin/NeedleMovement";
+import GoogleMetrics from "@/components/aether/GoogleMetrics";
 
 export default function Aether() {
   const [promptText, setPromptText] = useState("");
@@ -341,6 +342,9 @@ export default function Aether() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Google Performance Metrics */}
+            <GoogleMetrics />
 
             {/* Quick Actions */}
             <Card className="border-2 border-indigo-100 dark:border-indigo-900 shadow-lg bg-gradient-to-br from-white to-indigo-50/30 dark:from-slate-900 dark:to-indigo-950/30">
