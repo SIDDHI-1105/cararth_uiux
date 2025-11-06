@@ -26,8 +26,7 @@ import {
 import AuditPage from "./admin/AuditPage";
 import Top5Today from "./admin/Top5Today";
 import Benchmark from "./admin/Benchmark";
-import CreateArticle from "./admin/CreateArticle";
-import TopicExplorer from "./admin/TopicExplorer";
+import ContentStrategy from "./admin/ContentStrategy";
 import NeedleMovement from "@/components/admin/NeedleMovement";
 import GoogleMetrics from "@/components/aether/GoogleMetrics";
 import GoogleIntegrationSettings from "@/components/aether/GoogleIntegrationSettings";
@@ -189,7 +188,7 @@ export default function Aether() {
 
         {/* Main Tabs - Premium Navigation */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8 gap-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm p-2 rounded-xl shadow-lg border-2 border-slate-200 dark:border-slate-800">
+          <TabsList className="grid w-full grid-cols-6 gap-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm p-2 rounded-xl shadow-lg border-2 border-slate-200 dark:border-slate-800">
             <TabsTrigger 
               value="overview" 
               className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white font-semibold rounded-lg transition-all"
@@ -219,25 +218,11 @@ export default function Aether() {
               Benchmark
             </TabsTrigger>
             <TabsTrigger 
-              value="create" 
-              className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white font-semibold rounded-lg transition-all"
-            >
-              <Sparkles className="h-4 w-4" />
-              Create
-            </TabsTrigger>
-            <TabsTrigger 
               value="content" 
               className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white font-semibold rounded-lg transition-all"
             >
-              <TrendingUp className="h-4 w-4" />
-              Briefs
-            </TabsTrigger>
-            <TabsTrigger 
-              value="topic" 
-              className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white font-semibold rounded-lg transition-all"
-            >
-              <Search className="h-4 w-4" />
-              Topics
+              <Sparkles className="h-4 w-4" />
+              Content
             </TabsTrigger>
             <TabsTrigger 
               value="settings" 
@@ -621,115 +606,14 @@ export default function Aether() {
             <AuditPage />
           </TabsContent>
 
-          {/* Content Generation Tab */}
-          <TabsContent value="content" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Generate Content Brief</CardTitle>
-                <CardDescription>
-                  AI-powered SEO content briefs with outlines, keywords, and recommendations
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Topic</label>
-                  <Input
-                    value={contentTopic}
-                    onChange={(e) => setContentTopic(e.target.value)}
-                    placeholder="E.g., Best used cars to buy in India 2024"
-                    data-testid="input-content-topic"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Target Keywords (comma-separated, optional)</label>
-                  <Input
-                    value={contentKeywords}
-                    onChange={(e) => setContentKeywords(e.target.value)}
-                    placeholder="used cars, India, 2024, best deals"
-                    data-testid="input-content-keywords"
-                  />
-                </div>
-                <Button 
-                  onClick={handleGenerateBrief}
-                  disabled={generateBriefMutation.isPending}
-                  data-testid="button-generate-brief"
-                >
-                  {generateBriefMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="mr-2 h-4 w-4" />
-                      Generate Brief
-                    </>
-                  )}
-                </Button>
-
-                {generateBriefMutation.data && (
-                  <div className="space-y-4 border rounded-lg p-4 mt-4">
-                    <div>
-                      <h3 className="font-semibold text-lg mb-2">SEO Title</h3>
-                      <p className="text-slate-700 dark:text-slate-300">
-                        {generateBriefMutation.data.brief.title}
-                      </p>
-                    </div>
-                    
-                    <div>
-                      <h3 className="font-semibold text-lg mb-2">Meta Description</h3>
-                      <p className="text-slate-700 dark:text-slate-300">
-                        {generateBriefMutation.data.brief.metaDescription}
-                      </p>
-                    </div>
-
-                    {generateBriefMutation.data.brief.keywords && generateBriefMutation.data.brief.keywords.length > 0 && (
-                      <div>
-                        <h3 className="font-semibold text-lg mb-2">Keywords</h3>
-                        <div className="flex flex-wrap gap-2">
-                          {generateBriefMutation.data.brief.keywords.map((kw: string, idx: number) => (
-                            <Badge key={idx} variant="outline">{kw}</Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {generateBriefMutation.data.brief.outline && generateBriefMutation.data.brief.outline.length > 0 && (
-                      <div>
-                        <h3 className="font-semibold text-lg mb-2">Content Outline</h3>
-                        <ul className="list-disc list-inside space-y-1 text-slate-700 dark:text-slate-300">
-                          {generateBriefMutation.data.brief.outline.map((item: string, idx: number) => (
-                            <li key={idx}>{item}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    <div>
-                      <h3 className="font-semibold text-lg mb-2">Recommended Word Count</h3>
-                      <p className="text-slate-700 dark:text-slate-300">
-                        {generateBriefMutation.data.brief.wordCount} words
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
           {/* Benchmark Tab */}
           <TabsContent value="benchmark" className="space-y-6">
             <Benchmark />
           </TabsContent>
 
-          {/* Create Tab */}
-          <TabsContent value="create" className="space-y-6">
-            <CreateArticle />
-          </TabsContent>
-
-          {/* Topic Explorer Tab */}
-          <TabsContent value="topic" className="space-y-6">
-            <TopicExplorer />
+          {/* Content Strategy Tab - Combined Topics + Create */}
+          <TabsContent value="content" className="space-y-6">
+            <ContentStrategy />
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">
