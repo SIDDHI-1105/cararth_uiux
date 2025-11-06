@@ -1,7 +1,7 @@
 import { google } from 'googleapis';
 import { db } from '../../../db.js';
 import { aetherGoogleTokens, aetherProperties, aetherOrganizations } from '../../../../shared/schema.js';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { decryptCredentials } from './crypto.js';
 import { GSCClient } from './gsc.js';
 import { GA4Client } from './ga4.js';
@@ -93,8 +93,10 @@ export class GoogleClientFactory {
       const property = await db
         .select()
         .from(aetherProperties)
-        .where(eq(aetherProperties.orgId, orgId))
-        .where(eq(aetherProperties.source, 'gsc'))
+        .where(and(
+          eq(aetherProperties.orgId, orgId),
+          eq(aetherProperties.source, 'gsc')
+        ))
         .limit(1);
 
       return property.length > 0 ? property[0].externalId : null;
@@ -114,8 +116,10 @@ export class GoogleClientFactory {
       const property = await db
         .select()
         .from(aetherProperties)
-        .where(eq(aetherProperties.orgId, orgId))
-        .where(eq(aetherProperties.source, 'ga4'))
+        .where(and(
+          eq(aetherProperties.orgId, orgId),
+          eq(aetherProperties.source, 'ga4')
+        ))
         .limit(1);
 
       return property.length > 0 ? property[0].externalId : null;

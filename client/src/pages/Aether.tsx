@@ -29,6 +29,7 @@ import Benchmark from "./admin/Benchmark";
 import CreateArticle from "./admin/CreateArticle";
 import NeedleMovement from "@/components/admin/NeedleMovement";
 import GoogleMetrics from "@/components/aether/GoogleMetrics";
+import GoogleIntegrationSettings from "@/components/aether/GoogleIntegrationSettings";
 
 export default function Aether() {
   const [promptText, setPromptText] = useState("");
@@ -232,8 +233,7 @@ export default function Aether() {
             </TabsTrigger>
             <TabsTrigger 
               value="settings" 
-              className="flex items-center gap-2 font-semibold rounded-lg opacity-50" 
-              disabled
+              className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white font-semibold rounded-lg transition-all"
             >
               <Settings className="h-4 w-4" />
               Settings
@@ -719,13 +719,8 @@ export default function Aether() {
             <CreateArticle />
           </TabsContent>
 
-          <TabsContent value="settings">
-            <Card>
-              <CardHeader>
-                <CardTitle>Settings</CardTitle>
-                <CardDescription>Coming soon...</CardDescription>
-              </CardHeader>
-            </Card>
+          <TabsContent value="settings" className="space-y-6">
+            <GoogleIntegrationSettings />
           </TabsContent>
         </Tabs>
       </div>
