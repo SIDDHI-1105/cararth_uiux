@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -171,6 +171,7 @@ function generateBenchmarkPDF(benchmark: any): string {
 
 // Clean, minimal community platform
 export default function ThrottleTalkPage() {
+  const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState('intelligence');
   const [communityFilter, setCommunityFilter] = useState('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -966,6 +967,8 @@ export default function ThrottleTalkPage() {
                   onClick={() => {
                     if (post.isExternal && post.sourceUrl) {
                       window.open(post.sourceUrl, '_blank');
+                    } else {
+                      setLocation(`/news/${post.id}`);
                     }
                   }}
                 >
