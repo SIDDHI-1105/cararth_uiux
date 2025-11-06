@@ -2792,3 +2792,110 @@ export type InsertAetherArticles = z.infer<typeof insertAetherArticlesSchema>;
 export type AetherArticles = typeof aetherArticles.$inferSelect;
 export type InsertAetherArticleImpacts = z.infer<typeof insertAetherArticleImpactsSchema>;
 export type AetherArticleImpacts = typeof aetherArticleImpacts.$inferSelect;
+
+// ============================================================================
+// AETHER GOOGLE INTEGRATION (SSO + GSC/GA4)
+// Multi-tenant architecture ready for SaaS
+// ============================================================================
+
+// Organizations table - each org has its own GSC/GA4 properties
+export const aetherOrganizations = pgTable("aether_organizations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  domain: text("domain"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// AETHER users - separate from main users table for multi-tenancy
+export const aetherUsers = pgTable("aether_users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  orgId: varchar("org_id").notNull().references(() => aetherOrganizations.id),
+  email: text("email").notNull(),
+  name: text("name"),
+  picture: text("picture"),
+  provider: text("provider").notNull(), // 'google' | 'meta' | 'service_account'
+  googleSub: text("google_sub"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Google tokens - stores service account credentials or OAuth tokens
+export const aetherGoogleTokens = pgTable("aether_google_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  orgId: varchar("org_id").notNull().references(() => aetherOrganizations.id),
+  tokenType: text("token_type").notNull(), // 'service_account' | 'oauth'
+  credentials: jsonb("credentials").notNull(), // encrypted JSON blob
+  scopes: jsonb("scopes"), // array of scope strings
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Meta tokens - for Facebook/Instagram Ads integration
+export const aetherMetaTokens = pgTable("aether_meta_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  orgId: varchar("org_id").notNull().references(() => aetherOrganizations.id),
+  accessToken: text("access_token").notNull(),
+  tokenType: text("token_type"),
+  expiresAt: timestamp("expires_at"),
+  permissions: jsonb("permissions"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Properties - links orgs to their GSC sites and GA4 properties
+export const aetherProperties = pgTable("aether_properties", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  orgId: varchar("org_id").notNull().references(() => aetherOrganizations.id),
+  source: text("source").notNull(), // 'gsc' | 'ga4' | 'meta'
+  externalId: text("external_id").notNull(), // GSC site URL, GA4 property ID, etc.
+  displayName: text("display_name").notNull(),
+  kind: text("kind"), // 'site', 'property', 'ad_account'
+  config: jsonb("config"), // additional settings like stream ID for GA4
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Insert schemas for Google integration tables
+export const insertAetherOrganizationsSchema = createInsertSchema(aetherOrganizations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertAetherUsersSchema = createInsertSchema(aetherUsers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertAetherGoogleTokensSchema = createInsertSchema(aetherGoogleTokens).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertAetherMetaTokensSchema = createInsertSchema(aetherMetaTokens).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertAetherPropertiesSchema = createInsertSchema(aetherProperties).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Type exports for Google integration
+export type InsertAetherOrganizations = z.infer<typeof insertAetherOrganizationsSchema>;
+export type AetherOrganizations = typeof aetherOrganizations.$inferSelect;
+export type InsertAetherUsers = z.infer<typeof insertAetherUsersSchema>;
+export type AetherUsers = typeof aetherUsers.$inferSelect;
+export type InsertAetherGoogleTokens = z.infer<typeof insertAetherGoogleTokensSchema>;
+export type AetherGoogleTokens = typeof aetherGoogleTokens.$inferSelect;
+export type InsertAetherMetaTokens = z.infer<typeof insertAetherMetaTokensSchema>;
+export type AetherMetaTokens = typeof aetherMetaTokens.$inferSelect;
+export type InsertAetherProperties = z.infer<typeof insertAetherPropertiesSchema>;
+export type AetherProperties = typeof aetherProperties.$inferSelect;
