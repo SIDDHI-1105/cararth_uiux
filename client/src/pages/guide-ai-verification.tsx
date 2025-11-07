@@ -593,6 +593,10 @@ export default function AIVerificationGuide() {
               <strong>Cararth is part of this transformation</strong> — not as a marketplace alone, but as a trust network where every car has a verified story.
             </p>
             
+            <p>
+              This commitment to verification over visibility is at the core of Cararth's philosophy. Discover how our zero-bias marketplace model extends this principle — <a href="/guides/trust-over-traffic-cararth-no-paid-listings.html" className="text-blue-600 dark:text-blue-400 hover:underline font-medium" data-testid="link-trust-over-traffic">read why Cararth said no to paid listings</a>.
+            </p>
+            
             <p className="text-2xl font-semibold text-gray-800 dark:text-gray-200 italic border-l-4 border-purple-600 pl-4 my-8">
               In the near future, buyers won't choose between cheap and verified. They'll choose verified by default — because trust will be the new currency of mobility.
             </p>
