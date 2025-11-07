@@ -30,6 +30,7 @@ import ContentStrategy from "./admin/ContentStrategy";
 import NeedleMovement from "@/components/admin/NeedleMovement";
 import GoogleMetrics from "@/components/aether/GoogleMetrics";
 import GoogleIntegrationSettings from "@/components/aether/GoogleIntegrationSettings";
+import BingIntegrationSettings from "@/components/aether/BingIntegrationSettings";
 
 export default function Aether() {
   const [promptText, setPromptText] = useState("");
@@ -48,6 +49,26 @@ export default function Aether() {
     avgRelevance: number;
   }>({
     queryKey: ['/api/aether/sweeps/stats'],
+  });
+
+  // Fetch Discoverability Score
+  const { data: discoverabilityScore, isLoading: scoreLoading } = useQuery<{
+    overallScore: number;
+    breakdown: {
+      googleSeo: { score: number; impressions: number; clicks: number; ctr: number };
+      bingSeo: { score: number; impressions: number; clicks: number; ctr: number };
+      geoAi: { score: number; mentionRate: number };
+    };
+  }>({
+    queryKey: ['/api/aether/discoverability/score'],
+  });
+
+  // Fetch Bing data status
+  const { data: bingStatus } = useQuery<{
+    connected: boolean;
+    sites: Array<{ url: string; verified: boolean }>;
+  }>({
+    queryKey: ['/api/aether/bing/data/status'],
   });
 
   // Fetch recent sweeps
@@ -336,6 +357,111 @@ export default function Aether() {
               </Card>
             </div>
 
+            {/* Three-Way Discoverability Comparison */}
+            <Card className="border-2 border-blue-100 dark:border-blue-900 shadow-lg bg-gradient-to-br from-blue-50 to-white dark:from-blue-950/20 dark:to-slate-900">
+              <CardHeader>
+                <CardTitle className="text-xl font-bold text-slate-900 dark:text-slate-50 flex items-center gap-2">
+                  <TrendingUp className="h-6 w-6 text-blue-600" />
+                  Discoverability Score Comparison
+                </CardTitle>
+                <CardDescription className="text-base">
+                  Unified visibility score across Google SEO, Bing SEO, and AI (GEO) channels
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {scoreLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+                  </div>
+                ) : discoverabilityScore ? (
+                  <div className="space-y-6">
+                    {/* Overall Score */}
+                    <div className="text-center pb-4 border-b border-slate-200 dark:border-slate-800">
+                      <p className="text-sm text-slate-600 dark:text-slate-400 mb-2 uppercase tracking-wide font-semibold">
+                        Overall Discoverability
+                      </p>
+                      <div className="text-6xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                        {discoverabilityScore.overallScore}
+                      </div>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                        out of 100
+                      </p>
+                    </div>
+
+                    {/* Breakdown Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Google SEO */}
+                      <div className="p-4 bg-green-50 dark:bg-green-950/20 border-2 border-green-200 dark:border-green-800 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-sm font-semibold text-green-900 dark:text-green-200">
+                            Google SEO
+                          </p>
+                          <Badge className="bg-green-600 text-white">
+                            {discoverabilityScore.breakdown.googleSeo.score}
+                          </Badge>
+                        </div>
+                        <div className="space-y-1 text-xs text-green-700 dark:text-green-300">
+                          <p>Impressions: {discoverabilityScore.breakdown.googleSeo.impressions.toLocaleString()}</p>
+                          <p>Clicks: {discoverabilityScore.breakdown.googleSeo.clicks.toLocaleString()}</p>
+                          <p>CTR: {discoverabilityScore.breakdown.googleSeo.ctr}%</p>
+                        </div>
+                      </div>
+
+                      {/* Bing SEO */}
+                      <div className="p-4 bg-blue-50 dark:bg-blue-950/20 border-2 border-blue-200 dark:border-blue-800 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">
+                            Bing SEO
+                          </p>
+                          <Badge className="bg-blue-600 text-white">
+                            {discoverabilityScore.breakdown.bingSeo.score}
+                          </Badge>
+                        </div>
+                        <div className="space-y-1 text-xs text-blue-700 dark:text-blue-300">
+                          <p>Impressions: {discoverabilityScore.breakdown.bingSeo.impressions.toLocaleString()}</p>
+                          <p>Clicks: {discoverabilityScore.breakdown.bingSeo.clicks.toLocaleString()}</p>
+                          <p>CTR: {discoverabilityScore.breakdown.bingSeo.ctr}%</p>
+                        </div>
+                      </div>
+
+                      {/* GEO (AI) */}
+                      <div className="p-4 bg-purple-50 dark:bg-purple-950/20 border-2 border-purple-200 dark:border-purple-800 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-sm font-semibold text-purple-900 dark:text-purple-200">
+                            GEO (AI)
+                          </p>
+                          <Badge className="bg-purple-600 text-white">
+                            {discoverabilityScore.breakdown.geoAi.score}
+                          </Badge>
+                        </div>
+                        <div className="space-y-1 text-xs text-purple-700 dark:text-purple-300">
+                          <p>Mention Rate: {discoverabilityScore.breakdown.geoAi.mentionRate}%</p>
+                          <p className="text-xs italic mt-2">AI-powered visibility tracking</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bing Connection Status */}
+                    {!bingStatus?.connected && (
+                      <Alert className="border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-900/20">
+                        <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                        <AlertDescription className="text-amber-900 dark:text-amber-200">
+                          <strong>Bing not connected.</strong> Connect Bing Webmaster Tools in Settings to get real Bing SEO data.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </div>
+                ) : (
+                  <Alert className="border-slate-300 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/20">
+                    <Info className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+                    <AlertDescription className="text-slate-900 dark:text-slate-200">
+                      No discoverability data available. Configure Google and Bing integrations in Settings.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Google Performance Metrics */}
             <GoogleMetrics />
 
@@ -618,6 +744,7 @@ export default function Aether() {
 
           <TabsContent value="settings" className="space-y-6">
             <GoogleIntegrationSettings />
+            <BingIntegrationSettings />
           </TabsContent>
         </Tabs>
       </div>

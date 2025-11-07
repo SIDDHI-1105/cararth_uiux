@@ -12,6 +12,9 @@ import todayRoutes from './today/routes.js';
 import benchRoutes from './bench/routes.js';
 import contentRoutes from './content/routes.js';
 import googleIntegrationRoutes from '../integrations/google/routes.js';
+import bingAuthRoutes from '../../routes/aether/bingAuth.js';
+import bingDataRoutes from '../../routes/aether/bingData.js';
+import discoverabilityScoreRoutes from '../../routes/aether/discoverabilityScore.js';
 import topicRoutes from '../../routes/topic.js';
 import fs from 'fs';
 import path from 'path';
@@ -33,6 +36,13 @@ router.use('/content', contentRoutes);
 
 // Mount Google Integration routes (GSC + GA4)
 router.use('/integrations/google', googleIntegrationRoutes);
+
+// Mount Bing Webmaster Tools routes
+router.use('/bing/auth', bingAuthRoutes);
+router.use('/bing/data', bingDataRoutes);
+
+// Mount Discoverability Score routes
+router.use('/discoverability', discoverabilityScoreRoutes);
 
 // Mount Topic Explorer routes (SEO/GEO winnability)
 router.use('/topic', topicRoutes);
