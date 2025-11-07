@@ -118,8 +118,9 @@ app.use((req, res, next) => {
     // Add health check endpoint  
     app.get('/health', createHealthCheckHandler());
     
-    // SEO routes - server-side rendering for SEO-critical pages
-    // These routes serve HTML with meta tags and JSON-LD before client JavaScript loads
+    // SEO routes - server-side rendering for SEO-critical pages (bots only)
+    // These routes serve HTML with meta tags and JSON-LD to search engine crawlers
+    // Regular users will skip these and get the full React app from Vite
     app.use(seoRoutes);
     
     // Server-side rendering for car detail pages (for social media crawlers)

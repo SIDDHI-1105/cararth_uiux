@@ -2,10 +2,22 @@
 // Server-side rendered routes for SEO-critical pages
 // These routes serve HTML with meta tags and JSON-LD before client JavaScript loads
 
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { renderShell } from '../lib/renderShell';
 
 const router = Router();
+
+// Bot detection middleware - only serve SEO routes to search engine crawlers
+function botOnly(req: Request, res: Response, next: NextFunction) {
+  const userAgent = req.get('user-agent') || '';
+  const isBot = /bot|crawler|spider|crawling|google|bing|yahoo|duckduckbot|baiduspider|yandex|facebookexternalhit|twitterbot|whatsapp|telegram/i.test(userAgent);
+  
+  if (isBot) {
+    next(); // Serve SEO shell to bots
+  } else {
+    next('route'); // Skip to next route (Vite will handle it)
+  }
+}
 
 // Organization JSON-LD (used across all pages)
 const ORG_JSON_LD = {
@@ -54,7 +66,7 @@ const FAQ_JSON_LD = {
 };
 
 // Route: Homepage (/)
-router.get('/', (req: Request, res: Response) => {
+router.get('/', botOnly, (req: Request, res: Response) => {
   const meta = {
     title: "CarArth — One Trusted Place for Every Verified Car",
     description: "Find verified used cars from multiple platforms in one trusted place. No paid listings. Sellers: list once and syndicate nationwide. Honest prices, verified sellers.",
@@ -82,7 +94,7 @@ router.get('/', (req: Request, res: Response) => {
 });
 
 // Route: Sell page (/sell)
-router.get('/sell', (req: Request, res: Response) => {
+router.get('/sell', botOnly, (req: Request, res: Response) => {
   const meta = {
     title: "Sell Your Car — List Once, Reach Everywhere | CarArth",
     description: "List your car on CarArth and syndicate it to partner platforms. No paid listings. Verified sellers get fair visibility. AI-assisted price guidance.",
@@ -123,7 +135,7 @@ router.get('/sell', (req: Request, res: Response) => {
 });
 
 // Route: Hyderabad city page (/used-cars-hyderabad)
-router.get('/used-cars-hyderabad', (req: Request, res: Response) => {
+router.get('/used-cars-hyderabad', botOnly, (req: Request, res: Response) => {
   const meta = {
     title: "Used Cars in Hyderabad — Verified Listings | CarArth",
     description: "Find verified used cars in Hyderabad on CarArth. Aggregated from multiple platforms. No paid listings. List once and syndicate across partner networks.",
