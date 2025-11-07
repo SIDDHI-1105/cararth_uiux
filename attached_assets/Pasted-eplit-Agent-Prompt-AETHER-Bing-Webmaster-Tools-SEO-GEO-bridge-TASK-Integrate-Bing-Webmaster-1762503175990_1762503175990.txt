@@ -1,0 +1,99 @@
+eplit Agent Prompt — “AETHER × Bing Webmaster Tools (SEO→GEO bridge)”
+TASK: Integrate Bing Webmaster Tools into ÆTHER. Implement Microsoft OAuth (read-only), nightly sync jobs (performance, crawl, sitemaps, backlinks), REST endpoints, and UI panels that compare Google vs Bing vs GEO. Must gracefully fallback to mock mode if creds absent.
+ENV (read-only; never commit)
+MSFT_CLIENT_ID
+MSFT_CLIENT_SECRET
+MSFT_REDIRECT_URI → https://www.cararth.com/api/auth/bing/callback
+BING_SITE_URL → e.g. https://www.cararth.com/ (or sc-domain:cararth.com equivalent for Bing)
+DATABASE_URL, REDIS_URL, S3_BUCKET_URL
+AETHER_ADMIN_KEY
+AETHER_CITY_DEFAULT=Hyderabad
+AETHER_BING_CRON_ENABLED=true|false (default false)
+AETHER_DAILY_TOKEN_CAP (respect global cap)
+Notes
+OAuth provider: Microsoft Account / Azure v2 with Bing Webmaster permission.
+Scopes: bingwebmaster.read (or bingwebmaster if single scope). Use least-privilege read.
+If auth fails / not linked → return { mock:true } with deterministic fixtures so UI works.
+DB Migrations (server/db/migrations)
+aether_bing_tokens(user_id uuid, access_token text, refresh_token text, expires_at timestamptz, scopes jsonb, updated_at timestamptz default now())
+aether_bing_sites(id uuid pk, user_id uuid, site_url text, verified boolean, last_sync timestamptz)
+aether_bing_performance(date date, site_url text, page text, query text, device text, country text, clicks numeric, impressions numeric, ctr numeric, position numeric)
+aether_bing_crawl_issues(date date, site_url text, url text, issue_type text, severity text, details jsonb)
+aether_bing_sitemaps(date date, site_url text, sitemap_url text, status text, urls_submitted int, urls_indexed int, last_submitted timestamptz, last_processed timestamptz)
+aether_bing_backlinks(date date, site_url text, url text, referring_domains int, backlinks int)
+Indexes: (site_url,date), (page,date), (url).
+Auth + Connectors
+Routes (server/routes/auth.bing.js)
+GET /api/auth/bing/start → redirect to Microsoft OAuth with scope bingwebmaster.read
+GET /api/auth/bing/callback → exchange code → upsert aether_bing_tokens (encrypt refresh); fetch site list; insert into aether_bing_sites; redirect to /admin/aether/settings?bing=linked
+POST /api/auth/bing/disconnect → delete token rows + stop sync
+Connector (server/lib/aether/bing/client.js)
+Token refresh helper (use refresh_token before expiry)
+Thin wrappers:
+listSites()
+getPerformance({siteUrl, from, to, dimensions})
+getCrawlIssues({siteUrl, from, to})
+getSitemaps({siteUrl})
+getBacklinks({siteUrl, from, to}) (domain/backlink counts per URL if API supports; else aggregate)
+On missing token → return mock:true fixtures.
+Ingestion Jobs (BullMQ bingQueue)
+Files under server/lib/aether/bing/:
+syncSites.js → ensure aether_bing_sites list is current
+syncPerformance.js → 28-day window; write rows into aether_bing_performance
+syncCrawl.js → last 14 days; write aether_bing_crawl_issues
+syncSitemaps.js → snapshot aether_bing_sitemaps
+syncBacklinks.js → 28-day snapshot aether_bing_backlinks (aggregate per URL)
+rollup.js → produce per-day comparison series for Google vs Bing vs GEO into your existing aether_kpi_rollup (add cols: bing_clicks, bing_impressions)
+Cron (only when AETHER_BING_CRON_ENABLED=true)
+0 2 * * * IST: syncSites → syncPerformance → syncCrawl → syncSitemaps → syncBacklinks → rollup
+Any connector failure → log & continue; set mock:true data for that slice.
+API (mount server/routes/bing.js at /api/aether/bing)
+GET /status → { linked:bool, sites:[{site_url, verified, last_sync}], mock }
+GET /performance?from&to&page= → daily clicks/impressions/ctr/position (+ top queries 25)
+GET /crawl-issues?from&to → grouped issues (type, severity, count)
+GET /sitemaps → list + processed/accepted + indexed counts
+GET /backlinks?from&to&page= → backlink/referring domains counts per URL (or site aggregate)
+POST /sync → on-demand full sync chain (admin-only)
+All routes must:
+Enforce admin middleware / AETHER_ADMIN_KEY
+Return { mock:true } keys when using fixtures
+UI (React/Vite under /src/admin/aether/)
+1) Settings → Integrations
+New Bing card: Connect / Disconnect, site picker (if multiple), last sync, mock badge.
+2) Overview (“Growth Strip” enhancement)
+Add Bing mini-tiles: last 28d Impressions & Clicks with arrows.
+Add Compare toggle → Google vs Bing vs GEO (ai mentions) sparkline.
+3) New tab: “Bing”
+Performance: date picker, page filter, table (clicks, impressions, ctr, position) + Top Queries subtable.
+Crawl / Index: issues by type/severity; quick links to affected URLs.
+Sitemaps: status (Processed/Indexed), counts, last processed; Submit/Resubmit button (optional POST if you add it later).
+Backlinks: per-URL referring domains/backlinks (or site aggregate) + “Most linked pages” list.
+Insights banner: “Your Bing indexation lags Google by X%; improving this improves GEO visibility.”
+4) GEO tie-ins (subtle, high value)
+On Perception Map and Topic Explorer: show Bing Indexed? ✓/— per page and penalize topic win_score when not indexed in Bing.
+GEO Signal Inference (bridge logic)
+Add server/lib/aether/geo/bridge.js that computes a GEO Discoverability Score per page:
+discoverability = f( bing_indexed (binary/score) , bing_impressions z-score , schema_presence , freshness )
+Expose via GET /api/aether/geo/discoverability?page=.
+Use this score in Topic Explorer and Top-5 Action Engine to prioritize “Get indexed on Bing” tasks when low.
+Tests (server/test/aether/bing/*.test.js)
+auth.test.js → callback stores/refreshes token (mock)
+connectors.test.js → each endpoint returns shape; mock fallback works
+ingestion.test.js → writes rows; rollup merges series correctly
+ui.smoke.test.js (optional) → render Bing tab with fixtures
+Add script: "aether:test-bing": "jest server/test/aether/bing/*.test.js"
+Acceptance Criteria
+“Connect Bing” works; tokens stored securely; Disconnect revokes local tokens.
+On-demand sync populates performance, crawl, sitemaps, backlinks tables (or {mock:true} when not linked).
+Overview shows Bing KPI tiles + compare sparkline (Google vs Bing vs GEO).
+Bing tab renders performance table, crawl issues, sitemaps, backlinks.
+GEO Discoverability Score available and used by Topic Explorer / Top-5 Action Engine.
+Cron respects AETHER_BING_CRON_ENABLED; logs are structured with correlation IDs.
+Tests pass.
+Post-Build Report (paste here)
+✅ BING INTEGRATION LIVE or errors with logs
+Files created/modified
+Example payloads from /api/aether/bing/performance and /crawl-issues
+Screenshot/JSON of Overview compare sparkline
+Notes on any API limits observed + mock behavior
+END OF PROMPT
