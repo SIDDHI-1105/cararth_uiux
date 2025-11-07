@@ -405,57 +405,129 @@ export class DatabaseStorage implements IStorage {
     if (cached) return cached;
 
     try {
-      let query = this.db
-        .select()
-        .from(cars)
-        .where(eq(cars.isSold, false));
-
-      // Build dynamic WHERE conditions
-      const conditions = [eq(cars.isSold, false)];
+      // Build dynamic WHERE conditions for cars table
+      const carsConditions = [eq(cars.isSold, false)];
 
       if (filters.brand && filters.brand !== "All Brands") {
-        conditions.push(ilike(cars.brand, `%${filters.brand}%`));
+        carsConditions.push(ilike(cars.brand, `%${filters.brand}%`));
       }
 
       if (filters.priceMin !== undefined) {
-        conditions.push(gte(cars.price, filters.priceMin.toString()));
+        carsConditions.push(gte(cars.price, filters.priceMin.toString()));
       }
 
       if (filters.priceMax !== undefined) {
-        conditions.push(lte(cars.price, filters.priceMax.toString()));
+        carsConditions.push(lte(cars.price, filters.priceMax.toString()));
       }
 
       if (filters.city && filters.city !== "Select City") {
-        conditions.push(ilike(cars.city, `%${filters.city}%`));
+        carsConditions.push(ilike(cars.city, `%${filters.city}%`));
       }
 
       if (filters.fuelType && filters.fuelType !== "Any Fuel") {
-        conditions.push(eq(cars.fuelType, filters.fuelType));
+        carsConditions.push(eq(cars.fuelType, filters.fuelType));
       }
 
       if (filters.transmission && filters.transmission !== "Any Transmission") {
-        conditions.push(eq(cars.transmission, filters.transmission));
+        carsConditions.push(eq(cars.transmission, filters.transmission));
       }
 
       if (filters.yearMin !== undefined) {
-        conditions.push(gte(cars.year, filters.yearMin));
+        carsConditions.push(gte(cars.year, filters.yearMin));
       }
 
       if (filters.yearMax !== undefined) {
-        conditions.push(lte(cars.year, filters.yearMax));
+        carsConditions.push(lte(cars.year, filters.yearMax));
       }
 
-      const result = await this.db
-        .select()
-        .from(cars)
-        .where(and(...conditions))
-        .orderBy(desc(cars.createdAt))
-        .limit(50);
+      // Build conditions for cached portal listings
+      const portalConditions = [];
+
+      if (filters.brand && filters.brand !== "All Brands") {
+        portalConditions.push(ilike(cachedPortalListings.brand, `%${filters.brand}%`));
+      }
+
+      if (filters.priceMin !== undefined) {
+        portalConditions.push(gte(cachedPortalListings.price, filters.priceMin.toString()));
+      }
+
+      if (filters.priceMax !== undefined) {
+        portalConditions.push(lte(cachedPortalListings.price, filters.priceMax.toString()));
+      }
+
+      if (filters.city && filters.city !== "Select City") {
+        portalConditions.push(ilike(cachedPortalListings.city, `%${filters.city}%`));
+      }
+
+      if (filters.fuelType && filters.fuelType !== "Any Fuel") {
+        portalConditions.push(eq(cachedPortalListings.fuelType, filters.fuelType));
+      }
+
+      if (filters.transmission && filters.transmission !== "Any Transmission") {
+        portalConditions.push(eq(cachedPortalListings.transmission, filters.transmission));
+      }
+
+      if (filters.yearMin !== undefined) {
+        portalConditions.push(gte(cachedPortalListings.year, filters.yearMin));
+      }
+
+      if (filters.yearMax !== undefined) {
+        portalConditions.push(lte(cachedPortalListings.year, filters.yearMax));
+      }
+
+      // Query both tables
+      const [carsResults, portalResults] = await Promise.all([
+        this.db
+          .select()
+          .from(cars)
+          .where(and(...carsConditions))
+          .orderBy(desc(cars.createdAt))
+          .limit(25),
+        portalConditions.length > 0
+          ? this.db
+              .select()
+              .from(cachedPortalListings)
+              .where(and(...portalConditions))
+              .orderBy(desc(cachedPortalListings.createdAt))
+              .limit(25)
+          : this.db
+              .select()
+              .from(cachedPortalListings)
+              .orderBy(desc(cachedPortalListings.createdAt))
+              .limit(25)
+      ]);
+
+      // Convert portal listings to Car format
+      const convertedPortalListings = portalResults.map(listing => ({
+        id: listing.id,
+        title: listing.title,
+        brand: listing.brand,
+        model: listing.model,
+        year: listing.year,
+        price: listing.price.toString(),
+        mileage: listing.mileage || 0,
+        fuelType: listing.fuelType || '',
+        transmission: listing.transmission || '',
+        city: listing.city,
+        state: listing.state || '',
+        description: listing.description || '',
+        images: Array.isArray(listing.images) ? listing.images as string[] : [],
+        isSold: false,
+        isVerified: listing.verificationStatus === 'verified',
+        sellerId: listing.partnerUserId || '',
+        createdAt: listing.createdAt || new Date(),
+        features: Array.isArray(listing.features) ? listing.features : []
+      }));
+
+      // Combine and sort results
+      const result = [...carsResults, ...convertedPortalListings]
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 50);
 
       // Cache search results for 2 minutes
       this.setCache(cacheKey, result, 120000);
       
-      logError({ message: `PostgreSQL search completed: ${result.length} results`, statusCode: 200 }, 'searchCars success');
+      logError({ message: `PostgreSQL search completed: ${result.length} results (${carsResults.length} from cars, ${portalResults.length} from portals)`, statusCode: 200 }, 'searchCars success');
       return result;
     } catch (error) {
       logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'searchCars operation');
