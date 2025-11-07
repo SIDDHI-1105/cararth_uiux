@@ -56,6 +56,7 @@ export function renderShell(options: RenderShellOptions = {}): string {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="msvalidate.01" content="8E288AA59A45B361076D9B7278A11382" />
     <title>${title}</title>
     <meta name="description" content="${description}" />
     <meta name="keywords" content="${keywords}" />
