@@ -1,0 +1,131 @@
+Please create and publish a new pillar guide page at this route:
+
+**File Path:** /guides/trust-over-traffic-cararth-no-paid-listings.html  
+**Title:** Why Cararth Said No to Paid Listings — And What That Really Means for Trust  
+
+1️⃣ **Add the full HTML content below:**
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Why Cararth Said No to Paid Listings — And What That Really Means for Trust</title>
+  <meta name="description" content="Discover how Cararth chose verification over visibility — rejecting paid listings to rebuild trust and transparency in India’s used car ecosystem.">
+  <meta name="keywords" content="trust-based marketplace, no paid listings India, used car transparency, verified car discovery, cararth trust model">
+  <meta property="og:title" content="Why Cararth Said No to Paid Listings — And What That Really Means for Trust">
+  <meta property="og:description" content="Cararth’s trust-first approach rejects paid listings to keep the marketplace unbiased and transparent.">
+  <meta property="og:url" content="https://www.cararth.com/guides/trust-over-traffic-cararth-no-paid-listings">
+  <meta property="og:image" content="https://www.cararth.com/assets/cararth-trust-hero.jpg">
+  <link rel="canonical" href="https://www.cararth.com/guides/trust-over-traffic-cararth-no-paid-listings">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Why Cararth Said No to Paid Listings — And What That Really Means for Trust",
+    "author": {
+      "@type": "Person",
+      "name": "Kritarth Pattnaik",
+      "url": "https://www.linkedin.com/in/kritarthpattnaik/"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Cararth",
+      "url": "https://www.cararth.com",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://www.cararth.com/assets/logo.png"
+      }
+    },
+    "mainEntityOfPage": "https://www.cararth.com/guides/trust-over-traffic-cararth-no-paid-listings"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Why did Cararth reject paid listings?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Cararth chose to reject paid listings to eliminate bias and ensure that visibility is based on verification, not ad spend. Every car’s ranking is earned through verified authenticity, relevance, and transparency."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How does Cararth rank cars without ads?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Cararth uses a TrustRank Algorithm that prioritizes Veracity, Validity, and Transparency — ensuring that verified cars appear first, not those paying for visibility."
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+
+<body>
+  <header>
+    <h1>Why Cararth Said No to Paid Listings — And What That Really Means for Trust</h1>
+    <p>By <strong>Kritarth Pattnaik</strong>, Founder, Cararth</p>
+  </header>
+
+  <main>
+    <section>
+      <h2>The Problem with Online Car Search</h2>
+      <p>If you’ve ever searched for a used car online, you’ve felt it — that quiet sense that something’s not right...</p>
+    </section>
+
+    <section>
+      <h2>The Question That Shaped Cararth</h2>
+      <p>When we started building <a href="https://www.cararth.com">Cararth</a>, we weren’t trying to reinvent the marketplace...</p>
+    </section>
+
+    <section>
+      <h2>The Hidden Bias of Paid Visibility</h2>
+      <p>Most buyers don’t realize it, but paid visibility creates quiet losers...</p>
+      <table>
+        <tr><th>Stakeholder</th><th>What They Lose</th><th>Why It Matters</th></tr>
+        <tr><td>Buyers</td><td>End up seeing promoted cars first</td><td>Creates distorted value perception</td></tr>
+        <tr><td>Honest Sellers</td><td>Get buried under higher-paying listings</td><td>Reduces visibility despite quality</td></tr>
+        <tr><td>Platforms</td><td>Trade short-term ad revenue for long-term trust</td><td>Sacrifice credibility for click-throughs</td></tr>
+      </table>
+    </section>
+
+    <section>
+      <h2>Turning Accuracy Into an Asset</h2>
+      <p>We’re not against monetization — we’re just rebuilding it around verification, not visibility.</p>
+    </section>
+
+    <section>
+      <h2>The Long Game: Trust > Traffic</h2>
+      <p>Saying “no” to paid listings means growing slower — but more honestly...</p>
+    </section>
+
+    <section>
+      <h2>The Cararth Trust Framework</h2>
+      <p>This philosophy powers our verification infrastructure — <a href="https://www.cararth.com/guides/ai-verified-used-car-trust-india">The AI-Verified Used Car Trust Framework</a>.</p>
+    </section>
+
+    <section>
+      <h2>Call to Action</h2>
+      <p>Ready to explore how AI verification powers our trust-first ranking? <a href="https://www.cararth.com/guides/ai-verified-used-car-trust-india">Read our guide: The Ultimate Guide to AI-Verified Used Car Trust in India</a>.</p>
+    </section>
+  </main>
+</body>
+</html>
+
+2️⃣ **Update the Sitemap:**
+- Add this new URL (`/guides/trust-over-traffic-cararth-no-paid-listings`) to `/sitemap.xml`.
+
+3️⃣ **Internal Linking:**
+- On the AI Verification Guide page, insert a short crosslink near the end:  
+  “Discover how our zero-bias marketplace model extends this principle — [read why Cararth said no to paid listings](https://www.cararth.com/guides/trust-over-traffic-cararth-no-paid-listings).”
+
+4️⃣ **Indexing Prep:**
+- Once live, run the `ping_indexers.sh` script to notify Google and Bing.
+- Validate the new URL via Bing Webmaster and Google Search Console.
+
+5️⃣ **Branch & Preview:**
+- Commit this page and sitemap update to a new branch named `pillar-trust-over-traffic`.
+- Provide the Replit preview URL after build completion.
