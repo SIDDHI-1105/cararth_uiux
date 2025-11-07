@@ -4,7 +4,7 @@
  * Ensures all dealer listings meet Google's strict requirements for appearing
  * in Google Search and Google Maps as Vehicle Listings.
  * 
- * Based on: The Mobility Hub (cararth.com) Google Listings Checklist
+ * Based on: cararth.com Google Listings Checklist
  */
 
 interface VehicleListingData {

@@ -15,14 +15,14 @@ export default function TermsOfService() {
             <section>
               <h2 className="text-2xl font-semibold mb-4">1. Acceptance of Terms</h2>
               <p className="text-muted-foreground leading-relaxed">
-                By accessing and using The Mobility Hub platform, you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by these terms, please do not use this service.
+                By accessing and using cararth.com, you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by these terms, please do not use this service.
               </p>
             </section>
 
             <section>
               <h2 className="text-2xl font-semibold mb-4">2. Description of Service</h2>
               <p className="text-muted-foreground leading-relaxed">
-                The Mobility Hub is an automotive marketplace aggregator that collects and displays used car listings from multiple verified sources. We also provide Throttle Talk, a community platform for automotive enthusiasts with RSS-aggregated content and user-generated posts.
+                cararth.com is an automotive marketplace aggregator that collects and displays used car listings from multiple verified sources. We also provide Throttle Talk, a community platform for automotive enthusiasts with RSS-aggregated content and user-generated posts.
               </p>
             </section>
 
@@ -67,7 +67,7 @@ export default function TermsOfService() {
             <section>
               <h2 className="text-2xl font-semibold mb-4">5. Intellectual Property</h2>
               <p className="text-muted-foreground leading-relaxed">
-                The Mobility Hub platform, including its design, functionality, and content aggregation algorithms, is protected by copyright and other intellectual property laws. Users may not reproduce, distribute, or create derivative works without explicit permission.
+                cararth.com, including its design, functionality, and content aggregation algorithms, is protected by copyright and other intellectual property laws. Users may not reproduce, distribute, or create derivative works without explicit permission.
               </p>
             </section>
 
@@ -93,7 +93,7 @@ export default function TermsOfService() {
             <section>
               <h2 className="text-2xl font-semibold mb-4">8. Limitation of Liability</h2>
               <p className="text-muted-foreground leading-relaxed">
-                The Mobility Hub serves as an information aggregator and platform facilitator. We are not responsible for the accuracy of third-party listings, the quality of vehicles, or the conduct of users. Our liability is limited to the maximum extent permitted by Indian law.
+                cararth.com serves as an information aggregator and platform facilitator. We are not responsible for the accuracy of third-party listings, the quality of vehicles, or the conduct of users. Our liability is limited to the maximum extent permitted by Indian law.
               </p>
             </section>
 

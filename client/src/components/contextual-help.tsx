@@ -178,7 +178,7 @@ export function ContextualHelpProvider({ children }: ContextualHelpProviderProps
     
     // Show completion message
     setTimeout(() => {
-      alert("🎉 Welcome to The Mobility Hub! You're all set to find your perfect car.");
+      alert("🎉 Welcome to cararth.com! You're all set to find your perfect car.");
     }, 500);
   };
 

@@ -356,7 +356,7 @@ export class RSSAggregatorService {
         
         <!-- Bottom accent -->
         <rect x="0" y="180" width="400" height="20" fill="rgba(0,0,0,0.1)" rx="0 0 12 12"/>
-        <text x="20" y="194" font-family="Inter, sans-serif" font-size="10" font-weight="500" fill="white" opacity="0.8">The Mobility Hub</text>
+        <text x="20" y="194" font-family="Inter, sans-serif" font-size="10" font-weight="500" fill="white" opacity="0.8">cararth.com</text>
       </svg>
     `;
 

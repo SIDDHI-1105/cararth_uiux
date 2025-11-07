@@ -16,7 +16,7 @@ export default function ApiCompliance() {
             <section>
               <h2 className="text-2xl font-semibold mb-4">Compliance Overview</h2>
               <p className="text-muted-foreground leading-relaxed">
-                The Mobility Hub operates under strict legal and ethical guidelines when accessing and aggregating automotive data. We prioritize compliance with Indian and international laws governing data collection, usage, and distribution.
+                cararth.com operates under strict legal and ethical guidelines when accessing and aggregating automotive data. We prioritize compliance with Indian and international laws governing data collection, usage, and distribution.
               </p>
             </section>
 

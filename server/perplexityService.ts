@@ -154,7 +154,7 @@ Target length: 800-1200 words.`;
         excerpt,
         category,
         tags: ['#cararth', '#automotiveindia', '#preownedcars', '#carmarket'],
-        author: 'The Mobility Hub Editorial Team',
+        author: 'CarArth Team',
         publishedAt: new Date().toISOString(),
         readTime,
         sources: data.citations || [],

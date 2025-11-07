@@ -83,7 +83,7 @@ The pre-owned car segment has grown by 15% in 2024, with increasing demand for w
         excerpt: 'Discover the best value-for-money pre-owned cars under ₹5 lakhs that offer reliability, fuel efficiency, and low maintenance costs. Complete with buying tips and market insights.',
         category: 'buying-guides',
         tags: ['#cararth', '#preownedcars', '#budget', '#india'],
-        author: 'The Mobility Hub Editorial Team',
+        author: 'CarArth Team',
         publishedAt: new Date().toISOString(),
         readTime: 8,
         sources: [],
@@ -113,7 +113,7 @@ The transition period offers unique opportunities for smart buyers and sellers a
         excerpt: 'How the electric vehicle revolution is changing pre-owned car values and what it means for buyers and sellers in the Indian market.',
         category: 'market-trends',
         tags: ['#cararth', '#electricvehicles', '#markettrends', '#investment'],
-        author: 'The Mobility Hub Editorial Team',
+        author: 'CarArth Team',
         publishedAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
         readTime: 6,
         sources: [],
@@ -182,7 +182,7 @@ Two of India's most trusted automotive brands go head-to-head. Here's everything
         excerpt: 'Detailed comparison between India\'s top two car brands - Maruti Suzuki and Hyundai. Find out which brand suits your needs and budget better.',
         category: 'buying-guides',
         tags: ['#cararth', '#marutisuzuki', '#hyundai', '#comparison'],
-        author: 'The Mobility Hub Editorial Team',
+        author: 'CarArth Team',
         publishedAt: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
         readTime: 7,
         sources: [],
@@ -229,7 +229,7 @@ Two of India's most trusted automotive brands go head-to-head. Here's everything
         excerpt: 'Insider secrets and pro tips for getting your car loan approved at the best rates. Everything banks don\'t want you to know.',
         category: 'buying-guides',
         tags: ['#cararth', '#carloan', '#finance', '#tips'],
-        author: 'The Mobility Hub Editorial Team',
+        author: 'CarArth Team',
         publishedAt: new Date(Date.now() - 259200000).toISOString(), // 3 days ago
         readTime: 4,
         sources: [],
@@ -282,7 +282,7 @@ The pre-owned car market has seen significant price corrections across all segme
         excerpt: 'Pre-owned car prices have dropped significantly in Q1 2024. Here\'s your complete guide to the best buying opportunities and market predictions.',
         category: 'market-trends',
         tags: ['#cararth', '#marketreport', '#prices', '#trends'],
-        author: 'The Mobility Hub Editorial Team',
+        author: 'CarArth Team',
         publishedAt: new Date(Date.now() - 345600000).toISOString(), // 4 days ago
         readTime: 5,
         sources: [],
@@ -380,7 +380,7 @@ The pre-owned car market has seen significant price corrections across all segme
     return {
       linkedin: {
         platform: 'linkedin',
-        content: `🚗 ${article.title}\n\n${article.excerpt}\n\nRead the full insights on The Mobility Hub. Perfect for anyone looking to make smart car buying decisions in India.`,
+        content: `🚗 ${article.title}\n\n${article.excerpt}\n\nRead the full insights on cararth.com. Perfect for anyone looking to make smart car buying decisions in India.`,
         articleUrl: baseUrl,
         hashtags
       },
@@ -392,7 +392,7 @@ The pre-owned car market has seen significant price corrections across all segme
       },
       facebook: {
         platform: 'facebook',
-        content: `${article.title}\n\n${article.excerpt}\n\nStay informed about the latest automotive trends and make better car buying decisions with The Mobility Hub.`,
+        content: `${article.title}\n\n${article.excerpt}\n\nStay informed about the latest automotive trends and make better car buying decisions with cararth.com.`,
         articleUrl: baseUrl,
         hashtags
       },

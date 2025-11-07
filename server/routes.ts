@@ -3384,7 +3384,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name: sellerInfo.buyerDisplayName,
           phone: sellerInfo.maskedPhone,
           email: sellerInfo.maskedEmail,
-          note: "Contact via The Mobility Hub for privacy protection"
+          note: "Contact via cararth.com for privacy protection"
         }
       });
     } catch (error) {
@@ -3811,7 +3811,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bgColor: '#fef2f2'
       },
       'automotive-hero-image': {
-        title: 'The Mobility Hub',
+        title: 'cararth.com',
         subtitle: 'Your Journey. Simplified.',
         icon: '🏎️',
         gradient: ['#1e40af', '#3b82f6'],

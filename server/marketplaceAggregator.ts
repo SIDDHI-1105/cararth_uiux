@@ -2442,7 +2442,7 @@ export class MarketplaceAggregator {
       name: sellerInfo.name || 'Verified Seller',
       phone: this.maskPhoneNumber(sellerInfo.phones?.[0]),
       email: this.maskEmail(sellerInfo.emails?.[0]),
-      contact: 'Contact via The Mobility Hub',
+      contact: 'Contact via cararth.com',
       verified: true
     };
   }
