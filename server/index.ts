@@ -318,6 +318,14 @@ app.use((req, res, next) => {
       } catch (error: any) {
         console.warn('⚠️ Could not start automated content generator:', error.message);
       }
+
+      // Start Bing Webmaster Tools sync scheduler
+      try {
+        const { scheduleBingSyncJobs } = await import('./lib/aether/bingScheduler.js');
+        scheduleBingSyncJobs();
+      } catch (error: any) {
+        console.warn('⚠️ Could not start Bing sync scheduler:', error.message);
+      }
       
     } catch (error) {
       console.error('❌ Failed to start server:', error);
