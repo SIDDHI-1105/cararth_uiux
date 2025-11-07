@@ -2503,6 +2503,103 @@ export const aetherDailyDigest = pgTable("aether_daily_digest", {
   index("idx_daily_digest_city_date").on(table.city, table.runAt),
 ]);
 
+// AETHER Bing Webmaster Tools Integration
+export const aetherBingTokens = pgTable("aether_bing_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  accessToken: text("access_token").notNull(),
+  refreshToken: text("refresh_token").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  scopes: jsonb("scopes").default([]),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_bing_tokens_user").on(table.userId),
+  index("idx_bing_tokens_expires").on(table.expiresAt),
+]);
+
+export const aetherBingSites = pgTable("aether_bing_sites", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  siteUrl: text("site_url").notNull(),
+  verified: boolean("verified").default(false),
+  lastSync: timestamp("last_sync"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_bing_sites_user").on(table.userId),
+  index("idx_bing_sites_url").on(table.siteUrl),
+  index("idx_bing_sites_verified").on(table.verified),
+]);
+
+export const aetherBingPerformance = pgTable("aether_bing_performance", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  date: timestamp("date").notNull(),
+  siteUrl: text("site_url").notNull(),
+  page: text("page"),
+  query: text("query"),
+  device: text("device"), // 'desktop' | 'mobile' | 'tablet'
+  country: text("country"),
+  clicks: numeric("clicks").default('0'),
+  impressions: numeric("impressions").default('0'),
+  ctr: numeric("ctr", { precision: 5, scale: 4 }).default('0'),
+  position: numeric("position", { precision: 5, scale: 2 }).default('0'),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_bing_perf_site_date").on(table.siteUrl, table.date),
+  index("idx_bing_perf_page_date").on(table.page, table.date),
+  index("idx_bing_perf_query").on(table.query),
+]);
+
+export const aetherBingCrawlIssues = pgTable("aether_bing_crawl_issues", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  date: timestamp("date").notNull(),
+  siteUrl: text("site_url").notNull(),
+  url: text("url").notNull(),
+  issueType: text("issue_type").notNull(), // 'crawl_error' | 'not_found' | 'blocked' | 'redirect'
+  severity: text("severity").notNull(), // 'critical' | 'warning' | 'info'
+  details: jsonb("details").default({}),
+  resolved: boolean("resolved").default(false),
+  resolvedAt: timestamp("resolved_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_bing_crawl_site_date").on(table.siteUrl, table.date),
+  index("idx_bing_crawl_url").on(table.url),
+  index("idx_bing_crawl_severity").on(table.severity),
+  index("idx_bing_crawl_resolved").on(table.resolved),
+]);
+
+export const aetherBingSitemaps = pgTable("aether_bing_sitemaps", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  date: timestamp("date").notNull(),
+  siteUrl: text("site_url").notNull(),
+  sitemapUrl: text("sitemap_url").notNull(),
+  status: text("status").notNull(), // 'pending' | 'processed' | 'error'
+  urlsSubmitted: integer("urls_submitted").default(0),
+  urlsIndexed: integer("urls_indexed").default(0),
+  lastSubmitted: timestamp("last_submitted"),
+  lastProcessed: timestamp("last_processed"),
+  errors: jsonb("errors").default([]),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_bing_sitemaps_site_date").on(table.siteUrl, table.date),
+  index("idx_bing_sitemaps_url").on(table.sitemapUrl),
+  index("idx_bing_sitemaps_status").on(table.status),
+]);
+
+export const aetherBingBacklinks = pgTable("aether_bing_backlinks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  date: timestamp("date").notNull(),
+  siteUrl: text("site_url").notNull(),
+  url: text("url").notNull(), // Target URL receiving backlinks
+  referringDomains: integer("referring_domains").default(0),
+  backlinks: integer("backlinks").default(0),
+  anchorTexts: jsonb("anchor_texts").default([]), // Array of {text, count}
+  topReferrers: jsonb("top_referrers").default([]), // Array of {domain, count}
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_bing_backlinks_site_date").on(table.siteUrl, table.date),
+  index("idx_bing_backlinks_url").on(table.url),
+]);
+
 // Insert schemas
 export const insertDealerSchema = createInsertSchema(dealers).omit({
   id: true,
@@ -2757,6 +2854,37 @@ export const insertAetherArticleImpactsSchema = createInsertSchema(aetherArticle
   createdAt: true,
 });
 
+// AETHER Bing Webmaster Tools Insert Schemas
+export const insertAetherBingTokensSchema = createInsertSchema(aetherBingTokens).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export const insertAetherBingSitesSchema = createInsertSchema(aetherBingSites).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAetherBingPerformanceSchema = createInsertSchema(aetherBingPerformance).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAetherBingCrawlIssuesSchema = createInsertSchema(aetherBingCrawlIssues).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAetherBingSitemapsSchema = createInsertSchema(aetherBingSitemaps).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAetherBingBacklinksSchema = createInsertSchema(aetherBingBacklinks).omit({
+  id: true,
+  createdAt: true,
+});
+
 // AETHER Type exports
 export type InsertGeoSweep = z.infer<typeof insertGeoSweepSchema>;
 export type GeoSweep = typeof geoSweeps.$inferSelect;
@@ -2792,6 +2920,20 @@ export type InsertAetherArticles = z.infer<typeof insertAetherArticlesSchema>;
 export type AetherArticles = typeof aetherArticles.$inferSelect;
 export type InsertAetherArticleImpacts = z.infer<typeof insertAetherArticleImpactsSchema>;
 export type AetherArticleImpacts = typeof aetherArticleImpacts.$inferSelect;
+
+// AETHER Bing Webmaster Tools Type exports
+export type InsertAetherBingTokens = z.infer<typeof insertAetherBingTokensSchema>;
+export type AetherBingTokens = typeof aetherBingTokens.$inferSelect;
+export type InsertAetherBingSites = z.infer<typeof insertAetherBingSitesSchema>;
+export type AetherBingSites = typeof aetherBingSites.$inferSelect;
+export type InsertAetherBingPerformance = z.infer<typeof insertAetherBingPerformanceSchema>;
+export type AetherBingPerformance = typeof aetherBingPerformance.$inferSelect;
+export type InsertAetherBingCrawlIssues = z.infer<typeof insertAetherBingCrawlIssuesSchema>;
+export type AetherBingCrawlIssues = typeof aetherBingCrawlIssues.$inferSelect;
+export type InsertAetherBingSitemaps = z.infer<typeof insertAetherBingSitemapsSchema>;
+export type AetherBingSitemaps = typeof aetherBingSitemaps.$inferSelect;
+export type InsertAetherBingBacklinks = z.infer<typeof insertAetherBingBacklinksSchema>;
+export type AetherBingBacklinks = typeof aetherBingBacklinks.$inferSelect;
 
 // ============================================================================
 // AETHER GOOGLE INTEGRATION (SSO + GSC/GA4)
