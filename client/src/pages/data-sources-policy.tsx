@@ -16,7 +16,7 @@ export default function DataSourcesPolicy() {
             <section>
               <h2 className="text-2xl font-semibold mb-4">Our Commitment to Authentic Data</h2>
               <p className="text-muted-foreground leading-relaxed">
-                The Mobility Hub operates with zero tolerance for fake data. Every car listing on our platform is sourced from verified, publicly available channels and legitimate automotive marketplaces.
+                cararth.com operates with zero tolerance for fake data. Every car listing on our platform is sourced from verified, publicly available channels and legitimate automotive marketplaces.
               </p>
             </section>
 
