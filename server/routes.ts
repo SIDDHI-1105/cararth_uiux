@@ -8779,6 +8779,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }));
 
+  // AETHER - Bing Webmaster Tools OAuth
+  try {
+    const { default: bingAuthRouter } = await import('./routes/aether/bingAuth.js');
+    app.use('/api/aether/bing/auth', bingAuthRouter);
+  } catch (error) {
+    console.error('Failed to load Bing OAuth routes:', error);
+  }
+
   // AETHER - Project AETHER endpoints
   // Run a single GEO sweep
   app.post('/api/aether/sweep', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {
