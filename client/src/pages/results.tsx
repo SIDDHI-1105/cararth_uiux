@@ -83,6 +83,27 @@ export default function Results() {
     },
   });
 
+  // Helper function to check if listing has valid images
+  const hasValidImages = (car: any): boolean => {
+    if (!car.images || !Array.isArray(car.images) || car.images.length === 0) {
+      return false;
+    }
+    
+    // Check if the first image is a placeholder or invalid
+    const firstImage = car.images[0];
+    const placeholderPatterns = [
+      'placehold.co',
+      'placeholder',
+      'spacer',
+      'no-image',
+      'no+image'
+    ];
+    
+    return !placeholderPatterns.some(pattern => 
+      firstImage.toLowerCase().includes(pattern)
+    );
+  };
+
   // Filter by source and sort cars
   const sortedCars = useMemo(() => {
     if (!cars.length) return [];
@@ -93,8 +114,16 @@ export default function Results() {
       filtered = cars.filter(car => car.listingSource === sourceFilter);
     }
     
-    // Sort filtered results
+    // Sort filtered results - ALWAYS prioritize listings with valid images
     return [...filtered].sort((a, b) => {
+      // First priority: listings with valid images come first
+      const aHasImages = hasValidImages(a);
+      const bHasImages = hasValidImages(b);
+      
+      if (aHasImages && !bHasImages) return -1;
+      if (!aHasImages && bHasImages) return 1;
+      
+      // If both have images or both don't, apply user-selected sort
       switch (sortBy) {
         case "price-low":
           return parseFloat(a.price) - parseFloat(b.price);
