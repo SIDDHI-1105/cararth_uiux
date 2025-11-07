@@ -2532,6 +2532,7 @@ export const aetherBingSites = pgTable("aether_bing_sites", {
 
 export const aetherBingPerformance = pgTable("aether_bing_performance", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
   date: timestamp("date").notNull(),
   siteUrl: text("site_url").notNull(),
   page: text("page"),
@@ -2544,6 +2545,7 @@ export const aetherBingPerformance = pgTable("aether_bing_performance", {
   position: numeric("position", { precision: 5, scale: 2 }).default('0'),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
+  index("idx_bing_perf_user").on(table.userId),
   index("idx_bing_perf_site_date").on(table.siteUrl, table.date),
   index("idx_bing_perf_page_date").on(table.page, table.date),
   index("idx_bing_perf_query").on(table.query),
@@ -2551,6 +2553,7 @@ export const aetherBingPerformance = pgTable("aether_bing_performance", {
 
 export const aetherBingCrawlIssues = pgTable("aether_bing_crawl_issues", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
   date: timestamp("date").notNull(),
   siteUrl: text("site_url").notNull(),
   url: text("url").notNull(),
@@ -2561,6 +2564,7 @@ export const aetherBingCrawlIssues = pgTable("aether_bing_crawl_issues", {
   resolvedAt: timestamp("resolved_at"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
+  index("idx_bing_crawl_user").on(table.userId),
   index("idx_bing_crawl_site_date").on(table.siteUrl, table.date),
   index("idx_bing_crawl_url").on(table.url),
   index("idx_bing_crawl_severity").on(table.severity),
@@ -2569,6 +2573,7 @@ export const aetherBingCrawlIssues = pgTable("aether_bing_crawl_issues", {
 
 export const aetherBingSitemaps = pgTable("aether_bing_sitemaps", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
   date: timestamp("date").notNull(),
   siteUrl: text("site_url").notNull(),
   sitemapUrl: text("sitemap_url").notNull(),
@@ -2580,6 +2585,7 @@ export const aetherBingSitemaps = pgTable("aether_bing_sitemaps", {
   errors: jsonb("errors").default([]),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
+  index("idx_bing_sitemaps_user").on(table.userId),
   index("idx_bing_sitemaps_site_date").on(table.siteUrl, table.date),
   index("idx_bing_sitemaps_url").on(table.sitemapUrl),
   index("idx_bing_sitemaps_status").on(table.status),
@@ -2587,6 +2593,7 @@ export const aetherBingSitemaps = pgTable("aether_bing_sitemaps", {
 
 export const aetherBingBacklinks = pgTable("aether_bing_backlinks", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
   date: timestamp("date").notNull(),
   siteUrl: text("site_url").notNull(),
   url: text("url").notNull(), // Target URL receiving backlinks
@@ -2596,6 +2603,7 @@ export const aetherBingBacklinks = pgTable("aether_bing_backlinks", {
   topReferrers: jsonb("top_referrers").default([]), // Array of {domain, count}
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
+  index("idx_bing_backlinks_user").on(table.userId),
   index("idx_bing_backlinks_site_date").on(table.siteUrl, table.date),
   index("idx_bing_backlinks_url").on(table.url),
 ]);
