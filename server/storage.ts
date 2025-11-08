@@ -5,7 +5,9 @@ import {
   type Car, 
   type InsertCar, 
   type Contact, 
-  type InsertContact, 
+  type InsertContact,
+  type DeletedListing,
+  type InsertDeletedListing,
   type SellerLead,
   type InsertSellerLead,
   type Subscription, 
@@ -66,6 +68,12 @@ export interface IStorage {
     yearMin?: number;
     yearMax?: number;
   }): Promise<Car[]>;
+  
+  // Deleted listing operations for fast 410 responses
+  addDeletedListing(listing: InsertDeletedListing): Promise<DeletedListing>;
+  isListingDeleted(originalId: string): Promise<boolean>;
+  getDeletedListings(opts?: { gscRemovalRequested?: boolean; limit?: number }): Promise<DeletedListing[]>;
+  markGscRemovalRequested(originalId: string): Promise<void>;
   
   // Contact operations
   createContact(contact: InsertContact): Promise<Contact>;
@@ -1588,6 +1596,30 @@ export class MemStorage implements IStorage {
   
   async getRecentScraperLogs(limit: number): Promise<any[]> {
     return [];
+  }
+  
+  // Deleted listing operations - in-memory stubs
+  async addDeletedListing(listing: InsertDeletedListing): Promise<DeletedListing> {
+    return { 
+      id: randomUUID(), 
+      ...listing, 
+      deletedAt: new Date(),
+      lastCheckedAt: new Date(),
+      gscRemovalRequested: false,
+      gscRemovalRequestedAt: null
+    };
+  }
+
+  async isListingDeleted(originalId: string): Promise<boolean> {
+    return false; // MemStorage doesn't track deleted listings
+  }
+
+  async getDeletedListings(opts?: { gscRemovalRequested?: boolean; limit?: number }): Promise<DeletedListing[]> {
+    return [];
+  }
+
+  async markGscRemovalRequested(originalId: string): Promise<void> {
+    // No-op for MemStorage
   }
 }
 

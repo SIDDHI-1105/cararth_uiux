@@ -4,7 +4,8 @@ import { eq, and, sql, gte, lte, ilike, desc, asc, count, inArray } from "drizzl
 import { 
   cars, 
   users, 
-  contacts, 
+  contacts,
+  deletedListings,
   subscriptions, 
   featuredListings,
   conversations,
@@ -37,6 +38,8 @@ import {
   type InsertCar, 
   type Contact, 
   type InsertContact,
+  type DeletedListing,
+  type InsertDeletedListing,
   type Subscription,
   type InsertSubscription,
   type FeaturedListing,
@@ -281,6 +284,18 @@ export class DatabaseStorage implements IStorage {
       const car = result[0];
       if (car) {
         this.setCache(cacheKey, car);
+        
+        // CRITICAL: If car exists, remove it from deleted listings cache
+        // This handles reinstated listings and prevents false 410s
+        try {
+          await this.db
+            .delete(deletedListings)
+            .where(eq(deletedListings.originalId, id));
+          this.cache.delete(`deleted:${id}`);
+        } catch (cleanupError) {
+          // Log but don't fail - cache cleanup is not critical to car retrieval
+          logError(createAppError('Cache cleanup failed', 500, ErrorCategory.DATABASE), 'getCar deletion cache cleanup');
+        }
       }
       return car;
     } catch (error) {
@@ -644,6 +659,103 @@ export class DatabaseStorage implements IStorage {
         total: 0,
         hasMore: false
       };
+    }
+  }
+
+  // Deleted listing operations for fast 410 responses
+  async addDeletedListing(listing: InsertDeletedListing): Promise<DeletedListing> {
+    try {
+      const result = await this.db
+        .insert(deletedListings)
+        .values(listing)
+        .onConflictDoUpdate({
+          target: deletedListings.originalId,
+          set: {
+            lastCheckedAt: sql`now()`,
+            reason: listing.reason,
+          }
+        })
+        .returning();
+      
+      const deletedListing = result[0];
+      // Cache the deleted status with shorter TTL to minimize false positive window
+      this.setCache(`deleted:${listing.originalId}`, true, 4 * 60 * 60 * 1000); // 4 hour TTL
+      return deletedListing;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'addDeletedListing operation');
+      throw new Error('Failed to add deleted listing - please try again');
+    }
+  }
+
+  async isListingDeleted(originalId: string): Promise<boolean> {
+    // Check cache first for ultra-fast response
+    const cached = this.getCached<boolean>(`deleted:${originalId}`);
+    if (cached !== null) {
+      return cached;
+    }
+
+    try {
+      const result = await this.db
+        .select()
+        .from(deletedListings)
+        .where(eq(deletedListings.originalId, originalId))
+        .limit(1);
+      
+      const isDeleted = result.length > 0;
+      // Cache with shorter TTL (4 hours) to reduce risk of stale false positives
+      // Reinstated listings will be auto-cleaned when getCar() is called
+      this.setCache(`deleted:${originalId}`, isDeleted, 4 * 60 * 60 * 1000); // 4 hour TTL
+      return isDeleted;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'isListingDeleted operation');
+      return false; // Assume not deleted on error to avoid false positives
+    }
+  }
+
+  async getDeletedListings(opts?: { gscRemovalRequested?: boolean; limit?: number }): Promise<DeletedListing[]> {
+    try {
+      const conditions = [];
+      
+      if (opts?.gscRemovalRequested !== undefined) {
+        conditions.push(eq(deletedListings.gscRemovalRequested, opts.gscRemovalRequested));
+      }
+
+      let query = this.db
+        .select()
+        .from(deletedListings)
+        .orderBy(desc(deletedListings.deletedAt));
+
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions)) as any;
+      }
+
+      if (opts?.limit) {
+        query = query.limit(opts.limit) as any;
+      }
+
+      const result = await query;
+      return result;
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'getDeletedListings operation');
+      return [];
+    }
+  }
+
+  async markGscRemovalRequested(originalId: string): Promise<void> {
+    try {
+      await this.db
+        .update(deletedListings)
+        .set({
+          gscRemovalRequested: true,
+          gscRemovalRequestedAt: sql`now()`,
+        })
+        .where(eq(deletedListings.originalId, originalId));
+      
+      // Invalidate cache
+      this.cache.delete(`deleted:${originalId}`);
+    } catch (error) {
+      logError(createAppError('Database operation failed', 500, ErrorCategory.DATABASE), 'markGscRemovalRequested operation');
+      throw new Error('Failed to mark GSC removal requested');
     }
   }
 

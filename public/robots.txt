@@ -41,7 +41,7 @@ Allow: /
 Crawl-delay: 0
 
 # Sitemap
-Sitemap: https://cararth.com/sitemap.xml
+Sitemap: https://www.cararth.com/sitemap.xml
 
 # AI-Friendly Structured Data Endpoint
 # GET https://www.cararth.com/api/ai-info for machine-readable platform data

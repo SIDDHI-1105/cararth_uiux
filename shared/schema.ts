@@ -100,6 +100,25 @@ export const cars = pgTable("cars", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Deleted listings cache for fast 410 Gone responses and GSC URL removal
+export const deletedListings = pgTable(
+  "deleted_listings",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    originalId: varchar("original_id").notNull().unique(), // The car UUID that was deleted
+    deletedAt: timestamp("deleted_at").defaultNow(),
+    source: text("source"), // Where the listing came from: 'user_direct', 'olx', 'cardekho', etc.
+    lastCheckedAt: timestamp("last_checked_at").defaultNow(),
+    gscRemovalRequested: boolean("gsc_removal_requested").default(false), // Track if we submitted to GSC
+    gscRemovalRequestedAt: timestamp("gsc_removal_requested_at"),
+    reason: text("reason"), // Why deleted: 'sold', 'expired', 'removed_from_source', 'user_deleted'
+  },
+  (table) => [
+    index("idx_deleted_original_id").on(table.originalId),
+    index("idx_deleted_gsc_removal").on(table.gscRemovalRequested, table.gscRemovalRequestedAt),
+  ],
+);
+
 // Anonymous visitor search tracking for 30-day rolling window
 export const anonymousSearchActivity = pgTable(
   "anonymous_search_activity",
@@ -177,6 +196,12 @@ export const insertContactSchema = createInsertSchema(contacts).omit({
   createdAt: true,
 });
 
+export const insertDeletedListingSchema = createInsertSchema(deletedListings).omit({
+  id: true,
+  deletedAt: true,
+  lastCheckedAt: true,
+});
+
 export const insertSellerLeadSchema = createInsertSchema(sellerLeads).omit({
   id: true,
   createdAt: true,
@@ -218,6 +243,8 @@ export type SellerInfo = z.infer<typeof sellerInfoSchema>;
 export type Car = typeof cars.$inferSelect;
 export type InsertContact = z.infer<typeof insertContactSchema>;
 export type Contact = typeof contacts.$inferSelect;
+export type InsertDeletedListing = z.infer<typeof insertDeletedListingSchema>;
+export type DeletedListing = typeof deletedListings.$inferSelect;
 export type InsertSellerLead = z.infer<typeof insertSellerLeadSchema>;
 export type SellerLead = typeof sellerLeads.$inferSelect;
 

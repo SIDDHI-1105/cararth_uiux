@@ -127,9 +127,55 @@ app.use((req, res, next) => {
     app.get('/car/:id', async (req, res, next) => {
       try {
         const { storage } = await import('./storage.js');
+        
+        // OPTIMIZATION: Check deleted listing cache first, but verify against DB
+        // This handles reinstated listings and prevents false 410s
+        const maybeDeleted = await storage.isListingDeleted(req.params.id);
+        
+        // Always check the actual DB to handle reinstated listings
         const car = await storage.getCar(req.params.id);
         
+        // If cache said deleted but car exists, cleanup was already done in getCar()
+        // Just continue serving the car normally
+        if (car && maybeDeleted) {
+          // Log the cache inconsistency for monitoring
+          console.log(`Reinstated listing detected: ${req.params.id}`);
+        }
+        
+        // Only return 410 if car truly doesn't exist in DB
+        if (!car && maybeDeleted) {
+          // Fast path: cached deletion confirmed by DB
+          return res.status(410).send(`
+            <!DOCTYPE html>
+            <html>
+              <head>
+                <meta charset="utf-8">
+                <title>Car Listing No Longer Available | CarArth</title>
+                <meta http-equiv="refresh" content="3;url=/results">
+              </head>
+              <body>
+                <h1>This car listing is no longer available</h1>
+                <p>Redirecting you to search results...</p>
+                <p>If not redirected, <a href="/results">click here</a>.</p>
+              </body>
+            </html>
+          `);
+        }
+        
         if (!car) {
+          // Car not found - add to deleted listings cache for future fast lookups
+          // Guard against DB failures so we still return 410 even if cache write fails
+          try {
+            await storage.addDeletedListing({
+              originalId: req.params.id,
+              source: 'user_direct', // Unknown source
+              reason: 'not_found'
+            });
+          } catch (cacheError) {
+            // Log but continue - cache write failure shouldn't prevent 410 response
+            console.error('Failed to cache deleted listing:', cacheError);
+          }
+          
           // Return 410 Gone to signal permanent deletion to search engines
           // This tells Google to remove these URLs from the index
           return res.status(410).send(`
