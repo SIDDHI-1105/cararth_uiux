@@ -21,7 +21,7 @@ The frontend uses React 18, Vite, Wouter for routing, Radix UI primitives with s
 - **Communication**: Seller contact and notification system using Twilio (WhatsApp) and Nodemailer (email), with phone normalization via `libphonenumber-js`.
 - **AI SEO**: Enhanced Schema.org structured data, AI-friendly robots.txt, dynamic sitemap.xml, machine-readable data endpoint (`/api/ai-info`), and static file serving.
 - **Server-Side SEO Rendering**: Production-ready SSR for critical pages with meta tags and JSON-LD injection before client-side hydration.
-- **404 & SEO Cleanup**: Automated 404 audit system with proper HTTP status codes (e.g., 410 Gone for deleted listings) and API endpoint blocking in `robots.txt`.
+- **404 & SEO Cleanup**: Intelligent 410 Gone system with deleted listings cache (4-hour TTL), auto-cleanup for reinstated cars, and canonical URL normalization (https://www.cararth.com). Features intelligent double-check logic that always verifies DB before returning 410, preventing false positives for reinstated listings.
 - **Scraper Monitoring**: Self-healing system with persistent retries, exponential backoff, and health logs.
 - **Trust Layer & Listing Validation**: Centralized ingestion service enforces validation, rejecting non-compliant listings.
 - **Scrapers**: Implementations for CarDekho, OLX, and Facebook Marketplace, all routing through a centralized ingestion service.
