@@ -133,7 +133,7 @@ export default function CarDetail() {
         {/* Social Share Buttons */}
         <div className="mb-6">
           <SocialShareButtons 
-            url={typeof window !== 'undefined' ? window.location.href : `https://cararth.com/car/${car.id}`}
+            url={typeof window !== 'undefined' ? window.location.href : `https://www.cararth.com/car/${car.id}`}
             title={car.title}
             description={`${car.year} ${car.title} - ${formatPrice(car.price)} | ${formatMileage(car.mileage)} driven | ${car.city}, ${car.state}`}
           />

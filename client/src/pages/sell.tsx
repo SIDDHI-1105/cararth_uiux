@@ -107,7 +107,7 @@ export default function SellPage() {
     "provider": {
       "@type": "Organization",
       "name": "CarArth",
-      "url": "https://cararth.com"
+      "url": "https://www.cararth.com"
     },
     "areaServed": {
       "@type": "Country",

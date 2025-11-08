@@ -39,7 +39,7 @@ export class GoogleVehicleFeedGenerator {
     // Use Replit domain or custom domain if configured
     const replitDomain = process.env.REPL_SLUG && process.env.REPL_OWNER
       ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
-      : 'https://cararth.com';
+      : 'https://www.cararth.com';
     
     this.baseUrl = process.env.SITE_URL || replitDomain;
   }

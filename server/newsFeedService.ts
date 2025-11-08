@@ -42,7 +42,7 @@ export class NewsFeedService {
           rssItems.push({
             title: this.escapeXml(post.title || 'Untitled Post'),
             description: this.escapeXml(this.truncateDescription(post.content || '')),
-            link: `https://cararth.com/news/${post.id}`,
+            link: `https://www.cararth.com/news/${post.id}`,
             pubDate: new Date(post.createdAt || Date.now()),
             author: this.escapeXml(post.author || 'CarArth Community'),
             category: this.escapeXml(post.category || 'General'),
@@ -62,7 +62,7 @@ export class NewsFeedService {
           rssItems.push({
             title: this.escapeXml(insight.title),
             description: this.escapeXml(insight.executiveSummary.replace(/\*\*/g, '')), // Remove markdown
-            link: `https://cararth.com/news/market-insight-${idx}`,
+            link: `https://www.cararth.com/news/market-insight-${idx}`,
             pubDate: new Date(insight.timestamp),
             author: `CarArth x ${insight.powered_by}`,
             category: 'Market Insights',
@@ -102,15 +102,15 @@ export class NewsFeedService {
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Throttle Talk - CarArth Automotive News</title>
-    <link>https://cararth.com/news</link>
+    <link>https://www.cararth.com/news</link>
     <description>India's automotive community discussing used cars, market trends, and industry insights. Cararth.com is a unit of Aaro7 Fintech Private Limited.</description>
     <language>en-IN</language>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
-    <atom:link href="https://cararth.com/feed/news.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://www.cararth.com/feed/news.xml" rel="self" type="application/rss+xml" />
     <image>
-      <url>https://cararth.com/cararth-logo.png</url>
+      <url>https://www.cararth.com/cararth-logo.png</url>
       <title>Throttle Talk - CarArth</title>
-      <link>https://cararth.com/news</link>
+      <link>https://www.cararth.com/news</link>
     </image>
 ${itemsXML}
   </channel>
@@ -125,7 +125,7 @@ ${itemsXML}
 <rss version="2.0">
   <channel>
     <title>Throttle Talk - CarArth Automotive News</title>
-    <link>https://cararth.com/news</link>
+    <link>https://www.cararth.com/news</link>
     <description>India's automotive community news and insights</description>
     <language>en-IN</language>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>

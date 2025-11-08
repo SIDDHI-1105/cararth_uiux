@@ -61,11 +61,11 @@ export default function CommunityPage() {
     "@type": "CollectionPage",
     "name": "Throttle Talk - CarArth Community",
     "description": "Join India's most passionate car enthusiasts community. Share experiences, discover amazing rides, and connect with fellow automotive lovers.",
-    "url": "https://cararth.com/community",
+    "url": "https://www.cararth.com/community",
     "publisher": {
       "@type": "Organization",
       "name": "CarArth",
-      "url": "https://cararth.com"
+      "url": "https://www.cararth.com"
     }
   }), []);
 

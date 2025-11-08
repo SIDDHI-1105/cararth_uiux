@@ -86,7 +86,7 @@ export default function SellCar() {
     "provider": {
       "@type": "Organization",
       "name": "CarArth",
-      "url": "https://cararth.com"
+      "url": "https://www.cararth.com"
     },
     "areaServed": {
       "@type": "Country",

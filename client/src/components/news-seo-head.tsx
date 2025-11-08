@@ -62,7 +62,7 @@ function updateMetaTags(singlePost?: NewsPost, isDetailPage: boolean = false) {
     
     // Use actual domain in dev, production URL for meta tags (for SEO)
     const isDev = window.location.hostname.includes('replit');
-    const baseUrl = isDev ? window.location.origin : 'https://cararth.com';
+    const baseUrl = isDev ? window.location.origin : 'https://www.cararth.com';
     const postUrl = `${baseUrl}/news/${singlePost.id}`;
     const postDescription = singlePost.content?.substring(0, 160) || `${singlePost.title} - Read on CarArth Throttle Talk`;
     const postImage = singlePost.coverImage || `${baseUrl}/cararth-social-preview.png`;
@@ -107,13 +107,13 @@ function updateMetaTags(singlePost?: NewsPost, isDetailPage: boolean = false) {
     { property: 'og:title', content: 'Throttle Talk - Automotive News & Community | CarArth' },
     { property: 'og:description', content: 'Join India\'s automotive community for used car insights, market trends, and expert discussions. Powered by AI analysis from SIAM data and industry sources.' },
     { property: 'og:type', content: 'website' },
-    { property: 'og:url', content: 'https://cararth.com/news' },
-    { property: 'og:image', content: 'https://cararth.com/cararth-social-preview.png' },
+    { property: 'og:url', content: 'https://www.cararth.com/news' },
+    { property: 'og:image', content: 'https://www.cararth.com/cararth-social-preview.png' },
     { property: 'og:site_name', content: 'CarArth - India\'s Used Car Search Engine' },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: 'Throttle Talk - Automotive News | CarArth' },
     { name: 'twitter:description', content: 'India\'s automotive community for used car insights and market trends' },
-    { name: 'twitter:image', content: 'https://cararth.com/cararth-social-preview.png' },
+    { name: 'twitter:image', content: 'https://www.cararth.com/cararth-social-preview.png' },
   ];
 
   metaTags.forEach(({ name, property, content }) => {
@@ -132,15 +132,15 @@ function generateSchemaMarkup(posts?: NewsPost[]) {
     '@type': 'CollectionPage',
     name: 'Throttle Talk - Automotive News',
     description: 'India\'s automotive community discussing used cars, market trends, and industry insights',
-    url: 'https://cararth.com/news',
+    url: 'https://www.cararth.com/news',
     publisher: {
       '@type': 'Organization',
       name: 'CarArth',
       legalName: 'Aaro7 Fintech Private Limited',
-      url: 'https://cararth.com',
+      url: 'https://www.cararth.com',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://cararth.com/cararth-logo-full.png',
+        url: 'https://www.cararth.com/cararth-logo-full.png',
       },
       sameAs: [
         'https://www.facebook.com/cararth',
@@ -152,7 +152,7 @@ function generateSchemaMarkup(posts?: NewsPost[]) {
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: 'https://cararth.com/?query={search_term_string}'
+        urlTemplate: 'https://www.cararth.com/?query={search_term_string}'
       },
       'query-input': 'required name=search_term_string'
     }
@@ -170,7 +170,7 @@ function generateSchemaMarkup(posts?: NewsPost[]) {
         '@type': 'BlogPosting',
         headline: post.title,
         description: post.content?.substring(0, 200) || 'Automotive news and insights',
-        url: `https://cararth.com/news/${post.id}`,
+        url: `https://www.cararth.com/news/${post.id}`,
         datePublished: publishDate,
         dateModified: publishDate,
         author: {
@@ -183,10 +183,10 @@ function generateSchemaMarkup(posts?: NewsPost[]) {
           legalName: 'Aaro7 Fintech Private Limited',
           logo: {
             '@type': 'ImageObject',
-            url: 'https://cararth.com/cararth-logo.png',
+            url: 'https://www.cararth.com/cararth-logo.png',
           }
         },
-        image: post.coverImage || 'https://cararth.com/cararth-social-preview.png',
+        image: post.coverImage || 'https://www.cararth.com/cararth-social-preview.png',
         articleSection: post.category || 'Automotive News',
         keywords: 'used cars, automotive news, car market trends, India automotive, car buying, car selling',
       };
@@ -211,7 +211,7 @@ function generateSinglePostSchema(post: NewsPost) {
     '@type': 'BlogPosting',
     headline: post.title,
     description: post.content?.substring(0, 200) || 'Automotive news and insights',
-    url: `https://cararth.com/news/${post.id}`,
+    url: `https://www.cararth.com/news/${post.id}`,
     datePublished: publishDate,
     dateModified: publishDate,
     author: {
@@ -224,10 +224,10 @@ function generateSinglePostSchema(post: NewsPost) {
       legalName: 'Aaro7 Fintech Private Limited',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://cararth.com/cararth-logo.png',
+        url: 'https://www.cararth.com/cararth-logo.png',
       }
     },
-    image: post.coverImage || 'https://cararth.com/cararth-social-preview.png',
+    image: post.coverImage || 'https://www.cararth.com/cararth-social-preview.png',
     articleSection: post.category || 'Automotive News',
     keywords: 'used cars, automotive news, car market trends, India automotive, car buying, car selling',
   };
@@ -269,7 +269,7 @@ export function FAQSchemaMarkup() {
           name: 'How can I share Throttle Talk articles?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'You can share Throttle Talk articles on Facebook, LinkedIn, WhatsApp, and Twitter using the social sharing buttons. Each article includes backlinks to cararth.com for proper attribution. We also provide an RSS feed at https://cararth.com/feed/news.xml for automation tools.'
+            text: 'You can share Throttle Talk articles on Facebook, LinkedIn, WhatsApp, and Twitter using the social sharing buttons. Each article includes backlinks to cararth.com for proper attribution. We also provide an RSS feed at https://www.cararth.com/feed/news.xml for automation tools.'
           }
         },
         {

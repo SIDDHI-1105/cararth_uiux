@@ -636,7 +636,7 @@ export class SyndicationOrchestrator {
       transmission: listing.transmission?.toLowerCase(),
       fuel_type: listing.fuelType?.toLowerCase(),
       images: images,
-      url: `https://cararth.com/listings/${listing.id}`,
+      url: `https://www.cararth.com/listings/${listing.id}`,
       availability: 'in stock'
     };
   }

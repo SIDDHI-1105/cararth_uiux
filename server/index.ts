@@ -223,7 +223,7 @@ app.use((req, res, next) => {
         const carImage = (car.images && car.images[0]) || 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&h=600&fit=crop';
         const carTitle = escapeHtml(`${car.title} - ${formatPrice(car.price)} | CarArth`);
         const carDescription = escapeHtml(`${car.year} ${car.title} for sale at ${formatPrice(car.price)}. ${formatMileage(car.mileage)} driven, ${car.transmission} transmission, ${car.fuelType} fuel. Located in ${car.city}, ${car.state}. ${car.isVerified ? 'Verified ✓' : ''} listing on CarArth.`);
-        const carUrl = escapeHtml(`https://cararth.com/car/${car.id}`);
+        const carUrl = escapeHtml(`https://www.cararth.com/car/${car.id}`);
         const carImageEscaped = escapeHtml(carImage);
         
         // Read the base HTML template
@@ -271,7 +271,7 @@ app.use((req, res, next) => {
             "price": typeof car.price === 'string' ? parseFloat(car.price) : car.price,
             "priceCurrency": "INR",
             "availability": "https://schema.org/InStock",
-            "url": `https://cararth.com/car/${car.id}`,
+            "url": `https://www.cararth.com/car/${car.id}`,
             "seller": {
               "@type": "AutoDealer",
               "name": "CarArth"

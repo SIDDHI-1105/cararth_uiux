@@ -296,7 +296,7 @@ export default function NewsDetail() {
         <DisqusComments
           articleId={postData.id}
           articleTitle={postData.title}
-          articleUrl={`https://cararth.com/news/${postData.id}`}
+          articleUrl={`https://www.cararth.com/news/${postData.id}`}
         />
 
         {/* Related Articles Carousel */}

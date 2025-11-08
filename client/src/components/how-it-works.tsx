@@ -37,7 +37,7 @@ export function HowItWorks() {
       "position": step.number,
       "name": step.title,
       "text": step.description,
-      "url": `https://cararth.com#step-${step.number}`
+      "url": `https://www.cararth.com#step-${step.number}`
     }))
   };
 

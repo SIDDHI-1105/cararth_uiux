@@ -49,10 +49,10 @@ export function CityLandingPage({ cityData }: CityLandingPageProps) {
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "@id": `https://cararth.com/used-cars-${cityData.slug}#business`,
+    "@id": `https://www.cararth.com/used-cars-${cityData.slug}#business`,
     "name": `CarArth - Used Cars in ${cityData.name}`,
     "description": cityData.description,
-    "url": `https://cararth.com/used-cars-${cityData.slug}`,
+    "url": `https://www.cararth.com/used-cars-${cityData.slug}`,
     "areaServed": cityData.alternateName ? [
       {
         "@type": "City",

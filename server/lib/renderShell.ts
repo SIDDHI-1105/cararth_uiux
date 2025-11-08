@@ -16,6 +16,28 @@ interface RenderShellOptions {
   initialState?: Record<string, any>;
 }
 
+/**
+ * Normalize URL to canonical domain (https://www.cararth.com)
+ * Ensures consistent www subdomain across all canonical tags
+ */
+function normalizeCanonicalUrl(url: string): string {
+  if (!url) return 'https://www.cararth.com';
+  
+  try {
+    const parsedUrl = new URL(url, 'https://www.cararth.com');
+    
+    // Always use https://www.cararth.com as the canonical domain
+    parsedUrl.protocol = 'https:';
+    parsedUrl.hostname = 'www.cararth.com';
+    
+    return parsedUrl.toString();
+  } catch (error) {
+    // If URL parsing fails, default to canonical domain + path
+    const cleanPath = url.startsWith('/') ? url : `/${url}`;
+    return `https://www.cararth.com${cleanPath}`;
+  }
+}
+
 function escapeHtml(str: string): string {
   return String(str || "")
     .replace(/&/g, "&amp;")
@@ -45,7 +67,8 @@ export function renderShell(options: RenderShellOptions = {}): string {
   const description = escapeHtml(
     meta.description || "Find verified used cars from multiple platforms in one trusted place. No paid listings. AI-assisted price insights."
   );
-  const canonical = escapeHtml(meta.canonical || "https://www.cararth.com/");
+  // Normalize canonical URL to always use www subdomain
+  const canonical = escapeHtml(normalizeCanonicalUrl(meta.canonical || "https://www.cararth.com/"));
   const keywords = escapeHtml(
     meta.keywords || "used car search India, verified used cars, no paid listings, car syndication, AI price insights"
   );

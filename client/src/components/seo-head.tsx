@@ -6,6 +6,28 @@
 import { useEffect } from 'react';
 import cararthLogoFull from "@assets/cararth-logo-full.png";
 
+/**
+ * Normalize URL to canonical domain (https://www.cararth.com)
+ * Ensures consistent www subdomain across all canonical tags
+ */
+function normalizeCanonicalUrl(url: string): string {
+  if (!url) return 'https://www.cararth.com';
+  
+  try {
+    const parsedUrl = new URL(url, 'https://www.cararth.com');
+    
+    // Always use https://www.cararth.com as the canonical domain
+    parsedUrl.protocol = 'https:';
+    parsedUrl.hostname = 'www.cararth.com';
+    
+    return parsedUrl.toString();
+  } catch (error) {
+    // If URL parsing fails, default to canonical domain + path
+    const cleanPath = url.startsWith('/') ? url : `/${url}`;
+    return `https://www.cararth.com${cleanPath}`;
+  }
+}
+
 interface SEOHeadProps {
   title?: string;
   description?: string;
@@ -56,13 +78,16 @@ export function SEOHead({
     updateMetaTag('author', 'CarArth');
     updateMetaTag('viewport', 'width=device-width, initial-scale=1.0');
     
+    // Normalize canonical URL to always use www subdomain
+    const normalizedCanonical = normalizeCanonicalUrl(canonical || window.location.href);
+    
     // Open Graph tags
     updateMetaTag('og:title', title, true);
     updateMetaTag('og:description', description, true);
     updateMetaTag('og:type', ogType, true);
     updateMetaTag('og:image', ogImage, true);
     updateMetaTag('og:site_name', 'CarArth', true);
-    updateMetaTag('og:url', canonical || window.location.href, true);
+    updateMetaTag('og:url', normalizedCanonical, true);
     
     // Twitter Card tags
     updateMetaTag('twitter:card', 'summary_large_image', true);
@@ -79,16 +104,14 @@ export function SEOHead({
     updateMetaTag('HandheldFriendly', 'True');
     updateMetaTag('MobileOptimized', '320');
     
-    // Canonical link
-    if (canonical) {
-      let canonicalLink = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
-      if (!canonicalLink) {
-        canonicalLink = document.createElement('link');
-        canonicalLink.rel = 'canonical';
-        document.head.appendChild(canonicalLink);
-      }
-      canonicalLink.href = canonical;
+    // Canonical link - always set with normalized URL
+    let canonicalLink = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
+    if (!canonicalLink) {
+      canonicalLink = document.createElement('link');
+      canonicalLink.rel = 'canonical';
+      document.head.appendChild(canonicalLink);
     }
+    canonicalLink.href = normalizedCanonical;
 
     // Structured data
     if (structuredData) {
@@ -142,7 +165,7 @@ export const createWebsiteSchema = () => ({
   "@type": "WebSite",
   "name": "CarArth",
   "alternateName": "CarArth - India's Very Own Used Car Search Engine",
-  "url": "https://cararth.com",
+  "url": "https://www.cararth.com",
   "description": "India's very own comprehensive used car search engine that aggregates listings from multiple platforms with AI intelligence.",
   "keywords": "used cars, car marketplace, automotive search, India",
   "inLanguage": "en-IN",
@@ -150,7 +173,7 @@ export const createWebsiteSchema = () => ({
     "@type": "SearchAction",
     "target": {
       "@type": "EntryPoint",
-      "urlTemplate": "https://cararth.com/search?q={search_term_string}"
+      "urlTemplate": "https://www.cararth.com/search?q={search_term_string}"
     },
     "query-input": "required name=search_term_string"
   },
@@ -159,7 +182,7 @@ export const createWebsiteSchema = () => ({
     "name": "CarArth",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://cararth.com/cararth-logo-full.png"
+      "url": "https://www.cararth.com/cararth-logo-full.png"
     }
   }
 });
