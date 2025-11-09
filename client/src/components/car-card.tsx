@@ -197,7 +197,7 @@ export default function CarCard({ car, onFavoriteToggle, isFavorite = false }: C
   };
 
   return (
-    <div className="car-card steel-gradient rounded-lg overflow-hidden border-2 border-steel-primary/30" data-testid={`card-car-${car.id}`}>
+    <div className="car-card glass-card overflow-hidden hover:scale-[1.02] transition-transform duration-300" data-testid={`card-car-${car.id}`}>
       {/* Portal listings don't have featured status */}
       <div className="relative overflow-hidden">
         {!imageLoaded && (

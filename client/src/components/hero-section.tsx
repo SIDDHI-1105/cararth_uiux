@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, ShieldCheck, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 
 interface HeroSearchProps {
   onSearch: (filters: {
@@ -77,21 +76,21 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
   };
 
   return (
-    <section className="bg-gradient-to-b from-background via-accent/5 to-background px-4 py-6 md:py-8">
+    <section className="px-4 py-8 md:py-12">
       <div className="max-w-6xl mx-auto w-full">
         
         {/* Compact Headline */}
-        <div className="text-center mb-4">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 text-foreground">
+        <div className="text-center mb-6">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 text-foreground">
             One trusted place for every verified car
           </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
             Verified listings from multiple platforms · List once · No paid listings
           </p>
         </div>
 
-        {/* Central Search Card */}
-        <Card className="bg-card/95 backdrop-blur-sm rounded-xl p-3 sm:p-4 shadow-xl border-2 max-w-4xl mx-auto mb-4" data-testid="hero-search-form">
+        {/* Central Search Card with Glass Effect */}
+        <div className="glass-card max-w-4xl mx-auto mb-6" data-testid="hero-search-form">
           {/* Desktop: Grid Layout */}
           <div className="hidden md:grid md:grid-cols-5 gap-2 mb-3">
             <Select value={brand} onValueChange={setBrand}>
@@ -255,7 +254,7 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
             <Search className="mr-2 h-4 w-4" />
             {isSearching ? 'Searching...' : 'Search Cars'}
           </Button>
-        </Card>
+        </div>
 
         {/* Trust Badges */}
         <div className="flex flex-wrap justify-center gap-2 max-w-3xl mx-auto">
