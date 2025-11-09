@@ -12,6 +12,8 @@ Cararth is a TypeScript monorepo utilizing Drizzle ORM with PostgreSQL and a RES
 ### UI/UX Decisions
 The frontend uses React 18, Vite, Wouter for routing, Radix UI primitives with shadcn/ui, and Tailwind CSS for responsive design and theme support. It emphasizes component composition, form validation, and clear loading states.
 
+**Glassmorphism Design System (November 2025)**: iOS-inspired premium design with day/night theme switching. Features 30px backdrop blur (desktop), 20px (mobile), 55-60% opacity (day mode) / 70-80% (night mode), 2.5px glowing borders (orange in day, blue in night). Implemented across all major surfaces: homepage sections (HowItWorks, TrustSection, KeyInsights, FAQ), search results (FilterPanel, BadgeLegend, source filters), car detail pages (pricing cards, contact seller, Telangana intelligence), and forms. The `glass-contrast` variant (50% day / 80% night opacity) ensures text legibility in content-heavy areas with explicit white text tokens for night mode.
+
 ### Technical Implementations
 - **Frontend**: TanStack Query for state management, React Hook Form with Zod for forms.
 - **Backend**: Node.js with Express.js, TypeScript, RESTful API.
