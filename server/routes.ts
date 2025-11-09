@@ -8795,6 +8795,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.error('Failed to load Bing Data routes:', error);
   }
 
+  // AETHER - Google Search Console Data
+  try {
+    const { default: gscDataRouter } = await import('./routes/aether/gscData.js');
+    app.use('/api/aether/gsc/data', gscDataRouter);
+  } catch (error) {
+    console.error('Failed to load GSC Data routes:', error);
+  }
+
   // AETHER - Project AETHER endpoints
   // Run a single GEO sweep
   app.post('/api/aether/sweep', isAuthenticated, isAdmin, asyncHandler(async (req: any, res: any) => {

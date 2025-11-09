@@ -32,6 +32,7 @@ import ContentStrategy from "./admin/ContentStrategy";
 import NeedleMovement from "@/components/admin/NeedleMovement";
 import GoogleMetrics from "@/components/aether/GoogleMetrics";
 import GoogleIntegrationSettings from "@/components/aether/GoogleIntegrationSettings";
+import GscAnalyticsTab from "@/components/aether/GscAnalyticsTab";
 import BingIntegrationSettings from "@/components/aether/BingIntegrationSettings";
 import BingPerformanceChart from "@/components/aether/BingPerformanceChart";
 import BingCrawlIssues from "@/components/aether/BingCrawlIssues";
@@ -215,7 +216,7 @@ export default function Aether() {
 
         {/* Main Tabs - Premium Navigation */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7 gap-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm p-2 rounded-xl shadow-lg border-2 border-slate-200 dark:border-slate-800">
+          <TabsList className="grid w-full grid-cols-8 gap-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm p-2 rounded-xl shadow-lg border-2 border-slate-200 dark:border-slate-800">
             <TabsTrigger 
               value="overview" 
               className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white font-semibold rounded-lg transition-all"
@@ -229,6 +230,14 @@ export default function Aether() {
             >
               <FileSearch className="h-4 w-4" />
               Audit
+            </TabsTrigger>
+            <TabsTrigger 
+              value="gsc" 
+              className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-600 data-[state=active]:to-emerald-600 data-[state=active]:text-white font-semibold rounded-lg transition-all"
+              data-testid="tab-gsc"
+            >
+              <TrendingUp className="h-4 w-4" />
+              Google
             </TabsTrigger>
             <TabsTrigger 
               value="bing" 
@@ -744,6 +753,11 @@ export default function Aether() {
           {/* SEO Audit Tab */}
           <TabsContent value="seo" className="space-y-6">
             <AuditPage />
+          </TabsContent>
+
+          {/* Google Search Console Tab */}
+          <TabsContent value="gsc" className="space-y-6">
+            <GscAnalyticsTab />
           </TabsContent>
 
           {/* Bing Tab */}

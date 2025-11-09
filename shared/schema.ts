@@ -3170,3 +3170,47 @@ export type InsertAetherTopicScores = z.infer<typeof insertAetherTopicScoresSche
 export type AetherTopicScores = typeof aetherTopicScores.$inferSelect;
 export type InsertAetherTopicRecos = z.infer<typeof insertAetherTopicRecosSchema>;
 export type AetherTopicRecos = typeof aetherTopicRecos.$inferSelect;
+
+// ============================================================================
+// AETHER GSC & BING ANALYTICS
+// Daily snapshots of Google Search Console and Bing Webmaster Tools metrics
+// ============================================================================
+
+export const gscAnalytics = pgTable("gsc_analytics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  date: text("date").notNull(),
+  clicks: integer("clicks").notNull().default(0),
+  impressions: integer("impressions").notNull().default(0),
+  ctr: decimal("ctr", { precision: 5, scale: 4 }).notNull().default('0'),
+  position: decimal("position", { precision: 5, scale: 2 }).notNull().default('0'),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_gsc_date").on(table.date),
+]);
+
+export const bingAnalytics = pgTable("bing_analytics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  date: text("date").notNull(),
+  clicks: integer("clicks").notNull().default(0),
+  impressions: integer("impressions").notNull().default(0),
+  ctr: decimal("ctr", { precision: 5, scale: 4 }).notNull().default('0'),
+  position: decimal("position", { precision: 5, scale: 2 }).notNull().default('0'),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_bing_date").on(table.date),
+]);
+
+export const insertGscAnalyticsSchema = createInsertSchema(gscAnalytics).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertBingAnalyticsSchema = createInsertSchema(bingAnalytics).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertGscAnalytics = z.infer<typeof insertGscAnalyticsSchema>;
+export type GscAnalytics = typeof gscAnalytics.$inferSelect;
+export type InsertBingAnalytics = z.infer<typeof insertBingAnalyticsSchema>;
+export type BingAnalytics = typeof bingAnalytics.$inferSelect;

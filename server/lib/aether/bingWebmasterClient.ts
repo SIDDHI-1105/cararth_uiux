@@ -47,13 +47,25 @@ interface BingBacklink {
 export class BingWebmasterClient {
   private userId: string;
   private mockMode: boolean;
+  private useApiKey: boolean;
+  private apiKey: string | undefined;
+  private siteUrl: string;
 
   constructor(userId: string) {
     this.userId = userId;
-    this.mockMode = !process.env.BING_CLIENT_ID || !process.env.BING_CLIENT_SECRET;
+    this.apiKey = process.env.BING_WEBMASTER_API_KEY;
+    this.siteUrl = process.env.BING_WEBMASTER_SITE_URL || 'https://www.cararth.com/';
+    
+    // Prefer API key over OAuth if available
+    this.useApiKey = !!this.apiKey;
+    this.mockMode = !this.useApiKey && (!process.env.BING_CLIENT_ID || !process.env.BING_CLIENT_SECRET);
     
     if (this.mockMode) {
       console.log('[Bing Webmaster Client] Running in MOCK mode - credentials not configured');
+    } else if (this.useApiKey) {
+      console.log('[Bing Webmaster Client] Using API key authentication');
+    } else {
+      console.log('[Bing Webmaster Client] Using OAuth authentication');
     }
   }
 
@@ -65,22 +77,28 @@ export class BingWebmasterClient {
       return this.getMockResponse<T>(endpoint);
     }
 
-    const token = await getValidBingToken(this.userId);
-    if (!token) {
-      throw new Error('No valid Bing access token available. Please connect your Bing account.');
-    }
-
     const url = new URL(`${BING_API_BASE}/${endpoint}`);
     Object.entries(params).forEach(([key, value]) => {
       url.searchParams.append(key, value);
     });
 
-    const response = await fetch(url.toString(), {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    let headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (this.useApiKey) {
+      // API key authentication
+      headers['apikey'] = this.apiKey!;
+    } else {
+      // OAuth authentication
+      const token = await getValidBingToken(this.userId);
+      if (!token) {
+        throw new Error('No valid Bing access token available. Please connect your Bing account.');
+      }
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(url.toString(), { headers });
 
     if (!response.ok) {
       const errorText = await response.text();
