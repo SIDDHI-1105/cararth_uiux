@@ -423,7 +423,7 @@ export default function Results() {
 
               {/* No Results State */}
               {!isLoading && !error && sortedCars.length === 0 && (
-                <div className="text-center py-12 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800" data-testid="no-results">
+                <div className="text-center py-12 glass-card" data-testid="no-results">
                   <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">No Cars Found</h3>
                   <p className="text-gray-600 dark:text-gray-400 mb-6">
