@@ -557,7 +557,24 @@
 }
 
 .night .glass-contrast {
-  background: rgba(17, 24, 39, 0.8);
+  background: rgba(17, 24, 39, 0.85);
+}
+
+/* Legend text - ensure maximum legibility */
+.legend-heading {
+  color: #1F2937 !important;
+}
+
+.night .legend-heading {
+  color: #FFFFFF !important;
+}
+
+.legend-text {
+  color: #1F2937 !important;
+}
+
+.night .legend-text {
+  color: #F9FAFB !important;
 }
 
 /* Remove text-shadow from glass containers for better legibility */
