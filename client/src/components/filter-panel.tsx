@@ -77,7 +77,7 @@ export function FilterPanel({ filters, onChange, onSearch, isCollapsed = false, 
   }
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 space-y-6" data-testid="panel-filters">
+    <div className="glass-card p-6 space-y-6" data-testid="panel-filters">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold flex items-center gap-2">
           <SlidersHorizontal className="w-5 h-5" />

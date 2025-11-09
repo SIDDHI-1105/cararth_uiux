@@ -293,8 +293,8 @@ export default function Results() {
                 onClick={() => setSourceFilter("all")}
                 className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                   sourceFilter === "all"
-                    ? "bg-primary text-primary-foreground shadow-md"
-                    : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                    ? "glass-button-primary shadow-lg"
+                    : "glass-button hover:scale-105"
                 }`}
                 data-testid="filter-all"
               >
@@ -304,8 +304,8 @@ export default function Results() {
                 onClick={() => setSourceFilter("ethical_ai")}
                 className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                   sourceFilter === "ethical_ai"
-                    ? "bg-green-600 text-white shadow-md"
-                    : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50"
+                    ? "bg-green-600 text-white shadow-lg scale-105"
+                    : "glass-button text-green-700 dark:text-green-300 hover:scale-105 hover:border-green-400"
                 }`}
                 data-testid="filter-ethical-ai"
               >
@@ -315,8 +315,8 @@ export default function Results() {
                 onClick={() => setSourceFilter("exclusive_dealer")}
                 className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                   sourceFilter === "exclusive_dealer"
-                    ? "bg-blue-600 text-white shadow-md"
-                    : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50"
+                    ? "bg-blue-600 text-white shadow-lg scale-105"
+                    : "glass-button text-blue-700 dark:text-blue-300 hover:scale-105 hover:border-blue-400"
                 }`}
                 data-testid="filter-dealer"
               >
@@ -326,8 +326,8 @@ export default function Results() {
                 onClick={() => setSourceFilter("user_direct")}
                 className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                   sourceFilter === "user_direct"
-                    ? "bg-orange-600 text-white shadow-md"
-                    : "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-orange-900/50"
+                    ? "bg-orange-600 text-white shadow-lg scale-105"
+                    : "glass-button text-orange-700 dark:text-orange-300 hover:scale-105 hover:border-orange-400"
                 }`}
                 data-testid="filter-user"
               >
