@@ -53,11 +53,11 @@
   --orange-accent: hsl(14 100% 60%); /* #FF6B35 */
   
   /* Glassmorphism Specific */
-  --glass-bg: rgba(255, 255, 255, 0.15);
-  --glass-border: rgba(255, 255, 255, 0.3);
+  --glass-bg: rgba(255, 255, 255, 0.25);
+  --glass-border: rgba(255, 255, 255, 0.5);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   --glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.15);
-  --backdrop-blur: 16px;
+  --backdrop-blur: 12px;
   
   /* Typography System */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -107,8 +107,8 @@
   --ring: hsl(14 100% 60%);
   
   /* Glassmorphism Specific - Night */
-  --glass-bg: rgba(31, 41, 55, 0.4);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-bg: rgba(31, 41, 55, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.2);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   --glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
@@ -485,20 +485,40 @@
   background: var(--glass-bg);
   backdrop-filter: blur(var(--backdrop-blur));
   -webkit-backdrop-filter: blur(var(--backdrop-blur));
-  border: 1px solid var(--glass-border);
+  border: 1.5px solid var(--glass-border);
   border-radius: var(--radius);
-  box-shadow: var(--glass-shadow);
+  box-shadow: 
+    var(--glass-shadow),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 0 20px rgba(255, 255, 255, 0.05);
   transition: all 0.3s ease;
 }
 
 .glass:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--glass-shadow-hover);
+  transform: translateY(-2px);
+  box-shadow: 
+    var(--glass-shadow-hover),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.15),
+    0 0 24px rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.6);
 }
 
 .glass-card {
   @apply glass;
   padding: 1.5rem;
+}
+
+/* Enhanced text legibility on glass - only for headings and large text */
+.glass h1, .glass h2, .glass h3, .glass h4, .glass h5, .glass h6,
+.glass-card h1, .glass-card h2, .glass-card h3, .glass-card h4, .glass-card h5, .glass-card h6,
+.glass p, .glass-card p {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.night .glass h1, .night .glass h2, .night .glass h3, .night .glass h4, .night .glass h5, .night .glass h6,
+.night .glass-card h1, .night .glass-card h2, .night .glass-card h3, .night .glass-card h4, .night .glass-card h5, .night .glass-card h6,
+.night .glass p, .night .glass-card p {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
 
 .glass-button {
@@ -543,14 +563,30 @@
   }
 }
 
+/* Night mode glass adjustments - subtle blue/white glow */
+.night .glass {
+  box-shadow: 
+    var(--glass-shadow),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 20px rgba(147, 197, 253, 0.08);
+}
+
+.night .glass:hover {
+  box-shadow: 
+    var(--glass-shadow-hover),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 0 28px rgba(147, 197, 253, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
 /* Fallback for browsers that don't support backdrop-filter */
 @supports not (backdrop-filter: blur(0)) {
   .glass {
-    background: rgba(255, 255, 255, 0.25) !important;
+    background: rgba(255, 255, 255, 0.3) !important;
   }
   
   .night .glass {
-    background: rgba(31, 41, 55, 0.5) !important;
+    background: rgba(31, 41, 55, 0.7) !important;
   }
 }
 
