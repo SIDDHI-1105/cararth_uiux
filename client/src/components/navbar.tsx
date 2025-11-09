@@ -14,8 +14,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { AuthDialog } from "@/components/auth-dialog";
 import { ThrottleTalkMegaMenu } from "@/components/throttle-talk-mega-menu";
-import cararthLogo from "@assets/cararth-logo.png";
-
 export default function Navbar() {
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -33,14 +31,7 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-16 py-2">
           <div className="flex items-center space-x-6">
             <Link href="/" className="flex-shrink-0" data-testid="link-home">
-              <div className="flex items-center group">
-                <img 
-                  src={cararthLogo} 
-                  alt="CarArth" 
-                  className="h-10 sm:h-11 object-contain transition-transform duration-300 hover:scale-105"
-                  style={{ maxHeight: '44px' }}
-                />
-              </div>
+              <BrandWordmark variant="header" showTagline={false} />
             </Link>
           </div>
           
