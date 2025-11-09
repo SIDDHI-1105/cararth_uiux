@@ -90,29 +90,41 @@ export class GoogleSearchConsoleClient {
       });
 
       const rows = response.data.rows || [];
+      const dimensions = options?.dimensions || ['date'];
 
       return rows.map((row: any) => {
         const keys = row.keys || [];
         const result: GscSearchAnalytics = {
-          date: keys[0] || endDate,
+          date: endDate,
           clicks: row.clicks || 0,
           impressions: row.impressions || 0,
           ctr: row.ctr || 0,
           position: row.position || 0,
         };
 
-        if (options?.dimensions?.includes('query') && keys.length > 1) {
-          result.query = keys[1];
-        }
-        if (options?.dimensions?.includes('page') && keys.length > 1) {
-          result.page = keys[1];
-        }
-        if (options?.dimensions?.includes('country') && keys.length > 1) {
-          result.country = keys[1];
-        }
-        if (options?.dimensions?.includes('device') && keys.length > 1) {
-          result.device = keys[1];
-        }
+        // Map each dimension to its corresponding index in keys array
+        dimensions.forEach((dimension, index) => {
+          const value = keys[index];
+          if (value !== undefined) {
+            switch (dimension) {
+              case 'date':
+                result.date = value;
+                break;
+              case 'query':
+                result.query = value;
+                break;
+              case 'page':
+                result.page = value;
+                break;
+              case 'country':
+                result.country = value;
+                break;
+              case 'device':
+                result.device = value;
+                break;
+            }
+          }
+        });
 
         return result;
       });

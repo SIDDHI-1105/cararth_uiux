@@ -372,6 +372,14 @@ app.use((req, res, next) => {
       } catch (error: any) {
         console.warn('⚠️ Could not start Bing sync scheduler:', error.message);
       }
+
+      // Start Google Search Console sync scheduler
+      try {
+        const { scheduleGscSyncJobs } = await import('./lib/aether/gscScheduler.js');
+        scheduleGscSyncJobs();
+      } catch (error: any) {
+        console.warn('⚠️ Could not start GSC sync scheduler:', error.message);
+      }
       
     } catch (error) {
       console.error('❌ Failed to start server:', error);
