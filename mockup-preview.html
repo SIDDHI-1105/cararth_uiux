@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CarArth Glassmorphism Mockups</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #FF6B35, #f39c12);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .mockup-grid {
+            display: grid;
+            gap: 40px;
+        }
+        .mockup-section {
+            background: #2a2a2a;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        .mockup-section h2 {
+            margin-bottom: 20px;
+            color: #FF6B35;
+            font-size: 1.5rem;
+        }
+        .mockup-section img {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        }
+        .desktop-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+        .mobile-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        @media (max-width: 768px) {
+            .desktop-row,
+            .mobile-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        .badge {
+            display: inline-block;
+            background: #FF6B35;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚗 CarArth Glassmorphism Theme Preview</h1>
+        
+        <div class="mockup-grid">
+            <div>
+                <h2 style="text-align: center; margin-bottom: 30px; font-size: 2rem; color: #f39c12;">
+                    Desktop Views
+                </h2>
+                <div class="desktop-row">
+                    <div class="mockup-section">
+                        <h2>☀️ Day Mode <span class="badge">Desktop</span></h2>
+                        <img src="attached_assets/generated_images/Desktop_day_glassmorphism_CarArth_57bc578d.png" 
+                             alt="Desktop Day Mode">
+                        <p style="margin-top: 15px; color: #aaa; line-height: 1.6;">
+                            Bright highway background with white frosted glass panels. Semi-transparent cards showing car listings with orange accent buttons.
+                        </p>
+                    </div>
+                    
+                    <div class="mockup-section">
+                        <h2>🌙 Night Mode <span class="badge">Desktop</span></h2>
+                        <img src="attached_assets/generated_images/Desktop_night_glassmorphism_CarArth_50fd3b22.png" 
+                             alt="Desktop Night Mode">
+                        <p style="margin-top: 15px; color: #aaa; line-height: 1.6;">
+                            Dark highway with city lights. Charcoal glass panels with glowing orange accents for premium nighttime experience.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h2 style="text-align: center; margin-bottom: 30px; font-size: 2rem; color: #f39c12;">
+                    Mobile Views
+                </h2>
+                <div class="mobile-row">
+                    <div class="mockup-section">
+                        <h2>☀️ Day Mode <span class="badge">Mobile</span></h2>
+                        <img src="attached_assets/generated_images/Mobile_day_glassmorphism_CarArth_431fb674.png" 
+                             alt="Mobile Day Mode">
+                        <p style="margin-top: 15px; color: #aaa; line-height: 1.6;">
+                            Vertical single-column layout with white frosted glass cards stacked. Compact header with sun icon toggle.
+                        </p>
+                    </div>
+                    
+                    <div class="mockup-section">
+                        <h2>🌙 Night Mode <span class="badge">Mobile</span></h2>
+                        <img src="attached_assets/generated_images/Mobile_night_glassmorphism_CarArth_f1b870cc.png" 
+                             alt="Mobile Night Mode">
+                        <p style="margin-top: 15px; color: #aaa; line-height: 1.6;">
+                            Dark glass cards in vertical layout with glowing orange buttons. Premium mobile nighttime interface.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 60px; padding: 30px; background: #2a2a2a; border-radius: 16px;">
+            <h3 style="color: #FF6B35; margin-bottom: 15px;">Ready to implement?</h3>
+            <p style="color: #aaa; max-width: 600px; margin: 0 auto; line-height: 1.6;">
+                This glassmorphism theme will be applied to your existing React app while preserving all functionality. 
+                All features, database operations, and authentication will remain intact—just with a beautiful new visual layer.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
