@@ -13,17 +13,17 @@ export function BrandWordmark({
   showTagline = true, 
   className 
 }: BrandWordmarkProps) {
-  // Logo sizes for each variant - LARGER & MORE VISIBLE
+  // Logo sizes for each variant - PREMIUM, BOLD & HIGHLY VISIBLE
   const logoSizes = {
-    header: "h-16 sm:h-20 md:h-24 lg:h-28",
-    hero: "h-32 sm:h-40 md:h-48 lg:h-56 xl:h-64", 
-    footer: "h-12 sm:h-16 md:h-20"
+    header: "h-20 sm:h-24 md:h-28 lg:h-32 xl:h-36",
+    hero: "h-40 sm:h-48 md:h-56 lg:h-64 xl:h-72", 
+    footer: "h-16 sm:h-20 md:h-24"
   };
   
   const taglineSizes = {
-    header: "text-sm sm:text-base md:text-lg",
-    hero: "text-lg sm:text-xl md:text-2xl lg:text-3xl", 
-    footer: "text-xs sm:text-sm md:text-base"
+    header: "text-base sm:text-lg md:text-xl",
+    hero: "text-xl sm:text-2xl md:text-3xl lg:text-4xl", 
+    footer: "text-sm sm:text-base md:text-lg"
   };
   
   // Use full logo (with www.cararth.com) for hero and footer
@@ -38,11 +38,11 @@ export function BrandWordmark({
           src={logoSrc} 
           alt="CarArth - India's very own used car search engine"
           className={cn(
-            "object-contain transition-transform duration-300 hover:scale-105",
+            "object-contain transition-all duration-300 hover:scale-110",
             logoSizes[variant]
           )}
           style={{
-            filter: "drop-shadow(2px 4px 8px rgba(0,0,0,0.15))"
+            filter: "drop-shadow(3px 5px 12px rgba(0,0,0,0.2))"
           }}
         />
       </div>
