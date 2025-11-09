@@ -63,7 +63,7 @@ export default function UnifiedFilters({
 
 
   return (
-    <div className="bg-background border-b border-border sticky top-0 z-40 backdrop-blur-sm">
+    <div className="glass-card sticky top-0 z-40 border-b-2">
       <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-3">
         {/* Streamlined Filter Bar */}
         <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-3 mb-2 sm:mb-3">

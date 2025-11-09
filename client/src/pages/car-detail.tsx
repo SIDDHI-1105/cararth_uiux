@@ -168,11 +168,11 @@ export default function CarDetail() {
           </div>
           
           <div>
-            <div className="bg-muted rounded-lg p-6 mb-4">
-              <div className="text-3xl font-bold text-accent mb-2" data-testid="text-car-price">
+            <div className="glass-card p-6 mb-4">
+              <div className="text-3xl font-bold text-primary mb-2" data-testid="text-car-price">
                 {formatPrice(car.price)}
               </div>
-              <div className="text-muted-foreground mb-4">EMI starts at ₹{(() => {
+              <div className="text-gray-700 night:text-gray-300 mb-4">EMI starts at ₹{(() => {
                 const carPrice = parseFloat(car.price);
                 const principal = carPrice * 0.8; // 80% loan
                 const rate = 7.05; // Standard rate
@@ -235,15 +235,15 @@ export default function CarDetail() {
 
             {/* Telangana Market Intelligence */}
             {car.state?.toLowerCase() === 'telangana' && telanganaInsights && (
-              <Card className="mt-6 border-purple-200 dark:border-purple-800">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+              <div className="mt-6 glass-card p-6 border-2 border-purple-400/40 night:border-purple-400/30">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-900 night:text-white">
                     <Activity className="h-5 w-5 text-purple-600" />
                     Telangana Market Intelligence
                     <Badge variant="outline" className="text-xs ml-auto">Official RTA Data</Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+                  </h3>
+                </div>
+                <div className="space-y-4">
                   {/* Demand Score */}
                   <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950/50 dark:to-blue-950/50 rounded-lg">
                     <span className="font-medium">Demand Score:</span>
@@ -284,31 +284,29 @@ export default function CarDetail() {
                     </div>
                   </div>
 
-                  <p className="text-xs text-muted-foreground pt-2 border-t">
+                  <p className="text-xs text-gray-700 night:text-gray-300 pt-2 border-t">
                     📊 {telanganaInsights.dataSource}
                   </p>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             )}
 
             {/* Coming Soon for Other States */}
             {car.state?.toLowerCase() !== 'telangana' && (
-              <Card className="mt-6 border-dashed border-2">
-                <CardContent className="py-6 text-center">
-                  <Activity className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm font-medium mb-1">Market Intelligence</p>
-                  <p className="text-xs text-muted-foreground">
-                    Available for Telangana vehicles only. {car.state} coming soon!
-                  </p>
-                </CardContent>
-              </Card>
+              <div className="mt-6 glass-card p-6 border-dashed border-2 text-center">
+                <Activity className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm font-medium mb-1">Market Intelligence</p>
+                <p className="text-xs text-muted-foreground">
+                  Available for Telangana vehicles only. {car.state} coming soon!
+                </p>
+              </div>
             )}
           </div>
           
           <div className="space-y-6">
             {/* Contact Seller - With Details */}
-            <div className="bg-muted rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center">
+            <div className="glass-card p-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center text-gray-900 night:text-white">
                 <MessageCircle className="w-5 h-5 mr-2" />
                 Contact Seller
               </h3>
@@ -354,8 +352,8 @@ export default function CarDetail() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
           <div>
-            <h3 className="text-lg font-semibold mb-4">Seller Information</h3>
-            <div className="bg-muted rounded-lg p-4">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 night:text-white">Seller Information</h3>
+            <div className="glass-card p-4">
               {sellerLoading ? (
                 <div className="animate-pulse">
                   <div className="flex items-center mb-2">

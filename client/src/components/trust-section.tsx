@@ -67,20 +67,18 @@ export function TrustSection() {
             {trustPoints.map((point, index) => {
               const Icon = point.icon;
               return (
-                <Card key={index} className="hover:shadow-lg transition-shadow" data-testid={`card-trust-${index}`}>
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Icon className="w-6 h-6 text-primary" />
-                      </div>
-                      <span className="text-xs font-semibold px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full">
-                        {point.badge}
-                      </span>
+                <div key={index} className="glass-card p-6 hover:scale-105 transition-transform" data-testid={`card-trust-${index}`}>
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Icon className="w-6 h-6 text-primary" />
                     </div>
-                    <h3 className="font-semibold mb-2">{point.title}</h3>
-                    <p className="text-sm text-muted-foreground">{point.description}</p>
-                  </CardContent>
-                </Card>
+                    <span className="text-xs font-semibold px-2 py-1 bg-green-500 text-white night:bg-green-600 rounded-full shadow-sm">
+                      {point.badge}
+                    </span>
+                  </div>
+                  <h3 className="font-semibold mb-2 text-gray-900 night:text-white">{point.title}</h3>
+                  <p className="text-sm text-gray-700 night:text-gray-200">{point.description}</p>
+                </div>
               );
             })}
           </div>
