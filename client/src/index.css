@@ -107,7 +107,7 @@
   --ring: hsl(14 100% 60%);
   
   /* Glassmorphism Specific - Night */
-  --glass-bg: rgba(17, 24, 39, 0.70);
+  --glass-bg: rgba(17, 24, 39, 0.78);
   --glass-border: rgba(147, 197, 253, 0.6);
   --glass-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
   --glass-shadow-hover: 0 15px 50px rgba(0, 0, 0, 0.6);
