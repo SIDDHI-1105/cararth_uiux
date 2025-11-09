@@ -52,12 +52,12 @@
   --saffron: 30 100% 60%; /* #FF9933 - India saffron */
   --orange-accent: hsl(14 100% 60%); /* #FF6B35 */
   
-  /* Glassmorphism Specific - Enhanced iOS-style */
-  --glass-bg: rgba(255, 255, 255, 0.15);
+  /* Glassmorphism Specific - Enhanced iOS-style with readable contrast */
+  --glass-bg: rgba(255, 255, 255, 0.35);
   --glass-border: rgba(255, 255, 255, 0.7);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   --glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.18);
-  --backdrop-blur: 24px;
+  --backdrop-blur: 20px;
   
   /* Typography System */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -107,7 +107,7 @@
   --ring: hsl(14 100% 60%);
   
   /* Glassmorphism Specific - Night */
-  --glass-bg: rgba(31, 41, 55, 0.4);
+  --glass-bg: rgba(17, 24, 39, 0.65);
   --glass-border: rgba(147, 197, 253, 0.4);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   --glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.5);
@@ -135,6 +135,23 @@
     background-repeat: no-repeat;
     position: relative;
     min-height: 100vh;
+  }
+  
+  /* Darkening overlay for better text contrast */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.15);
+    z-index: -1;
+    pointer-events: none;
+  }
+  
+  .night body::before {
+    background: rgba(0, 0, 0, 0.35);
   }
   
   /* Day mode background - default */
@@ -480,11 +497,11 @@
   border: 0;
 }
 
-/* Glassmorphism Utility Classes - Enhanced iOS-style */
+/* Glassmorphism Utility Classes - Enhanced iOS-style with readable contrast */
 .glass {
   background: var(--glass-bg);
-  backdrop-filter: blur(var(--backdrop-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--backdrop-blur)) saturate(180%);
+  backdrop-filter: blur(var(--backdrop-blur)) saturate(150%);
+  -webkit-backdrop-filter: blur(var(--backdrop-blur)) saturate(150%);
   border: 2px solid var(--glass-border);
   border-radius: var(--radius);
   box-shadow: 
@@ -492,6 +509,11 @@
     inset 0 0 0 1.5px rgba(255, 255, 255, 0.2),
     0 0 30px rgba(255, 255, 255, 0.1);
   transition: all 0.3s ease;
+  color: hsl(222 47% 11%);
+}
+
+.night .glass {
+  color: hsl(210 20% 98%);
 }
 
 .glass:hover {
@@ -508,17 +530,19 @@
   padding: 1.5rem;
 }
 
-/* Enhanced text legibility on glass - only for headings and large text */
-.glass h1, .glass h2, .glass h3, .glass h4, .glass h5, .glass h6,
-.glass-card h1, .glass-card h2, .glass-card h3, .glass-card h4, .glass-card h5, .glass-card h6,
-.glass p, .glass-card p {
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+/* High-contrast variant for text-heavy areas like AETHER */
+.glass-contrast {
+  @apply glass;
+  background: rgba(255, 255, 255, 0.5);
 }
 
-.night .glass h1, .night .glass h2, .night .glass h3, .night .glass h4, .night .glass h5, .night .glass h6,
-.night .glass-card h1, .night .glass-card h2, .night .glass-card h3, .night .glass-card h4, .night .glass-card h5, .night .glass-card h6,
-.night .glass p, .night .glass-card p {
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+.night .glass-contrast {
+  background: rgba(17, 24, 39, 0.8);
+}
+
+/* Remove text-shadow from glass containers for better legibility */
+.glass *, .glass-card *, .glass-contrast * {
+  text-shadow: none !important;
 }
 
 .glass-button {
@@ -558,26 +582,26 @@
 /* Mobile optimization - lighter blur for performance */
 @media (max-width: 768px) {
   .glass {
-    backdrop-filter: blur(16px) saturate(180%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    backdrop-filter: blur(14px) saturate(150%);
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
   }
 }
 
-/* Night mode glass adjustments - enhanced blue glow */
+/* Night mode glass adjustments - enhanced blue glow with better contrast */
 .night .glass {
   box-shadow: 
     var(--glass-shadow),
-    inset 0 0 0 1.5px rgba(147, 197, 253, 0.15),
-    0 0 30px rgba(147, 197, 253, 0.15);
-  border-color: rgba(147, 197, 253, 0.4);
+    inset 0 0 0 1.5px rgba(147, 197, 253, 0.2),
+    0 0 30px rgba(147, 197, 253, 0.18);
+  border-color: rgba(147, 197, 253, 0.5);
 }
 
 .night .glass:hover {
   box-shadow: 
     var(--glass-shadow-hover),
-    inset 0 0 0 1.5px rgba(147, 197, 253, 0.2),
-    0 0 40px rgba(147, 197, 253, 0.2);
-  border-color: rgba(147, 197, 253, 0.6);
+    inset 0 0 0 1.5px rgba(147, 197, 253, 0.25),
+    0 0 40px rgba(147, 197, 253, 0.22);
+  border-color: rgba(147, 197, 253, 0.7);
 }
 
 /* Fallback for browsers that don't support backdrop-filter */
@@ -591,14 +615,7 @@
   }
 }
 
-/* Typography with subtle shadows for depth */
-h1, h2, h3, h4, h5, h6 {
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-.night h1, .night h2, .night h3, .night h4, .night h5, .night h6 {
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
+/* Remove global text-shadow for better legibility - add contextually where needed */
 
 /* Print Styles */
 @media print {
