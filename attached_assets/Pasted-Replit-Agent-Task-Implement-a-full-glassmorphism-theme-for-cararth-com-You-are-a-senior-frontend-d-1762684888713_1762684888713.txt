@@ -1,0 +1,71 @@
+Replit Agent Task: Implement a full glassmorphism theme for cararth.com
+
+You are a senior frontend designer and full-stack developer working in Replit. Transform the entire cararth.com website (homepage, search, listings, news, footer) into a premium glassmorphism UI with day/night mode toggle. Use only HTML, CSS, and minimal vanilla JS — no frameworks, no build tools, no npm. Everything must run instantly in Replit’s live preview.
+
+### DESIGN SYSTEM (Glassmorphism Core)
+- **Background**: Fixed full-screen blurred highway image (day: bright Indian road; night: dark highway with lights). Use Unsplash URLs or placeholder `/assets/day-road.jpg` and `/assets/night-road.jpg`.
+- **Glass Panels**: 
+  ```css
+  .glass {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+  }
+  .glass:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.15); }
+
+Night Mode Class (toggle on <html class="night">):css.night .glass {
+  background: rgba(31, 41, 55, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+Colors:
+Accent: #FF6B35 (orange)
+Text: #1F2937 (day), #F3F4F6 (night)
+Font: Inter via Google Fonts
+
+Typography: H1 2.5rem, H2 1.8rem, body 1rem, all with subtle text-shadow for depth.
+
+PAGE LAYOUT (Responsive)
+
+Header: Sticky glass bar with logo (CarArth robots), nav links, search icon, and day/night toggle (☀️/🌙).
+Hero: Full-width glass card with tagline + search bar (rounded, glassy input).
+Car Listings:
+Desktop: 3-column grid
+Mobile: 1-column stack
+Each card: image + price badge + title + CTA button (orange glass)
+
+News Section: Glass cards with title, excerpt, "Read More" link.
+Footer: Glass horizontal bar with links and social icons.
+
+FUNCTIONALITY
+
+Day/Night Toggle: Click sun/moon → toggle .night class on <html>, update icon, persist with localStorage.
+Mobile Menu: Hamburger → full-screen glass overlay.
+Search Bar: Glassy input with magnifying glass, placeholder "Search city, model, price...".
+
+ASSETS
+
+Create /assets/ folder.
+Add:
+day-road.jpg (bright highway)
+night-road.jpg (dark road with lights)
+logo.svg (current robot car logo)
+
+Use fallbacks if missing.
+
+FALLBACKS
+css@supports not (backdrop-filter: blur(0)) {
+  .glass { background: rgba(255,255,255,0.25) !important; }
+}
+OUTPUT
+
+Update index.html with full structure.
+Create styles.css with complete glassmorphism system.
+Add script.js for toggle + mobile menu.
+Ensure 100% mobile responsive (use media queries).
+Add comments: , , etc.
+
+Final Goal: A sleek, futuristic, India-themed glass UI that feels like driving through a digital windshield. Make it fast, beautiful, and ready to deploy.
