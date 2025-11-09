@@ -76,16 +76,34 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
   };
 
   return (
-    <section className="px-4 py-8 md:py-12">
-      <div className="max-w-6xl mx-auto w-full">
+    <section className="px-4 py-8 md:py-16 relative">
+      {/* Gradient Overlay for depth */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/20 pointer-events-none" />
+      
+      <div className="max-w-6xl mx-auto w-full relative z-10">
         
-        {/* Compact Headline */}
-        <div className="text-center mb-6">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 text-foreground">
-            One trusted place for every verified car
+        {/* Enhanced Headline with Gradient */}
+        <div className="text-center mb-8 space-y-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 glass rounded-full mb-4">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium">India's Trusted Car Discovery Platform</span>
+          </div>
+          
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 bg-gradient-to-r from-foreground via-foreground to-primary bg-clip-text text-transparent leading-tight">
+            One trusted place for<br />every verified car
           </h1>
-          <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
-            Verified listings from multiple platforms · List once · No paid listings
+          
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto font-medium">
+            {statsLoading ? (
+              "Loading live data..."
+            ) : heroStats ? (
+              <>
+                <span className="text-primary font-bold">{heroStats.totalListings.toLocaleString()}+</span> verified listings from{" "}
+                <span className="text-primary font-bold">{heroStats.totalPlatforms}</span> platforms · List once · No paid listings
+              </>
+            ) : (
+              "Verified listings from multiple platforms · List once · No paid listings"
+            )}
           </p>
         </div>
 
@@ -256,16 +274,16 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
           </Button>
         </div>
 
-        {/* Trust Badges */}
-        <div className="flex flex-wrap justify-center gap-2 max-w-3xl mx-auto">
-          <Badge variant="outline" className="px-3 py-1 text-xs bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-300" data-testid="badge-verified">
-            <ShieldCheck className="w-3 h-3 mr-1" />
-            ✅ Verified by CarArthX
-          </Badge>
-          <Badge variant="outline" className="px-3 py-1 text-xs bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300" data-testid="badge-no-paid">
-            <Sparkles className="w-3 h-3 mr-1" />
-            🤝 No Paid Listings
-          </Badge>
+        {/* Enhanced Trust Badges with Glass Effect */}
+        <div className="flex flex-wrap justify-center gap-3 max-w-3xl mx-auto">
+          <div className="glass px-4 py-2.5 rounded-full flex items-center gap-2 border-green-200/30 dark:border-green-800/30" data-testid="badge-verified">
+            <ShieldCheck className="w-4 h-4 text-green-600 dark:text-green-400" />
+            <span className="text-sm font-semibold text-green-700 dark:text-green-300">Verified by CarArthX</span>
+          </div>
+          <div className="glass px-4 py-2.5 rounded-full flex items-center gap-2 border-blue-200/30 dark:border-blue-800/30" data-testid="badge-no-paid">
+            <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">No Paid Listings</span>
+          </div>
         </div>
       </div>
     </section>
