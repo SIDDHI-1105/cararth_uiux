@@ -17,7 +17,8 @@ import {
   MessageSquare, Eye, Calendar, Plus, 
   MessageCircle, Globe, ExternalLink, LogIn,
   Heart, Bookmark, Share2, ThumbsUp, TrendingUp,
-  Image as ImageIcon, Play, BarChart3, Users, Info, HelpCircle, Download, X, BookOpen, FileCheck
+  Image as ImageIcon, Play, BarChart3, Users, Info, HelpCircle, Download, X, BookOpen, FileCheck,
+  Car, MapPin
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useForm } from "react-hook-form";
@@ -1252,6 +1253,130 @@ export default function ThrottleTalkPage() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Recently Published Buyer's Guides - NEW SECTION */}
+              <div className="mt-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <span className="text-orange-600">✨</span> Recently Published Guides
+                  </h3>
+                  <Badge className="bg-orange-500 text-white">NEW</Badge>
+                </div>
+                
+                {/* Guide 1: Best Used Cars 2025 */}
+                <Card className="hover:shadow-md transition-shadow mb-4 border-orange-200 dark:border-orange-900">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 mt-1">
+                        <Car className="h-5 w-5 text-orange-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Buyer's Guide</Badge>
+                        <Link href="/guides/best-used-cars-india-2025">
+                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
+                            Best Used Cars in India 2025: Complete Buyer's Guide with Prices, Models & Expert Tips
+                          </h4>
+                        </Link>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
+                          Comprehensive guide featuring top used car picks across all segments with expert analysis, 
+                          real pricing data, and model-specific insights to help you make the right purchase decision.
+                        </p>
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mb-3">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Published Nov 15, 2025
+                          </span>
+                          <Badge variant="outline" className="text-xs">Car Models</Badge>
+                          <Badge variant="outline" className="text-xs">Pricing</Badge>
+                          <Badge variant="outline" className="text-xs">Expert Analysis</Badge>
+                        </div>
+                        <Link href="/guides/best-used-cars-india-2025">
+                          <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-best-cars-guide">
+                            Read Full Guide
+                            <ExternalLink className="ml-2 h-3 w-3" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Guide 2: Market Analysis 2025 */}
+                <Card className="hover:shadow-md transition-shadow mb-4 border-orange-200 dark:border-orange-900">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 mt-1">
+                        <TrendingUp className="h-5 w-5 text-orange-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Market Intelligence</Badge>
+                        <Link href="/guides/used-car-market-india-2025">
+                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
+                            Used Car Market Analysis India 2025: Trends, Pricing & Investment Insights
+                          </h4>
+                        </Link>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
+                          Deep-dive market analysis covering pricing trends, demand patterns, depreciation curves, 
+                          and investment opportunities in India's used car market backed by real data.
+                        </p>
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mb-3">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Published Nov 15, 2025
+                          </span>
+                          <Badge variant="outline" className="text-xs">Market Trends</Badge>
+                          <Badge variant="outline" className="text-xs">Pricing Data</Badge>
+                          <Badge variant="outline" className="text-xs">Analytics</Badge>
+                        </div>
+                        <Link href="/guides/used-car-market-india-2025">
+                          <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-market-guide">
+                            Read Full Guide
+                            <ExternalLink className="ml-2 h-3 w-3" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Guide 3: Hyderabad Market 2025 */}
+                <Card className="hover:shadow-md transition-shadow mb-4 border-orange-200 dark:border-orange-900">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 mt-1">
+                        <MapPin className="h-5 w-5 text-orange-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">City Guide</Badge>
+                        <Link href="/guides/used-cars-hyderabad-2025">
+                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
+                            Best Used Cars in Hyderabad 2025: Local Market Insights & Top Deals
+                          </h4>
+                        </Link>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
+                          Hyderabad-specific buying guide with local market analysis, area-wise pricing differences, 
+                          RTA insights, and top model recommendations for Telangana buyers.
+                        </p>
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mb-3">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Published Nov 15, 2025
+                          </span>
+                          <Badge variant="outline" className="text-xs">Hyderabad</Badge>
+                          <Badge variant="outline" className="text-xs">Local Insights</Badge>
+                          <Badge variant="outline" className="text-xs">RTA Data</Badge>
+                        </div>
+                        <Link href="/guides/used-cars-hyderabad-2025">
+                          <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-hyderabad-guide">
+                            Read Full Guide
+                            <ExternalLink className="ml-2 h-3 w-3" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
 
               {/* Cluster Articles Section */}
               <div className="mt-8">
