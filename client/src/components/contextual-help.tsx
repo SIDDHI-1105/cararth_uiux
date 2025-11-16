@@ -121,7 +121,7 @@ export function ContextualHelpProvider({ children }: ContextualHelpProviderProps
 
   // Check if user is first-time visitor
   useEffect(() => {
-    const hasSeenOnboarding = localStorage.getItem("mobility-hub-onboarding-complete");
+    const hasSeenOnboarding = localStorage.getItem("cararth-onboarding-complete");
     const isFirstTime = !hasSeenOnboarding;
     setIsFirstTimeUser(isFirstTime);
     
@@ -168,13 +168,13 @@ export function ContextualHelpProvider({ children }: ContextualHelpProviderProps
   const skipOnboarding = () => {
     setIsOnboardingActive(false);
     setActiveTooltip(null);
-    localStorage.setItem("mobility-hub-onboarding-complete", "true");
+    localStorage.setItem("cararth-onboarding-complete", "true");
   };
 
   const finishOnboarding = () => {
     setIsOnboardingActive(false);
     setActiveTooltip(null);
-    localStorage.setItem("mobility-hub-onboarding-complete", "true");
+    localStorage.setItem("cararth-onboarding-complete", "true");
     
     // Show completion message
     setTimeout(() => {
