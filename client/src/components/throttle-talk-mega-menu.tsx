@@ -12,7 +12,8 @@ import {
   Calendar,
   ArrowRight,
   Sparkles,
-  BookOpen
+  BookOpen,
+  LineChart
 } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
@@ -79,6 +80,14 @@ export function ThrottleTalkMegaMenu({ isOpen, onClose }: ThrottleTalkMegaMenuPr
       href: "/guides/best-used-cars-india-2025",
       color: "text-rose-600 dark:text-rose-400",
       bgColor: "bg-rose-50 dark:bg-rose-950/20",
+    },
+    {
+      icon: LineChart,
+      title: "Market Analysis 2025",
+      description: "Growth trends to 2030",
+      href: "/guides/used-car-market-india-2025",
+      color: "text-teal-600 dark:text-teal-400",
+      bgColor: "bg-teal-50 dark:bg-teal-950/20",
     },
   ];
 

@@ -46,6 +46,7 @@ import RTADataImport from "./pages/RTADataImport";
 import MarketIntelligenceDashboard from "./pages/MarketIntelligenceDashboard";
 import AIVerificationGuide from "./pages/guide-ai-verification";
 import BestUsedCars2025Guide from "./pages/guide-best-used-cars-2025";
+import UsedCarMarketAnalysis2025 from "./pages/guide-market-analysis-2025";
 import HyderabadCityPage from "./pages/city-hyderabad";
 import DelhiCityPage from "./pages/city-delhi";
 import MumbaiCityPage from "./pages/city-mumbai";
@@ -107,6 +108,7 @@ function Router() {
       <Route path="/spinny-deals-hyderabad" component={SpinnyDeals} />
       <Route path="/guides/ai-verified-used-car-trust-india" component={AIVerificationGuide} />
       <Route path="/guides/best-used-cars-india-2025" component={BestUsedCars2025Guide} />
+      <Route path="/guides/used-car-market-india-2025" component={UsedCarMarketAnalysis2025} />
       <Route path="/used-cars-hyderabad" component={HyderabadCityPage} />
       <Route path="/used-cars-delhi-ncr" component={DelhiCityPage} />
       <Route path="/used-cars-mumbai" component={MumbaiCityPage} />
