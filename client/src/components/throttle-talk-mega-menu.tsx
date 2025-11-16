@@ -13,7 +13,8 @@ import {
   ArrowRight,
   Sparkles,
   BookOpen,
-  LineChart
+  LineChart,
+  MapPin
 } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
@@ -56,6 +57,14 @@ export function ThrottleTalkMegaMenu({ isOpen, onClose }: ThrottleTalkMegaMenuPr
       href: "/guides/used-car-market-india-2025",
       color: "text-teal-600 dark:text-teal-400",
       bgColor: "bg-teal-50 dark:bg-teal-950/20",
+    },
+    {
+      icon: MapPin,
+      title: "Hyderabad Guide 2025",
+      description: "6,500+ local listings",
+      href: "/guides/used-cars-hyderabad-2025",
+      color: "text-amber-600 dark:text-amber-400",
+      bgColor: "bg-amber-50 dark:bg-amber-950/20",
     },
   ];
 
