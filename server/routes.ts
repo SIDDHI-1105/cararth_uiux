@@ -4942,6 +4942,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get single community post by ID or slug
+  app.get('/api/community/posts/:idOrSlug', async (req, res) => {
+    try {
+      const { or } = await import('drizzle-orm');
+      const { idOrSlug } = req.params;
+      
+      // Try to find by slug first, then by ID
+      const post = await db
+        .select({
+          id: communityPosts.id,
+          slug: communityPosts.slug,
+          title: communityPosts.title,
+          content: communityPosts.content,
+          excerpt: communityPosts.excerpt,
+          category: communityPosts.category,
+          sourceName: communityPosts.sourceName,
+          sourceUrl: communityPosts.sourceUrl,
+          attribution: communityPosts.attribution,
+          isExternal: communityPosts.isExternal,
+          coverImage: communityPosts.coverImage,
+          metaDescription: communityPosts.metaDescription,
+          keywords: communityPosts.keywords,
+          views: communityPosts.views,
+          upvotes: communityPosts.upvotes,
+          createdAt: communityPosts.createdAt,
+          authorId: communityPosts.authorId,
+        })
+        .from(communityPosts)
+        .where(
+          or(
+            eq(communityPosts.slug, idOrSlug),
+            eq(communityPosts.id, idOrSlug)
+          )
+        )
+        .limit(1);
+
+      if (!post || post.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: 'Post not found'
+        });
+      }
+
+      // Format the response to match the expected structure
+      const formattedPost = {
+        id: post[0].id,
+        slug: post[0].slug,
+        title: post[0].title,
+        content: post[0].content || '',
+        excerpt: post[0].excerpt,
+        author: post[0].sourceName || 'CarArth Team',
+        source: post[0].sourceName || 'CarArth',
+        sourceUrl: post[0].sourceUrl || null,
+        publishedAt: post[0].createdAt,
+        category: post[0].category,
+        attribution: post[0].attribution || null,
+        isExternal: post[0].isExternal || false,
+        coverImage: post[0].coverImage || null,
+        metaDescription: post[0].metaDescription,
+        keywords: post[0].keywords,
+        replies: 0,
+        views: post[0].views || 0,
+        lastReply: post[0].createdAt.toISOString(),
+      };
+
+      res.json({
+        success: true,
+        post: formattedPost,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Get post error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch post',
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
   // Throttle Talk Automation API - GET recent news for deduplication
   app.get('/api/news', async (req, res) => {
     try {
