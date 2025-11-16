@@ -302,7 +302,10 @@ export default function ThrottleTalkPage() {
   })) : [];
 
   // Convert user posts data to forum post format
-  const userPosts: ForumPost[] = (userPostsData as any)?.posts?.map((post: any) => ({
+  // Filter out guides - they should only appear in the Guides tab
+  const userPosts: ForumPost[] = (userPostsData as any)?.posts?.filter((post: any) => 
+    post.category !== 'market-insights' && post.category !== 'buyer-guide'
+  ).map((post: any) => ({
     id: post.id,
     title: post.title,
     author: post.author?.firstName || 'Anonymous',
