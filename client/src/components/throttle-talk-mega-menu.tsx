@@ -32,39 +32,7 @@ export function ThrottleTalkMegaMenu({ isOpen, onClose }: ThrottleTalkMegaMenuPr
 
   const featuredArticles = articlesData?.posts?.slice(0, 3) || [];
 
-  const categories = [
-    {
-      icon: TrendingUp,
-      title: "Market Intelligence",
-      description: "AI-powered insights & trends",
-      href: "/news?tab=intelligence",
-      color: "text-blue-600 dark:text-blue-400",
-      bgColor: "bg-blue-50 dark:bg-blue-950/20",
-    },
-    {
-      icon: MessageSquare,
-      title: "Community",
-      description: "Stories & discussions",
-      href: "/news?tab=community",
-      color: "text-green-600 dark:text-green-400",
-      bgColor: "bg-green-50 dark:bg-green-950/20",
-    },
-    {
-      icon: BarChart3,
-      title: "OEM Analytics",
-      description: "Sales data & benchmarks",
-      href: "/news?tab=intelligence",
-      color: "text-purple-600 dark:text-purple-400",
-      bgColor: "bg-purple-50 dark:bg-purple-950/20",
-    },
-    {
-      icon: Users,
-      title: "Road Tales",
-      description: "Owner experiences",
-      href: "/news?tab=community",
-      color: "text-orange-600 dark:text-orange-400",
-      bgColor: "bg-orange-50 dark:bg-orange-950/20",
-    },
+  const guides = [
     {
       icon: Sparkles,
       title: "AI Verification Guide",
@@ -91,6 +59,25 @@ export function ThrottleTalkMegaMenu({ isOpen, onClose }: ThrottleTalkMegaMenuPr
     },
   ];
 
+  const sections = [
+    {
+      icon: TrendingUp,
+      title: "Market Intelligence",
+      description: "AI insights & trends",
+      href: "/news?tab=intelligence",
+      color: "text-blue-600 dark:text-blue-400",
+      bgColor: "bg-blue-50 dark:bg-blue-950/20",
+    },
+    {
+      icon: MessageSquare,
+      title: "Community Stories",
+      description: "Owner experiences",
+      href: "/news?tab=community",
+      color: "text-green-600 dark:text-green-400",
+      bgColor: "bg-green-50 dark:bg-green-950/20",
+    },
+  ];
+
   if (!isOpen) return null;
 
   return (
@@ -103,38 +90,76 @@ export function ThrottleTalkMegaMenu({ isOpen, onClose }: ThrottleTalkMegaMenuPr
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
         <Card className="overflow-hidden shadow-2xl border-2 bg-background backdrop-blur-sm">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 p-4 sm:p-6">
-            {/* Categories Section */}
-            <div className="lg:col-span-2 space-y-3 sm:space-y-4">
-              <div className="flex items-center gap-2 mb-3 sm:mb-4">
-                <Newspaper className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                <h3 className="font-semibold text-base sm:text-lg">Explore Throttle Talk</h3>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-                {categories.map((category) => (
-                  <Link 
-                    key={category.title} 
-                    href={category.href}
-                    onClick={onClose}
-                  >
-                    <Button
-                      variant="ghost"
-                      className="w-full h-auto min-h-[44px] p-3 sm:p-4 justify-start hover:bg-accent/50 transition-all group"
-                      data-testid={`mega-menu-category-${category.title.toLowerCase().replace(/\s+/g, '-')}`}
+            {/* Left Section */}
+            <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+              {/* Guides Section */}
+              <div>
+                <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                  <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                  <h3 className="font-semibold text-base sm:text-lg">Buyer's Guides</h3>
+                </div>
+                <div className="grid grid-cols-1 gap-2 sm:gap-3">
+                  {guides.map((guide) => (
+                    <Link 
+                      key={guide.title} 
+                      href={guide.href}
+                      onClick={onClose}
                     >
-                      <div className={cn(
-                        "p-1.5 sm:p-2 rounded-lg mr-2 sm:mr-3 transition-transform group-hover:scale-110",
-                        category.bgColor
-                      )}>
-                        <category.icon className={cn("h-4 w-4 sm:h-5 sm:w-5", category.color)} />
-                      </div>
-                      <div className="text-left flex-1 min-w-0">
-                        <div className="font-semibold text-xs sm:text-sm truncate">{category.title}</div>
-                        <div className="text-[10px] sm:text-xs text-muted-foreground truncate">{category.description}</div>
-                      </div>
-                      <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
-                    </Button>
-                  </Link>
-                ))}
+                      <Button
+                        variant="ghost"
+                        className="w-full h-auto min-h-[44px] p-3 sm:p-4 justify-start hover:bg-accent/50 transition-all group"
+                        data-testid={`mega-menu-guide-${guide.title.toLowerCase().replace(/\s+/g, '-')}`}
+                      >
+                        <div className={cn(
+                          "p-1.5 sm:p-2 rounded-lg mr-2 sm:mr-3 transition-transform group-hover:scale-110",
+                          guide.bgColor
+                        )}>
+                          <guide.icon className={cn("h-4 w-4 sm:h-5 sm:w-5", guide.color)} />
+                        </div>
+                        <div className="text-left flex-1 min-w-0">
+                          <div className="font-semibold text-xs sm:text-sm truncate">{guide.title}</div>
+                          <div className="text-[10px] sm:text-xs text-muted-foreground truncate">{guide.description}</div>
+                        </div>
+                        <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                      </Button>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              {/* News Sections */}
+              <div>
+                <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                  <Newspaper className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                  <h3 className="font-semibold text-base sm:text-lg">News & Insights</h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                  {sections.map((section) => (
+                    <Link 
+                      key={section.title} 
+                      href={section.href}
+                      onClick={onClose}
+                    >
+                      <Button
+                        variant="ghost"
+                        className="w-full h-auto min-h-[44px] p-3 sm:p-4 justify-start hover:bg-accent/50 transition-all group"
+                        data-testid={`mega-menu-section-${section.title.toLowerCase().replace(/\s+/g, '-')}`}
+                      >
+                        <div className={cn(
+                          "p-1.5 sm:p-2 rounded-lg mr-2 sm:mr-3 transition-transform group-hover:scale-110",
+                          section.bgColor
+                        )}>
+                          <section.icon className={cn("h-4 w-4 sm:h-5 sm:w-5", section.color)} />
+                        </div>
+                        <div className="text-left flex-1 min-w-0">
+                          <div className="font-semibold text-xs sm:text-sm truncate">{section.title}</div>
+                          <div className="text-[10px] sm:text-xs text-muted-foreground truncate">{section.description}</div>
+                        </div>
+                        <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                      </Button>
+                    </Link>
+                  ))}
+                </div>
               </div>
 
               {/* Quick Actions */}
