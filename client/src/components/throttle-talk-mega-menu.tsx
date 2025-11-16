@@ -27,20 +27,13 @@ interface ThrottleTalkMegaMenuProps {
 export function ThrottleTalkMegaMenu({ isOpen, onClose }: ThrottleTalkMegaMenuProps) {
   const menuItems = [
     {
-      icon: Sparkles,
-      title: "AI Verification Guide",
-      description: "Ultimate trust guide",
-      href: "/guides/ai-verified-used-car-trust-india",
-      color: "text-indigo-600 dark:text-indigo-400",
-      bgColor: "bg-indigo-50 dark:bg-indigo-950/20",
-    },
-    {
       icon: BookOpen,
       title: "Best Used Cars 2025",
       description: "Complete buyer's guide",
       href: "/guides/best-used-cars-india-2025",
       color: "text-rose-600 dark:text-rose-400",
       bgColor: "bg-rose-50 dark:bg-rose-950/20",
+      isNew: true,
     },
     {
       icon: LineChart,
@@ -49,6 +42,7 @@ export function ThrottleTalkMegaMenu({ isOpen, onClose }: ThrottleTalkMegaMenuPr
       href: "/guides/used-car-market-india-2025",
       color: "text-teal-600 dark:text-teal-400",
       bgColor: "bg-teal-50 dark:bg-teal-950/20",
+      isNew: true,
     },
     {
       icon: MapPin,
@@ -57,6 +51,15 @@ export function ThrottleTalkMegaMenu({ isOpen, onClose }: ThrottleTalkMegaMenuPr
       href: "/guides/used-cars-hyderabad-2025",
       color: "text-amber-600 dark:text-amber-400",
       bgColor: "bg-amber-50 dark:bg-amber-950/20",
+      isNew: true,
+    },
+    {
+      icon: Sparkles,
+      title: "AI Verification Guide",
+      description: "Ultimate trust guide",
+      href: "/guides/ai-verified-used-car-trust-india",
+      color: "text-indigo-600 dark:text-indigo-400",
+      bgColor: "bg-indigo-50 dark:bg-indigo-950/20",
     },
     {
       icon: TrendingUp,
@@ -107,7 +110,14 @@ export function ThrottleTalkMegaMenu({ isOpen, onClose }: ThrottleTalkMegaMenuPr
                       <item.icon className={cn("h-5 w-5", item.color)} />
                     </div>
                     <div className="text-left flex-1 min-w-0">
-                      <div className="font-semibold text-sm mb-0.5">{item.title}</div>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <div className="font-semibold text-sm">{item.title}</div>
+                        {item.isNew && (
+                          <Badge className="bg-green-500 dark:bg-green-600 text-white text-[10px] px-1.5 py-0">
+                            NEW
+                          </Badge>
+                        )}
+                      </div>
                       <div className="text-xs text-muted-foreground">{item.description}</div>
                     </div>
                     <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-2" />
