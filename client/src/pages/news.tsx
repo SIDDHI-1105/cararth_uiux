@@ -173,7 +173,6 @@ function generateBenchmarkPDF(benchmark: any): string {
 export default function ThrottleTalkPage() {
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState('intelligence');
-  const [communityFilter, setCommunityFilter] = useState('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isBenchmarkDialogOpen, setIsBenchmarkDialogOpen] = useState(false);
   const [benchmarkResults, setBenchmarkResults] = useState<any>(null);
@@ -350,16 +349,8 @@ export default function ThrottleTalkPage() {
       content: article.enhancedContent || article.content,
     })) : [];
 
-  // Filter community posts based on selected filter
-  let communityPosts = [...userPosts, ...rssContent];
-  if (communityFilter === 'reviews') {
-    communityPosts = communityPosts.filter(p => p.category === 'Reviews');
-  } else if (communityFilter === 'questions') {
-    communityPosts = communityPosts.filter(p => p.category === 'Questions');
-  } else if (communityFilter === 'leadership') {
-    communityPosts = leadershipPosts;
-  }
-  communityPosts = communityPosts.slice(0, 20);
+  // Show all community posts (no filtering)
+  const communityPosts = [...userPosts, ...rssContent, ...leadershipPosts].slice(0, 20);
 
   if (isCommunityLoading || (activeTab === 'intelligence' && isMarketInsightsLoading)) {
     return (
@@ -1132,57 +1123,6 @@ export default function ThrottleTalkPage() {
             {/* Poll Section */}
             <PollWidget />
             
-            {/* Filter for Reviews and Questions */}
-            <div className="flex gap-2 border-b border-gray-200 dark:border-gray-800">
-              <button
-                onClick={() => setCommunityFilter('all')}
-                className={cn(
-                  "px-4 py-2 text-sm font-medium transition-colors border-b-2",
-                  communityFilter === 'all'
-                    ? "border-gray-900 text-gray-900 dark:border-white dark:text-white"
-                    : "border-transparent text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-                )}
-                data-testid="filter-all"
-              >
-                All
-              </button>
-              <button
-                onClick={() => setCommunityFilter('reviews')}
-                className={cn(
-                  "px-4 py-2 text-sm font-medium transition-colors border-b-2",
-                  communityFilter === 'reviews'
-                    ? "border-gray-900 text-gray-900 dark:border-white dark:text-white"
-                    : "border-transparent text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-                )}
-                data-testid="filter-reviews"
-              >
-                Reviews
-              </button>
-              <button
-                onClick={() => setCommunityFilter('questions')}
-                className={cn(
-                  "px-4 py-2 text-sm font-medium transition-colors border-b-2",
-                  communityFilter === 'questions'
-                    ? "border-gray-900 text-gray-900 dark:border-white dark:text-white"
-                    : "border-transparent text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-                )}
-                data-testid="filter-questions"
-              >
-                Questions
-              </button>
-              <button
-                onClick={() => setCommunityFilter('leadership')}
-                className={cn(
-                  "px-4 py-2 text-sm font-medium transition-colors border-b-2",
-                  communityFilter === 'leadership'
-                    ? "border-gray-900 text-gray-900 dark:border-white dark:text-white"
-                    : "border-transparent text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-                )}
-                data-testid="filter-leadership"
-              >
-                Leadership & Promotions
-              </button>
-            </div>
 
             {/* Community Posts */}
             <div className="space-y-4">
