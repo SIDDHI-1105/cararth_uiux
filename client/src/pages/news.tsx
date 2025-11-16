@@ -1414,6 +1414,44 @@ export default function ThrottleTalkPage() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Guide 5: Creta India 2025 */}
+                <Card className="hover:shadow-md transition-shadow mb-4 border-orange-200 dark:border-orange-900">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 mt-1">
+                        <Car className="h-5 w-5 text-orange-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Model Guide</Badge>
+                        <Link href="/guides/used-creta-india-2025">
+                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
+                            Used Hyundai Creta India 2025: 5,800+ Listings, Best Years & Diesel vs Petrol
+                          </h4>
+                        </Link>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
+                          Comprehensive Creta buying guide with 5,800+ listings, generation comparison (2015-2024), 
+                          diesel vs petrol analysis, ownership costs, and platform reviews across India.
+                        </p>
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mb-3">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Published Nov 16, 2025
+                          </span>
+                          <Badge variant="outline" className="text-xs">Creta</Badge>
+                          <Badge variant="outline" className="text-xs">Diesel vs Petrol</Badge>
+                          <Badge variant="outline" className="text-xs">First Gen / Second Gen</Badge>
+                        </div>
+                        <Link href="/guides/used-creta-india-2025">
+                          <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-creta-guide">
+                            Read Full Guide
+                            <ExternalLink className="ml-2 h-3 w-3" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
 
               {/* Cluster Articles Section */}
