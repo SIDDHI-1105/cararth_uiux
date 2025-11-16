@@ -1145,6 +1145,8 @@ export default function ThrottleTalkPage() {
                     onClick={() => {
                       if (post.isExternal && post.sourceUrl) {
                         window.open(post.sourceUrl, '_blank');
+                      } else {
+                        setLocation(`/news/${(post as any).slug || post.id}`);
                       }
                     }}
                   >
