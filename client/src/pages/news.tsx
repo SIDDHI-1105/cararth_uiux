@@ -968,7 +968,7 @@ export default function ThrottleTalkPage() {
                     if (post.isExternal && post.sourceUrl) {
                       window.open(post.sourceUrl, '_blank');
                     } else {
-                      setLocation(`/news/${post.id}`);
+                      setLocation(`/news/${(post as any).slug || post.id}`);
                     }
                   }}
                 >
@@ -1066,7 +1066,7 @@ export default function ThrottleTalkPage() {
                         {/* Social Sharing - Always link to CarArth for backlinks */}
                         <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
                           <SocialShareButtons
-                            url={`/news/${post.id}`}
+                            url={`/news/${(post as any).slug || post.id}`}
                             title={post.category === 'Market Insights' && post.author 
                               ? `${post.title} - ${post.author}` 
                               : post.isExternal 

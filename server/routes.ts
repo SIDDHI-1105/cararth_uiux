@@ -4869,14 +4869,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Community & RSS Integration Routes
   app.get('/api/community/posts', async (req, res) => {
     try {
+      // Fetch posts from database
+      const dbPosts = await db
+        .select({
+          id: communityPosts.id,
+          slug: communityPosts.slug,
+          title: communityPosts.title,
+          content: communityPosts.content,
+          category: communityPosts.category,
+          sourceName: communityPosts.sourceName,
+          sourceUrl: communityPosts.sourceUrl,
+          attribution: communityPosts.attribution,
+          isExternal: communityPosts.isExternal,
+          coverImage: communityPosts.coverImage,
+          views: communityPosts.views,
+          upvotes: communityPosts.upvotes,
+          createdAt: communityPosts.createdAt,
+        })
+        .from(communityPosts)
+        .where(eq(communityPosts.status, 'published'))
+        .orderBy(desc(communityPosts.createdAt))
+        .limit(50);
+
+      // Fetch RSS aggregated posts
       const { rssAggregator } = await import('./rssService');
-      const allPosts = await rssAggregator.aggregateAutomotiveContent();
+      const rssPosts = await rssAggregator.aggregateAutomotiveContent();
+      
+      // Convert database posts to match the interface
+      const formattedDbPosts = dbPosts.map(post => ({
+        id: post.id,
+        slug: post.slug,
+        title: post.title,
+        content: post.content || '',
+        author: post.sourceName || 'CarArth Team',
+        source: post.sourceName || 'CarArth',
+        sourceUrl: post.sourceUrl || null,
+        publishedAt: post.createdAt,
+        category: post.category,
+        attribution: post.attribution || null,
+        isExternal: post.isExternal || false,
+        coverImage: post.coverImage || null,
+        replies: 0,
+        views: post.views || 0,
+        lastReply: post.createdAt.toISOString(),
+      }));
+
+      // Combine database posts and RSS posts
+      const allPosts = [...formattedDbPosts, ...rssPosts];
       
       // Filter out benchmark posts from community feed
       const posts = allPosts.filter(post => 
         post.category !== 'dealership_benchmark' && 
         !post.id.startsWith('dealership-benchmark-')
       );
+
+      // Sort by publishedAt descending
+      posts.sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime());
       
       res.json({
         success: true,
