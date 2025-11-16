@@ -11,7 +11,8 @@ import {
   Users,
   Calendar,
   ArrowRight,
-  Sparkles
+  Sparkles,
+  BookOpen
 } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
@@ -70,6 +71,14 @@ export function ThrottleTalkMegaMenu({ isOpen, onClose }: ThrottleTalkMegaMenuPr
       href: "/guides/ai-verified-used-car-trust-india",
       color: "text-indigo-600 dark:text-indigo-400",
       bgColor: "bg-indigo-50 dark:bg-indigo-950/20",
+    },
+    {
+      icon: BookOpen,
+      title: "Best Used Cars 2025",
+      description: "Complete buyer's guide",
+      href: "/guides/best-used-cars-india-2025",
+      color: "text-rose-600 dark:text-rose-400",
+      bgColor: "bg-rose-50 dark:bg-rose-950/20",
     },
   ];
 
