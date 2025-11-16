@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Used Toyota Innova Buyer’s Guide (2025) — Cararth</title>
+  <meta name="description" content="Used Toyota Innova (Innova Crysta) buyer's guide 2025: city-wise prices, best variants, inspection checklist, TCO and FAQs. Updated for India and optimised for Cararth.com">
+  <link rel="canonical" href="https://www.cararth.com/used-toyota-innova-guide-2025">
+  <meta name="robots" content="index, follow">
+  <style>
+    body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.6;color:#1f2937;margin:0;padding:0;background:#fff}
+    .container{max-width:900px;margin:36px auto;padding:24px}
+    h1{font-size:28px;margin-bottom:8px}
+    h2{font-size:20px;margin-top:20px}
+    h3{font-size:17px;margin-top:16px}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{border:1px solid #e5e7eb;padding:8px;text-align:left;font-size:14px}
+    th{background:#f8fafc}
+    .kbd{background:#f1f5f9;padding:3px 6px;border-radius:4px;font-family:monospace}
+    .note{background:#fffbeb;border-left:4px solid #f59e0b;padding:10px;margin:12px 0}
+    .small{font-size:13px;color:#6b7280}
+    .cta{display:inline-block;margin-top:12px;padding:10px 14px;background:#0ea5a4;color:#fff;border-radius:8px;text-decoration:none}
+    pre.json{background:#0f172a;color:#f8fafc;padding:12px;overflow:auto;border-radius:6px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Used Toyota Innova Buyer’s Guide (2025): Prices, Problems, Lifespan & Best Variants</h1>
+      <p class="small">Updated for Cararth — published: 16 Nov 2025. Canonical: /used-toyota-innova-guide-2025</p>
+    </header>
+
+    <section>
+      <h2>Quick answer</h2>
+      <p>The Toyota Innova (Innova Crysta) remains one of India’s most reliable used MPVs — strong resale value, robust build and long life make it a sensible family buy, provided you check service history, usage, and perform a thorough inspection.</p>
+
+      <h2>Key takeaways</h2>
+      <ul>
+        <li>Best value: 2016–2020 Innova Crysta (2.4/2.8 diesel) — balance of features and remaining life.</li>
+        <li>Check: ownership history, service records and signs of commercial/taxi use over raw odometer numbers.</li>
+        <li>Common issues: suspension bush wear, brake judder, injector/turbo repairs on high‑km diesels.</li>
+        <li>Life expectancy: many Innovas surpass 300,000 km with regular maintenance.</li>
+        <li>Resale: Innova depreciates slowly — high long‑term value makes higher upfront cost worthwhile.</li>
+      </ul>
+    </section>
+
+    <article>
+      <h2>Overview — Why Innova still leads the used MPV market</h2>
+      <p>The Innova’s body‑on‑frame construction, proven diesel engines and Toyota’s service network make it a favourite for families and fleet operators. For value‑focused buyers, a properly maintained Innova offers predictable ownership costs and strong resale.</p>
+
+      <h2>City &amp; variant price tables (quick reference)</h2>
+      <p class="small">Estimated asking price ranges — use these as city‑level benchmarks. Prices vary by exact condition, mileage and seller.</p>
+
+      <!-- 20 city tables condensed into a single large table -->
+      <table>
+        <thead>
+          <tr>
+            <th>City</th>
+            <th>Representative Variant (year)</th>
+            <th>Typical Asking Price (INR)</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Delhi NCR</td><td>2018 Innova Crysta 2.4 VX (7‑seater)</td><td>₹10.5–12.5 L</td><td>Balanced pricing; good inventory</td></tr>
+          <tr><td>Mumbai</td><td>2017 Crysta 2.8 ZX AT</td><td>₹11.0–13.5 L</td><td>Premium market — higher asking</td></tr>
+          <tr><td>Bengaluru</td><td>2016–2018 Crysta 2.4 VX</td><td>₹10.0–12.0 L</td><td>Strong demand for family MPVs</td></tr>
+          <tr><td>Chennai</td><td>2015 Innova 2.5 G</td><td>₹8.0–10.5 L</td><td>Good dealer stock</td></tr>
+          <tr><td>Hyderabad</td><td>2017 Crysta 2.4 VX</td><td>₹9.5–11.5 L</td><td>Competitive pricing</td></tr>
+          <tr><td>Pune</td><td>2016 Innova Crysta 2.4</td><td>₹9.8–11.8 L</td><td>High private‑use listings</td></tr>
+          <tr><td>Kolkata</td><td>2015–2017 Innova 2.5</td><td>₹7.5–10.0 L</td><td>Lower asking vs metros</td></tr>
+          <tr><td>Ahmedabad</td><td>2016 Crysta 2.4</td><td>₹8.5–10.8 L</td><td>Good availability</td></tr>
+          <tr><td>Jaipur</td><td>2014–2016 Innova 2.5</td><td>₹6.8–9.0 L</td><td>Often earlier gen models</td></tr>
+          <tr><td>Lucknow</td><td>2013–2016 Innova 2.5</td><td>₹6.5–8.5 L</td><td>Fleet units common</td></tr>
+          <tr><td>Chandigarh</td><td>2016–2018 Crysta 2.4</td><td>₹9.2–11.0 L</td><td>Strong resale market</td></tr>
+          <tr><td>Kochi</td><td>2015 Innova 2.5</td><td>₹7.8–9.8 L</td><td>Lower demand vs metros</td></tr>
+          <tr><td>Goa</td><td>2017 Crysta 2.4</td><td>₹9.0–11.0 L</td><td>Tourist market influences price</td></tr>
+          <tr><td>Surat</td><td>2014–2016 Innova 2.5</td><td>₹6.8–9.0 L</td><td>Value buys available</td></tr>
+          <tr><td>Visakhapatnam</td><td>2015 Innova 2.5</td><td>₹6.5–9.2 L</td><td>Favourable pricing</td></tr>
+          <tr><td>Bhopal</td><td>2014–2016 Innova</td><td>₹6.2–8.5 L</td><td>High fleet penetration</td></tr>
+          <tr><td>Indore</td><td>2015 Innova 2.5</td><td>₹6.5–8.8 L</td><td>Lower average prices</td></tr>
+          <tr><td>Nagpur</td><td>2014–2016 Innova</td><td>₹6.0–8.5 L</td><td>Good bargains on high‑km units</td></tr>
+          <tr><td>Coimbatore</td><td>2016–2018 Crysta 2.4</td><td>₹8.5–10.8 L</td><td>Steady demand</td></tr>
+          <tr><td>Srinagar</td><td>2013–2016 Innova 2.5</td><td>₹6.0–8.0 L</td><td>Regional pricing variance</td></tr>
+        </tbody>
+      </table>
+
+      <p class="note">Note: These are representative asking ranges aggregated from marketplaces and dealer listings — always validate with inspection and a fresh market search on Cararth.</p>
+
+      <h2>Which variant should you buy?</h2>
+      <p>For families, the 2.4 VX or 2.8 ZX (Crysta) from 2016–2020 provides the best balance of comfort and longevity. Commercial buyers may prioritise earlier gen 2.5 diesels for lower upfront cost but expect higher wear.</p>
+
+      <h2>Pre‑purchase inspection checklist</h2>
+      <ul>
+        <li>Service history and ownership records — look for consistent dealer records.</li>
+        <li>Underbody &amp; frame inspection — check for rust or structural repairs.</li>
+        <li>Test drive: listen for gearbox/clutch issues, check for brake judder and suspension clunks.</li>
+        <li>Check for signs of taxi/fleet use (seat wear, flooring, registration class, sudden ownership changes).</li>
+      </ul>
+
+      <h2>Total cost of ownership (TCO) highlights</h2>
+      <p>Expect higher running costs than compact cars but reasonable reliability; budget for larger tyres, periodic injector/turbo servicing on diesels and potential clutch or suspension work on high‑km units.</p>
+
+      <h2>Internal links (for Cararth templates)</h2>
+      <ul>
+        <li><a href="https://www.cararth.com/used-cars/toyota-innova">Used Toyota Innova listings</a></li>
+        <li><a href="https://www.cararth.com/used-cars-in-delhi">Used Cars in Delhi</a></li>
+        <li><a href="https://www.cararth.com/blog/used-car-buying-guide">Used car buying guide</a></li>
+      </ul>
+
+      <h2>FAQs</h2>
+      <dl>
+        <dt>Is buying a used Innova worth it in 2025?</dt>
+        <dd>Yes — if the car has solid service records and no history of heavy commercial use.</dd>
+        <dt>How many kilometres can an Innova last?</dt>
+        <dd>Many owners report 300k+ km with proper maintenance; focus on condition and service history.</dd>
+        <dt>Which Innova variant offers best value?</dt>
+        <dd>2016–2020 Crysta trims (2.4/2.8 diesel) — balance of features, performance and longevity.</dd>
+      </dl>
+
+      <h2>Publishing instructions for Replit agent / CMS</h2>
+      <ol>
+        <li>Place this HTML at <code class="kbd">/content/used-toyota-innova-guide-2025/index.html</code> or in your CMS editor with the same canonical.</li>
+        <li>Ensure the JSON‑LD block (below) is inserted into the &lt;head&gt; of the final page.</li>
+        <li>Replace price placeholders or offer URLs with live Cararth listing URLs where available.</li>
+        <li>Add server side caching headers and set OpenGraph tags for socials (sample provided below).</li>
+      </ol>
+
+      <h3>OpenGraph (example)</h3>
+      <pre class="json">&lt;meta property="og:title" content="Used Toyota Innova Buyer’s Guide (2025) — Cararth"/&gt;
+&lt;meta property="og:description" content="City-wise prices, inspection checklist, TCO and FAQs for buying a used Toyota Innova in India."/&gt;
+&lt;meta property="og:image" content="https://www.cararth.com/assets/images/innova-guide-og.jpg"/&gt;
+&lt;meta property="og:url" content="https://www.cararth.com/used-toyota-innova-guide-2025"/&gt;</pre>
+
+      <h2>JSON‑LD (Article + FAQ + Vehicles)</h2>
+      <pre class="json">{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Article",
+      "headline": "Used Toyota Innova Buyer’s Guide (2025): Prices, Problems, Lifespan & Best Variants",
+      "description": "Explore pricing, variant guide, common issues and inspection checklist for buying a used Toyota Innova or Innova Crysta in India.",
+      "author": {"@type":"Person","name":"Cararth Team"},
+      "datePublished": "2025-11-16",
+      "mainEntityOfPage": {"@type":"WebPage","@id":"https://www.cararth.com/used-toyota-innova-guide-2025"}
+    },
+
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {"@type":"Question","name":"Is buying a used Innova worth it in 2025?","acceptedAnswer":{"@type":"Answer","text":"Yes — if the car has solid service records and no history of heavy commercial use."}},
+        {"@type":"Question","name":"How many kilometres can an Innova last?","acceptedAnswer":{"@type":"Answer","text":"Many owners report 300k+ km with proper maintenance; focus on condition and service history."}},
+        {"@type":"Question","name":"Which Innova variant offers best value?","acceptedAnswer":{"@type":"Answer","text":"2016–2020 Crysta trims (2.4/2.8 diesel) — balance of features, performance and longevity."}}
+      ]
+    },
+
+    {
+      "@type": "Product",
+      "name": "Toyota Innova Crysta 2.4 VX (2018)",
+      "brand": {"@type":"Brand","name":"Toyota"},
+      "model": "Innova Crysta 2.4 VX",
+      "additionalProperty": [{"@type":"PropertyValue","name":"seatingCapacity","value":"7"}],
+      "offers": {
+        "@type": "AggregateOffer",
+        "offerCount": "20",
+        "lowPrice": "1050000",
+        "highPrice": "1250000",
+        "priceCurrency": "INR",
+        "availability": "https://schema.org/InStock",
+        "url": "https://www.cararth.com/used-cars/toyota-innova-crysta?variant=2.4-vx&year=2018"
+      }
+    },
+
+    {
+      "@type": "Product",
+      "name": "Toyota Innova Crysta 2.8 ZX AT (2017)",
+      "brand": {"@type":"Brand","name":"Toyota"},
+      "model": "Innova Crysta 2.8 ZX AT",
+      "additionalProperty": [{"@type":"PropertyValue","name":"seatingCapacity","value":"7/8"}],
+      "offers": {"@type":"AggregateOffer","offerCount":"12","lowPrice":"1100000","highPrice":"1350000","priceCurrency":"INR","availability":"https://schema.org/InStock","url":"https://www.cararth.com/used-cars/toyota-innova-crysta?variant=2.8-zx-at&year=2017"}
+    },
+
+    {
+      "@type": "Product",
+      "name": "Toyota Innova 2.5 G (2015)",
+      "brand": {"@type":"Brand","name":"Toyota"},
+      "model": "Innova 2.5 G",
+      "additionalProperty": [{"@type":"PropertyValue","name":"seatingCapacity","value":"8"}],
+      "offers": {"@type":"AggregateOffer","offerCount":"30","lowPrice":"600000","highPrice":"1000000","priceCurrency":"INR","availability":"https://schema.org/InStock","url":"https://www.cararth.com/used-cars/toyota-innova?variant=2.5-g&year=2015"}
+    }
+  ]
+}
+</pre>
+
+      <p class="small">Tip: Replace the example offer URLs with direct Cararth listing pages for improved schema accuracy and search signals.</p>
+
+      <h2>Source references (for editors)</h2>
+      <ul>
+        <li>CarWale — used Innova listings and pricing benchmarks</li>
+        <li>CarDekho — variant level pricing and market examples</li>
+        <li>Spinny/Cars24 — certified used inventory for inspection reference</li>
+        <li>Owner forums (Team‑BHP) — longevity and owner reports</li>
+      </ul>
+
+      <p class="small">If you want, I can now generate:
+      <ul>
+        <li>20 city specific HTML fragments (one per city) with localized canonical tags and Cararth listing URLs</li>
+        <li>Individual JSON‑LD <code class="kbd">Product</code> objects for every model‑variant in your inventory (CSV → JSON‑LD mapping)</li>
+      </ul>
+      </p>
+
+    </article>
+  </div>
+</body>
+</html>

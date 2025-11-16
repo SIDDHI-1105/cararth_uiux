@@ -15,7 +15,8 @@ import {
   Car,
   Fuel,
   Settings,
-  DollarSign
+  DollarSign,
+  BookOpen
 } from "lucide-react";
 
 export default function SwiftHyderabadGuide2025() {
