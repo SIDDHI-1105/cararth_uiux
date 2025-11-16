@@ -5128,18 +5128,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Otherwise fetch from database
+      // Check if the parameter looks like a slug (not a UUID)
+      const isSlug = !id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+      
       const post = await db
         .select({
           id: communityPosts.id,
+          slug: communityPosts.slug,
           title: communityPosts.title,
           content: communityPosts.content,
           category: communityPosts.category,
+          metaDescription: communityPosts.metaDescription,
+          keywords: communityPosts.keywords,
+          coverImage: communityPosts.coverImage,
+          excerpt: communityPosts.excerpt,
+          sourceName: communityPosts.sourceName,
+          attribution: communityPosts.attribution,
+          isExternal: communityPosts.isExternal,
+          sourceUrl: communityPosts.sourceUrl,
           createdAt: communityPosts.createdAt,
           author: users.firstName,
         })
         .from(communityPosts)
         .leftJoin(users, eq(communityPosts.authorId, users.id))
-        .where(eq(communityPosts.id, id))
+        .where(isSlug ? eq(communityPosts.slug, id) : eq(communityPosts.id, id))
         .limit(1);
 
       if (post.length === 0) {
@@ -5153,10 +5165,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         post: {
           id: post[0].id,
+          slug: post[0].slug,
           title: post[0].title,
           content: post[0].content,
-          author: post[0].author || 'CarArth Community',
+          author: post[0].author || post[0].sourceName || 'CarArth Community',
           category: post[0].category,
+          metaDescription: post[0].metaDescription,
+          keywords: post[0].keywords,
+          coverImage: post[0].coverImage,
+          excerpt: post[0].excerpt,
+          isExternal: post[0].isExternal,
+          sourceUrl: post[0].sourceUrl,
+          attribution: post[0].attribution,
           publishedAt: post[0].createdAt,
         }
       });

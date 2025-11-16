@@ -802,6 +802,13 @@ export const communityPosts = pgTable("community_posts", {
   content: text("content").notNull(),
   category: text("category").notNull(), // reviews, questions, market-insights, discussion, dealership_benchmark
   
+  // SEO fields
+  slug: text("slug").unique(),
+  metaDescription: text("meta_description"),
+  keywords: text("keywords").array().default([]),
+  coverImage: text("cover_image"),
+  excerpt: text("excerpt"),
+  
   // Dealer benchmark linkage (for dealership_benchmark posts)
   dealerId: varchar("dealer_id"), // Links to dealers table for benchmark posts
   
