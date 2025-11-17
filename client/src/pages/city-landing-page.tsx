@@ -136,12 +136,13 @@ export default function CityLandingPage() {
                       fuelType={listing.fuelType}
                       transmission={listing.transmission}
                       city={listing.location || cityData.city}
-                      sellerType={listing.sellerType || "owner"}
+                      sellerType={listing.sellerType || "dealer"}
                       imageUrl={listing.images?.[0]}
                       portal={listing.portal}
                       isVerified={listing.isVerified}
                       googleCompliant={listing.googleCompliant}
                       listingScore={listing.listingScore}
+                      listingSource="ethical_ai"
                       trustScore={listing.trustScore}
                       trustScoreLabel={listing.trustScoreLabel}
                       trustScoreColor={listing.trustScoreColor}
