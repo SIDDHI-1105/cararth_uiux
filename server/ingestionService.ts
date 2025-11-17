@@ -199,6 +199,23 @@ export class IngestionService {
         };
       }
 
+      // HYDERABAD-ONLY FILTER: Reject listings from other cities
+      const city = normalized.city?.trim().toLowerCase() || '';
+      const allowedCities = ['hyderabad', 'secunderabad'];
+      const isHyderabadListing = allowedCities.some(c => city.includes(c));
+      
+      if (!isHyderabadListing) {
+        return {
+          success: false,
+          isDuplicate: false,
+          errors: [`Listing rejected: Not from Hyderabad (city: ${normalized.city || 'unknown'})`],
+        };
+      }
+
+      // Normalize city name and set state
+      normalized.city = city.includes('secunderabad') ? 'Secunderabad' : 'Hyderabad';
+      normalized.registrationState = 'Telangana';
+
       const fingerprint = this.generateFingerprint({
         vin: normalized.vin || undefined,
         make: normalized.make,
