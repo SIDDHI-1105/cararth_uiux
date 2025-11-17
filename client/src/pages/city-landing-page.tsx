@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Home, ChevronRight, Car, TrendingUp, MapPin, Building2, Calendar } from "lucide-react";
+import { Home, ChevronRight, Car, TrendingUp, MapPin, Building2 } from "lucide-react";
+import { ListingCard } from "@/components/listing-card";
 
 interface CityData {
   success: boolean;
@@ -48,18 +49,6 @@ export default function CityLandingPage() {
     if (price >= 10000000) return `₹${(price / 10000000).toFixed(2)} Cr`;
     if (price >= 100000) return `₹${(price / 100000).toFixed(2)} L`;
     return `₹${price.toLocaleString('en-IN')}`;
-  };
-
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-    return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
   if (isLoading) {
@@ -135,32 +124,36 @@ export default function CityLandingPage() {
                   Latest verified listings in {cityData.city}
                 </h2>
                 
-                <div className="space-y-4" data-testid="listings-container">
-                  {cityData.latestListings.slice(0, 10).map((listing, idx) => (
-                    <div 
-                      key={listing.id} 
-                      className="border-b border-gray-200 dark:border-gray-700 pb-4 last:border-0"
-                      data-testid={`listing-item-${idx}`}
-                    >
-                      <Link href={`/car/${listing.id}`} className="group">
-                        <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
-                          {listing.title} — {formatPrice(listing.price)}
-                        </h3>
-                      </Link>
-                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        {listing.mileage && `${listing.mileage.toLocaleString()} km`} • {listing.fuelType} • {listing.transmission} • {listing.location || cityData.city}
-                      </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-500 mt-1 flex items-center gap-2">
-                        <Calendar className="h-3 w-3" />
-                        {listing.listingDate && formatDate(listing.listingDate)} • {listing.portal}
-                      </div>
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6" data-testid="listings-container">
+                  {cityData.latestListings.slice(0, 6).map((listing, idx) => (
+                    <ListingCard
+                      key={listing.id}
+                      id={listing.id}
+                      title={listing.title}
+                      price={listing.price}
+                      year={listing.year}
+                      mileage={listing.mileage}
+                      fuelType={listing.fuelType}
+                      transmission={listing.transmission}
+                      city={listing.location || cityData.city}
+                      sellerType={listing.sellerType || "owner"}
+                      imageUrl={listing.images?.[0]}
+                      portal={listing.portal}
+                      isVerified={listing.isVerified}
+                      googleCompliant={listing.googleCompliant}
+                      listingScore={listing.listingScore}
+                      trustScore={listing.trustScore}
+                      trustScoreLabel={listing.trustScoreLabel}
+                      trustScoreColor={listing.trustScoreColor}
+                      trustScoreBreakdown={listing.trustScoreBreakdown}
+                      priceFairnessLabel={listing.priceFairnessLabel}
+                    />
                   ))}
                 </div>
 
                 <Link 
                   href="/" 
-                  className="mt-6 inline-block bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg transition-colors"
+                  className="mt-2 inline-block bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg transition-colors"
                   data-testid="view-all-link"
                 >
                   View all {cityData.totalListings} listings →
