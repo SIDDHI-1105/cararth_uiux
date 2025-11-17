@@ -25,11 +25,24 @@ export default function CityLandingPage() {
   const citySlug = params.city || 'hyderabad';
   
   const { data: cityData, isLoading } = useQuery<CityData>({
-    queryKey: ['/api/city', citySlug],
+    queryKey: [`/api/city/${citySlug}`],
   });
 
-  const formatPrice = (price: number) => {
-    if (price === 0) return 'N/A';
+  // Set page title dynamically - MUST be before any conditional returns
+  useEffect(() => {
+    if (cityData?.city) {
+      document.title = `Used Cars in ${cityData.city} — Verified Listings | CarArth`;
+      
+      // Update meta description
+      const metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) {
+        metaDesc.setAttribute('content', cityData.metaDescription);
+      }
+    }
+  }, [cityData]);
+
+  const formatPrice = (price: number | null | undefined) => {
+    if (!price || price === 0) return 'N/A';
     if (price >= 10000000) return `₹${(price / 10000000).toFixed(2)} Cr`;
     if (price >= 100000) return `₹${(price / 100000).toFixed(2)} L`;
     return `₹${price.toLocaleString('en-IN')}`;
@@ -72,19 +85,6 @@ export default function CityLandingPage() {
       </div>
     );
   }
-
-  // Set page title dynamically
-  useEffect(() => {
-    if (cityData?.city) {
-      document.title = `Used Cars in ${cityData.city} — Verified Listings | CarArth`;
-      
-      // Update meta description
-      const metaDesc = document.querySelector('meta[name="description"]');
-      if (metaDesc) {
-        metaDesc.setAttribute('content', cityData.metaDescription);
-      }
-    }
-  }, [cityData]);
 
   return (
     <>

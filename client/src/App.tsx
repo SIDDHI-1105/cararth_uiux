@@ -126,7 +126,7 @@ function Router() {
       <Route path="/used-cars-bangalore" component={BangaloreCityPage} />
       <Route path="/used-cars-pune" component={PuneCityPage} />
       <Route path="/used-cars-chennai" component={ChennaiCityPage} />
-      <Route path="/used-cars-in-:city" component={CityLandingPage} />
+      <Route path="/used-cars/:city" component={CityLandingPage} />
       <Route component={NotFound} />
     </Switch>
   );
