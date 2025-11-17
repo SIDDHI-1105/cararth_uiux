@@ -3502,4 +3502,93 @@ export class DatabaseStorage implements IStorage {
       return null;
     }
   }
+
+  // ============================================================================
+  // GEO CITATION MONITORING
+  // ============================================================================
+
+  async getCitations(filters?: { domain?: string; model?: string; limit?: number }): Promise<any[]> {
+    try {
+      const { geoCitations } = await import('@shared/schema.js');
+      
+      const conditions = [];
+      if (filters?.domain) {
+        conditions.push(eq(geoCitations.domain, filters.domain));
+      }
+      if (filters?.model) {
+        conditions.push(eq(geoCitations.model, filters.model));
+      }
+      
+      const query = this.db
+        .select()
+        .from(geoCitations)
+        .orderBy(desc(geoCitations.timestamp));
+      
+      if (conditions.length > 0) {
+        query.where(and(...conditions));
+      }
+      
+      if (filters?.limit) {
+        query.limit(filters.limit);
+      }
+      
+      const result = await query;
+      return result;
+    } catch (error) {
+      logError(createAppError('Failed to get citations', 500, ErrorCategory.DATABASE), 'getCitations');
+      return [];
+    }
+  }
+
+  async getCitationStats(): Promise<{
+    totalCitations: number;
+    byDomain: Record<string, number>;
+    byModel: Record<string, number>;
+    recentCitations: any[];
+  }> {
+    try {
+      const { geoCitations } = await import('@shared/schema.js');
+      
+      const allCitations = await this.db
+        .select()
+        .from(geoCitations)
+        .orderBy(desc(geoCitations.timestamp));
+      
+      const byDomain: Record<string, number> = {};
+      const byModel: Record<string, number> = {};
+      
+      for (const citation of allCitations) {
+        byDomain[citation.domain] = (byDomain[citation.domain] || 0) + 1;
+        byModel[citation.model] = (byModel[citation.model] || 0) + 1;
+      }
+      
+      return {
+        totalCitations: allCitations.length,
+        byDomain,
+        byModel,
+        recentCitations: allCitations.slice(0, 20),
+      };
+    } catch (error) {
+      logError(createAppError('Failed to get citation stats', 500, ErrorCategory.DATABASE), 'getCitationStats');
+      return {
+        totalCitations: 0,
+        byDomain: {},
+        byModel: {},
+        recentCitations: [],
+      };
+    }
+  }
+
+  async markCitationNotified(id: string): Promise<void> {
+    try {
+      const { geoCitations } = await import('@shared/schema.js');
+      
+      await this.db
+        .update(geoCitations)
+        .set({ notified: true })
+        .where(eq(geoCitations.id, id));
+    } catch (error) {
+      logError(createAppError('Failed to mark citation notified', 500, ErrorCategory.DATABASE), 'markCitationNotified');
+    }
+  }
 }

@@ -298,6 +298,16 @@ export interface IStorage {
   }>;
   getListingMetricsTrend(days: number): Promise<any[]>;
   getRecentScraperLogs(limit: number): Promise<any[]>;
+  
+  // GEO Citation tracking
+  getCitations(filters?: { domain?: string; model?: string; limit?: number }): Promise<any[]>;
+  getCitationStats(): Promise<{
+    totalCitations: number;
+    byDomain: Record<string, number>;
+    byModel: Record<string, number>;
+    recentCitations: any[];
+  }>;
+  markCitationNotified(id: string): Promise<void>;
 }
 
 export class MemStorage implements IStorage {

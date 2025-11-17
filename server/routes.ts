@@ -860,6 +860,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================================================
+  // AETHER GEO CITATION MONITORING ENDPOINTS
+  // Real-time AI model citation tracking
+  // ============================================================================
+
+  app.get('/api/citations', isAdmin, async (req, res) => {
+    try {
+      const { domain, model, limit } = req.query;
+      
+      const citations = await storage.getCitations?.({
+        domain: domain as string,
+        model: model as string,
+        limit: limit ? parseInt(limit as string) : 100,
+      }) || [];
+      
+      res.json({
+        success: true,
+        citations,
+        count: citations.length,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Citations endpoint error:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to fetch citations'
+      });
+    }
+  });
+
+  app.get('/api/citations/stats', isAdmin, async (req, res) => {
+    try {
+      const stats = await storage.getCitationStats?.() || {
+        totalCitations: 0,
+        byDomain: {},
+        byModel: {},
+        recentCitations: [],
+      };
+      
+      res.json({
+        success: true,
+        ...stats,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Citation stats endpoint error:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to fetch citation stats'
+      });
+    }
+  });
+
+  app.post('/api/citations/trigger-sweep', isAdmin, async (req, res) => {
+    try {
+      const { geoCitationMonitor } = await import('./geoCitationMonitor.js');
+      
+      res.json({
+        success: true,
+        message: 'Citation sweep started',
+        timestamp: new Date().toISOString(),
+      });
+      
+      geoCitationMonitor.runSweep().catch(error => {
+        console.error('Citation sweep error:', error);
+      });
+    } catch (error) {
+      console.error('Trigger sweep endpoint error:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to trigger citation sweep'
+      });
+    }
+  });
+
   // Image authenticity monitoring endpoints
   app.get('/api/monitoring/image-authenticity', async (req, res) => {
     try {
