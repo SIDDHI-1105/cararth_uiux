@@ -17,6 +17,20 @@ import { FirecrawlMcpService } from './firecrawlMcpService';
 import { Crawl4AIService } from './crawl4aiService';
 import type { DatabaseStorage } from './dbStorage';
 
+// HYDERABAD-ONLY FILTER: Centralized city validation
+export function isHyderabadListing(city: string | null | undefined): boolean {
+  if (!city) return false;
+  const cityLower = city.trim().toLowerCase();
+  const allowedCities = ['hyderabad', 'secunderabad'];
+  return allowedCities.some(c => cityLower.includes(c));
+}
+
+export function normalizeHyderabadCity(city: string | null | undefined): string {
+  if (!city) return 'Hyderabad';
+  const cityLower = city.trim().toLowerCase();
+  return cityLower.includes('secunderabad') ? 'Secunderabad' : 'Hyderabad';
+}
+
 export interface IngestionResult {
   success: boolean;
   listingId?: string;
@@ -200,11 +214,7 @@ export class IngestionService {
       }
 
       // HYDERABAD-ONLY FILTER: Reject listings from other cities
-      const city = normalized.city?.trim().toLowerCase() || '';
-      const allowedCities = ['hyderabad', 'secunderabad'];
-      const isHyderabadListing = allowedCities.some(c => city.includes(c));
-      
-      if (!isHyderabadListing) {
+      if (!isHyderabadListing(normalized.city)) {
         return {
           success: false,
           isDuplicate: false,
@@ -213,7 +223,7 @@ export class IngestionService {
       }
 
       // Normalize city name and set state
-      normalized.city = city.includes('secunderabad') ? 'Secunderabad' : 'Hyderabad';
+      normalized.city = normalizeHyderabadCity(normalized.city);
       normalized.registrationState = 'Telangana';
 
       const fingerprint = this.generateFingerprint({
