@@ -166,7 +166,7 @@ export default function CitationMonitorDashboard() {
                         {citation.model}
                       </Badge>
                       <span className="text-xs text-slate-500 dark:text-slate-400">
-                        {format(new Date(citation.timestamp), 'MMM d, h:mm a')}
+                        {citation.timestamp ? format(new Date(citation.timestamp), 'MMM d, h:mm a') : 'Unknown time'}
                       </span>
                     </div>
                     <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">

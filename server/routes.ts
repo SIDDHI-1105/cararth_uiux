@@ -861,7 +861,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================================================
-  // AETHER GEO CITATION MONITORING ENDPOINTS
+  // AETHER GEO CITATION MONITORING ENDPOINTS - Protected by isAdmin
   // Real-time AI model citation tracking
   // ============================================================================
 

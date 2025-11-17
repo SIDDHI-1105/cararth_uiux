@@ -3562,11 +3562,16 @@ export class DatabaseStorage implements IStorage {
         byModel[citation.model] = (byModel[citation.model] || 0) + 1;
       }
       
+      const normalizedCitations = allCitations.slice(0, 20).map(citation => ({
+        ...citation,
+        timestamp: citation.timestamp ? new Date(citation.timestamp).toISOString() : new Date().toISOString(),
+      }));
+      
       return {
         totalCitations: allCitations.length,
         byDomain,
         byModel,
-        recentCitations: allCitations.slice(0, 20),
+        recentCitations: normalizedCitations,
       };
     } catch (error) {
       logError(createAppError('Failed to get citation stats', 500, ErrorCategory.DATABASE), 'getCitationStats');

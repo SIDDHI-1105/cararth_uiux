@@ -109,6 +109,16 @@ app.use((req, res, next) => {
         console.error('❌ Failed to initialize AETHER:', aetherError);
         console.error('Continuing without AETHER features...');
       }
+
+      // Initialize AETHER GEO Citation Monster scheduler
+      try {
+        const { citationScheduler } = await import('./citationScheduler.js');
+        citationScheduler.start();
+        console.log('✅ AETHER Citation Monster scheduler started');
+      } catch (citationError) {
+        console.error('❌ Failed to start citation scheduler:', citationError);
+        console.error('Continuing without automatic citation monitoring...');
+      }
     } catch (error) {
       console.error('❌ Failed to register routes:', error);
       console.error('Server cannot start without routes. Exiting.');

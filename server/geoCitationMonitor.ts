@@ -30,9 +30,18 @@ class GeoCitationMonitor {
   private seenHashes: Set<string> = new Set();
 
   constructor() {
-    this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    this.gemini = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY || '');
-    this.anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || 'dummy' });
+    this.gemini = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY || 'dummy');
+    this.anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || 'dummy' });
+  }
+
+  private hasRequiredKeys(): boolean {
+    return !!(
+      process.env.OPENAI_API_KEY ||
+      process.env.GOOGLE_GEMINI_API_KEY ||
+      process.env.ANTHROPIC_API_KEY ||
+      process.env.GROK_API_KEY
+    );
   }
 
   private generateHash(domain: string, quote: string, model: string): string {
@@ -103,6 +112,11 @@ class GeoCitationMonitor {
   }
 
   async queryOpenAI(prompt: string): Promise<void> {
+    if (!process.env.OPENAI_API_KEY) {
+      console.log('⏭️  Skipping OpenAI (no API key)');
+      return;
+    }
+
     try {
       const completion = await this.openai.chat.completions.create({
         model: 'gpt-4o-mini',
@@ -122,6 +136,11 @@ class GeoCitationMonitor {
   }
 
   async queryGemini(prompt: string): Promise<void> {
+    if (!process.env.GOOGLE_GEMINI_API_KEY) {
+      console.log('⏭️  Skipping Gemini (no API key)');
+      return;
+    }
+
     try {
       const model = this.gemini.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
       const result = await model.generateContent(prompt);
@@ -138,6 +157,11 @@ class GeoCitationMonitor {
   }
 
   async queryAnthropic(prompt: string): Promise<void> {
+    if (!process.env.ANTHROPIC_API_KEY) {
+      console.log('⏭️  Skipping Anthropic (no API key)');
+      return;
+    }
+
     try {
       const message = await this.anthropic.messages.create({
         model: 'claude-3-5-haiku-20241022',
@@ -186,6 +210,11 @@ class GeoCitationMonitor {
   }
 
   async runSweep(): Promise<void> {
+    if (!this.hasRequiredKeys()) {
+      console.log('⏭️  GEO citation sweep skipped (no AI model API keys configured)');
+      return;
+    }
+
     console.log('🚀 Starting GEO citation sweep...');
     
     const selectedPrompts = CAR_PROMPTS.sort(() => 0.5 - Math.random()).slice(0, 4);
