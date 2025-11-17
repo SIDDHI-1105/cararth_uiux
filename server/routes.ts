@@ -637,6 +637,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // City landing page data endpoint - provides market statistics and listings for city pages
+  app.get('/api/city/:citySlug', async (req, res) => {
+    try {
+      const citySlug = req.params.citySlug.toLowerCase();
+      const cityName = citySlug.charAt(0).toUpperCase() + citySlug.slice(1);
+      
+      // Get all listings for the city
+      const listings = await storage.searchCars({ city: cityName });
+      
+      // Calculate average prices by vehicle category
+      const hatchbacks = listings.filter(car => 
+        car.model?.toLowerCase().includes('swift') || 
+        car.model?.toLowerCase().includes('i10') ||
+        car.model?.toLowerCase().includes('i20') ||
+        car.model?.toLowerCase().includes('baleno') ||
+        car.model?.toLowerCase().includes('alto') ||
+        car.model?.toLowerCase().includes('wagonr')
+      );
+      
+      const sedans = listings.filter(car => 
+        car.model?.toLowerCase().includes('city') ||
+        car.model?.toLowerCase().includes('verna') ||
+        car.model?.toLowerCase().includes('ciaz') ||
+        car.model?.toLowerCase().includes('amaze') ||
+        car.model?.toLowerCase().includes('dzire')
+      );
+      
+      const suvs = listings.filter(car => 
+        car.model?.toLowerCase().includes('creta') ||
+        car.model?.toLowerCase().includes('seltos') ||
+        car.model?.toLowerCase().includes('xuv') ||
+        car.model?.toLowerCase().includes('safari') ||
+        car.model?.toLowerCase().includes('fortuner') ||
+        car.model?.toLowerCase().includes('innova') ||
+        car.model?.toLowerCase().includes('ertiga') ||
+        car.model?.toLowerCase().includes('brezza')
+      );
+      
+      const avgHatchbackPrice = hatchbacks.length > 0 
+        ? Math.round(hatchbacks.reduce((sum, car) => sum + (car.price || 0), 0) / hatchbacks.length)
+        : 0;
+        
+      const avgSedanPrice = sedans.length > 0
+        ? Math.round(sedans.reduce((sum, car) => sum + (car.price || 0), 0) / sedans.length)
+        : 0;
+        
+      const avgSuvPrice = suvs.length > 0
+        ? Math.round(suvs.reduce((sum, car) => sum + (car.price || 0), 0) / suvs.length)
+        : 0;
+      
+      // Get top brands by listing count
+      const brandCounts: Record<string, number> = {};
+      listings.forEach(car => {
+        const brand = car.make || car.brand || 'Unknown';
+        brandCounts[brand] = (brandCounts[brand] || 0) + 1;
+      });
+      
+      const topBrands = Object.entries(brandCounts)
+        .filter(([brand]) => brand !== 'Unknown')
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
+        .map(([brand, count]) => ({ brand, count }));
+      
+      // Get top dealers (extract from seller info or portal)
+      const dealerCounts: Record<string, number> = {};
+      listings.forEach(car => {
+        if (car.sellerType === 'dealer') {
+          const dealer = car.portal || 'Unknown Dealer';
+          dealerCounts[dealer] = (dealerCounts[dealer] || 0) + 1;
+        }
+      });
+      
+      const topDealers = Object.entries(dealerCounts)
+        .filter(([dealer]) => dealer !== 'Unknown Dealer')
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([dealer, count]) => ({ dealer, count }));
+      
+      // Get latest 20 listings sorted by listing date
+      const latestListings = listings
+        .filter(car => car.listingDate)
+        .sort((a, b) => {
+          const dateA = new Date(a.listingDate!).getTime();
+          const dateB = new Date(b.listingDate!).getTime();
+          return dateB - dateA;
+        })
+        .slice(0, 20);
+      
+      res.json({
+        success: true,
+        city: cityName,
+        citySlug,
+        totalListings: listings.length,
+        averagePrices: {
+          hatchback: avgHatchbackPrice,
+          sedan: avgSedanPrice,
+          suv: avgSuvPrice
+        },
+        topBrands,
+        topDealers,
+        latestListings,
+        lastUpdated: new Date().toISOString(),
+        metaDescription: `Browse ${listings.length}+ verified used cars in ${cityName}. Compare prices from trusted dealers and owners. Find your perfect car with CarArth's no-paid-ads search engine.`
+      });
+    } catch (error) {
+      console.error('City landing page endpoint error:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to fetch city data'
+      });
+    }
+  });
+
   // Scraper health monitoring endpoint
   app.get('/api/scraper-health', async (req, res) => {
     try {

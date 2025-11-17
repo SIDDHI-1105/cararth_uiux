@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <!--
+    Cararth city page template (Replit-ready)
+    Replace placeholders ({{CITY}}, {{CITY_SLUG}}, {{META_DESC}}, {{INVENTORY_BLOCK}}, {{DEALER_BLOCKS}}, {{TOP_BRANDS}}) dynamically.
+    File path recommendation: /content/used-cars-in-{{CITY_SLUG}}/index.html
+  -->
+
+  <title>Used Cars in {{CITY}} — Verified Listings | Cararth</title>
+  <meta name="description" content="{{META_DESC}}">
+  <link rel="canonical" href="https://www.cararth.com/used-cars-in-{{CITY_SLUG}}">
+  <meta name="robots" content="index, follow">
+
+  <!-- OpenGraph -->
+  <meta property="og:site_name" content="Cararth">
+  <meta property="og:title" content="Used Cars in {{CITY}} — Verified Listings | Cararth">
+  <meta property="og:description" content="{{META_DESC}}">
+  <meta property="og:url" content="https://www.cararth.com/used-cars-in-{{CITY_SLUG}}">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://www.cararth.com/assets/images/used-cars-{{CITY_SLUG}}-og.jpg">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+
+  <style>
+    :root{--max:1100px;--muted:#6b7280}
+    body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#0f172a;margin:0;padding:0;background:#fff}
+    .wrap{max-width:var(--max);margin:28px auto;padding:24px}
+    header h1{font-size:28px;margin:4px 0}
+    .lede{color:var(--muted);margin-bottom:12px}
+    nav.breadcrumb{font-size:13px;color:var(--muted);margin-bottom:12px}
+    .grid{display:grid;grid-template-columns:1fr 320px;gap:24px}
+    .card{background:#fff;border:1px solid #e6edf3;padding:16px;border-radius:8px}
+    .inventory-list .item{border-bottom:1px solid #eef2f6;padding:12px 0}
+    table{width:100%;border-collapse:collapse}
+    .small{font-size:13px;color:var(--muted)}
+    a.cta{display:inline-block;background:#0ea5a4;color:#fff;padding:10px 12px;border-radius:8px;text-decoration:none}
+    footer{margin-top:28px;color:var(--muted);font-size:13px}
+    .faq dt{font-weight:600;margin-top:12px}
+    .faq dd{margin:6px 0 12px}
+    pre.json{background:#0f172a;color:#ecfeff;padding:12px;border-radius:6px;overflow:auto}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+    <!-- Breadcrumbs -->
+    <nav class="breadcrumb small">Home &rsaquo; Used Cars &rsaquo; <strong>{{CITY}}</strong></nav>
+
+    <header>
+      <h1>Used Cars in {{CITY}}</h1>
+      <p class="lede">Find verified, no‑paid‑ads used car listings in {{CITY}} — real owner and dealer inventory, transparent prices and inspection reports.</p>
+    </header>
+
+    <div class="grid">
+      <main>
+        <!-- City intro (100-160 words) -->
+        <section class="card">
+          <h2>Why buy a used car in {{CITY}} on Cararth?</h2>
+          <p class="small">Cararth organises local inventory in {{CITY}} with standardised listing templates, verified seller badges and active dealer citations. Our GEO structure connects dealers, city pages and Cararth to improve discoverability and trust.</p>
+        </section>
+
+        <!-- Inventory block (dynamic) -->
+        <section class="card inventory-list" id="inventory">
+          <h2>Latest verified listings in {{CITY}}</h2>
+
+          <!-- START: INVENTORY_BLOCK -->
+          {{INVENTORY_BLOCK}}
+          <!-- INVENTORY_BLOCK should be a list of HTML snippets for each vehicle with: title, price, odometer, year, fuel, transmission, short CTA link to listing -->
+          <!-- Example item format to generate: -->
+          <!--
+          <div class="item">
+            <a href="{{LISTING_URL}}"><strong>2018 Toyota Innova Crysta 2.4 VX — ₹11.2 L</strong></a>
+            <div class="small">88,621 km • Diesel • Automatic • South Delhi</div>
+            <p class="small">Short 1‑line inspection note or seller type (Owner/Dealer) • <a href="{{LISTING_URL}}">View details</a></p>
+          </div>
+          -->
+
+        </section>
+
+        <!-- City pricing & market snapshot -->
+        <section class="card">
+          <h2>Market snapshot — average asking price in {{CITY}}</h2>
+          <table>
+            <tbody>
+              <tr><th>Avg - Hatchbacks</th><td>{{AVG_HATCHBACK_PRICE}}</td></tr>
+              <tr><th>Avg - Sedans</th><td>{{AVG_SEDAN_PRICE}}</td></tr>
+              <tr><th>Avg - SUVs / MPVs</th><td>{{AVG_SUV_PRICE}}</td></tr>
+            </tbody>
+          </table>
+          <p class="small">Prices updated: {{PRICE_UPDATE_DATE}} • These are representative asking prices — inspect before buying.</p>
+        </section>
+
+        <!-- City specific guide snippet -->
+        <section class="card">
+          <h2>How to choose the right used car in {{CITY}}</h2>
+          <ol>
+            <li>Check registration &amp; service history for local garages/dealers.</li>
+            <li>Prefer cars with full-service records and fewer owners.</li>
+            <li>Get a pre-purchase inspection and a detailed test drive on local roads.</li>
+            <li>Compare similar listings across Cararth to validate pricing.</li>
+          </ol>
+        </section>
+
+        <!-- FAQs (FAQPage schema below as JSON-LD too) -->
+        <section class="card faq">
+          <h2>Frequently asked questions — Used Cars in {{CITY}}</h2>
+          <dl>
+            <dt>Where can I find certified used cars in {{CITY}}?</dt>
+            <dd>Use the "Certified" filter on this page or check listings tagged <em>Certified</em> by Cararth; certified deals include inspection reports and short warranties.</dd>
+            <dt>How do I check dealer credibility in {{CITY}}?</dt>
+            <dd>Look for Dealer badges, NAPW consistency and Cararth dealer citations listed on their profile — verified dealers have completed onboarding steps.</dd>
+            <dt>Are prices negotiable on Cararth?</dt>
+            <dd>Yes — most listings are owner/dealer quoted prices; use comparative listings and the price insights to negotiate.</dd>
+          </dl>
+        </section>
+
+        <!-- Local tips block -->
+        <section class="card">
+          <h2>{{CITY}}‑specific buying tips</h2>
+          <ul>
+            <li class="small">Tip 1 tailored for {{CITY}} roads/conditions.</li>
+            <li class="small">Tip 2: check local emissions / registration nuances if any.</li>
+            <li class="small">Tip 3: preferred service centres in {{CITY}} for post‑purchase maintenance.</li>
+          </ul>
+        </section>
+
+      </main>
+
+      <!-- Sidebar -->
+      <aside>
+        <div class="card">
+          <h3>Top brands in {{CITY}}</h3>
+          <ul>
+            <!-- START: TOP_BRANDS -->
+            {{TOP_BRANDS}}
+            <!-- TOP_BRANDS should be an HTML list of links to /used-cars/brand-in-city pages e.g., <li><a href="/used-cars/toyota-in-{{CITY_SLUG}}">Toyota</a></li> -->
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>Top dealers in {{CITY}}</h3>
+          <!-- START: DEALER_BLOCKS -->
+          {{DEALER_BLOCKS}}
+          <!-- Dealer block example: <div class="small"><a href="/dealer/{{DEALER_SLUG}}">ABC Motors</a> • 48 listings • <span class="small">Verified</span></div> -->
+        </div>
+
+        <div class="card">
+          <h3>Quick price filter</h3>
+          <form action="/search" method="get">
+            <label class="small">Min price</label>
+            <input type="number" name="min_price" placeholder="₹ 3,00,000"><br>
+            <label class="small">Max price</label>
+            <input type="number" name="max_price" placeholder="₹ 15,00,000"><br>
+            <input type="hidden" name="city" value="{{CITY_SLUG}}">
+            <button class="cta" type="submit">Apply</button>
+          </form>
+        </div>
+
+      </aside>
+    </div>
+
+    <footer>
+      <p class="small">Cararth — India’s first no‑paid‑ads search engine for used cars • <a href="https://www.cararth.com/about">About</a> • <a href="https://www.cararth.com/contact">Contact</a></p>
+    </footer>
+
+    <!-- JSON-LD: Organization, WebPage, BreadcrumbList, FAQPage, ItemList (vehicles) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "name": "Cararth",
+          "url": "https://www.cararth.com",
+          "logo": "https://www.cararth.com/assets/images/cararth-logo.png",
+          "sameAs": ["https://www.facebook.com/cararth","https://www.linkedin.com/company/cararth"]
+        },
+        {
+          "@type": "WebPage",
+          "headline": "Used Cars in {{CITY}} — Verified Listings | Cararth",
+          "description": "{{META_DESC}}",
+          "url": "https://www.cararth.com/used-cars-in-{{CITY_SLUG}}",
+          "inLanguage": "en-IN",
+          "breadcrumb": { "@id": "https://www.cararth.com/used-cars-in-{{CITY_SLUG}}#breadcrumb" }
+        },
+        {
+          "@type": "BreadcrumbList",
+          "@id": "https://www.cararth.com/used-cars-in-{{CITY_SLUG}}#breadcrumb",
+          "itemListElement": [
+            {"@type":"ListItem","position":1,"name":"Home","item":"https://www.cararth.com"},
+            {"@type":"ListItem","position":2,"name":"Used Cars","item":"https://www.cararth.com/used-cars"},
+            {"@type":"ListItem","position":3,"name":"{{CITY}}","item":"https://www.cararth.com/used-cars-in-{{CITY_SLUG}}"}
+          ]
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type":"Question",
+              "name":"How do I find certified used cars in {{CITY}}?",
+              "acceptedAnswer": {"@type":"Answer","text":"Use the Certified filter on this page or look for listings tagged 'Certified' with inspection reports and short warranties."}
+            },
+            {
+              "@type":"Question",
+              "name":"How can I verify a dealer listed on Cararth in {{CITY}}?",
+              "acceptedAnswer": {"@type":"Answer","text":"Open the dealer profile to check NAPW, badge status, verified inventory count and customer citations."}
+            },
+            {
+              "@type":"Question",
+              "name":"Are prices shown on Cararth negotiable?",
+              "acceptedAnswer": {"@type":"Answer","text":"Yes — most listings are owner/dealer quoted; use price insights and comparable listings to negotiate."}
+            }
+          ]
+        },
+        {
+          "@type": "ItemList",
+          "name": "Latest verified listings in {{CITY}}",
+          "itemListElement": [
+            <!-- START: DYNAMIC_ITEM_LIST -->
+            {{ITEM_LIST_ELEMENTS}}
+            <!-- Each item should be an object: {"@type":"ListItem","position":1,"url":"https://www.cararth.com/listing/12345","item":{"@type":"Product","name":"2018 Toyota Innova Crysta 2.4 VX","brand":{"@type":"Brand","name":"Toyota"},"model":"Innova Crysta 2.4 VX","vehicleModelDate":"2018","vehicleEngine":"2.4 L","fuelType":"Diesel","offers":{"@type":"Offer","price":"1120000","priceCurrency":"INR","availability":"https://schema.org/InStock","url":"https://www.cararth.com/listing/12345"}}} -->
+          ]
+        }
+      ]
+    }
+    </script>
+
+  </div>
+</body>
+</html>
