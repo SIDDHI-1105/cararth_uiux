@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { GoogleGenerativeAI } from '@google/genai';
+import { GoogleGenAI } from '@google/genai';
 import Anthropic from '@anthropic-ai/sdk';
 import { db } from './db.js';
 import { geoCitations } from '@shared/schema';
@@ -25,13 +25,13 @@ const CAR_PROMPTS = [
 
 class GeoCitationMonitor {
   private openai: OpenAI;
-  private gemini: GoogleGenerativeAI;
+  private gemini: GoogleGenAI;
   private anthropic: Anthropic;
   private seenHashes: Set<string> = new Set();
 
   constructor() {
     this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || 'dummy' });
-    this.gemini = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY || 'dummy');
+    this.gemini = new GoogleGenAI(process.env.GOOGLE_GEMINI_API_KEY || 'dummy');
     this.anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || 'dummy' });
   }
 
@@ -142,10 +142,12 @@ class GeoCitationMonitor {
     }
 
     try {
-      const model = this.gemini.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
-      const result = await model.generateContent(prompt);
-      const response = result.response.text();
+      const result = await this.gemini.models.generateContent({
+        model: 'gemini-2.0-flash-exp',
+        contents: prompt,
+      });
       
+      const response = result.text || '';
       const mentions = this.extractDomainMentions(response);
 
       for (const { domain, quote } of mentions) {
