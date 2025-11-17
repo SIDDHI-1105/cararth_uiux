@@ -42,7 +42,9 @@ export default function CityLandingPage() {
   }, [cityData]);
 
   const formatPrice = (price: number | null | undefined) => {
-    if (!price || price === 0) return 'N/A';
+    if (price === null || price === undefined || isNaN(price) || price === 0) {
+      return 'Price on request';
+    }
     if (price >= 10000000) return `₹${(price / 10000000).toFixed(2)} Cr`;
     if (price >= 100000) return `₹${(price / 100000).toFixed(2)} L`;
     return `₹${price.toLocaleString('en-IN')}`;
