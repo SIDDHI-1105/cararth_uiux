@@ -38,6 +38,7 @@ import BingPerformanceChart from "@/components/aether/BingPerformanceChart";
 import BingCrawlIssues from "@/components/aether/BingCrawlIssues";
 import BingSitemaps from "@/components/aether/BingSitemaps";
 import BingBacklinks from "@/components/aether/BingBacklinks";
+import CitationMonitorDashboard from "@/components/CitationMonitorDashboard";
 
 export default function Aether() {
   const [promptText, setPromptText] = useState("");
@@ -589,6 +590,22 @@ export default function Aether() {
 
           {/* GEO Insights Tab */}
           <TabsContent value="geo" className="space-y-6">
+            {/* Citation Monster - Real-time AI Model Tracking */}
+            <Card className="border-2 border-orange-200 dark:border-orange-900 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950 dark:to-amber-950">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-orange-900 dark:text-orange-100">
+                  <Brain className="h-5 w-5" />
+                  Citation Monster™ - Live AI Tracking
+                </CardTitle>
+                <CardDescription className="text-orange-700 dark:text-orange-300">
+                  Real-time monitoring of CarArth mentions across Gemini, ChatGPT, Claude, and Grok
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <CitationMonitorDashboard />
+              </CardContent>
+            </Card>
+
             {/* Run New Sweep */}
             <Card>
               <CardHeader>
