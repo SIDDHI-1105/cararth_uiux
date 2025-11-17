@@ -10,7 +10,7 @@ class CitationScheduler {
       return;
     }
 
-    this.job = cron.schedule('*/10 * * * *', async () => {
+    this.job = cron.schedule('0 1 * * *', async () => {
       console.log('⏰ Citation sweep scheduled task triggered');
       try {
         await geoCitationMonitor.runSweep();
@@ -19,7 +19,7 @@ class CitationScheduler {
       }
     });
 
-    console.log('✅ Citation scheduler started (runs every 10 minutes)');
+    console.log('✅ Citation scheduler started (runs daily at 1 AM UTC)');
     
     console.log('🚀 Running initial citation sweep...');
     geoCitationMonitor.runSweep().catch(error => {
