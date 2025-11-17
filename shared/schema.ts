@@ -3221,3 +3221,34 @@ export type InsertGscAnalytics = z.infer<typeof insertGscAnalyticsSchema>;
 export type GscAnalytics = typeof gscAnalytics.$inferSelect;
 export type InsertBingAnalytics = z.infer<typeof insertBingAnalyticsSchema>;
 export type BingAnalytics = typeof bingAnalytics.$inferSelect;
+
+// ============================================================================
+// AETHER GEO CITATION MONITORING
+// Real-time tracking of AI model mentions (Gemini, Perplexity, ChatGPT, Grok)
+// ============================================================================
+
+export const geoCitations = pgTable("geo_citations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  domain: text("domain").notNull(),
+  quote: text("quote").notNull(),
+  sourceUrl: text("source_url"),
+  model: text("model").notNull(),
+  prompt: text("prompt").notNull(),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  notified: boolean("notified").default(false),
+  metadata: jsonb("metadata").default({}),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_geo_domain").on(table.domain),
+  index("idx_geo_model").on(table.model),
+  index("idx_geo_timestamp").on(table.timestamp),
+  index("idx_geo_notified").on(table.notified),
+]);
+
+export const insertGeoCitationSchema = createInsertSchema(geoCitations).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertGeoCitation = z.infer<typeof insertGeoCitationSchema>;
+export type GeoCitation = typeof geoCitations.$inferSelect;
