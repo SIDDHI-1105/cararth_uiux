@@ -237,17 +237,36 @@ export class OfficialFirecrawlMcpService extends EventEmitter {
         
         if (jsonPart?.text) {
           console.log(`📄 Found JSON part, parsing ${jsonPart.text.length} chars...`);
-          const extractedData = JSON.parse(jsonPart.text);
           
-          if (extractedData?.listings && Array.isArray(extractedData.listings)) {
-            console.log(`✅ Found ${extractedData.listings.length} listings in MCP response`);
+          // Check if this is a Firecrawl error message (not JSON)
+          if (jsonPart.text.includes("Tool 'firecrawl_extract' execution failed")) {
+            console.error(`❌ Firecrawl MCP tool failed: ${jsonPart.text}`);
             return {
-              success: true,
-              data: extractedData,
-              listings: extractedData.listings
+              success: false,
+              error: jsonPart.text
             };
-          } else {
-            console.error(`❌ Parsed data has no listings array. Keys: ${Object.keys(extractedData || {}).join(', ')}`);
+          }
+          
+          try {
+            const extractedData = JSON.parse(jsonPart.text);
+            
+            if (extractedData?.listings && Array.isArray(extractedData.listings)) {
+              console.log(`✅ Found ${extractedData.listings.length} listings in MCP response`);
+              return {
+                success: true,
+                data: extractedData,
+                listings: extractedData.listings
+              };
+            } else {
+              console.error(`❌ Parsed data has no listings array. Keys: ${Object.keys(extractedData || {}).join(', ')}`);
+            }
+          } catch (parseError) {
+            console.error(`❌ JSON parse error:`, parseError);
+            console.error(`📄 Failed to parse content: ${jsonPart.text}`);
+            return {
+              success: false,
+              error: `JSON parse failed: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`
+            };
           }
         } else {
           console.error(`❌ No JSON part found in content. Available: ${JSON.stringify(result.content[0])}`);
