@@ -58,6 +58,7 @@ import MumbaiCityPage from "./pages/city-mumbai";
 import BangaloreCityPage from "./pages/city-bangalore";
 import PuneCityPage from "./pages/city-pune";
 import ChennaiCityPage from "./pages/city-chennai";
+import CityLandingPage from "./pages/city-landing-page";
 import MockupPreview from "./pages/mockup-preview";
 import NotFound from "@/pages/not-found";
 import Results from "./pages/results";
@@ -125,6 +126,7 @@ function Router() {
       <Route path="/used-cars-bangalore" component={BangaloreCityPage} />
       <Route path="/used-cars-pune" component={PuneCityPage} />
       <Route path="/used-cars-chennai" component={ChennaiCityPage} />
+      <Route path="/used-cars-in-:city" component={CityLandingPage} />
       <Route component={NotFound} />
     </Switch>
   );
