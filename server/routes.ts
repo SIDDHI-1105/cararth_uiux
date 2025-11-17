@@ -643,8 +643,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const citySlug = req.params.citySlug.toLowerCase();
       const cityName = citySlug.charAt(0).toUpperCase() + citySlug.slice(1);
       
-      // Get all listings for the city
-      const listings = await storage.searchCars({ city: cityName });
+      // Get all listings for the city (direct database query for full results)
+      const { cachedPortalListings } = await import("@shared/schema");
+      const listings = await db.select().from(cachedPortalListings).where(eq(cachedPortalListings.city, cityName));
       
       // Calculate average prices by vehicle category
       const hatchbacks = listings.filter(car => 
