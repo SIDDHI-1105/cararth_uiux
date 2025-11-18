@@ -9,7 +9,7 @@ export class GoogleSearchConsoleService {
     this.credentials = {
       email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
       privateKey: process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      siteUrl: process.env.GOOGLE_SEARCH_CONSOLE_SITE_URL || 'https://cararth.com'
+      siteUrl: process.env.GOOGLE_SEARCH_CONSOLE_SITE_URL || 'https://www.cararth.com'
     };
     
     this.client = null;
