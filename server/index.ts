@@ -10,6 +10,8 @@ import {
 import { setGlobalLogger } from "../shared/logging";
 import { initializeMetricsService } from "./listingMetricsService.js";
 import seoRoutes from "./routes/seoRoutes.js";
+import fs from 'fs';
+import path from 'path';
 
 const app = express();
 
@@ -318,8 +320,6 @@ app.use((req, res, next) => {
       res.sendFile('sitemap.xml', { root: 'public' });
     });
     app.get('/what-is-cararth', (req, res) => {
-      const fs = require('fs');
-      const path = require('path');
       const filePath = path.join(process.cwd(), 'public', 'what-is-cararth.html');
       const html = fs.readFileSync(filePath, 'utf8');
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
