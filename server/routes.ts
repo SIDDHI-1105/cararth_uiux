@@ -9485,6 +9485,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <priority>0.95</priority>
   </url>
 
+  <!-- Static Guides (Pillar Content) -->
+  <url>
+    <loc>${baseUrl}/guides/trust-over-traffic-cararth-no-paid-listings.html</loc>
+    <lastmod>2025-11-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <url>
+    <loc>${baseUrl}/guides/ai-check-vs-manual-inspection.html</loc>
+    <lastmod>2025-11-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <url>
+    <loc>${baseUrl}/guides/used-cars-in-india-2025.html</loc>
+    <lastmod>2025-11-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
   <!-- Car Listings (Dynamic) -->
 `;
 
