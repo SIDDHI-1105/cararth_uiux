@@ -9363,16 +9363,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Dynamic sitemap.xml generator
   app.get('/sitemap.xml', asyncHandler(async (req: any, res: any) => {
     const { db } = await import('./db.js');
-    const { communityPosts, userStories } = await import('../shared/schema');
-    const { eq, desc } = await import('drizzle-orm');
+    const { communityPosts, userStories, deletedListings } = await import('../shared/schema');
+    const { eq, desc, inArray } = await import('drizzle-orm');
     
     // Get all cached portal listings (the 329 listings from various portals)
-    const cars = await storage.searchCachedPortalListings({
+    const allCars = await storage.searchCachedPortalListings({
       sortBy: 'datePosted',
       sortOrder: 'desc',
       limit: 1000, // Get all listings for sitemap
       offset: 0
     });
+    
+    // Get deleted listing IDs to exclude from sitemap
+    const deletedIds = await db
+      .select({ originalId: deletedListings.originalId })
+      .from(deletedListings);
+    
+    const deletedIdSet = new Set(deletedIds.map(d => d.originalId));
+    
+    // Filter out deleted listings - only include active cars in sitemap
+    const cars = allCars.filter(car => !deletedIdSet.has(car.id));
     
     // Get published news articles
     const newsArticles = await db.select()

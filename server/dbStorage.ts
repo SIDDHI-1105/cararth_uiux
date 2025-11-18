@@ -1805,6 +1805,18 @@ export class DatabaseStorage implements IStorage {
       
       const newListing = result[0];
       
+      // CRITICAL: Auto-cleanup stale deletion records for this listing
+      // This prevents reinstated listings from being marked as deleted
+      try {
+        await this.db
+          .delete(deletedListings)
+          .where(eq(deletedListings.originalId, newListing.id));
+        this.cache.delete(`deleted:${newListing.id}`);
+      } catch (cleanupError) {
+        // Log but don't fail - stale deletion cleanup shouldn't break ingestion
+        console.warn('⚠️ Failed to cleanup stale deletion record:', cleanupError);
+      }
+      
       // Invalidate related caches
       this.cache.delete('portal_stats');
       Array.from(this.cache.keys())
