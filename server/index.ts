@@ -317,6 +317,9 @@ app.use((req, res, next) => {
       res.type('application/xml');
       res.sendFile('sitemap.xml', { root: 'public' });
     });
+    app.get('/what-is-cararth', (req, res) => {
+      res.sendFile('what-is-cararth.html', { root: 'public' });
+    });
     
     // Serve other static files from public directory
     app.use(express.static('public'));
