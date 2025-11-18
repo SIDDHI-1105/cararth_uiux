@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { isAuthenticated, isAdmin } from "../../replitAuth";
 import { db } from "../../db";
-import { aetherBingPerformance, geoSweeps } from "../../../shared/schema";
+import { aetherBingPerformance, geoSweeps, gscAnalytics } from "../../../shared/schema";
 import { desc, and, gte, sql } from "drizzle-orm";
 
 const router = Router();
@@ -40,11 +40,13 @@ interface DiscoverabilityScore {
 async function calculateDiscoverabilityScore(userId: string): Promise<DiscoverabilityScore> {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
   
   const sixtyDaysAgo = new Date();
   sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+  const sixtyDaysAgoStr = sixtyDaysAgo.toISOString().split('T')[0];
 
-  const [bingRecent, bingPrevious, geoStats] = await Promise.all([
+  const [bingRecent, bingPrevious, gscRecent, gscPrevious, geoStats] = await Promise.all([
     db.select()
       .from(aetherBingPerformance)
       .where(and(
@@ -63,6 +65,17 @@ async function calculateDiscoverabilityScore(userId: string): Promise<Discoverab
       ))
       .limit(30),
     
+    db.select()
+      .from(gscAnalytics)
+      .where(sql`${gscAnalytics.date} >= ${thirtyDaysAgoStr}`)
+      .orderBy(desc(gscAnalytics.date))
+      .limit(30),
+    
+    db.select()
+      .from(gscAnalytics)
+      .where(sql`${gscAnalytics.date} >= ${sixtyDaysAgoStr} AND ${gscAnalytics.date} < ${thirtyDaysAgoStr}`)
+      .limit(30),
+    
     db.select({
       totalSweeps: sql<number>`COUNT(*)`,
       mentionedSweeps: sql<number>`SUM(CASE WHEN ${geoSweeps.cararthMentioned} = true THEN 1 ELSE 0 END)`,
@@ -71,13 +84,13 @@ async function calculateDiscoverabilityScore(userId: string): Promise<Discoverab
       .where(gte(geoSweeps.createdAt, thirtyDaysAgo))
   ]);
 
-  const gscRecent: any[] = [];
-  const gscPrevious: any[] = [];
-
   const gscTotalImpressions = gscRecent.reduce((sum, r) => sum + (r.impressions || 0), 0);
   const gscTotalClicks = gscRecent.reduce((sum, r) => sum + (r.clicks || 0), 0);
   const gscAvgPosition = gscRecent.length > 0
-    ? gscRecent.reduce((sum, r) => sum + (r.avgPosition || 0), 0) / gscRecent.length
+    ? gscRecent.reduce((sum, r) => {
+        const pos = Number.parseFloat(r.position ?? '0');
+        return Number.isFinite(pos) ? sum + pos : sum;
+      }, 0) / gscRecent.length
     : 0;
   const gscCtr = gscTotalImpressions > 0 ? (gscTotalClicks / gscTotalImpressions) * 100 : 0;
 
