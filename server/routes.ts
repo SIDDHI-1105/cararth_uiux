@@ -9434,6 +9434,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <priority>0.8</priority>
   </url>
 
+  <!-- Brand & About Pages -->
+  <url>
+    <loc>${baseUrl}/what-is-cararth</loc>
+    <lastmod>2025-11-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.95</priority>
+  </url>
+
   <!-- City Landing Pages for SEO -->
   <url>
     <loc>${baseUrl}/used-cars-hyderabad</loc>
