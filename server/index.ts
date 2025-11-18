@@ -318,7 +318,12 @@ app.use((req, res, next) => {
       res.sendFile('sitemap.xml', { root: 'public' });
     });
     app.get('/what-is-cararth', (req, res) => {
-      res.sendFile('what-is-cararth.html', { root: 'public' });
+      const fs = require('fs');
+      const path = require('path');
+      const filePath = path.join(process.cwd(), 'public', 'what-is-cararth.html');
+      const html = fs.readFileSync(filePath, 'utf8');
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.send(html);
     });
     
     // Serve other static files from public directory
