@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <!--
+    Replit-ready HTML: "What is Cararth?" article
+    - Replace placeholders wrapped {{LIKE_THIS}} dynamically (e.g., dates, site URLs, OG image)
+    - Recommended file path: /content/what-is-cararth/index.html
+    - Add to sitemap and internal linking: /about, /used-cars-in-hyderabad, /blog
+  -->
+
+  <title>What is Cararth? — India’s No‑Paid‑Listings Used‑Car Search Engine (Hyderabad launch)</title>
+  <meta name="description" content="What is Cararth? Learn about Cararth's no‑paid‑listings model, Hyderabad launch, AI verification, how it helps buyers and sellers, and why it matters for India’s used‑car market." />
+  <link rel="canonical" href="https://www.cararth.com/what-is-cararth" />
+  <meta name="robots" content="index, follow" />
+
+  <!-- Open Graph -->
+  <meta property="og:site_name" content="Cararth" />
+  <meta property="og:title" content="What is Cararth? — India’s No‑Paid‑Listings Used‑Car Search Engine" />
+  <meta property="og:description" content="Cararth is India’s first no‑paid‑listings used‑car search engine — launching in Hyderabad, prioritising verified listings and transparency over paid promotions." />
+  <meta property="og:url" content="https://www.cararth.com/what-is-cararth" />
+  <meta property="og:image" content="https://www.cararth.com/assets/images/what-is-cararth-og.jpg" />
+  <meta property="og:type" content="article" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <!-- Structured data hint: Article + FAQ JSON-LD is included at the end of the document -->
+
+  <style>
+    :root{--max:1100px;--muted:#6b7280}
+    body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#0f172a;margin:0;padding:0;background:#fff}
+    .wrap{max-width:var(--max);margin:36px auto;padding:24px}
+    header h1{font-size:28px;margin:4px 0}
+    .lede{color:var(--muted);margin-bottom:12px}
+    .small{font-size:13px;color:var(--muted)}
+    h2{font-size:20px;margin-top:18px}
+    h3{font-size:16px;margin-top:12px}
+    p{line-height:1.6}
+    ul{margin-left:18px}
+    a.cta{display:inline-block;background:#0ea5a4;color:#fff;padding:10px 12px;border-radius:8px;text-decoration:none}
+    .note{background:#fffbeb;border-left:4px solid #f59e0b;padding:10px;margin:12px 0}
+    .sources{font-size:13px;color:#374151}
+    footer{margin-top:28px;color:var(--muted);font-size:13px}
+    .kbd{font-family:monospace;background:#f1f5f9;padding:2px 6px;border-radius:4px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav class="small">Home &rsaquo; About &rsaquo; <strong>What is Cararth</strong></nav>
+
+    <header>
+      <h1>What is Cararth? — India’s No‑Paid‑Listings Used‑Car Search Engine</h1>
+      <p class="lede">Cararth is a trust‑first used‑car search engine launching in Hyderabad with a simple but radical promise: <strong>no paid listings</strong>. Discover how it works, why it matters, and how buyers and sellers benefit.</p>
+      <p class="small">Published: <span id="pub-date">16 Nov 2025</span> • Canonical: <a href="https://www.cararth.com/what-is-cararth">https://www.cararth.com/what-is-cararth</a></p>
+    </header>
+
+    <section>
+      <h2>Quick answer</h2>
+      <p>Cararth is India’s first <strong>no‑paid‑listings</strong> used‑car search engine — a transparent platform that ranks cars by relevance, freshness and verification rather than advertising spend, launching in Hyderabad and scaling PAN‑India.</p>
+
+      <h2>Key takeaways</h2>
+      <ul>
+        <li><strong>No paid listings:</strong> Rankings are based on data quality, not budgets.</li>
+        <li><strong>AI + verification:</strong> Cararth runs automated checks for listing authenticity.</li>
+        <li><strong>Launch city:</strong> Hyderabad (Telangana) — with PAN‑India plans.</li>
+        <li><strong>Buyer benefit:</strong> Cleaner search results, better price discovery.</li>
+        <li><strong>Seller benefit:</strong> Equal visibility for owners and dealers without pay‑to‑rank fees.</li>
+      </ul>
+    </section>
+
+    <article>
+      <h2>Why Cararth exists — the problem with pay‑to‑rank used‑car sites</h2>
+      <p>Most used‑car portals let dealers or sellers pay to promote their listings. This pay‑to‑rank model often surfaces inventory that’s paid to be visible, not necessarily the best option for the buyer. The result: noisy search results, hidden bargains and high acquisition costs for dealers.</p>
+
+      <h2>How Cararth works — three pillars of a fair search</h2>
+
+      <h3>1. No paid listings — ever</h3>
+      <p>Cararth does not offer paid boosts, featured slots or promoted placements. Visibility is earned through listing completeness, fresh updates, image quality, accurate pricing and seller verification. This levels the playing field for private owners and small dealers.</p>
+
+      <h3>2. AI‑assisted verification</h3>
+      <p>Cararth applies AI checks (image authenticity, RTO‑style data cross‑checks, text consistency) to flag suspicious or low‑quality listings. Verified listings receive a trust badge and rank higher in relevant searches.</p>
+
+      <h3>3. Standardised listing format</h3>
+      <p>Every listing follows a consistent template: variant, year, km, fuel, transmission, owner count, service history indicator, price benchmark and seller type. This reduces decision friction and improves comparison.</p>
+
+      <h2>Why Hyderabad is the launch city</h2>
+      <p>Hyderabad offers a strong mix of organised dealers, tech‑savvy buyers and a growing certified pre‑owned ecosystem, making it an ideal market to pilot Cararth’s no‑paid‑listings model before a PAN‑India roll‑out.</p>
+
+      <h2>How Cararth helps buyers and sellers</h2>
+      <h3>For buyers</h3>
+      <ul>
+        <li>Unbiased results that prioritise relevance and verification</li>
+        <li>Cleaner price discovery with less noise from promoted listings</li>
+        <li>Ability to compare similarly‑scoped listings easily</li>
+      </ul>
+
+      <h3>For sellers</h3>
+      <ul>
+        <li>Equal opportunity for visibility without ad spends</li>
+        <li>Lower customer acquisition cost for smaller dealers</li>
+        <li>Access to tools for verification and better presentation (premium optional services)</li>
+      </ul>
+
+      <h2>How Cararth is different — quick competitive snapshot</h2>
+      <table>
+        <thead>
+          <tr><th>Feature</th><th>Cararth</th><th>Typical Portals</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Paid listing boosts</td><td>❌ No</td><td>✔ Often</td></tr>
+          <tr><td>Ranking basis</td><td>Relevance & verification</td><td>Paid + relevance</td></tr>
+          <tr><td>Seller parity</td><td>✔ Equal</td><td>❌ Tiers</td></tr>
+          <tr><td>Launch city</td><td>Hyderabad</td><td>Pan‑India typical</td></tr>
+        </tbody>
+      </table>
+
+      <h2>SEO, backlinks & citation strategy (for editors / Replit agent)</h2>
+      <p class="note">Below are recommended anchor texts and citation URLs to include in the live article — embed as natural links within context (not a link dump). Replace {{CITY_PAGE}} and {{LISTING_PAGE}} with Cararth URLs where relevant.</p>
+      <ul class="sources">
+        <li><a href="https://www.cars24.com" target="_blank" rel="noopener">Cars24</a> — citation for market reports and certified program examples.</li>
+        <li><a href="https://www.spinny.com" target="_blank" rel="noopener">Spinny</a> — citation for inspection & warranty models.</li>
+        <li><a href="https://www.carwale.com" target="_blank" rel="noopener">CarWale</a> — citation for price tools and variant pages.</li>
+        <li><a href="https://www.cardekho.com" target="_blank" rel="noopener">CarDekho</a> — citation for dealer networks & sell pages.</li>
+        <li><a href="https://www.team-bhp.com" target="_blank" rel="noopener">Team‑BHP</a> — community insights and owner experiences.</li>
+      </ul>
+
+      <p class="small">Recommended anchor text examples for backlinks:
+      <ul>
+        <li>“used cars in Hyderabad” → link to <code class="kbd">/used-cars-in-hyderabad</code></li>
+        <li>“Cararth no‑paid‑listings” → link to <code class="kbd">/about</code></li>
+        <li>“verified listings” → link to <code class="kbd">/verification</code> (or listing trust page)</li>
+      </ul></p>
+
+      <h2>Call to action</h2>
+      <p>Launching soon in Hyderabad. <a class="cta" href="https://www.cararth.com/notify">Get notified</a> when Cararth goes live — or <a href="https://www.cararth.com/sell">list your car for free</a> today.</p>
+
+    </article>
+
+    <section class="sources">
+      <h2>Sources & citations</h2>
+      <ol>
+        <li><a href="https://www.cars24.com" target="_blank" rel="noopener">Cars24 — market reports & certified programs</a></li>
+        <li><a href="https://www.spinny.com" target="_blank" rel="noopener">Spinny — inspection & warranty models</a></li>
+        <li><a href="https://www.carwale.com" target="_blank" rel="noopener">CarWale — pricing & variant research</a></li>
+        <li><a href="https://www.cardekho.com" target="_blank" rel="noopener">CarDekho — dealer network & sell pages</a></li>
+        <li><a href="https://www.team-bhp.com" target="_blank" rel="noopener">Team‑BHP — owner community insights</a></li>
+      </ol>
+    </section>
+
+    <footer>
+      <p class="small">Cararth • India’s no‑paid‑listings used car search engine • <a href="https://www.cararth.com/about">About</a> • <a href="https://www.cararth.com/contact">Contact</a></p>
+
+      <!-- JSON-LD: Organization, Article, FAQPage -->
+      <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "name": "Cararth",
+            "url": "https://www.cararth.com",
+            "logo": "https://www.cararth.com/assets/images/cararth-logo.png",
+            "sameAs": ["https://www.facebook.com/cararth","https://www.linkedin.com/company/cararth"]
+          },
+          {
+            "@type": "WebSite",
+            "url": "https://www.cararth.com",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://www.cararth.com/search?q={search_term_string}",
+              "query-input": "required name=search_term_string"
+            }
+          },
+          {
+            "@type": "Article",
+            "headline": "What is Cararth? — India’s No‑Paid‑Listings Used‑Car Search Engine",
+            "description": "Cararth is a no‑paid‑listings used‑car search engine launching in Hyderabad; learn how it works, why it matters and how buyers and sellers benefit.",
+            "author": {"@type":"Organization","name":"Cararth"},
+            "datePublished": "2025-11-16",
+            "mainEntityOfPage": "https://www.cararth.com/what-is-cararth"
+          },
+          {
+            "@type": "FAQPage",
+            "mainEntity": [
+              {"@type":"Question","name":"What is Cararth?","acceptedAnswer":{"@type":"Answer","text":"Cararth is India’s first no‑paid‑listings used‑car search engine that ranks cars by relevance and verification, not advertising spend."}},
+              {"@type":"Question","name":"Does Cararth charge to list?","acceptedAnswer":{"@type":"Answer","text":"No — Cararth allows free basic listings; optional paid verification or premium presentation services may be offered separately."}},
+              {"@type":"Question","name":"Where is Cararth launching?","acceptedAnswer":{"@type":"Answer","text":"Cararth is launching in Hyderabad, Telangana and will expand PAN‑India in phased rollouts."}}
+            ]
+          }
+        ]
+      }
+      </script>
+    </footer>
+  </div>
+</body>
+</html>
