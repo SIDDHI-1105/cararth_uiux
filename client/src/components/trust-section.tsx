@@ -67,7 +67,7 @@ export function TrustSection() {
             {trustPoints.map((point, index) => {
               const Icon = point.icon;
               return (
-                <div key={index} className="glass-card p-6 hover:scale-105 transition-transform" data-testid={`card-trust-${index}`}>
+                <div key={index} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-6 hover:scale-105 transition-transform" data-testid={`card-trust-${index}`}>
                   <div className="flex items-start justify-between mb-4">
                     <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
                       <Icon className="w-6 h-6 text-primary" />

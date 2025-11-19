@@ -9,7 +9,7 @@ export default function KeyInsights() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* AI-Verified Listings */}
-          <div className="flex items-start space-x-4 glass-card p-5 border-2 border-blue-400/40 night:border-blue-400/30" data-testid="card-insight-ai-verified">
+          <div className="flex items-start space-x-4 bg-white dark:bg-gray-900 rounded-lg p-5 border-2 border-blue-400/40 night:border-blue-400/30" data-testid="card-insight-ai-verified">
             <div className="flex-shrink-0">
               <Shield className="w-8 h-8 text-blue-600 night:text-blue-400" />
             </div>
@@ -21,7 +21,7 @@ export default function KeyInsights() {
           </div>
 
           {/* Carbon Savings Dashboard */}
-          <div className="flex items-start space-x-4 glass-card p-5 border-2 border-green-400/40 night:border-green-400/30" data-testid="card-insight-carbon-savings">
+          <div className="flex items-start space-x-4 bg-white dark:bg-gray-900 rounded-lg p-5 border-2 border-green-400/40 night:border-green-400/30" data-testid="card-insight-carbon-savings">
             <div className="flex-shrink-0">
               <Leaf className="w-8 h-8 text-green-600 night:text-green-400" />
             </div>
@@ -33,7 +33,7 @@ export default function KeyInsights() {
           </div>
 
           {/* One-Upload Syndication */}
-          <div className="flex items-start space-x-4 glass-card p-5 border-2 border-purple-400/40 night:border-purple-400/30" data-testid="card-insight-syndication">
+          <div className="flex items-start space-x-4 bg-white dark:bg-gray-900 rounded-lg p-5 border-2 border-purple-400/40 night:border-purple-400/30" data-testid="card-insight-syndication">
             <div className="flex-shrink-0">
               <Zap className="w-8 h-8 text-purple-600 night:text-purple-400" />
             </div>

@@ -58,7 +58,7 @@ export function FAQSection() {
             <AccordionItem
               key={index}
               value={`item-${index}`}
-              className="glass-card px-4 sm:px-6 hover:scale-102 transition-transform"
+              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-4 sm:px-6 hover:scale-102 transition-transform"
               data-testid={`faq-item-${index}`}
             >
               <AccordionTrigger className="text-left text-base sm:text-lg font-semibold hover:no-underline py-4 sm:py-5 text-gray-900 night:text-white">

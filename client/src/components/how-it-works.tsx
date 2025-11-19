@@ -65,7 +65,7 @@ export function HowItWorks() {
               return (
                 <div 
                   key={step.number} 
-                  className="glass-card relative overflow-hidden hover:scale-105 transition-all duration-300"
+                  className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg relative overflow-hidden hover:scale-105 transition-all duration-300"
                   id={`step-${step.number}`}
                   data-testid={`card-step-${step.number}`}
                 >
