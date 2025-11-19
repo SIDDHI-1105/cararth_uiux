@@ -1,0 +1,60 @@
+## UI/UX Design Brief: www.cararth.com - Hybrid Mode, Glassmorphic Carbon Interface
+
+### 0. Technical & Professional Requirements (CRITICAL)
+
+**PURPOSE:** To enforce technical discipline and eliminate the "unprofessional" aesthetic common to rapid development.
+
+1.  **CSS Reset:** The codebase MUST start with a CSS Reset (e.g., Normalize.css) to enforce consistent styling.
+2.  **Custom Font Loading:** Use Google Fonts to load the **Inter** font family. Do not use default system fonts.
+3.  **Asset Quality:** All icons must be loaded as optimized **SVGs**. All photography/imagery must be optimized (e.g., WebP format) and properly sized for fast loading and high resolution.
+4.  **No Default Components:** Forbid the use of unstyled, default components from any framework. Every element must strictly adhere to the styling recipe in Section 3.
+
+---
+
+### 1. Project Goal & Aesthetic Mandate: Hybrid Approach
+
+We must achieve **high general visibility (Light Mode)** for content/forms and a **visually arresting, premium performance aesthetic (Dark Mode)** for key user areas.
+
+* **Platform Context:** Car Discovery and Listing service. The aesthetic must evoke **premium automotive technology and performance**.
+* **Mode Strategy:**
+    * **Light Mode (Default):** Used for **content-heavy** sections (Throttle Talk, FAQs, Sell Car Forms) to maximize legibility and form usability. Uses the White/Orange/Gray palette.
+    * **Dark Mode (Premium/Performance):** Used for the **Hero Section, Performance Dashboards (e.g., Dealer Dashboard), and as an optional user preference.** This mode implements the full Glassmorphism, Chrome, and Carbon Fibre aesthetic.
+* **Mandate:** Both modes must share the same components, ensuring **visual uniformity and consistency** via their respective color schemes.
+
+---
+
+### 2. Color Palette & Typography
+
+| Usage | Light Mode Value | Dark Mode Value | Notes |
+| :--- | :--- | :--- | :--- |
+| **Primary Background** | `#FFFFFF` (Pure White) | Dark Carbon (`#1E1E1E` or darker) | Defines the mode. |
+| **Glassmorphism Base** | N/A (Solid White) | `rgba(30, 30, 30, 0.65)` | Used only in Dark Mode elements. |
+| **Primary Text** | `#222222` (Near Black) | `#FFFFFF` (Pure White) | Ensures high contrast in both modes. |
+| **Secondary Text/Chrome** | `#888888` (Mid Gray) | Light Chrome Gray (`#E0E0E0`) | Used for subtle details, borders, and placeholders. |
+| **Primary CTA Accent** | Solid Orange (`#FF7043`) | Solid Orange (`#FF7043`) | **CRITICAL:** Remains the same high-visibility color in both modes. |
+| **Typography** | Font Family | **Inter** (must be loaded via Google Fonts) | Must be used consistently across both modes. |
+
+---
+
+### 3. Glassmorphism Styling Recipe (Dark Mode Only)
+
+This formula is **STRICTLY** reserved for the Dark Mode, giving it its distinctive premium look.
+
+```css
+.glass-element {
+    /* 1. Carbon Base with Transparency */
+    background-color: rgba(30, 30, 30, 0.65); 
+
+    /* 2. The KEY Frosted Glass Effect */
+    backdrop-filter: blur(10px); 
+    -webkit-backdrop-filter: blur(10px); 
+
+    /* 3. Chrome Highlight/Border */
+    border: 1px solid rgba(255, 255, 255, 0.2); 
+
+    /* 4. Depth/Floating Effect */
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); 
+
+    /* 5. Modern Shape */
+    border-radius: 12px;
+}
