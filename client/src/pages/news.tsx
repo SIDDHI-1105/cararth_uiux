@@ -957,7 +957,7 @@ export default function ThrottleTalkPage() {
                 marketInsightsPosts.map((post) => (
                 <Card 
                   key={post.id} 
-                  className="glass-card hover:shadow-lg cursor-pointer transition-all duration-300" 
+                  className="bg-white dark:bg-gray-900 hover:shadow-lg cursor-pointer transition-all duration-300 border border-gray-200 dark:border-gray-800" 
                   data-testid={`card-post-${post.id}`}
                   onClick={() => {
                     if (post.isExternal && post.sourceUrl) {
@@ -1144,7 +1144,7 @@ export default function ThrottleTalkPage() {
                 communityPosts.map((post) => (
                   <Card 
                     key={post.id} 
-                    className="glass-card hover:shadow-lg cursor-pointer transition-all duration-300" 
+                    className="bg-white dark:bg-gray-900 hover:shadow-lg cursor-pointer transition-all duration-300 border border-gray-200 dark:border-gray-800" 
                     data-testid={`card-post-${post.id}`}
                     onClick={() => {
                       if (post.isExternal && post.sourceUrl) {
