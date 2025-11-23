@@ -52,6 +52,7 @@ import SwiftHyderabadGuide2025 from "./pages/guide-swift-hyderabad-2025";
 import CretaIndiaGuide2025 from "./pages/guide-creta-india-2025";
 import InnovaIndiaGuide2025 from "./pages/guide-innova-india-2025";
 import DealersHyderabadGuide2025 from "./pages/guide-dealers-hyderabad-2025";
+import UsedElectricCarsGuide2025 from "./pages/guide-used-electric-cars-2025";
 import HyderabadCityPage from "./pages/city-hyderabad";
 import DelhiCityPage from "./pages/city-delhi";
 import MumbaiCityPage from "./pages/city-mumbai";
@@ -120,6 +121,7 @@ function Router() {
       <Route path="/guides/used-creta-india-2025" component={CretaIndiaGuide2025} />
       <Route path="/guides/used-innova-india-2025" component={InnovaIndiaGuide2025} />
       <Route path="/guides/used-car-dealers-hyderabad-2025" component={DealersHyderabadGuide2025} />
+      <Route path="/guides/used-electric-cars-2025" component={UsedElectricCarsGuide2025} />
       <Route path="/used-cars-hyderabad" component={HyderabadCityPage} />
       <Route path="/used-cars-delhi-ncr" component={DelhiCityPage} />
       <Route path="/used-cars-mumbai" component={MumbaiCityPage} />
