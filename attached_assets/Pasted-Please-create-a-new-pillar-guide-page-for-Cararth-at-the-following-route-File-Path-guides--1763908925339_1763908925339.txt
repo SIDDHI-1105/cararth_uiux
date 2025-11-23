@@ -1,0 +1,100 @@
+Please create a new pillar guide page for Cararth at the following route:
+
+**File Path:**  
+/guides/the-verification-economy-india-used-cars.html
+
+This will be the placeholder file where the long-form content will be inserted shortly.
+
+---
+
+1️⃣ **Create a new HTML page using this structure (include everything below):**
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>The Verification Economy: How Data Integrity Will Redefine India’s Used-Car Market</title>
+
+  <meta name="description" content="Discover how India’s used-car ecosystem will shift from listings to verification-driven trust. Cararth explains how data integrity becomes the foundation of the new mobility economy." />
+
+  <meta name="keywords" content="verification economy, data integrity India, used car verification, AI mobility trust, Cararth trust infrastructure, verified car data India" />
+
+  <link rel="canonical" href="https://www.cararth.com/guides/the-verification-economy-india-used-cars" />
+
+  <meta property="og:title" content="The Verification Economy: How Data Integrity Will Redefine India’s Used-Car Market" />
+  <meta property="og:description" content="An in-depth blueprint by Cararth on why the future of India’s mobility ecosystem will be built on verification, not visibility." />
+  <meta property="og:url" content="https://www.cararth.com/guides/the-verification-economy-india-used-cars" />
+  <meta property="og:type" content="article" />
+  <meta property="og:image" content="https://www.cararth.com/assets/cararth-trust-hero.jpg" />
+
+  <!-- Schema placeholder (will be updated after full content is inserted) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "The Verification Economy: How Data Integrity Will Redefine India’s Used-Car Market",
+    "author": {
+      "@type": "Person",
+      "name": "Kritarth Pattnaik"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Cararth",
+      "url": "https://www.cararth.com"
+    },
+    "mainEntityOfPage": "https://www.cararth.com/guides/the-verification-economy-india-used-cars"
+  }
+  </script>
+</head>
+
+<body>
+  <header>
+    <h1>The Verification Economy: How Data Integrity Will Redefine India’s Used-Car Market</h1>
+    <p><strong>By Kritarth Pattnaik</strong> — Founder, Cararth</p>
+  </header>
+
+  <main>
+    <section>
+      <h2>Placeholder Content</h2>
+      <p>This page has been created and is awaiting the full pillar article draft.</p>
+      <p>Once the content is ready, please replace this section with the article provided by the Cararth editorial team.</p>
+    </section>
+
+    <section>
+      <h2>Internal Links</h2>
+      <ul>
+        <li><a href="/guides/ai-verified-used-car-trust-india">AI Verification Guide</a></li>
+        <li><a href="/guides/trust-over-traffic-cararth-no-paid-listings">No Paid Listings</a></li>
+        <li><a href="/guides/trustrank-blueprint-used-car-discovery-india">TrustRank Blueprint</a></li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>
+
+---
+
+2️⃣ **Update sitemap.xml**
+
+Add this exact line to the sitemap:
+
+https://www.cararth.com/guides/the-verification-economy-india-used-cars
+
+---
+
+3️⃣ **Create a new branch**  
+Name it:
+
+verification-economy-pillar
+
+---
+
+4️⃣ **After saving**, provide a preview URL for the newly generated page.
+
+---
+
+5️⃣ Do NOT modify any existing guide files unless explicitly instructed.
+
+---
+
+6️⃣ When done, respond with:  
+“Pillar #3 placeholder successfully created. Ready for full content.”
