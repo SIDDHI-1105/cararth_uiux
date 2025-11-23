@@ -217,7 +217,7 @@ export default function UsedElectricCarsGuide2025() {
 
             <div className="bg-yellow-50 dark:bg-yellow-950/20 border-l-4 border-yellow-600 p-6 my-6">
               <p className="text-lg font-semibold mb-2">💡 Pro Tip:</p>
-              <p>When searching used EVs on Cararth.com, use the battery health filter to show only listings with SOH >90% for cars under 5 years. This instantly narrows 500+ listings to quality options across all platforms.</p>
+              <p>When searching used EVs on Cararth.com, use the battery health filter to show only listings with SOH {'>'}90% for cars under 5 years. This instantly narrows 500+ listings to quality options across all platforms.</p>
             </div>
 
             <Separator className="my-8" />
@@ -240,7 +240,7 @@ export default function UsedElectricCarsGuide2025() {
             </ul>
 
             <p className="mt-4">
-              However, faster depreciation creates opportunity: <strong>2-3 year old EVs available at 50-60% of original price</strong> offer excellent value if battery health verified (>90% SOH) and remaining warranty substantial (5-8 years typical).
+              However, faster depreciation creates opportunity: <strong>2-3 year old EVs available at 50-60% of original price</strong> offer excellent value if battery health verified ({'>'}90% SOH) and remaining warranty substantial (5-8 years typical).
             </p>
 
             <Separator className="my-8" />
