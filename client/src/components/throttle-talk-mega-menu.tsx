@@ -14,7 +14,8 @@ import {
   Sparkles,
   BookOpen,
   LineChart,
-  MapPin
+  MapPin,
+  Zap
 } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
@@ -51,6 +52,15 @@ export function ThrottleTalkMegaMenu({ isOpen, onClose }: ThrottleTalkMegaMenuPr
       href: "/guides/used-cars-hyderabad-2025",
       color: "text-amber-600 dark:text-amber-400",
       bgColor: "bg-amber-50 dark:bg-amber-950/20",
+      isNew: true,
+    },
+    {
+      icon: Zap,
+      title: "Used Electric Cars 2025",
+      description: "500+ EVs, battery health guide",
+      href: "/guides/used-electric-cars-2025",
+      color: "text-green-600 dark:text-green-400",
+      bgColor: "bg-green-50 dark:bg-green-950/20",
       isNew: true,
     },
     {
