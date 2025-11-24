@@ -71,7 +71,7 @@ export default function InnovaIndiaGuide2025() {
       "dateModified": "2025-11-16",
       "mainEntityOfPage": {
         "@type": "WebPage",
-        "@id": "https://www.cararth.com/guides/used-innova-india-2025"
+        "@id": "https://www.cararth.com/news/used-innova-india-2025"
       },
       "articleSection": "Car Guides",
       "keywords": "Innova India, used Innova price, Innova Crysta, MPV guide",
@@ -101,7 +101,7 @@ export default function InnovaIndiaGuide2025() {
           </Link>
           <BrandWordmark variant="header" showTagline={false} className="scale-75" />
           <SocialShareButtons
-            url="https://www.cararth.com/guides/used-innova-india-2025"
+            url="https://www.cararth.com/news/used-innova-india-2025"
             title="Used Innova India 2025: Complete Buyer's Guide"
             description="City-wise prices, inspection checklist for Toyota Innova on Cararth.com"
           />

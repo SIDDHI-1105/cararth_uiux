@@ -73,7 +73,7 @@ export default function SwiftHyderabadGuide2025() {
       "dateModified": "2025-11-16",
       "mainEntityOfPage": {
         "@type": "WebPage",
-        "@id": "https://www.cararth.com/guides/used-swift-hyderabad-2025"
+        "@id": "https://www.cararth.com/news/used-swift-hyderabad-2025"
       },
       "articleSection": "Car Guides",
       "keywords": "Swift Hyderabad, used Swift price, AMT vs Manual, VXi ZXi variants",
@@ -103,7 +103,7 @@ export default function SwiftHyderabadGuide2025() {
           </Link>
           <BrandWordmark variant="header" showTagline={false} className="scale-75" />
           <SocialShareButtons
-            url="https://www.cararth.com/guides/used-swift-hyderabad-2025"
+            url="https://www.cararth.com/news/used-swift-hyderabad-2025"
             title="Used Swift Hyderabad 2025: Complete Buyer's Guide"
             description="220+ Swift listings from ₹1.3L. Compare AMT vs Manual, VXi vs ZXi pricing on Cararth.com"
           />

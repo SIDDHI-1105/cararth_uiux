@@ -73,7 +73,7 @@ export default function HyderabadUsedCarsGuide2025() {
       "dateModified": "2025-11-16",
       "mainEntityOfPage": {
         "@type": "WebPage",
-        "@id": "https://www.cararth.com/guides/used-cars-hyderabad-2025"
+        "@id": "https://www.cararth.com/news/used-cars-hyderabad-2025"
       },
       "articleSection": "City Guides",
       "keywords": "Hyderabad used cars, Madhapur dealers, Jubilee Hills, car financing",
@@ -103,7 +103,7 @@ export default function HyderabadUsedCarsGuide2025() {
           </Link>
           <BrandWordmark variant="header" showTagline={false} className="scale-75" />
           <SocialShareButtons
-            url="https://www.cararth.com/guides/used-cars-hyderabad-2025"
+            url="https://www.cararth.com/news/used-cars-hyderabad-2025"
             title="Used Cars in Hyderabad 2025: Complete Buyer's Guide"
             description="6,500+ used cars in Hyderabad from ₹35K. Compare prices across all platforms instantly on Cararth.com"
           />
@@ -413,7 +413,7 @@ export default function HyderabadUsedCarsGuide2025() {
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Share this guide:</p>
                   <SocialShareButtons
-                    url="https://www.cararth.com/guides/used-cars-hyderabad-2025"
+                    url="https://www.cararth.com/news/used-cars-hyderabad-2025"
                     title="Used Cars in Hyderabad 2025: Complete Buyer's Guide"
                     description="6,500+ used cars in Hyderabad from ₹35K. Complete guide with dealers, financing & inspection services"
                   />

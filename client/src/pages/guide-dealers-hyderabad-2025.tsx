@@ -72,7 +72,7 @@ export default function DealersHyderabadGuide2025() {
       "dateModified": "2025-11-16",
       "mainEntityOfPage": {
         "@type": "WebPage",
-        "@id": "https://www.cararth.com/guides/used-car-dealers-hyderabad-2025"
+        "@id": "https://www.cararth.com/news/used-car-dealers-hyderabad-2025"
       },
       "articleSection": "Car Guides",
       "keywords": "Hyderabad dealers, Cars24, Spinny, used car showrooms",
@@ -102,7 +102,7 @@ export default function DealersHyderabadGuide2025() {
           </Link>
           <BrandWordmark variant="header" showTagline={false} className="scale-75" />
           <SocialShareButtons
-            url="https://www.cararth.com/guides/used-car-dealers-hyderabad-2025"
+            url="https://www.cararth.com/news/used-car-dealers-hyderabad-2025"
             title="Best Used Car Dealers in Hyderabad 2025"
             description="Top 15 showrooms, platform comparison & buying guide on Cararth.com"
           />

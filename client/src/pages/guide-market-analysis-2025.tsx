@@ -73,7 +73,7 @@ export default function UsedCarMarketAnalysis2025() {
       "dateModified": "2025-11-16",
       "mainEntityOfPage": {
         "@type": "WebPage",
-        "@id": "https://www.cararth.com/guides/used-car-market-india-2025"
+        "@id": "https://www.cararth.com/news/used-car-market-india-2025"
       },
       "articleSection": "Market Analysis",
       "keywords": "used car market India, market analysis 2025, growth forecast, SUV trends, organized platforms",
@@ -103,7 +103,7 @@ export default function UsedCarMarketAnalysis2025() {
           </Link>
           <BrandWordmark variant="header" showTagline={false} className="scale-75" />
           <SocialShareButtons
-            url="https://www.cararth.com/guides/used-car-market-india-2025"
+            url="https://www.cararth.com/news/used-car-market-india-2025"
             title="Used Car Market India 2025: Complete Market Analysis"
             description="India's used car market analysis: 5.9M units to 9.5M by 2030 with SUV demand, tier 2/3 growth, and digital transformation"
           />
@@ -358,7 +358,7 @@ export default function UsedCarMarketAnalysis2025() {
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Share this analysis:</p>
                   <SocialShareButtons
-                    url="https://www.cararth.com/guides/used-car-market-india-2025"
+                    url="https://www.cararth.com/news/used-car-market-india-2025"
                     title="Used Car Market India 2025: Complete Market Analysis"
                     description="India's used car market analysis: 5.9M units to 9.5M by 2030"
                   />

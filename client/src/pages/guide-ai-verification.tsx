@@ -75,7 +75,7 @@ export default function AIVerificationGuide() {
       "dateModified": "2025-10-26",
       "mainEntityOfPage": {
         "@type": "WebPage",
-        "@id": "https://www.cararth.com/guides/ai-verified-used-car-trust-india"
+        "@id": "https://www.cararth.com/news/ai-verified-used-car-trust-india"
       },
       "articleSection": "Automotive Technology",
       "keywords": "AI verification, used car fraud, trust scoring, VAHAN integration, blockchain automotive",
@@ -108,7 +108,7 @@ export default function AIVerificationGuide() {
           </Link>
           <BrandWordmark variant="header" showTagline={false} className="scale-75" />
           <SocialShareButtons
-            url="https://www.cararth.com/guides/ai-verified-used-car-trust-india"
+            url="https://www.cararth.com/news/ai-verified-used-car-trust-india"
             title="The Ultimate Guide to AI-Verified Used Car Trust in India"
             description="How AI verification is solving India's used car trust crisis"
           />
@@ -287,7 +287,7 @@ export default function AIVerificationGuide() {
             <p>Let's unpack how it works.</p>
             
             <p>
-              For a detailed breakdown of how Cararth's 200-Point AI Verification compares to traditional manual inspections, read <Link href="/guides/ai-check-vs-manual-inspection.html" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">this guide</Link>.
+              For a detailed breakdown of how Cararth's 200-Point AI Verification compares to traditional manual inspections, read <Link href="/news/ai-check-vs-manual-inspection.html" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">this guide</Link>.
             </p>
             
             <h3>Step 1: Multi-LLM (Large Language Model) Integration</h3>
@@ -594,7 +594,7 @@ export default function AIVerificationGuide() {
             </p>
             
             <p>
-              This commitment to verification over visibility is at the core of Cararth's philosophy. Discover how our zero-bias marketplace model extends this principle — <a href="/guides/trust-over-traffic-cararth-no-paid-listings.html" className="text-blue-600 dark:text-blue-400 hover:underline font-medium" data-testid="link-trust-over-traffic">read why Cararth said no to paid listings</a>.
+              This commitment to verification over visibility is at the core of Cararth's philosophy. Discover how our zero-bias marketplace model extends this principle — <a href="/news/trust-over-traffic-cararth-no-paid-listings.html" className="text-blue-600 dark:text-blue-400 hover:underline font-medium" data-testid="link-trust-over-traffic">read why Cararth said no to paid listings</a>.
             </p>
             
             <p className="text-2xl font-semibold text-gray-800 dark:text-gray-200 italic border-l-4 border-purple-600 pl-4 my-8">

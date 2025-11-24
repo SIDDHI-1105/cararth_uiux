@@ -64,7 +64,7 @@ export default function UsedMahindraGuide2025() {
       "dateModified": "2025-11-24",
       "mainEntityOfPage": {
         "@type": "WebPage",
-        "@id": "https://www.cararth.com/guides/used-mahindra-cars-india-2025"
+        "@id": "https://www.cararth.com/news/used-mahindra-cars-india-2025"
       }
     };
 
@@ -91,7 +91,7 @@ export default function UsedMahindraGuide2025() {
           </Link>
           <BrandWordmark variant="header" showTagline={false} className="scale-75" />
           <SocialShareButtons
-            url="https://www.cararth.com/guides/used-mahindra-cars-india-2025"
+            url="https://www.cararth.com/news/used-mahindra-cars-india-2025"
             title="Used Mahindra Cars India 2025: Complete Buying Guide with 1,270+ Listings"
             description="Compare 1,270+ used Mahindra cars, pricing, depreciation, and warranties."
           />
@@ -258,9 +258,9 @@ export default function UsedMahindraGuide2025() {
 
             <h2 className="text-2xl font-bold mb-4">Related Guides</h2>
             <ul>
-              <li><Link href="/guides/best-used-cars-india-2025" className="text-blue-600 hover:text-blue-700">Best Used Cars 2025</Link></li>
-              <li><Link href="/guides/used-tata-cars-india-2025" className="text-blue-600 hover:text-blue-700">Used Tata Cars Guide</Link></li>
-              <li><Link href="/guides/the-verification-economy-india-used-cars" className="text-blue-600 hover:text-blue-700">Verification Economy</Link></li>
+              <li><Link href="/news/best-used-cars-india-2025" className="text-blue-600 hover:text-blue-700">Best Used Cars 2025</Link></li>
+              <li><Link href="/news/used-tata-cars-india-2025" className="text-blue-600 hover:text-blue-700">Used Tata Cars Guide</Link></li>
+              <li><Link href="/news/the-verification-economy-india-used-cars" className="text-blue-600 hover:text-blue-700">Verification Economy</Link></li>
             </ul>
 
             <Separator className="my-8" />

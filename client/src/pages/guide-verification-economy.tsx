@@ -66,7 +66,7 @@ export default function VerificationEconomyGuide() {
       "dateModified": "2025-11-23",
       "mainEntityOfPage": {
         "@type": "WebPage",
-        "@id": "https://www.cararth.com/guides/the-verification-economy-india-used-cars"
+        "@id": "https://www.cararth.com/news/the-verification-economy-india-used-cars"
       },
       "articleSection": "Pillar Guides"
     };
@@ -94,7 +94,7 @@ export default function VerificationEconomyGuide() {
           </Link>
           <BrandWordmark variant="header" showTagline={false} className="scale-75" />
           <SocialShareButtons
-            url="https://www.cararth.com/guides/the-verification-economy-india-used-cars"
+            url="https://www.cararth.com/news/the-verification-economy-india-used-cars"
             title="The Verification Economy: How Data Integrity Will Redefine India's Used-Car Market"
             description="How India's used-car ecosystem will shift from listings to verification-driven trust."
           />
@@ -268,9 +268,9 @@ export default function VerificationEconomyGuide() {
 
             <h2 className="text-2xl font-bold mb-4">Related Guides</h2>
             <ul>
-              <li><Link href="/guides/ai-verified-used-car-trust-india" className="text-blue-600 hover:text-blue-700">AI Verification Guide</Link></li>
-              <li><Link href="/guides/best-used-cars-india-2025" className="text-blue-600 hover:text-blue-700">Best Used Cars 2025</Link></li>
-              <li><Link href="/guides/used-electric-cars-2025" className="text-blue-600 hover:text-blue-700">Used Electric Cars Guide</Link></li>
+              <li><Link href="/news/ai-verified-used-car-trust-india" className="text-blue-600 hover:text-blue-700">AI Verification Guide</Link></li>
+              <li><Link href="/news/best-used-cars-india-2025" className="text-blue-600 hover:text-blue-700">Best Used Cars 2025</Link></li>
+              <li><Link href="/news/used-electric-cars-2025" className="text-blue-600 hover:text-blue-700">Used Electric Cars Guide</Link></li>
             </ul>
 
             <Separator className="my-8" />

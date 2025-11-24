@@ -72,7 +72,7 @@ export default function UsedElectricCarsGuide2025() {
       "dateModified": "2025-11-19",
       "mainEntityOfPage": {
         "@type": "WebPage",
-        "@id": "https://www.cararth.com/guides/used-electric-cars-2025"
+        "@id": "https://www.cararth.com/news/used-electric-cars-2025"
       },
       "articleSection": "Buying Guides",
       "keywords": "used EV, electric car, battery health, depreciation, warranty",
@@ -102,7 +102,7 @@ export default function UsedElectricCarsGuide2025() {
           </Link>
           <BrandWordmark variant="header" showTagline={false} className="scale-75" />
           <SocialShareButtons
-            url="https://www.cararth.com/guides/used-electric-cars-2025"
+            url="https://www.cararth.com/news/used-electric-cars-2025"
             title="Used Electric Cars India 2025: Complete Buyer's Guide"
             description="500+ used EVs from ₹2.2L with battery health data, depreciation analysis, and warranty comparisons on Cararth.com"
           />

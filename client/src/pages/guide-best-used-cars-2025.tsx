@@ -74,7 +74,7 @@ export default function BestUsedCars2025Guide() {
       "dateModified": "2025-11-16",
       "mainEntityOfPage": {
         "@type": "WebPage",
-        "@id": "https://www.cararth.com/guides/best-used-cars-india-2025"
+        "@id": "https://www.cararth.com/news/best-used-cars-india-2025"
       },
       "articleSection": "Buyer's Guide",
       "keywords": "best used cars 2025, used car India, Maruti Swift, Honda City, resale value",
@@ -104,7 +104,7 @@ export default function BestUsedCars2025Guide() {
           </Link>
           <BrandWordmark variant="header" showTagline={false} className="scale-75" />
           <SocialShareButtons
-            url="https://www.cararth.com/guides/best-used-cars-india-2025"
+            url="https://www.cararth.com/news/best-used-cars-india-2025"
             title="Best Used Cars in India 2025: Complete Buyer's Guide"
             description="Expert guide to the best used cars in India with prices, maintenance costs, and resale values"
           />
@@ -318,7 +318,7 @@ export default function BestUsedCars2025Guide() {
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Share this guide:</p>
                   <SocialShareButtons
-                    url="https://www.cararth.com/guides/best-used-cars-india-2025"
+                    url="https://www.cararth.com/news/best-used-cars-india-2025"
                     title="Best Used Cars in India 2025: Complete Buyer's Guide"
                     description="Expert guide to the best used cars in India with prices, maintenance costs, and resale values"
                   />

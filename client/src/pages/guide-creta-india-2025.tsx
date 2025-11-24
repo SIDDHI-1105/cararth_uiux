@@ -72,7 +72,7 @@ export default function CretaIndiaGuide2025() {
       "dateModified": "2025-11-16",
       "mainEntityOfPage": {
         "@type": "WebPage",
-        "@id": "https://www.cararth.com/guides/used-creta-india-2025"
+        "@id": "https://www.cararth.com/news/used-creta-india-2025"
       },
       "articleSection": "Car Guides",
       "keywords": "Creta India, used Creta price, diesel vs petrol, first gen second gen",
@@ -102,7 +102,7 @@ export default function CretaIndiaGuide2025() {
           </Link>
           <BrandWordmark variant="header" showTagline={false} className="scale-75" />
           <SocialShareButtons
-            url="https://www.cararth.com/guides/used-creta-india-2025"
+            url="https://www.cararth.com/news/used-creta-india-2025"
             title="Used Creta India 2025: Complete Buyer's Guide"
             description="5,800+ Creta listings from ₹2.5L. Compare diesel vs petrol, best years on Cararth.com"
           />
