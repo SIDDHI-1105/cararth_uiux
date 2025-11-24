@@ -63,7 +63,16 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 export function useTheme() {
   const context = useContext(ThemeContext);
   if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+    // Return a fallback when ThemeProvider is not available
+    return {
+      theme: (typeof document !== 'undefined' && document.documentElement.classList.contains('dark') ? 'night' : 'day') as Theme,
+      toggleTheme: () => {
+        if (typeof document !== 'undefined') {
+          document.documentElement.classList.toggle('dark');
+        }
+      },
+      setTheme: () => {}
+    };
   }
   return context;
 }
