@@ -1,0 +1,114 @@
+Please create and publish a new pillar guide page on Cararth.com with the following details:
+
+---
+
+📌 FILE PATH  
+/guides/the-verification-economy-india-used-cars.html
+
+📌 PAGE TITLE  
+The Verification Economy: Building India’s First Trust Infrastructure for Used Cars
+
+📌 META DESCRIPTION  
+India’s used-car market doesn’t need more listings—it needs more truth. Discover how Cararth is building the verification-first trust infrastructure that will redefine mobility discovery in India.
+
+📌 CANONICAL URL  
+https://www.cararth.com/guides/the-verification-economy-india-used-cars
+
+📌 OPEN GRAPH TAGS  
+og:title = The Verification Economy: Building India’s First Trust Infrastructure for Used Cars  
+og:description = Why India is entering the Verification Economy—and how Cararth is building the trust infrastructure underpinning the future of mobility discovery.  
+og:type = article  
+og:image = https://www.cararth.com/assets/cararth-trust-hero.jpg  
+
+---
+
+📌 **INSERT THE FOLLOWING HTML PAGE INTO THE FILE**  
+(Use clean HTML. Do NOT escape characters. Keep all formatting, headings, and paragraphs intact.)
+
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>The Verification Economy: Building India’s First Trust Infrastructure for Used Cars</title>
+<meta name="description" content="India’s used-car market doesn’t need more listings—it needs more truth. Discover how Cararth is building the verification-first trust infrastructure that will redefine mobility discovery in India."/>
+<meta name="keywords" content="verification economy india, car verification india, mobility trust infrastructure, cararth verification, verified used cars india"/>
+<link rel="canonical" href="https://www.cararth.com/guides/the-verification-economy-india-used-cars"/>
+
+<meta property="og:title" content="The Verification Economy: Building India’s First Trust Infrastructure for Used Cars">
+<meta property="og:description" content="Why India is entering the Verification Economy—and how Cararth is building the trust infrastructure underpinning the future of mobility discovery.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.cararth.com/guides/the-verification-economy-india-used-cars">
+<meta property="og:image" content="https://www.cararth.com/assets/cararth-trust-hero.jpg">
+
+<script type="application/ld+json">
+{
+"@context": "https://schema.org",
+"@type": "Article",
+"headline": "The Verification Economy: Building India’s First Trust Infrastructure for Used Cars",
+"author": {
+"@type": "Person",
+"name": "Kritarth Pattnaik"
+},
+"publisher": {
+"@type": "Organization",
+"name": "Cararth",
+"url": "https://www.cararth.com"
+},
+"mainEntityOfPage": "https://www.cararth.com/guides/the-verification-economy-india-used-cars"
+}
+</script>
+
+</head>
+<body>
+<header>
+<h1>The Verification Economy: Building India’s First Trust Infrastructure for Used Cars</h1>
+<p><strong>By Kritarth Pattnaik</strong> — Founder, Cararth</p>
+</header>
+
+<main>
+
+<!-- ✨ START OF FULL ARTICLE CONTENT — REPLACE NOTHING BELOW THIS LINE -->
+
+[INSERT THE ENTIRE ARTICLE YOU GENERATED EARLIER HERE]
+
+<!-- ✨ END OF ARTICLE CONTENT -->
+
+<section>
+<h2>Related Guides</h2>
+<ul>
+<li><a href="/guides/ai-verified-used-car-trust-india">AI Verification Guide</a></li>
+<li><a href="/guides/trust-over-traffic-cararth-no-paid-listings">No Paid Listings</a></li>
+<li><a href="/guides/trustrank-blueprint-used-car-discovery-india">TrustRank Blueprint</a></li>
+</ul>
+</section>
+
+</main>
+</body>
+</html>
+
+---
+
+📌 **VERY IMPORTANT — Replace the placeholder  
+"[INSERT THE ENTIRE ARTICLE YOU GENERATED EARLIER HERE]"  
+with the full pillar content provided by the user.**
+
+---
+
+📌 UPDATE SITEMAP.XML  
+Add this line:
+
+https://www.cararth.com/guides/the-verification-economy-india-used-cars
+
+---
+
+📌 CREATE NEW BRANCH  
+Branch name: verification-economy-pillar
+
+Commit the new HTML file + sitemap update to this new branch.
+
+---
+
+📌 FINAL OUTPUT  
+After completing all steps, respond with:
+
+"Pillar #3 has been created. Preview URL ready."
+
