@@ -290,7 +290,7 @@ export default function BestUsedCarPortalsGuide2025() {
 
             <Card className="glass-contrast border-l-4 border-green-500 dark:border-green-400 p-6 mt-6">
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                <strong>Warranty Strategy:</strong> Spinny 1-year best for newer vehicles (<40,000 km), Cars24 3-year/45,000 km best for high-usage buyers (15,000+ km/year), CarWale 15,000 km conservative for shorter ownership (2-3 years). Cars24 includes RSA + servicing, Spinny focuses on duration, CarWale emphasizes dealer-backed assurance.
+                <strong>Warranty Strategy:</strong> Spinny 1-year best for newer vehicles (&lt;40,000 km), Cars24 3-year/45,000 km best for high-usage buyers (15,000+ km/year), CarWale 15,000 km conservative for shorter ownership (2-3 years). Cars24 includes RSA + servicing, Spinny focuses on duration, CarWale emphasizes dealer-backed assurance.
               </p>
             </Card>
           </section>
@@ -380,7 +380,7 @@ export default function BestUsedCarPortalsGuide2025() {
                   What warranty duration should I prioritize for my situation?
                 </h3>
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                  <strong>New vehicles (<40,000 km), high-usage (15,000+ km/year):</strong> Spinny 1-year (best duration, ₹50-100K protection). <strong>Older vehicles (>60,000 km), extended ownership (5+ years):</strong> Cars24 3-year/45,000 km (most comprehensive, RSA included, ₹75-150K protection). <strong>Budget ownership (2-3 years, lower usage):</strong> CarWale 15,000 km (conservative but adequate, ₹30-60K protection). Calculate planned annual km × ownership years to select optimal warranty.
+                  <strong>New vehicles (&lt;40,000 km), high-usage (15,000+ km/year):</strong> Spinny 1-year (best duration, ₹50-100K protection). <strong>Older vehicles (&gt;60,000 km), extended ownership (5+ years):</strong> Cars24 3-year/45,000 km (most comprehensive, RSA included, ₹75-150K protection). <strong>Budget ownership (2-3 years, lower usage):</strong> CarWale 15,000 km (conservative but adequate, ₹30-60K protection). Calculate planned annual km × ownership years to select optimal warranty.
                 </p>
               </Card>
 
