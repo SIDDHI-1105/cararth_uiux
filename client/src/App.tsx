@@ -56,6 +56,7 @@ import UsedElectricCarsGuide2025 from "./pages/guide-used-electric-cars-2025";
 import VerificationEconomyGuide from "./pages/guide-verification-economy";
 import UsedTataGuide2025 from "./pages/guide-used-tata-cars-2025";
 import UsedMahindraGuide2025 from "./pages/guide-used-mahindra-cars-2025";
+import BestUsedCarPortalsGuide2025 from "./pages/guide-best-used-car-portals-2025";
 import HyderabadCityPage from "./pages/city-hyderabad";
 import DelhiCityPage from "./pages/city-delhi";
 import MumbaiCityPage from "./pages/city-mumbai";
@@ -112,6 +113,7 @@ function Router() {
       <Route path="/news/the-verification-economy-india-used-cars" component={VerificationEconomyGuide} />
       <Route path="/news/used-tata-cars-india-2025" component={UsedTataGuide2025} />
       <Route path="/news/used-mahindra-cars-india-2025" component={UsedMahindraGuide2025} />
+      <Route path="/news/best-used-car-portals-india-2025" component={BestUsedCarPortalsGuide2025} />
       <Route path="/news/:id" component={NewsDetail} />
       <Route path="/news" component={ThrottleTalk} />
       <Route path="/community" component={Community} />
