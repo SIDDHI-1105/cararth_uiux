@@ -18,7 +18,7 @@ import {
   MessageCircle, Globe, ExternalLink, LogIn,
   Heart, Bookmark, Share2, ThumbsUp, TrendingUp,
   Image as ImageIcon, Play, BarChart3, Users, Info, HelpCircle, Download, X, BookOpen, FileCheck,
-  Car, MapPin
+  Car, MapPin, Star
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useForm } from "react-hook-form";
