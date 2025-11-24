@@ -1225,7 +1225,7 @@ export default function ThrottleTalkPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <Badge className="mb-3 bg-purple-600 text-white">Pillar Guide</Badge>
-                      <Link href="/guides/ai-verified-used-car-trust-india">
+                      <Link href="/news/ai-verified-used-car-trust-india">
                         <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 hover:text-purple-600 dark:hover:text-purple-400 transition-colors cursor-pointer">
                           The Ultimate Guide to AI-Verified Used Car Trust in India
                         </h3>
@@ -1243,7 +1243,7 @@ export default function ThrottleTalkPage() {
                         <Badge variant="outline" className="text-xs">Trust Scoring</Badge>
                         <Badge variant="outline" className="text-xs">Fraud Detection</Badge>
                       </div>
-                      <Link href="/guides/ai-verified-used-car-trust-india">
+                      <Link href="/news/ai-verified-used-car-trust-india">
                         <Button className="bg-purple-600 hover:bg-purple-700 text-white" data-testid="button-read-pillar-guide">
                           Read Full Guide
                           <ExternalLink className="ml-2 h-4 w-4" />
@@ -1272,7 +1272,7 @@ export default function ThrottleTalkPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Buyer's Guide</Badge>
-                        <Link href="/guides/best-used-cars-india-2025">
+                        <Link href="/news/best-used-cars-india-2025">
                           <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
                             Best Used Cars in India 2025: Complete Buyer's Guide with Prices, Models & Expert Tips
                           </h4>
@@ -1290,7 +1290,7 @@ export default function ThrottleTalkPage() {
                           <Badge variant="outline" className="text-xs">Pricing</Badge>
                           <Badge variant="outline" className="text-xs">Expert Analysis</Badge>
                         </div>
-                        <Link href="/guides/best-used-cars-india-2025">
+                        <Link href="/news/best-used-cars-india-2025">
                           <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-best-cars-guide">
                             Read Full Guide
                             <ExternalLink className="ml-2 h-3 w-3" />
@@ -1310,7 +1310,7 @@ export default function ThrottleTalkPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Market Intelligence</Badge>
-                        <Link href="/guides/used-car-market-india-2025">
+                        <Link href="/news/used-car-market-india-2025">
                           <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
                             Used Car Market Analysis India 2025: Trends, Pricing & Investment Insights
                           </h4>
@@ -1328,7 +1328,7 @@ export default function ThrottleTalkPage() {
                           <Badge variant="outline" className="text-xs">Pricing Data</Badge>
                           <Badge variant="outline" className="text-xs">Analytics</Badge>
                         </div>
-                        <Link href="/guides/used-car-market-india-2025">
+                        <Link href="/news/used-car-market-india-2025">
                           <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-market-guide">
                             Read Full Guide
                             <ExternalLink className="ml-2 h-3 w-3" />
@@ -1348,7 +1348,7 @@ export default function ThrottleTalkPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">City Guide</Badge>
-                        <Link href="/guides/used-cars-hyderabad-2025">
+                        <Link href="/news/used-cars-hyderabad-2025">
                           <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
                             Best Used Cars in Hyderabad 2025: Local Market Insights & Top Deals
                           </h4>
@@ -1366,7 +1366,7 @@ export default function ThrottleTalkPage() {
                           <Badge variant="outline" className="text-xs">Local Insights</Badge>
                           <Badge variant="outline" className="text-xs">RTA Data</Badge>
                         </div>
-                        <Link href="/guides/used-cars-hyderabad-2025">
+                        <Link href="/news/used-cars-hyderabad-2025">
                           <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-hyderabad-guide">
                             Read Full Guide
                             <ExternalLink className="ml-2 h-3 w-3" />
@@ -1386,7 +1386,7 @@ export default function ThrottleTalkPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Model Guide</Badge>
-                        <Link href="/guides/used-swift-hyderabad-2025">
+                        <Link href="/news/used-swift-hyderabad-2025">
                           <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
                             Used Maruti Swift Hyderabad 2025: 220+ Listings, Prices & AMT vs Manual
                           </h4>
@@ -1404,7 +1404,7 @@ export default function ThrottleTalkPage() {
                           <Badge variant="outline" className="text-xs">AMT vs Manual</Badge>
                           <Badge variant="outline" className="text-xs">Variants</Badge>
                         </div>
-                        <Link href="/guides/used-swift-hyderabad-2025">
+                        <Link href="/news/used-swift-hyderabad-2025">
                           <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-swift-guide">
                             Read Full Guide
                             <ExternalLink className="ml-2 h-3 w-3" />
@@ -1424,7 +1424,7 @@ export default function ThrottleTalkPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Model Guide</Badge>
-                        <Link href="/guides/used-creta-india-2025">
+                        <Link href="/news/used-creta-india-2025">
                           <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
                             Used Hyundai Creta India 2025: 5,800+ Listings, Best Years & Diesel vs Petrol
                           </h4>
@@ -1442,7 +1442,7 @@ export default function ThrottleTalkPage() {
                           <Badge variant="outline" className="text-xs">Diesel vs Petrol</Badge>
                           <Badge variant="outline" className="text-xs">First Gen / Second Gen</Badge>
                         </div>
-                        <Link href="/guides/used-creta-india-2025">
+                        <Link href="/news/used-creta-india-2025">
                           <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-creta-guide">
                             Read Full Guide
                             <ExternalLink className="ml-2 h-3 w-3" />
@@ -1462,7 +1462,7 @@ export default function ThrottleTalkPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Model Guide</Badge>
-                        <Link href="/guides/used-innova-india-2025">
+                        <Link href="/news/used-innova-india-2025">
                           <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
                             Used Toyota Innova India 2025: Complete Buyer's Guide with City Prices
                           </h4>
@@ -1480,7 +1480,7 @@ export default function ThrottleTalkPage() {
                           <Badge variant="outline" className="text-xs">MPV</Badge>
                           <Badge variant="outline" className="text-xs">Crysta</Badge>
                         </div>
-                        <Link href="/guides/used-innova-india-2025">
+                        <Link href="/news/used-innova-india-2025">
                           <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-innova-guide">
                             Read Full Guide
                             <ExternalLink className="ml-2 h-3 w-3" />
@@ -1500,7 +1500,7 @@ export default function ThrottleTalkPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Dealer Guide</Badge>
-                        <Link href="/guides/used-car-dealers-hyderabad-2025">
+                        <Link href="/news/used-car-dealers-hyderabad-2025">
                           <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
                             Best Used Car Dealers in Hyderabad 2025: Top 15 Showrooms & Platform Comparison
                           </h4>
@@ -1518,8 +1518,160 @@ export default function ThrottleTalkPage() {
                           <Badge variant="outline" className="text-xs">Dealers</Badge>
                           <Badge variant="outline" className="text-xs">Cars24</Badge>
                         </div>
-                        <Link href="/guides/used-car-dealers-hyderabad-2025">
+                        <Link href="/news/used-car-dealers-hyderabad-2025">
                           <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-dealers-guide">
+                            Read Full Guide
+                            <ExternalLink className="ml-2 h-3 w-3" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Guide 8: Used Electric Cars 2025 */}
+                <Card className="hover:shadow-md transition-shadow mb-4 border-orange-200 dark:border-orange-900">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 mt-1">
+                        <Car className="h-5 w-5 text-orange-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">EV Guide</Badge>
+                        <Link href="/news/used-electric-cars-2025">
+                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
+                            Used Electric Cars India 2025: Complete Buyer's Guide & Charging Insights
+                          </h4>
+                        </Link>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
+                          Comprehensive EV buying guide covering battery health evaluation, charging infrastructure, 
+                          popular models, ownership costs, and government incentives for used electric cars in India.
+                        </p>
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mb-3">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Published Nov 17, 2025
+                          </span>
+                          <Badge variant="outline" className="text-xs">Electric Cars</Badge>
+                          <Badge variant="outline" className="text-xs">Battery Health</Badge>
+                          <Badge variant="outline" className="text-xs">Charging</Badge>
+                        </div>
+                        <Link href="/news/used-electric-cars-2025">
+                          <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-electric-guide">
+                            Read Full Guide
+                            <ExternalLink className="ml-2 h-3 w-3" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Guide 9: The Verification Economy */}
+                <Card className="hover:shadow-md transition-shadow mb-4 border-orange-200 dark:border-orange-900">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 mt-1">
+                        <FileCheck className="h-5 w-5 text-orange-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Economics Guide</Badge>
+                        <Link href="/news/the-verification-economy-india-used-cars">
+                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
+                            The Verification Economy: How Trust Creation Is Reshaping India's Used Car Market
+                          </h4>
+                        </Link>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
+                          Deep analysis of how verification services create value in used car marketplaces, 
+                          economic impact of trust infrastructure, and future of verified commerce in India.
+                        </p>
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mb-3">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Published Nov 17, 2025
+                          </span>
+                          <Badge variant="outline" className="text-xs">Market Economics</Badge>
+                          <Badge variant="outline" className="text-xs">Trust Infrastructure</Badge>
+                          <Badge variant="outline" className="text-xs">Verification</Badge>
+                        </div>
+                        <Link href="/news/the-verification-economy-india-used-cars">
+                          <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-verification-econ-guide">
+                            Read Full Guide
+                            <ExternalLink className="ml-2 h-3 w-3" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Guide 10: Used Tata Cars 2025 */}
+                <Card className="hover:shadow-md transition-shadow mb-4 border-orange-200 dark:border-orange-900">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 mt-1">
+                        <Car className="h-5 w-5 text-orange-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Model Guide</Badge>
+                        <Link href="/news/used-tata-cars-india-2025">
+                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
+                            Used Tata Cars India 2025: Nexon, Harrier & Altroz Buyer's Guide
+                          </h4>
+                        </Link>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
+                          Complete Tata buying guide covering popular models (Nexon, Harrier, Altroz), 
+                          engine options, ownership costs, reliability insights, and best model years.
+                        </p>
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mb-3">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Published Nov 17, 2025
+                          </span>
+                          <Badge variant="outline" className="text-xs">Tata Motors</Badge>
+                          <Badge variant="outline" className="text-xs">Nexon</Badge>
+                          <Badge variant="outline" className="text-xs">Harrier</Badge>
+                        </div>
+                        <Link href="/news/used-tata-cars-india-2025">
+                          <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-tata-guide">
+                            Read Full Guide
+                            <ExternalLink className="ml-2 h-3 w-3" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Guide 11: Used Mahindra Cars 2025 */}
+                <Card className="hover:shadow-md transition-shadow mb-4 border-orange-200 dark:border-orange-900">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 mt-1">
+                        <Car className="h-5 w-5 text-orange-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Model Guide</Badge>
+                        <Link href="/news/used-mahindra-cars-india-2025">
+                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
+                            Used Mahindra Cars India 2025: XUV500, Bolero & Scorpio Buyer's Guide
+                          </h4>
+                        </Link>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
+                          Comprehensive Mahindra buying guide with popular models (XUV500, Bolero, Scorpio), 
+                          engine variants, resale value analysis, maintenance costs, and reliability data.
+                        </p>
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mb-3">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Published Nov 17, 2025
+                          </span>
+                          <Badge variant="outline" className="text-xs">Mahindra</Badge>
+                          <Badge variant="outline" className="text-xs">XUV500</Badge>
+                          <Badge variant="outline" className="text-xs">Scorpio</Badge>
+                        </div>
+                        <Link href="/news/used-mahindra-cars-india-2025">
+                          <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-mahindra-guide">
                             Read Full Guide
                             <ExternalLink className="ml-2 h-3 w-3" />
                           </Button>
