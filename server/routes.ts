@@ -546,6 +546,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('⚠️ Continuing without local authentication');
   }
 
+  // 301 Redirect middleware for /guides/* to /news/* (SEO preservation)
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/guides/')) {
+      const newPath = req.path.replace('/guides/', '/news/');
+      return res.redirect(301, newPath);
+    }
+    next();
+  });
+  console.log('✅ SEO redirects configured: /guides/* → /news/*');
+
   // Register dealer inventory upload routes
   app.use('/api/dealer', dealerRoutes);
   console.log('✅ Dealer routes registered');
