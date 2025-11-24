@@ -70,8 +70,8 @@ export default function BestUsedCars2025Guide() {
           "url": "https://www.cararth.com/cararth-logo-full.png"
         }
       },
-      "datePublished": "2025-11-16",
-      "dateModified": "2025-11-16",
+      "datePublished": "2025-11-15",
+      "dateModified": "2025-11-15",
       "mainEntityOfPage": {
         "@type": "WebPage",
         "@id": "https://www.cararth.com/news/best-used-cars-india-2025"

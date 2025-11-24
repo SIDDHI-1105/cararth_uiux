@@ -69,8 +69,8 @@ export default function UsedCarMarketAnalysis2025() {
           "url": "https://www.cararth.com/cararth-logo-full.png"
         }
       },
-      "datePublished": "2025-11-16",
-      "dateModified": "2025-11-16",
+      "datePublished": "2025-11-15",
+      "dateModified": "2025-11-15",
       "mainEntityOfPage": {
         "@type": "WebPage",
         "@id": "https://www.cararth.com/news/used-car-market-india-2025"
