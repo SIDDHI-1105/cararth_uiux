@@ -116,18 +116,18 @@ function Router() {
       <Route path="/analytics/market-intelligence" component={MarketIntelligenceDashboard} />
       <Route path="/market-intelligence" component={MarketIntelligenceDashboard} />
       <Route path="/spinny-deals-hyderabad" component={SpinnyDeals} />
-      <Route path="/guides/ai-verified-used-car-trust-india" component={AIVerificationGuide} />
-      <Route path="/guides/best-used-cars-india-2025" component={BestUsedCars2025Guide} />
-      <Route path="/guides/used-car-market-india-2025" component={UsedCarMarketAnalysis2025} />
-      <Route path="/guides/used-cars-hyderabad-2025" component={HyderabadUsedCarsGuide2025} />
-      <Route path="/guides/used-swift-hyderabad-2025" component={SwiftHyderabadGuide2025} />
-      <Route path="/guides/used-creta-india-2025" component={CretaIndiaGuide2025} />
-      <Route path="/guides/used-innova-india-2025" component={InnovaIndiaGuide2025} />
-      <Route path="/guides/used-car-dealers-hyderabad-2025" component={DealersHyderabadGuide2025} />
-      <Route path="/guides/used-electric-cars-2025" component={UsedElectricCarsGuide2025} />
-      <Route path="/guides/the-verification-economy-india-used-cars" component={VerificationEconomyGuide} />
-      <Route path="/guides/used-tata-cars-india-2025" component={UsedTataGuide2025} />
-      <Route path="/guides/used-mahindra-cars-india-2025" component={UsedMahindraGuide2025} />
+      <Route path="/news/ai-verified-used-car-trust-india" component={AIVerificationGuide} />
+      <Route path="/news/best-used-cars-india-2025" component={BestUsedCars2025Guide} />
+      <Route path="/news/used-car-market-india-2025" component={UsedCarMarketAnalysis2025} />
+      <Route path="/news/used-cars-hyderabad-2025" component={HyderabadUsedCarsGuide2025} />
+      <Route path="/news/used-swift-hyderabad-2025" component={SwiftHyderabadGuide2025} />
+      <Route path="/news/used-creta-india-2025" component={CretaIndiaGuide2025} />
+      <Route path="/news/used-innova-india-2025" component={InnovaIndiaGuide2025} />
+      <Route path="/news/used-car-dealers-hyderabad-2025" component={DealersHyderabadGuide2025} />
+      <Route path="/news/used-electric-cars-2025" component={UsedElectricCarsGuide2025} />
+      <Route path="/news/the-verification-economy-india-used-cars" component={VerificationEconomyGuide} />
+      <Route path="/news/used-tata-cars-india-2025" component={UsedTataGuide2025} />
+      <Route path="/news/used-mahindra-cars-india-2025" component={UsedMahindraGuide2025} />
       <Route path="/used-cars-hyderabad" component={HyderabadCityPage} />
       <Route path="/used-cars-delhi-ncr" component={DelhiCityPage} />
       <Route path="/used-cars-mumbai" component={MumbaiCityPage} />
