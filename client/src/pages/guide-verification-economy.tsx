@@ -125,7 +125,7 @@ export default function VerificationEconomyGuide() {
           <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
             <span>By Kritarth Pattnaik</span>
             <span>•</span>
-            <span>Founder, Cararth</span>
+            <span>November 17, 2025</span>
           </div>
         </div>
       </div>

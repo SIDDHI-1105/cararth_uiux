@@ -137,7 +137,7 @@ export default function HyderabadUsedCarsGuide2025() {
           <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
             <span>By Cararth Team</span>
             <span>•</span>
-            <span>November 16, 2025</span>
+            <span>November 15, 2025</span>
           </div>
         </div>
       </div>
