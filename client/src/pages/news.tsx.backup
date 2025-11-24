@@ -1263,310 +1263,7 @@ export default function ThrottleTalkPage() {
                   <Badge className="bg-orange-500 text-white">NEW</Badge>
                 </div>
                 
-                {/* Guide 1: Used Electric Cars 2025 */}
-                <Card className="hover:shadow-md transition-shadow mb-4 border-orange-200 dark:border-orange-900">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0 mt-1">
-                        <Car className="h-5 w-5 text-orange-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">EV Guide</Badge>
-                        <Link href="/news/used-electric-cars-2025">
-                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
-                            Used Electric Cars India 2025: Complete Buyer's Guide & Charging Insights
-                          </h4>
-                        </Link>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
-                          Comprehensive EV buying guide covering battery health evaluation, charging infrastructure, 
-                          popular models, ownership costs, and government incentives for used electric cars in India.
-                        </p>
-                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mb-3">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            Published Nov 17, 2025
-                          </span>
-                          <Badge variant="outline" className="text-xs">Electric Cars</Badge>
-                          <Badge variant="outline" className="text-xs">Battery Health</Badge>
-                          <Badge variant="outline" className="text-xs">Charging</Badge>
-                        </div>
-                        <Link href="/news/used-electric-cars-2025">
-                          <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-electric-guide">
-                            Read Full Guide
-                            <ExternalLink className="ml-2 h-3 w-3" />
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Guide 2: The Verification Economy */}
-                <Card className="hover:shadow-md transition-shadow mb-4 border-orange-200 dark:border-orange-900">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0 mt-1">
-                        <FileCheck className="h-5 w-5 text-orange-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Economics Guide</Badge>
-                        <Link href="/news/the-verification-economy-india-used-cars">
-                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
-                            The Verification Economy: How Trust Creation Is Reshaping India's Used Car Market
-                          </h4>
-                        </Link>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
-                          Deep analysis of how verification services create value in used car marketplaces, 
-                          economic impact of trust infrastructure, and future of verified commerce in India.
-                        </p>
-                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mb-3">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            Published Nov 17, 2025
-                          </span>
-                          <Badge variant="outline" className="text-xs">Market Economics</Badge>
-                          <Badge variant="outline" className="text-xs">Trust Infrastructure</Badge>
-                          <Badge variant="outline" className="text-xs">Verification</Badge>
-                        </div>
-                        <Link href="/news/the-verification-economy-india-used-cars">
-                          <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-verification-econ-guide">
-                            Read Full Guide
-                            <ExternalLink className="ml-2 h-3 w-3" />
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Guide 3: Used Tata Cars 2025 */}
-                <Card className="hover:shadow-md transition-shadow mb-4 border-orange-200 dark:border-orange-900">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0 mt-1">
-                        <Car className="h-5 w-5 text-orange-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Model Guide</Badge>
-                        <Link href="/news/used-tata-cars-india-2025">
-                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
-                            Used Tata Cars India 2025: Nexon, Harrier & Altroz Buyer's Guide
-                          </h4>
-                        </Link>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
-                          Complete Tata buying guide covering popular models (Nexon, Harrier, Altroz), 
-                          engine options, ownership costs, reliability insights, and best model years.
-                        </p>
-                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mb-3">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            Published Nov 17, 2025
-                          </span>
-                          <Badge variant="outline" className="text-xs">Tata Motors</Badge>
-                          <Badge variant="outline" className="text-xs">Nexon</Badge>
-                          <Badge variant="outline" className="text-xs">Harrier</Badge>
-                        </div>
-                        <Link href="/news/used-tata-cars-india-2025">
-                          <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-tata-guide">
-                            Read Full Guide
-                            <ExternalLink className="ml-2 h-3 w-3" />
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Guide 4: Used Mahindra Cars 2025 */}
-                <Card className="hover:shadow-md transition-shadow mb-4 border-orange-200 dark:border-orange-900">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0 mt-1">
-                        <Car className="h-5 w-5 text-orange-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Model Guide</Badge>
-                        <Link href="/news/used-mahindra-cars-india-2025">
-                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
-                            Used Mahindra Cars India 2025: XUV500, Bolero & Scorpio Buyer's Guide
-                          </h4>
-                        </Link>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
-                          Comprehensive Mahindra buying guide with popular models (XUV500, Bolero, Scorpio), 
-                          engine variants, resale value analysis, maintenance costs, and reliability data.
-                        </p>
-                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mb-3">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            Published Nov 17, 2025
-                          </span>
-                          <Badge variant="outline" className="text-xs">Mahindra</Badge>
-                          <Badge variant="outline" className="text-xs">XUV500</Badge>
-                          <Badge variant="outline" className="text-xs">Scorpio</Badge>
-                        </div>
-                        <Link href="/news/used-mahindra-cars-india-2025">
-                          <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-mahindra-guide">
-                            Read Full Guide
-                            <ExternalLink className="ml-2 h-3 w-3" />
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                {/* Guide 5: Swift Hyderabad 2025 */}
-                <Card className="hover:shadow-md transition-shadow mb-4 border-orange-200 dark:border-orange-900">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0 mt-1">
-                        <Car className="h-5 w-5 text-orange-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Model Guide</Badge>
-                        <Link href="/news/used-swift-hyderabad-2025">
-                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
-                            Used Maruti Swift Hyderabad 2025: 220+ Listings, Prices & AMT vs Manual
-                          </h4>
-                        </Link>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
-                          Complete Swift buying guide with 220+ listings analysis, variant comparison (VXi vs ZXi), 
-                          AMT vs Manual transmission, model year recommendations, and ownership costs.
-                        </p>
-                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mb-3">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            Published Nov 16, 2025
-                          </span>
-                          <Badge variant="outline" className="text-xs">Swift</Badge>
-                          <Badge variant="outline" className="text-xs">AMT vs Manual</Badge>
-                          <Badge variant="outline" className="text-xs">Variants</Badge>
-                        </div>
-                        <Link href="/news/used-swift-hyderabad-2025">
-                          <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-swift-guide">
-                            Read Full Guide
-                            <ExternalLink className="ml-2 h-3 w-3" />
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Guide 6: Creta India 2025 */}
-                <Card className="hover:shadow-md transition-shadow mb-4 border-orange-200 dark:border-orange-900">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0 mt-1">
-                        <Car className="h-5 w-5 text-orange-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Model Guide</Badge>
-                        <Link href="/news/used-creta-india-2025">
-                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
-                            Used Hyundai Creta India 2025: 5,800+ Listings, Best Years & Diesel vs Petrol
-                          </h4>
-                        </Link>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
-                          Comprehensive Creta buying guide with 5,800+ listings, generation comparison (2015-2024), 
-                          diesel vs petrol analysis, ownership costs, and platform reviews across India.
-                        </p>
-                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mb-3">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            Published Nov 16, 2025
-                          </span>
-                          <Badge variant="outline" className="text-xs">Creta</Badge>
-                          <Badge variant="outline" className="text-xs">Diesel vs Petrol</Badge>
-                          <Badge variant="outline" className="text-xs">First Gen / Second Gen</Badge>
-                        </div>
-                        <Link href="/news/used-creta-india-2025">
-                          <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-creta-guide">
-                            Read Full Guide
-                            <ExternalLink className="ml-2 h-3 w-3" />
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Guide 7: Innova India 2025 */}
-                <Card className="hover:shadow-md transition-shadow mb-4 border-orange-200 dark:border-orange-900">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0 mt-1">
-                        <Car className="h-5 w-5 text-orange-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Model Guide</Badge>
-                        <Link href="/news/used-innova-india-2025">
-                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
-                            Used Toyota Innova India 2025: Complete Buyer's Guide with City Prices
-                          </h4>
-                        </Link>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
-                          Complete Innova buying guide with city-wise pricing, best variants (Crysta 2.4/2.8), 
-                          inspection checklist, ownership costs, and reliability insights for India's best MPV.
-                        </p>
-                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mb-3">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            Published Nov 16, 2025
-                          </span>
-                          <Badge variant="outline" className="text-xs">Innova</Badge>
-                          <Badge variant="outline" className="text-xs">MPV</Badge>
-                          <Badge variant="outline" className="text-xs">Crysta</Badge>
-                        </div>
-                        <Link href="/news/used-innova-india-2025">
-                          <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-innova-guide">
-                            Read Full Guide
-                            <ExternalLink className="ml-2 h-3 w-3" />
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Guide 8: Dealers Hyderabad 2025 */}
-                <Card className="hover:shadow-md transition-shadow mb-4 border-orange-200 dark:border-orange-900">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0 mt-1">
-                        <MapPin className="h-5 w-5 text-orange-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Dealer Guide</Badge>
-                        <Link href="/news/used-car-dealers-hyderabad-2025">
-                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
-                            Best Used Car Dealers in Hyderabad 2025: Top 15 Showrooms & Platform Comparison
-                          </h4>
-                        </Link>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
-                          Complete dealer guide covering Cars24 (1,681 cars), Spinny (1,075+ cars), CarWale (61+ dealers), 
-                          Maruti True Value (376-point inspection), locations, warranties, and inspection standards.
-                        </p>
-                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mb-3">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            Published Nov 16, 2025
-                          </span>
-                          <Badge variant="outline" className="text-xs">Hyderabad</Badge>
-                          <Badge variant="outline" className="text-xs">Dealers</Badge>
-                          <Badge variant="outline" className="text-xs">Cars24</Badge>
-                        </div>
-                        <Link href="/news/used-car-dealers-hyderabad-2025">
-                          <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-dealers-guide">
-                            Read Full Guide
-                            <ExternalLink className="ml-2 h-3 w-3" />
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Guide 9: Best Used Cars 2025 */}
+                {/* Guide 1: Best Used Cars 2025 */}
                 <Card className="hover:shadow-md transition-shadow mb-4 border-orange-200 dark:border-orange-900">
                   <CardContent className="p-6">
                     <div className="flex items-start gap-4">
@@ -1604,7 +1301,7 @@ export default function ThrottleTalkPage() {
                   </CardContent>
                 </Card>
 
-                {/* Guide 10: Market Analysis 2025 */}
+                {/* Guide 2: Market Analysis 2025 */}
                 <Card className="hover:shadow-md transition-shadow mb-4 border-orange-200 dark:border-orange-900">
                   <CardContent className="p-6">
                     <div className="flex items-start gap-4">
@@ -1642,7 +1339,7 @@ export default function ThrottleTalkPage() {
                   </CardContent>
                 </Card>
 
-                {/* Guide 11: Hyderabad Market 2025 */}
+                {/* Guide 3: Hyderabad Market 2025 */}
                 <Card className="hover:shadow-md transition-shadow mb-4 border-orange-200 dark:border-orange-900">
                   <CardContent className="p-6">
                     <div className="flex items-start gap-4">
@@ -1680,6 +1377,309 @@ export default function ThrottleTalkPage() {
                   </CardContent>
                 </Card>
 
+                {/* Guide 4: Swift Hyderabad 2025 */}
+                <Card className="hover:shadow-md transition-shadow mb-4 border-orange-200 dark:border-orange-900">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 mt-1">
+                        <Car className="h-5 w-5 text-orange-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Model Guide</Badge>
+                        <Link href="/news/used-swift-hyderabad-2025">
+                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
+                            Used Maruti Swift Hyderabad 2025: 220+ Listings, Prices & AMT vs Manual
+                          </h4>
+                        </Link>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
+                          Complete Swift buying guide with 220+ listings analysis, variant comparison (VXi vs ZXi), 
+                          AMT vs Manual transmission, model year recommendations, and ownership costs.
+                        </p>
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mb-3">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Published Nov 16, 2025
+                          </span>
+                          <Badge variant="outline" className="text-xs">Swift</Badge>
+                          <Badge variant="outline" className="text-xs">AMT vs Manual</Badge>
+                          <Badge variant="outline" className="text-xs">Variants</Badge>
+                        </div>
+                        <Link href="/news/used-swift-hyderabad-2025">
+                          <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-swift-guide">
+                            Read Full Guide
+                            <ExternalLink className="ml-2 h-3 w-3" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Guide 5: Creta India 2025 */}
+                <Card className="hover:shadow-md transition-shadow mb-4 border-orange-200 dark:border-orange-900">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 mt-1">
+                        <Car className="h-5 w-5 text-orange-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Model Guide</Badge>
+                        <Link href="/news/used-creta-india-2025">
+                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
+                            Used Hyundai Creta India 2025: 5,800+ Listings, Best Years & Diesel vs Petrol
+                          </h4>
+                        </Link>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
+                          Comprehensive Creta buying guide with 5,800+ listings, generation comparison (2015-2024), 
+                          diesel vs petrol analysis, ownership costs, and platform reviews across India.
+                        </p>
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mb-3">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Published Nov 16, 2025
+                          </span>
+                          <Badge variant="outline" className="text-xs">Creta</Badge>
+                          <Badge variant="outline" className="text-xs">Diesel vs Petrol</Badge>
+                          <Badge variant="outline" className="text-xs">First Gen / Second Gen</Badge>
+                        </div>
+                        <Link href="/news/used-creta-india-2025">
+                          <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-creta-guide">
+                            Read Full Guide
+                            <ExternalLink className="ml-2 h-3 w-3" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Guide 6: Innova India 2025 */}
+                <Card className="hover:shadow-md transition-shadow mb-4 border-orange-200 dark:border-orange-900">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 mt-1">
+                        <Car className="h-5 w-5 text-orange-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Model Guide</Badge>
+                        <Link href="/news/used-innova-india-2025">
+                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
+                            Used Toyota Innova India 2025: Complete Buyer's Guide with City Prices
+                          </h4>
+                        </Link>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
+                          Complete Innova buying guide with city-wise pricing, best variants (Crysta 2.4/2.8), 
+                          inspection checklist, ownership costs, and reliability insights for India's best MPV.
+                        </p>
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mb-3">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Published Nov 16, 2025
+                          </span>
+                          <Badge variant="outline" className="text-xs">Innova</Badge>
+                          <Badge variant="outline" className="text-xs">MPV</Badge>
+                          <Badge variant="outline" className="text-xs">Crysta</Badge>
+                        </div>
+                        <Link href="/news/used-innova-india-2025">
+                          <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-innova-guide">
+                            Read Full Guide
+                            <ExternalLink className="ml-2 h-3 w-3" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Guide 7: Dealers Hyderabad 2025 */}
+                <Card className="hover:shadow-md transition-shadow mb-4 border-orange-200 dark:border-orange-900">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 mt-1">
+                        <MapPin className="h-5 w-5 text-orange-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Dealer Guide</Badge>
+                        <Link href="/news/used-car-dealers-hyderabad-2025">
+                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
+                            Best Used Car Dealers in Hyderabad 2025: Top 15 Showrooms & Platform Comparison
+                          </h4>
+                        </Link>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
+                          Complete dealer guide covering Cars24 (1,681 cars), Spinny (1,075+ cars), CarWale (61+ dealers), 
+                          Maruti True Value (376-point inspection), locations, warranties, and inspection standards.
+                        </p>
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mb-3">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Published Nov 16, 2025
+                          </span>
+                          <Badge variant="outline" className="text-xs">Hyderabad</Badge>
+                          <Badge variant="outline" className="text-xs">Dealers</Badge>
+                          <Badge variant="outline" className="text-xs">Cars24</Badge>
+                        </div>
+                        <Link href="/news/used-car-dealers-hyderabad-2025">
+                          <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-dealers-guide">
+                            Read Full Guide
+                            <ExternalLink className="ml-2 h-3 w-3" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Guide 8: Used Electric Cars 2025 */}
+                <Card className="hover:shadow-md transition-shadow mb-4 border-orange-200 dark:border-orange-900">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 mt-1">
+                        <Car className="h-5 w-5 text-orange-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">EV Guide</Badge>
+                        <Link href="/news/used-electric-cars-2025">
+                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
+                            Used Electric Cars India 2025: Complete Buyer's Guide & Charging Insights
+                          </h4>
+                        </Link>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
+                          Comprehensive EV buying guide covering battery health evaluation, charging infrastructure, 
+                          popular models, ownership costs, and government incentives for used electric cars in India.
+                        </p>
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mb-3">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Published Nov 17, 2025
+                          </span>
+                          <Badge variant="outline" className="text-xs">Electric Cars</Badge>
+                          <Badge variant="outline" className="text-xs">Battery Health</Badge>
+                          <Badge variant="outline" className="text-xs">Charging</Badge>
+                        </div>
+                        <Link href="/news/used-electric-cars-2025">
+                          <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-electric-guide">
+                            Read Full Guide
+                            <ExternalLink className="ml-2 h-3 w-3" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Guide 9: The Verification Economy */}
+                <Card className="hover:shadow-md transition-shadow mb-4 border-orange-200 dark:border-orange-900">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 mt-1">
+                        <FileCheck className="h-5 w-5 text-orange-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Economics Guide</Badge>
+                        <Link href="/news/the-verification-economy-india-used-cars">
+                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
+                            The Verification Economy: How Trust Creation Is Reshaping India's Used Car Market
+                          </h4>
+                        </Link>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
+                          Deep analysis of how verification services create value in used car marketplaces, 
+                          economic impact of trust infrastructure, and future of verified commerce in India.
+                        </p>
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mb-3">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Published Nov 17, 2025
+                          </span>
+                          <Badge variant="outline" className="text-xs">Market Economics</Badge>
+                          <Badge variant="outline" className="text-xs">Trust Infrastructure</Badge>
+                          <Badge variant="outline" className="text-xs">Verification</Badge>
+                        </div>
+                        <Link href="/news/the-verification-economy-india-used-cars">
+                          <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-verification-econ-guide">
+                            Read Full Guide
+                            <ExternalLink className="ml-2 h-3 w-3" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Guide 10: Used Tata Cars 2025 */}
+                <Card className="hover:shadow-md transition-shadow mb-4 border-orange-200 dark:border-orange-900">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 mt-1">
+                        <Car className="h-5 w-5 text-orange-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Model Guide</Badge>
+                        <Link href="/news/used-tata-cars-india-2025">
+                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
+                            Used Tata Cars India 2025: Nexon, Harrier & Altroz Buyer's Guide
+                          </h4>
+                        </Link>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
+                          Complete Tata buying guide covering popular models (Nexon, Harrier, Altroz), 
+                          engine options, ownership costs, reliability insights, and best model years.
+                        </p>
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mb-3">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Published Nov 17, 2025
+                          </span>
+                          <Badge variant="outline" className="text-xs">Tata Motors</Badge>
+                          <Badge variant="outline" className="text-xs">Nexon</Badge>
+                          <Badge variant="outline" className="text-xs">Harrier</Badge>
+                        </div>
+                        <Link href="/news/used-tata-cars-india-2025">
+                          <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-tata-guide">
+                            Read Full Guide
+                            <ExternalLink className="ml-2 h-3 w-3" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Guide 11: Used Mahindra Cars 2025 */}
+                <Card className="hover:shadow-md transition-shadow mb-4 border-orange-200 dark:border-orange-900">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 mt-1">
+                        <Car className="h-5 w-5 text-orange-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <Badge className="mb-2 text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Model Guide</Badge>
+                        <Link href="/news/used-mahindra-cars-india-2025">
+                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
+                            Used Mahindra Cars India 2025: XUV500, Bolero & Scorpio Buyer's Guide
+                          </h4>
+                        </Link>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
+                          Comprehensive Mahindra buying guide with popular models (XUV500, Bolero, Scorpio), 
+                          engine variants, resale value analysis, maintenance costs, and reliability data.
+                        </p>
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mb-3">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Published Nov 17, 2025
+                          </span>
+                          <Badge variant="outline" className="text-xs">Mahindra</Badge>
+                          <Badge variant="outline" className="text-xs">XUV500</Badge>
+                          <Badge variant="outline" className="text-xs">Scorpio</Badge>
+                        </div>
+                        <Link href="/news/used-mahindra-cars-india-2025">
+                          <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950" data-testid="button-read-mahindra-guide">
+                            Read Full Guide
+                            <ExternalLink className="ml-2 h-3 w-3" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
 
               {/* Cluster Articles Section */}
