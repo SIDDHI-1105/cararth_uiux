@@ -4,8 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 import { SEOHead } from "@/components/seo-head";
-import Navbar from "@/components/navbar";
-import Footer from "@/components/footer";
+import Layout from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -122,7 +121,7 @@ export default function SellPage() {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
+    <Layout>
       <SEOHead
         title="Sell Your Car - CarArth | AI-Verified Listings"
         description="Sell your used car on CarArth. Free AI-verified listings, reach buyers across India, no paid promotions. List once, reach everywhere."
@@ -131,9 +130,7 @@ export default function SellPage() {
         structuredData={structuredData}
       />
       
-      <Navbar />
-      
-      <main className="container mx-auto px-4 py-16 md:py-24 max-w-4xl">
+      <main className="container mx-auto px-4 py-16 md:py-24 max-w-4xl mt-2">
         {/* Header */}
         <div className="text-center mb-16 md:mb-20">
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6" style={{ color: 'var(--foreground)' }}>
@@ -473,8 +470,6 @@ export default function SellPage() {
           </div>
         )}
       </main>
-      
-      <Footer />
-    </div>
+    </Layout>
   );
 }

@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { User, Phone, Mail, Loader2 } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+import Layout from '@/components/layout';
 
 interface UserProfile {
   id: string;
@@ -76,15 +77,17 @@ export default function SellerSettings() {
 
   if (isLoadingUser) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
+      <Layout>
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+    <Layout>
+      <div className="container mx-auto px-4 py-8 mt-2">
         <div className="max-w-2xl mx-auto">
           <div className="mb-6">
             <h1 className="text-3xl font-bold text-foreground">Profile Settings</h1>
@@ -182,6 +185,6 @@ export default function SellerSettings() {
           </Card>
         </div>
       </div>
-    </div>
+    </Layout>
   );
 }
