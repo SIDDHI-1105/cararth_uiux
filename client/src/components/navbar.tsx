@@ -118,7 +118,7 @@ export default function Navbar() {
               💰 Sell
             </Link>
             <Link href="/news" style={linkStyle(location === '/news', '#3b82f6')} data-testid="link-throttle-talk">
-              🚗 News
+              🚗 Throttle Talk
             </Link>
             <button 
               onClick={toggleTheme} 
