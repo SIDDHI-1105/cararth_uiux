@@ -78,7 +78,7 @@ export default function Home() {
             />
             <input
               type="text"
-              placeholder="Swift under 5 lakh in Pune..."
+              placeholder="Swift under 5 lakh in Hyderabad..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => setFocusedInput(true)}
