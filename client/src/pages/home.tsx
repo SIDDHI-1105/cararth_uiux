@@ -95,7 +95,7 @@ export default function Home() {
             }}
             className="text-lg sm:text-xl max-w-2xl mb-12 leading-relaxed animate-fade-in transition-colors duration-300"
           >
-            Search 50,000+ verified used cars across India. Compare prices, authenticity, and value in seconds.
+            Search across Cars24, Spinny, OLX, CarWale, and Facebook Marketplace. AI-powered verification helps you find authentic deals faster.
           </p>
 
           {/* Search Bar - Glassmorphic, Massive, Centered */}
@@ -151,15 +151,15 @@ export default function Home() {
           >
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-[#00F5A0]" />
-              <span>50,000+ Verified Listings</span>
+              <span>Multi-Platform Search</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-[#00F5A0]" />
-              <span>AI-Powered Authenticity Checks</span>
+              <span>AI Verification</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-[#00F5A0]" />
-              <span>Zero Hidden Charges</span>
+              <span>Real-Time Listings</span>
             </div>
           </div>
         </div>
@@ -187,25 +187,63 @@ export default function Home() {
               <div className="flex flex-col justify-center">
                 <div className="mb-6">
                   <div className="inline-block trust-pill mb-4">
-                    ✓ AI Verified
+                    ✓ From OLX India
                   </div>
                   <h3 className="text-5xl font-bold mb-2">Hyundai Creta</h3>
-                  <p className="text-white/60">2022 • 45,000 km • Pune</p>
+                  <p 
+                    style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)" }}
+                    className="transition-colors duration-300"
+                  >
+                    2022 • 45,000 km • Hyderabad
+                  </p>
                 </div>
 
                 <div className="space-y-4 mb-8">
                   <div>
-                    <p className="text-white/60 text-sm mb-1">Price</p>
-                    <p className="text-4xl font-bold">₹8,50,000</p>
+                    <p 
+                      style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)" }}
+                      className="text-sm mb-1 transition-colors duration-300"
+                    >
+                      Price
+                    </p>
+                    <p 
+                      style={{ color: isDark ? "#f5f5f7" : "#1d1d1f" }}
+                      className="text-4xl font-bold transition-colors duration-300"
+                    >
+                      ₹8,50,000
+                    </p>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
+                  <div 
+                    style={{ borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)" }}
+                    className="grid grid-cols-2 gap-4 pt-4 border-t transition-colors duration-300"
+                  >
                     <div>
-                      <p className="text-white/60 text-sm mb-1">Engine</p>
-                      <p className="font-500">1.5L Petrol</p>
+                      <p 
+                        style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)" }}
+                        className="text-sm mb-1 transition-colors duration-300"
+                      >
+                        Engine
+                      </p>
+                      <p 
+                        style={{ color: isDark ? "#f5f5f7" : "#1d1d1f" }}
+                        className="font-semibold transition-colors duration-300"
+                      >
+                        1.5L Petrol
+                      </p>
                     </div>
                     <div>
-                      <p className="text-white/60 text-sm mb-1">Transmission</p>
-                      <p className="font-500">Automatic</p>
+                      <p 
+                        style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)" }}
+                        className="text-sm mb-1 transition-colors duration-300"
+                      >
+                        Transmission
+                      </p>
+                      <p 
+                        style={{ color: isDark ? "#f5f5f7" : "#1d1d1f" }}
+                        className="font-semibold transition-colors duration-300"
+                      >
+                        Automatic
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -229,27 +267,32 @@ export default function Home() {
             {/* Stat Cards */}
             {[
               {
-                number: "50K+",
-                title: "Verified Cars",
-                description: "Across all major platforms in India",
+                number: "5+",
+                title: "Platform Aggregation",
+                description: "Search OLX, Cars24, Spinny, CarWale, Facebook",
               },
               {
-                number: "3.2M",
-                title: "Smart Searches",
-                description: "Processed monthly with AI",
+                number: "AI",
+                title: "Powered Search",
+                description: "Multi-LLM verification for authenticity",
               },
               {
-                number: "99.8%",
-                title: "Authenticity Rate",
-                description: "Multi-LLM verification system",
+                number: "HYD",
+                title: "Hyderabad Focus",
+                description: "Deep local market intelligence",
               },
             ].map((stat, idx) => (
               <div key={idx} className="glass-card">
                 <p className="text-4xl font-bold text-[#0071E3] mb-2">
                   {stat.number}
                 </p>
-                <h4 className="text-lg font-600 mb-2">{stat.title}</h4>
-                <p className="text-white/60 text-sm">{stat.description}</p>
+                <h4 className="text-lg font-semibold mb-2">{stat.title}</h4>
+                <p 
+                  style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)" }}
+                  className="text-sm transition-colors duration-300"
+                >
+                  {stat.description}
+                </p>
               </div>
             ))}
           </div>
@@ -257,13 +300,24 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 border-t border-white/10">
+      <section 
+        style={{ 
+          borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
+        }}
+        className="py-20 px-4 sm:px-6 lg:px-8 border-t transition-colors duration-300"
+      >
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-5xl font-bold mb-6">
+          <h2 
+            style={{ color: isDark ? "#f5f5f7" : "#1d1d1f" }}
+            className="text-5xl font-bold mb-6 transition-colors duration-300"
+          >
             Ready to find your car?
           </h2>
-          <p className="text-xl text-white/60 mb-8 max-w-2xl mx-auto">
-            Start searching across 50,000+ verified listings from Cars24, Spinny, OLX, and more.
+          <p 
+            style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)" }}
+            className="text-xl mb-8 max-w-2xl mx-auto transition-colors duration-300"
+          >
+            Search across multiple platforms. AI-verified listings. Real-time updates from India's top markets.
           </p>
           <button className="btn-primary text-lg px-8 py-4">
             Search Cars
