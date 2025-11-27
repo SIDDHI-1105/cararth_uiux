@@ -91,7 +91,7 @@ export default function Home() {
           {/* Subheading - Clean, Minimal */}
           <p 
             style={{
-              color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)",
+              color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.75)",
             }}
             className="text-lg sm:text-xl max-w-2xl mb-12 leading-relaxed animate-fade-in transition-colors duration-300"
           >
@@ -145,7 +145,7 @@ export default function Home() {
 
           {/* Quick Stats - Minimal Pills */}
           <div 
-            style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)" }}
+            style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.75)" }}
             className="flex flex-wrap gap-3 text-sm transition-colors duration-300"
           >
             <div className="flex items-center gap-2">
@@ -291,7 +291,7 @@ export default function Home() {
                 </p>
                 <h4 className="text-lg font-semibold mb-2">{stat.title}</h4>
                 <p 
-                  style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)" }}
+                  style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.75)" }}
                   className="text-sm transition-colors duration-300"
                 >
                   {stat.description}
@@ -317,7 +317,7 @@ export default function Home() {
             Ready to find your car?
           </h2>
           <p 
-            style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)" }}
+            style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.75)" }}
             className="text-xl mb-8 max-w-2xl mx-auto transition-colors duration-300"
           >
             Search across multiple platforms. AI-verified listings. Real-time updates from India's top markets.
