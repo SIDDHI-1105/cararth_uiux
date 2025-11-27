@@ -1,8 +1,8 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Mic, Search, ChevronRight } from "lucide-react";
-import { BrandWordmark } from "@/components/brand-wordmark";
+import { FullWidthLayout } from "@/components/layout";
 
 export default function Home() {
   const [isDark, setIsDark] = useState(true);
@@ -10,69 +10,30 @@ export default function Home() {
   const [focusedInput, setFocusedInput] = useState(false);
 
   useEffect(() => {
-    // Auto-detect system theme
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    setIsDark(prefersDark);
+    // Detect current theme from document
+    const checkTheme = () => {
+      setIsDark(document.documentElement.classList.contains("dark"));
+    };
     
-    if (prefersDark) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    checkTheme();
+    
+    // Watch for theme changes
+    const observer = new MutationObserver(checkTheme);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    
+    return () => observer.disconnect();
   }, []);
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
-      // Redirect to search results
       window.location.href = `/results?q=${encodeURIComponent(searchQuery)}`;
     }
   };
 
-  const toggleTheme = () => {
-    const newIsDark = !isDark;
-    setIsDark(newIsDark);
-    
-    if (newIsDark) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-    
-    localStorage.setItem("theme", newIsDark ? "dark" : "light");
-  };
-
   return (
-    <div 
-      style={{
-        backgroundColor: isDark ? "#000000" : "#fbfbfb",
-        color: isDark ? "#f5f5f7" : "#1d1d1f",
-      }}
-      className="min-h-screen overflow-x-hidden transition-colors duration-300"
-    >
-      {/* Header */}
-      <header 
-        style={{
-          backgroundColor: isDark ? "rgba(0, 0, 0, 0.3)" : "rgba(255, 255, 255, 0.8)",
-          borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
-        }}
-        className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b transition-colors duration-300"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
-          <BrandWordmark variant="header" showTagline={false} />
-          <button
-            onClick={toggleTheme}
-            style={{
-              color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)",
-            }}
-            className="px-4 py-2 text-sm font-semibold hover:opacity-100 transition-opacity duration-300"
-          >
-            {isDark ? "Light" : "Dark"}
-          </button>
-        </div>
-      </header>
-
+    <FullWidthLayout showFooter={true}>
       {/* Hero Section - Maximum Negative Space */}
-      <section className="pt-40 pb-20 px-4 sm:px-6 lg:px-8">
+      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
           {/* Main Headline - Huge, Minimal */}
           <h1 
@@ -309,15 +270,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-white/10 py-8 px-4 sm:px-6 lg:px-8 text-center text-white/60 text-sm">
-        <p>
-          © 2025 CarArth. India's used car search engine.{" "}
-          <a href="#" className="text-[#0071E3] hover:text-[#0077ED]">
-            Learn more
-          </a>
-        </p>
-      </footer>
-    </div>
+    </FullWidthLayout>
   );
 }
