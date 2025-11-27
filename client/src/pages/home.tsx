@@ -168,94 +168,75 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured Car Section - One Large Hero Car */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 border-t border-white/10">
+      {/* Why CarArth Section - Clean Stats */}
+      <section 
+        style={{ borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)" }}
+        className="py-20 px-4 sm:px-6 lg:px-8 border-t transition-colors duration-300"
+      >
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl font-bold mb-12">Featured Listing</h2>
-
-          {/* Glass Card with Hero Car */}
-          <div className="glass-card group cursor-pointer">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Image Placeholder */}
-              <div className="aspect-square bg-gradient-to-br from-white/10 to-white/5 rounded-lg overflow-hidden">
-                <div className="w-full h-full flex items-center justify-center text-white/30">
-                  <div className="text-center">
-                    <div className="text-6xl mb-4">🚗</div>
-                    <p>Car Image</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Details - Minimal, Huge Typography */}
-              <div className="flex flex-col justify-center">
-                <div className="mb-6">
-                  <div className="inline-block trust-pill mb-4">
-                    ✓ From OLX India
-                  </div>
-                  <h3 className="text-5xl font-bold mb-2">Hyundai Creta</h3>
-                  <p 
-                    style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)" }}
-                    className="transition-colors duration-300"
-                  >
-                    2022 • 45,000 km • Hyderabad
-                  </p>
-                </div>
-
-                <div className="space-y-4 mb-8">
-                  <div>
-                    <p 
-                      style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)" }}
-                      className="text-sm mb-1 transition-colors duration-300"
-                    >
-                      Price
-                    </p>
-                    <p 
-                      style={{ color: isDark ? "#f5f5f7" : "#1d1d1f" }}
-                      className="text-4xl font-bold transition-colors duration-300"
-                    >
-                      ₹8,50,000
-                    </p>
-                  </div>
-                  <div 
-                    style={{ borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)" }}
-                    className="grid grid-cols-2 gap-4 pt-4 border-t transition-colors duration-300"
-                  >
-                    <div>
-                      <p 
-                        style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)" }}
-                        className="text-sm mb-1 transition-colors duration-300"
-                      >
-                        Engine
-                      </p>
-                      <p 
-                        style={{ color: isDark ? "#f5f5f7" : "#1d1d1f" }}
-                        className="font-semibold transition-colors duration-300"
-                      >
-                        1.5L Petrol
-                      </p>
-                    </div>
-                    <div>
-                      <p 
-                        style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)" }}
-                        className="text-sm mb-1 transition-colors duration-300"
-                      >
-                        Transmission
-                      </p>
-                      <p 
-                        style={{ color: isDark ? "#f5f5f7" : "#1d1d1f" }}
-                        className="font-semibold transition-colors duration-300"
-                      >
-                        Automatic
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <button className="btn-primary w-full group/btn">
-                  <span>View Details</span>
-                  <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                </button>
-              </div>
+          <h2 
+            style={{ color: isDark ? "#f5f5f7" : "#1d1d1f" }}
+            className="text-4xl font-bold mb-12 transition-colors duration-300"
+          >
+            Why CarArth?
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div 
+              style={{ 
+                backgroundColor: isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.02)",
+                borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
+              }}
+              className="p-8 rounded-2xl border transition-colors duration-300"
+            >
+              <div className="text-5xl font-bold text-[#0071E3] mb-4">5+</div>
+              <h3 
+                style={{ color: isDark ? "#f5f5f7" : "#1d1d1f" }}
+                className="text-xl font-semibold mb-2 transition-colors duration-300"
+              >
+                Platforms Searched
+              </h3>
+              <p style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)" }}>
+                Cars24, Spinny, OLX, CarWale, Facebook Marketplace - all in one search
+              </p>
+            </div>
+            
+            <div 
+              style={{ 
+                backgroundColor: isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.02)",
+                borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
+              }}
+              className="p-8 rounded-2xl border transition-colors duration-300"
+            >
+              <div className="text-5xl font-bold text-[#00F5A0] mb-4">AI</div>
+              <h3 
+                style={{ color: isDark ? "#f5f5f7" : "#1d1d1f" }}
+                className="text-xl font-semibold mb-2 transition-colors duration-300"
+              >
+                Verified Listings
+              </h3>
+              <p style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)" }}>
+                Advanced AI screens every listing to filter out scams and fake deals
+              </p>
+            </div>
+            
+            <div 
+              style={{ 
+                backgroundColor: isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.02)",
+                borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
+              }}
+              className="p-8 rounded-2xl border transition-colors duration-300"
+            >
+              <div className="text-5xl font-bold text-[#FF6B35] mb-4">₹0</div>
+              <h3 
+                style={{ color: isDark ? "#f5f5f7" : "#1d1d1f" }}
+                className="text-xl font-semibold mb-2 transition-colors duration-300"
+              >
+                No Hidden Fees
+              </h3>
+              <p style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)" }}>
+                100% free for buyers - no commissions, no premium listings
+              </p>
             </div>
           </div>
         </div>
