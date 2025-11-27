@@ -244,6 +244,70 @@ export default function Home() {
         </div>
       </section>
 
+      {/* FAQ Section */}
+      <section 
+        style={{ 
+          borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
+        }}
+        className="py-20 px-4 sm:px-6 lg:px-8 border-t transition-colors duration-300"
+      >
+        <div className="max-w-4xl mx-auto">
+          <h2 
+            style={{ color: isDark ? "#f5f5f7" : "#1d1d1f" }}
+            className="text-4xl font-bold mb-12 transition-colors duration-300"
+          >
+            Frequently Asked Questions
+          </h2>
+          
+          <div className="space-y-6">
+            {[
+              {
+                question: "What is CarArth?",
+                answer: "CarArth is India's first unified used car search engine. We aggregate listings from Cars24, Spinny, OLX, CarWale, and Facebook Marketplace into one simple search, powered by AI verification to help you find authentic deals."
+              },
+              {
+                question: "Is CarArth free to use?",
+                answer: "Yes, CarArth is 100% free for buyers. We don't charge any commissions or fees. Our mission is to make the used car buying process transparent and hassle-free."
+              },
+              {
+                question: "How does AI verification work?",
+                answer: "Our multi-LLM AI system analyzes every listing for authenticity markers, pricing anomalies, and potential scam indicators. We screen out fraudulent listings so you only see genuine deals."
+              },
+              {
+                question: "Which cities does CarArth cover?",
+                answer: "We're currently live in Hyderabad with deep market intelligence. Delhi NCR is coming soon, with more major cities to follow."
+              },
+              {
+                question: "How often are listings updated?",
+                answer: "Our scrapers run continuously to bring you real-time listings. Most listings are updated within hours of being posted on partner platforms."
+              }
+            ].map((faq, idx) => (
+              <div 
+                key={idx}
+                style={{ 
+                  backgroundColor: isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.02)",
+                  borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
+                }}
+                className="p-6 rounded-2xl border transition-colors duration-300"
+              >
+                <h3 
+                  style={{ color: isDark ? "#f5f5f7" : "#1d1d1f" }}
+                  className="text-lg font-semibold mb-3 transition-colors duration-300"
+                >
+                  {faq.question}
+                </h3>
+                <p 
+                  style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)" }}
+                  className="leading-relaxed transition-colors duration-300"
+                >
+                  {faq.answer}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section 
         style={{ 
@@ -267,6 +331,23 @@ export default function Home() {
           <button className="btn-primary text-lg px-8 py-4">
             Search Cars
           </button>
+        </div>
+      </section>
+
+      {/* Footnotes */}
+      <section 
+        style={{ 
+          borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
+        }}
+        className="py-8 px-4 sm:px-6 lg:px-8 border-t transition-colors duration-300"
+      >
+        <div className="max-w-4xl mx-auto">
+          <p 
+            style={{ color: isDark ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.4)" }}
+            className="text-xs leading-relaxed transition-colors duration-300"
+          >
+            * CarArth aggregates listings from third-party platforms including Cars24, Spinny, OLX, CarWale, and Facebook Marketplace. We do not own or sell any vehicles directly. All listings are subject to availability and accuracy as provided by source platforms. AI verification is designed to filter potential scams but cannot guarantee authenticity of all listings. Users are advised to conduct their own due diligence before any purchase. Prices shown are indicative and may vary. CarArth is not responsible for any transactions conducted through linked platforms.
+          </p>
         </div>
       </section>
 
