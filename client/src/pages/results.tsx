@@ -269,10 +269,10 @@ export default function Results() {
         structuredData={itemListSchema}
       />
       
-      <Layout>
+      <Layout containerSize="2xl">
         <div className="py-8">
           {/* Header */}
-          <div className="mb-6">
+          <div className="mb-6 mt-2">
             <h1 className="text-3xl md:text-4xl font-bold mb-2 text-gray-900 dark:text-gray-100" data-testid="text-results-heading">
               Used Cars Matching Your Search
             </h1>

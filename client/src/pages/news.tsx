@@ -413,13 +413,13 @@ export default function ThrottleTalkPage() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-white dark:bg-gray-950">
       {/* SEO & Schema Markup */}
       <NewsSEOHead posts={allPostsForSEO.map((p: ForumPost) => ({ ...p, publishedAt: new Date(p.lastReply) }))} />
       <FAQSchemaMarkup />
       
+      <div className="bg-white dark:bg-gray-950">
       {/* Clean header */}
-      <div className="border-b border-gray-200 dark:border-gray-800 bg-gradient-to-r from-white via-gray-50/30 to-white dark:from-gray-950 dark:via-gray-900/30 dark:to-gray-950">
+      <div className="border-b border-gray-200 dark:border-gray-800 bg-gradient-to-r from-white via-gray-50/30 to-white dark:from-gray-950 dark:via-gray-900/30 dark:to-gray-950 mt-2">
         <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-2 sm:gap-4">
