@@ -1,593 +1,232 @@
 import { useState, useMemo, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { FullWidthLayout } from "@/components/layout";
-import HeroSection from "@/components/hero-section";
-import UnifiedFilters from "@/components/unified-filters";
-import TheAssistant from "@/components/the-assistant";
-import MinimalCarCard from "@/components/minimal-car-card";
-import MarketplaceResults from "@/components/marketplace-results";
-import FeaturedListingModal from "@/components/featured-listing-modal";
-import PremiumUpgrade from "@/components/premium-upgrade";
-import RecentlyViewed from "@/components/recently-viewed";
-import SearchLimitPopup from "@/components/search-limit-popup";
-import { HapticProvider, useHapticFeedback, HapticButton } from "@/components/haptic-feedback";
-import { SEOHead, createWebsiteSchema, createOrganizationSchema } from "@/components/seo-head";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, Search, Globe, Star, Crown, MessageSquare, Users, Phone } from "lucide-react";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { type CarListing } from "@shared/schema";
-import { hasValidImages } from "@/lib/car-utils";
-
-// Type definition for usage status data
-interface UsageStatus {
-  isAuthenticated: boolean;
-  searchesLeft: number;
-  totalLimit: number;
-}
-import { BrandWordmark } from "@/components/brand-wordmark";
 import { Link } from "wouter";
-import { FAQSection } from "@/components/faq-section";
-import KeyInsights from "@/components/key-insights";
-import HomepageIntro from "@/components/homepage-intro";
-import { HowItWorks } from "@/components/how-it-works";
-import { TrustSection } from "@/components/trust-section";
+import { Button } from "@/components/ui/button";
+import { Mic, Search, ChevronRight } from "lucide-react";
+import { BrandWordmark } from "@/components/brand-wordmark";
 
-function HomeContent() {
-  const [filters, setFilters] = useState<Record<string, any>>({});
-  const [sortBy, setSortBy] = useState("price-low");
-  const [favorites, setFavorites] = useState<Set<string>>(new Set());
-  const [activeTab, setActiveTab] = useState("local");
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [showFeaturedModal, setShowFeaturedModal] = useState(false);
-  const [selectedCarForFeatured, setSelectedCarForFeatured] = useState<{id: string, title: string} | null>(null);
-  const [showSearchLimitPopup, setShowSearchLimitPopup] = useState(false);
-  const [searchLimitData, setSearchLimitData] = useState<any>(null);
-  const [usageStatus, setUsageStatus] = useState<any>(null);
-  const [showContactDialog, setShowContactDialog] = useState(false);
-  const [selectedCarForContact, setSelectedCarForContact] = useState<{id: string, title: string} | null>(null);
-  const [hasSearched, setHasSearched] = useState<boolean>(false);
-  
-  const { feedback } = useHapticFeedback();
+export default function Home() {
+  const [isDark, setIsDark] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [focusedInput, setFocusedInput] = useState(false);
 
-  // Dynamic SEO based on search filters
-  const dynamicSEO = useMemo(() => {
-    const hasFilters = Object.keys(filters).length > 0;
-    let title = "CarArth - India's Very Own Used Car Search Engine";
-    let description = "India's very own used car search engine. Compare cars across platforms, discover true value with AI intelligence. Buy & sell with confidence on CarArth.";
+  useEffect(() => {
+    // Auto-detect system theme
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    setIsDark(prefersDark);
     
-    if (hasFilters) {
-      const filterParts = [];
-      if (filters.brand) filterParts.push(filters.brand);
-      if (filters.model) filterParts.push(filters.model);
-      if (filters.city) filterParts.push(`in ${filters.city}`);
-      if (filters.fuelType) filterParts.push(filters.fuelType);
-      
-      if (filterParts.length > 0) {
-        title = `${filterParts.join(' ')} Used Cars - CarArth`;
-        description = `Find ${filterParts.join(' ')} used cars on CarArth. Compare prices across all major platforms with AI intelligence. Authentic listings, verified sellers.`;
-      }
+    if (prefersDark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
     }
-    
-    return { title, description };
-  }, [filters]);
-
-  // Structured data for homepage
-  const structuredData = useMemo(() => {
-    const baseSchema = createWebsiteSchema();
-    const orgSchema = createOrganizationSchema();
-    
-    // ItemList Schema for Key Insights (LLM optimization)
-    const itemListSchema = {
-      "@context": "https://schema.org",
-      "@type": "ItemList",
-      "name": "CarArth Key Platform Features",
-      "description": "AI-powered features that make CarArth India's leading used car search engine",
-      "itemListElement": [
-        {
-          "@type": "ListItem",
-          "position": 1,
-          "name": "AI-Verified Listings",
-          "description": "Multi-LLM checks using Gemini for OCR and Claude for compliance ensure trust and accuracy in every car listing"
-        },
-        {
-          "@type": "ListItem",
-          "position": 2,
-          "name": "Carbon Savings Dashboard",
-          "description": "Quantifies CO₂ reductions for each sale, promoting eco-friendly choices and sustainable automotive practices"
-        },
-        {
-          "@type": "ListItem",
-          "position": 3,
-          "name": "One-Upload Syndication",
-          "description": "Maximizes reach by distributing listings to platforms like OLX, Cars24, CarDekho, and Facebook Marketplace automatically"
-        }
-      ]
-    };
-    
-    // FAQ Schema for SEO/LLM optimization
-    const faqSchema = {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "What is CarArth.com?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "CarArth.com is India's first AI-powered used car search engine for both buyers and sellers, bringing listings from multiple sources into one smart, unified experience."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "How does CarArth find cars from multiple platforms?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "CarArth uses legally compliant web crawlers (Firecrawl and Apify) to fetch publicly available listings and organize them for easier discovery."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "How is CarArth different from Cars24 or OLX Autos?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "CarArth is a search engine, not a dealer. It aggregates verified listings from different platforms instead of selling directly."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Is CarArth data legal and verified?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Yes. CarArth only indexes publicly available information and complies with Indian data and intermediary laws."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "How can sellers list their cars?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Sellers can list via CarArth's syndication form and have their car appear on multiple platforms simultaneously."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "What are the benefits of using AI in CarArth?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "AI helps match buyers to the most relevant listings, ensures zero duplication, and provides price insights using data from SIAM and market trends."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Does CarArth charge sellers or buyers?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Basic listing is free; premium syndication and featured listings are optional paid upgrades."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Where does CarArth operate?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "The pilot phase is live in Telangana, with expansion plans across India."
-          }
-        }
-      ]
-    };
-    
-    return {
-      "@context": "https://schema.org",
-      "@graph": [baseSchema, orgSchema, itemListSchema, faqSchema]
-    };
   }, []);
 
-  // Memoize filters to create stable query key
-  const queryKeyFilters = useMemo(() => JSON.stringify(filters), [JSON.stringify(filters)]);
-  
-  const { data: cars = [], isLoading } = useQuery<CarListing[]>({
-    queryKey: ["/api/marketplace/search", queryKeyFilters],
-    queryFn: async () => {
-      const searchFilters = {
-        brand: filters.brand,
-        model: filters.model,
-        priceMin: filters.priceMin,
-        priceMax: filters.priceMax,
-        fuelType: filters.fuelType ? [filters.fuelType] : undefined,
-        transmission: filters.transmission ? [filters.transmission] : undefined,
-        city: filters.city,
-        sortBy: "price",
-        sortOrder: "asc",
-        limit: 50
-      };
-
-      try {
-        const response = await apiRequest('POST', '/api/marketplace/search', searchFilters);
-        const result = await response.json();
-        
-        // Manually refresh usage status after successful local search
-        queryClient.invalidateQueries({ queryKey: ["/api/usage/status"] });
-        
-        const listings = result.listings || [];
-        return listings;
-      } catch (error: any) {
-        console.error('❌ Local search error:', error);
-        if (error.isSearchLimitExceeded) {
-          // Handle search limit exceeded - show popup
-          setSearchLimitData(error.data);
-          setShowSearchLimitPopup(true);
-          return []; // Return empty results
-        }
-        throw error; // Re-throw other errors
-      }
-    },
-  });
-
-  // FIXED: Removed sortedCars reference that was causing component crash
-
-  const handleHeroSearch = (searchFilters: any) => {
-    setHasSearched(true);
-    setActiveTab("local");
-    
-    // Convert hero search to filter format
-    const newFilters: Record<string, any> = {};
-    
-    if (searchFilters.brand && searchFilters.brand !== "all") {
-      newFilters.brand = searchFilters.brand;
-    }
-    if (searchFilters.city && searchFilters.city !== "all") {
-      newFilters.city = searchFilters.city;
-    }
-    if (searchFilters.fuelType && searchFilters.fuelType !== "all") {
-      newFilters.fuelType = searchFilters.fuelType;
-    }
-    if (searchFilters.budget && searchFilters.budget !== "all") {
-      const [min, max] = searchFilters.budget.split("-").map(Number);
-      if (min) newFilters.priceMin = min;
-      if (max && max !== 99999999) newFilters.priceMax = max;
-    }
-    
-    // Update filters state - this will trigger the local query to refetch
-    setFilters(newFilters);
-  };
-
-  const handleFilterChange = (filterData: any) => {
-    const newFilters: Record<string, any> = {};
-    
-    // Handle budget range
-    if (filterData.budgetRange && Array.isArray(filterData.budgetRange) && filterData.budgetRange.length >= 2) {
-      if (filterData.budgetRange[0] > 0 || filterData.budgetRange[1] < 2000000) {
-        newFilters.priceMin = filterData.budgetRange[0];
-        newFilters.priceMax = filterData.budgetRange[1];
-      }
-    }
-    
-    // Handle other filters
-    if (filterData.brand && filterData.brand !== 'all') {
-      newFilters.brand = filterData.brand;
-    }
-    if (filterData.model) {
-      newFilters.model = filterData.model;
-    }
-    if (filterData.fuelType && filterData.fuelType !== 'all') {
-      newFilters.fuelType = filterData.fuelType;
-    }
-    if (filterData.transmission && filterData.transmission !== 'all') {
-      newFilters.transmission = filterData.transmission;
-    }
-    if (filterData.city && filterData.city !== 'all') {
-      newFilters.city = filterData.city;
-    }
-    if (filterData.location) {
-      newFilters.city = filterData.location;
-    }
-    
-    feedback.selection(); // Haptic feedback on filter change
-    setFilters(newFilters);
-    
-    // Query will auto-refetch when filters change
-    if (Object.keys(newFilters).length > 0) {
-      setHasSearched(true);
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      // Redirect to search results
+      window.location.href = `/results?q=${encodeURIComponent(searchQuery)}`;
     }
   };
-
-  const handleFavoriteToggle = (carId: string) => {
-    feedback.selection(); // Haptic feedback for favorite action
-    setFavorites(prev => {
-      const newFavorites = new Set(prev);
-      if (newFavorites.has(carId)) {
-        newFavorites.delete(carId);
-      } else {
-        newFavorites.add(carId);
-      }
-      return newFavorites;
-    });
-  };
-
-  const handleContactSeller = (carId: string) => {
-    const car = cars.find(c => c.id === carId);
-    if (car) {
-      feedback.button(); // Haptic feedback for button action
-      setSelectedCarForContact({ id: carId, title: car.title });
-      setShowContactDialog(true);
-    }
-  };
-
-  const handleAdvancedSearch = () => {
-    feedback.button(); // Haptic feedback for search action
-    setHasSearched(true);
-    setActiveTab("local");
-    // Filters are already updated by handleFilterChange
-    // The query will auto-refetch with the new filters
-  };
-
-  const handleMakeFeatured = (car: CarListing) => {
-    setSelectedCarForFeatured({ id: car.id, title: car.title });
-    setShowFeaturedModal(true);
-  };
-
-  // Usage status query for showing remaining searches
-  const { data: usageStatusData } = useQuery({
-    queryKey: ["/api/usage/status"],
-    refetchOnWindowFocus: true, // Refetch when user returns to window
-    staleTime: 5 * 60 * 1000, // Data is fresh for 5 minutes
-    // Removed excessive refetchInterval to reduce server load
-  });
-
-  const sortedCars = useMemo(() => {
-    return [...cars].sort((a, b) => {
-      // First priority: Listings with images come first
-      const aHasImages = hasValidImages(a);
-      const bHasImages = hasValidImages(b);
-      
-      if (aHasImages && !bHasImages) return -1;
-      if (!aHasImages && bHasImages) return 1;
-      
-      // Second priority: Apply user's selected sort criteria
-      switch (sortBy) {
-        case "price-low":
-          return parseFloat(a.price) - parseFloat(b.price);
-        case "price-high":
-          return parseFloat(b.price) - parseFloat(a.price);
-        case "year-new":
-          return b.year - a.year;
-        case "mileage-low":
-          return (a.mileage || 0) - (b.mileage || 0);
-        default:
-          return 0;
-      }
-    });
-  }, [cars, sortBy]);
 
   return (
-    <FullWidthLayout>
-      <SEOHead 
-        title={dynamicSEO.title}
-        description={dynamicSEO.description}
-        keywords="used cars India, car search engine, compare cars, authentic car listings, AI car recommendations, cross-platform car search, car marketplace India, used car price comparison, CarDekho, OLX, Cars24"
-        structuredData={structuredData}
-        canonical="https://www.cararth.com/"
-      />
-      <div>
-        <HeroSection 
-          onSearch={handleHeroSearch}
-          hasSearched={hasSearched}
-          isSearching={isLoading}
-        />
-        
-        {/* Show How It Works section before search */}
-        {!hasSearched && <HowItWorks />}
-        
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-8">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6 sm:mb-8">
-            <TabsList className="grid w-full grid-cols-2 h-12 sm:h-14">
-              <TabsTrigger value="local" className="flex items-center gap-2 text-sm sm:text-base font-medium">
-                <Search className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="hidden sm:inline">Local Listings ({cars.length})</span>
-                <span className="sm:hidden">Local ({cars.length})</span>
-              </TabsTrigger>
-              <TabsTrigger value="marketplace" className="flex items-center gap-2 text-sm sm:text-base font-medium">
-                <Globe className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="hidden sm:inline">Info</span>
-                <span className="sm:hidden">Info</span>
-              </TabsTrigger>
-            </TabsList>
+    <div className="min-h-screen bg-black dark:bg-black text-white dark:text-white overflow-x-hidden">
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-black/30 border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
+          <BrandWordmark variant="header" showTagline={false} />
+          <button
+            onClick={() => setIsDark(!isDark)}
+            className="px-4 py-2 text-sm font-500 text-white/60 hover:text-white transition-colors"
+          >
+            {isDark ? "Light" : "Dark"}
+          </button>
+        </div>
+      </header>
 
-            <TabsContent value="local">
-              <div className="flex flex-col lg:flex-row gap-8">
-                <div className="lg:w-1/4 space-y-6">
-                  <UnifiedFilters 
-                    filters={filters}
-                    onFiltersChange={handleFilterChange}
-                    onSearch={handleAdvancedSearch}
-                  />
-                  
-                  {/* AI Assistant - Less prominent position */}
-                  <div className="hidden lg:block">
-                    <div className="scale-90 transform origin-top">
-                      <TheAssistant 
-                        isAuthenticated={false}
-                        userEmail={null}
-                      />
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="lg:w-3/4">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
-                    <h2 className="text-xl sm:text-2xl font-bold" data-testid="text-results-title">
-                      Verified Cars in India
-                    </h2>
-                    <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto">
-                      <span className="text-muted-foreground text-sm">Sort:</span>
-                      <Select value={sortBy} onValueChange={setSortBy}>
-                        <SelectTrigger className="w-full sm:w-48 min-h-[44px]" data-testid="select-sort">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="price-low">Price: Low to High</SelectItem>
-                          <SelectItem value="price-high">Price: High to Low</SelectItem>
-                          <SelectItem value="year-new">Year: Newest First</SelectItem>
-                          <SelectItem value="mileage-low">Mileage: Low to High</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
+      {/* Hero Section - Maximum Negative Space */}
+      <section className="pt-40 pb-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto">
+          {/* Main Headline - Huge, Minimal */}
+          <h1 className="text-7xl sm:text-8xl lg:text-9xl font-900 tracking-tighter leading-none mb-8 animate-fade-in">
+            Find Your Perfect
+            <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0071E3] to-[#0077ED]">
+              Car
+            </span>
+          </h1>
 
-                  {isLoading && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
-                      {[...Array(6)].map((_, i) => (
-                        <div key={i} className="bg-card border border-border rounded-lg overflow-hidden animate-pulse">
-                          <div className="w-full h-48 bg-muted"></div>
-                          <div className="p-4 space-y-3">
-                            <div className="h-6 bg-muted rounded w-3/4"></div>
-                            <div className="h-8 bg-muted rounded w-1/2"></div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  
-                  {!isLoading && (
-                    <div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8" data-testid="grid-car-listings">
-                        {sortedCars.map((car) => (
-                          <MinimalCarCard
-                            key={car.id}
-                            car={car}
-                            onFavoriteToggle={handleFavoriteToggle}
-                            isFavorite={favorites.has(car.id)}
-                            onContactSeller={handleContactSeller}
-                          />
-                        ))}
-                      </div>
-                      
-                      {sortedCars.length === 0 && (
-                        <div className="text-center py-12" data-testid="text-no-results">
-                          <p className="text-muted-foreground text-lg">No cars found matching your criteria.</p>
-                          <p className="text-muted-foreground">Try adjusting your filters to see more results.</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </TabsContent>
+          {/* Subheading - Clean, Minimal */}
+          <p className="text-lg sm:text-xl text-white/60 max-w-2xl mb-12 leading-relaxed animate-fade-in">
+            Search 50,000+ verified used cars across India. Compare prices, authenticity, and value in seconds.
+          </p>
 
-            <TabsContent value="marketplace">
-              <div className="text-center py-12">
-                <Globe className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-xl font-semibold mb-2">All Results Shown in Local Tab</h3>
-                <p className="text-muted-foreground mb-4">
-                  Search results from all platforms (CarDekho, OLX, Cars24, CarWale, etc.) are displayed in the Local Listings tab.
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Use the search form above to filter by brand, budget, city, and more.
-                </p>
-              </div>
-            </TabsContent>
+          {/* Search Bar - Glassmorphic, Massive, Centered */}
+          <div
+            className={`
+              backdrop-blur-[12px] rounded-full border transition-all duration-300
+              ${
+                focusedInput
+                  ? "bg-white/12 border-white/20 shadow-lg"
+                  : "bg-white/8 border-white/10"
+              }
+              flex items-center gap-3 px-6 py-4 mb-8 animate-slide-up
+            `}
+          >
+            <Search className="w-5 h-5 text-white/40" />
+            <input
+              type="text"
+              placeholder="Swift under 5 lakh in Pune..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setFocusedInput(true)}
+              onBlur={() => setFocusedInput(false)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              className="flex-1 bg-transparent text-white text-lg outline-none placeholder-white/40"
+            />
+            <button className="p-2 hover:bg-white/10 rounded-full transition-colors">
+              <Mic className="w-5 h-5 text-white/60 hover:text-white/80" />
+            </button>
+            <button
+              onClick={handleSearch}
+              className="px-6 py-2 bg-[#0071E3] hover:bg-[#0077ED] rounded-full font-600 text-white transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/50"
+            >
+              Search
+            </button>
+          </div>
 
-          </Tabs>
-          
-          {/* Trust Section - show after results or before if searched */}
-          {hasSearched && <TrustSection />}
-          
-          {/* Enterprise Partnership Section */}
-          <div className="mt-6 sm:mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl p-4 sm:p-6 border border-blue-200 dark:border-blue-800">
-            <div className="text-center">
-              <h3 className="text-xl sm:text-2xl font-bold text-blue-800 dark:text-blue-200 mb-2 sm:mb-3">Enterprise Partnerships & Subscriptions</h3>
-              <p className="text-sm sm:text-base text-blue-700 dark:text-blue-300 mb-3 sm:mb-4 max-w-2xl mx-auto">
-                Looking for bulk car data, API access, or custom automotive solutions? Partner with CarArth for enterprise-level services.
-              </p>
-              <Button 
-                onClick={() => {
-                  window.location.href = 'mailto:connect@cararth.com?subject=Enterprise Partnership Inquiry&body=Hi! I\'m interested in enterprise partnerships and subscriptions with CarArth. Please share more details about your enterprise services.';
-                }}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 py-3 rounded-lg font-semibold text-sm sm:text-base min-h-[44px]"
-                data-testid="button-enterprise-contact"
-              >
-                📧 email us: connect@cararth.com
-              </Button>
+          {/* Quick Stats - Minimal Pills */}
+          <div className="flex flex-wrap gap-3 text-sm text-white/60">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-[#00F5A0]" />
+              <span>50,000+ Verified Listings</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-[#00F5A0]" />
+              <span>AI-Powered Authenticity Checks</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-[#00F5A0]" />
+              <span>Zero Hidden Charges</span>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Trust Section - show for non-searched state */}
-      {!hasSearched && <TrustSection />}
-      
-      {/* Detailed content for interested users */}
-      <KeyInsights />
-      <HomepageIntro />
-      
-      {/* FAQ Section */}
-      <FAQSection />
+      {/* Featured Car Section - One Large Hero Car */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 border-t border-white/10">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-4xl font-bold mb-12">Featured Listing</h2>
 
-      {/* Search Limit Popup */}
-      <SearchLimitPopup
-        isOpen={showSearchLimitPopup}
-        onClose={() => setShowSearchLimitPopup(false)}
-        onSignUp={() => {
-          console.log('🚀 Sign up clicked from search limit popup');
-          // TODO: Implement sign up functionality
-        }}
-        onLogin={() => {
-          console.log('🔑 Login clicked from search limit popup');
-          // TODO: Implement login functionality
-        }}
-        data={searchLimitData}
-      />
+          {/* Glass Card with Hero Car */}
+          <div className="glass-card group cursor-pointer">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Image Placeholder */}
+              <div className="aspect-square bg-gradient-to-br from-white/10 to-white/5 rounded-lg overflow-hidden">
+                <div className="w-full h-full flex items-center justify-center text-white/30">
+                  <div className="text-center">
+                    <div className="text-6xl mb-4">🚗</div>
+                    <p>Car Image</p>
+                  </div>
+                </div>
+              </div>
 
-      {/* Contact Seller Dialog */}
-      <Dialog open={showContactDialog} onOpenChange={setShowContactDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Phone className="w-5 h-5" />
-              Contact Seller
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              {selectedCarForContact?.title && `Interested in "${selectedCarForContact.title}"`}
-            </p>
-            <div className="flex flex-col gap-3">
-              <HapticButton 
-                className="w-full" 
-                hapticType="button"
-                onClick={() => {
-                  feedback.success();
-                  // TODO: Implement contact seller functionality
-                  console.log('📞 Contact seller for car:', selectedCarForContact?.id);
-                  setShowContactDialog(false);
-                }}
-              >
-                <Phone className="w-4 h-4 mr-2" />
-                Get Seller Contact
-              </HapticButton>
-              <Button 
-                variant="outline" 
-                onClick={() => setShowContactDialog(false)}
-                className="w-full"
-              >
-                Cancel
-              </Button>
+              {/* Details - Minimal, Huge Typography */}
+              <div className="flex flex-col justify-center">
+                <div className="mb-6">
+                  <div className="inline-block trust-pill mb-4">
+                    ✓ AI Verified
+                  </div>
+                  <h3 className="text-5xl font-bold mb-2">Hyundai Creta</h3>
+                  <p className="text-white/60">2022 • 45,000 km • Pune</p>
+                </div>
+
+                <div className="space-y-4 mb-8">
+                  <div>
+                    <p className="text-white/60 text-sm mb-1">Price</p>
+                    <p className="text-4xl font-bold">₹8,50,000</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
+                    <div>
+                      <p className="text-white/60 text-sm mb-1">Engine</p>
+                      <p className="font-500">1.5L Petrol</p>
+                    </div>
+                    <div>
+                      <p className="text-white/60 text-sm mb-1">Transmission</p>
+                      <p className="font-500">Automatic</p>
+                    </div>
+                  </div>
+                </div>
+
+                <button className="btn-primary w-full group/btn">
+                  <span>View Details</span>
+                  <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                </button>
+              </div>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
-    </FullWidthLayout>
-  );
-}
+        </div>
+      </section>
 
-// Wrap everything in HapticProvider
-export default function Home() {
-  return (
-    <HapticProvider>
-      <HomeContent />
-    </HapticProvider>
+      {/* Quick Stats Grid */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 border-t border-white/10">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-4xl font-bold mb-12">Why CarArth</h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Stat Cards */}
+            {[
+              {
+                number: "50K+",
+                title: "Verified Cars",
+                description: "Across all major platforms in India",
+              },
+              {
+                number: "3.2M",
+                title: "Smart Searches",
+                description: "Processed monthly with AI",
+              },
+              {
+                number: "99.8%",
+                title: "Authenticity Rate",
+                description: "Multi-LLM verification system",
+              },
+            ].map((stat, idx) => (
+              <div key={idx} className="glass-card">
+                <p className="text-4xl font-bold text-[#0071E3] mb-2">
+                  {stat.number}
+                </p>
+                <h4 className="text-lg font-600 mb-2">{stat.title}</h4>
+                <p className="text-white/60 text-sm">{stat.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 border-t border-white/10">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-5xl font-bold mb-6">
+            Ready to find your car?
+          </h2>
+          <p className="text-xl text-white/60 mb-8 max-w-2xl mx-auto">
+            Start searching across 50,000+ verified listings from Cars24, Spinny, OLX, and more.
+          </p>
+          <button className="btn-primary text-lg px-8 py-4">
+            Search Cars
+          </button>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-white/10 py-8 px-4 sm:px-6 lg:px-8 text-center text-white/60 text-sm">
+        <p>
+          © 2025 CarArth. India's used car search engine.{" "}
+          <a href="#" className="text-[#0071E3] hover:text-[#0077ED]">
+            Learn more
+          </a>
+        </p>
+      </footer>
+    </div>
   );
 }

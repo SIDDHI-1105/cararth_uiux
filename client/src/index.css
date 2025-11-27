@@ -1,671 +1,175 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Enhanced Search Button Animations */
-@keyframes searchButtonPulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.02); }
-  100% { transform: scale(1); }
-}
-
-@keyframes searchButtonPress {
-  0% { transform: scale(1); }
-  50% { transform: scale(0.98); }
-  100% { transform: scale(1); }
-}
-
-/* Custom utility classes for enhanced feedback */
-.scale-98 {
-  transform: scale(0.98);
-}
-
-.scale-102 {
-  transform: scale(1.02);
-}
-
 :root {
-  /* Glassmorphism Theme - Day Mode */
-  --background: hsl(0 0% 100%);
-  --foreground: hsl(222 47% 11%); /* #1F2937 for day mode text */
-  --card: rgba(255, 255, 255, 0.15); /* Glass effect */
-  --card-foreground: hsl(222 47% 11%);
-  --popover: rgba(255, 255, 255, 0.95);
-  --popover-foreground: hsl(222 47% 11%);
-  --primary: hsl(14 100% 60%); /* #FF6B35 - Orange accent */
-  --primary-foreground: hsl(0 0% 100%);
-  --secondary: hsl(210 15% 96%);
-  --secondary-foreground: hsl(222 47% 11%);
-  --muted: hsl(210 15% 96%);
-  --muted-foreground: hsl(0 0% 30%);
-  --accent: hsl(14 100% 60%); /* Orange accent */
-  --accent-foreground: hsl(0 0% 100%);
-  --destructive: hsl(0 84% 60%);
-  --destructive-foreground: hsl(0 0% 100%);
-  --border: rgba(255, 255, 255, 0.3); /* Glass border */
-  --input: rgba(255, 255, 255, 0.2);
-  --ring: hsl(14 100% 60%);
-  --radius: 16px; /* More rounded for glass effect */
+  /* Apple.com 2025 - Pure Dark Mode Default */
+  --background: #000000;
+  --foreground: #f5f5f7;
+  --primary: #0071E3; /* Apple Electric Indigo */
+  --accent: #0071E3;
+  --trust-green: #00F5A0;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.08);
   
-  /* Brand Colors */
-  --saffron: 30 100% 60%; /* #FF9933 - India saffron */
-  --orange-accent: hsl(14 100% 60%); /* #FF6B35 */
+  /* Glassmorphism - Apple Specification */
+  --glass-blur: 12px;
+  --glass-opacity: 0.72;
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --glass-glow: 0 0 20px rgba(0, 113, 227, 0.3);
   
-  /* Glassmorphism Specific - Enhanced iOS-style with pronounced effect */
-  --glass-bg: rgba(255, 255, 255, 0.55);
-  --glass-border: rgba(255, 255, 255, 0.8);
-  --glass-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-  --glass-shadow-hover: 0 15px 50px rgba(0, 0, 0, 0.22);
-  --backdrop-blur: 30px;
-  
-  /* Typography System */
+  /* Typography */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
-  
-  /* Clean Spacing System */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px;
-  --space-12: 48px;
-  --space-16: 64px;
-  --space-20: 80px;
-  --space-24: 96px;
-  
-  /* Clean Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
-/* Night Mode - Glassmorphism Dark Theme */
-.night {
-  --background: hsl(0 0% 9%);
-  --foreground: hsl(210 20% 95%); /* #F3F4F6 for night mode text */
-  --card: rgba(31, 41, 55, 0.4); /* Dark glass effect */
-  --card-foreground: hsl(210 20% 95%);
-  --popover: rgba(31, 41, 55, 0.95);
-  --popover-foreground: hsl(210 20% 95%);
-  --primary: hsl(14 100% 60%); /* #FF6B35 - Orange accent */
-  --primary-foreground: hsl(0 0% 100%);
-  --secondary: hsl(210 8% 15%);
-  --secondary-foreground: hsl(210 20% 95%);
-  --muted: hsl(210 8% 15%);
-  --muted-foreground: hsl(0 0% 75%);
-  --accent: hsl(14 100% 60%); /* Orange accent */
-  --accent-foreground: hsl(0 0% 100%);
-  --destructive: hsl(0 84% 60%);
-  --destructive-foreground: hsl(0 0% 100%);
-  --border: rgba(255, 255, 255, 0.1); /* Subtle glass border */
-  --input: rgba(31, 41, 55, 0.3);
-  --ring: hsl(14 100% 60%);
-  
-  /* Glassmorphism Specific - Night */
-  --glass-bg: rgba(17, 24, 39, 0.78);
-  --glass-border: rgba(147, 197, 253, 0.6);
-  --glass-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-  --glass-shadow-hover: 0 15px 50px rgba(0, 0, 0, 0.6);
+/* Light Mode - Apple.com 2025 */
+.light {
+  --background: #fbfbfb;
+  --foreground: #1d1d1f;
+  --glass-bg: rgba(255, 255, 255, 0.78);
+  --glass-border: rgba(0, 0, 0, 0.1);
+  --glass-glow: 0 0 20px rgba(0, 113, 227, 0.15);
 }
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-[rgba(255,255,255,0.1)] dark:border-[rgba(255,255,255,0.1)];
   }
 
   html {
     @apply scroll-smooth;
     font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   body {
     @apply text-foreground antialiased;
     font-family: var(--font-sans);
     line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
-    position: relative;
+    background-color: var(--background);
     min-height: 100vh;
   }
-  
-  /* Darkening overlay for better text contrast */
-  body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.15);
-    z-index: -1;
-    pointer-events: none;
-  }
-  
-  .night body::before {
-    background: rgba(0, 0, 0, 0.35);
-  }
-  
-  /* Day mode background - default */
-  html.day body,
-  html:not(.night) body {
-    background-image: url('/assets/day-highway.jpg');
-  }
-  
-  /* Night mode background */
-  html.night body {
-    background-image: url('/assets/night-highway.jpg');
+
+  /* Hero Typography - Apple 2025 */
+  h1 {
+    @apply text-6xl sm:text-7xl lg:text-8xl font-bold tracking-tight;
+    line-height: 1.1;
+    font-weight: 900;
   }
 
-  /* Typography Hierarchy - Clear and Readable */
-  h1 {
-    @apply text-3xl lg:text-4xl font-bold tracking-tight;
+  h2 {
+    @apply text-4xl sm:text-5xl font-bold tracking-tight;
     line-height: 1.2;
-    color: var(--foreground);
-  }
-
-  h2 {
-    @apply text-2xl lg:text-3xl font-semibold tracking-tight;
-    line-height: 1.3;
-    color: var(--foreground);
   }
 
   h3 {
-    @apply text-xl lg:text-2xl font-semibold;
-    line-height: 1.4;
-    color: var(--foreground);
-  }
-
-  h4 {
-    @apply text-lg lg:text-xl font-semibold;
-    line-height: 1.4;
-    color: var(--foreground);
-  }
-
-  h5 {
-    @apply text-base lg:text-lg font-medium;
-    line-height: 1.5;
-    color: var(--foreground);
-  }
-
-  h6 {
-    @apply text-sm lg:text-base font-medium;
-    line-height: 1.5;
-    color: var(--foreground);
-  }
-
-  p {
-    @apply text-base leading-relaxed;
-    color: var(--foreground);
-  }
-
-  /* Interactive Elements - Clear Focus States */
-  button:focus-visible,
-  input:focus-visible,
-  select:focus-visible,
-  textarea:focus-visible {
-    @apply outline-2 outline-offset-2;
-    outline-color: var(--ring);
-  }
-}
-
-/* Scrollbar Hide for Mobile Horizontal Scrolling */
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-/* Clean Card Design */
-.card {
-  @apply bg-card text-card-foreground rounded-lg border;
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow 0.2s ease;
-}
-
-.card:hover {
-  box-shadow: var(--shadow-md);
-}
-
-.card-elevated {
-  box-shadow: var(--shadow-lg);
-}
-
-/* Clean Button Styles */
-.btn-primary {
-  @apply bg-primary text-primary-foreground font-medium px-4 py-2 rounded-lg;
-  @apply hover:opacity-90 focus:ring-2 focus:ring-ring focus:ring-offset-2;
-  transition: opacity 0.2s ease;
-  min-height: 44px; /* Touch-friendly */
-}
-
-.btn-secondary {
-  @apply bg-secondary text-secondary-foreground font-medium px-4 py-2 rounded-lg border;
-  @apply hover:bg-muted focus:ring-2 focus:ring-ring focus:ring-offset-2;
-  transition: background-color 0.2s ease;
-  min-height: 44px; /* Touch-friendly */
-}
-
-.btn-ghost {
-  @apply text-foreground font-medium px-4 py-2 rounded-lg;
-  @apply hover:bg-muted focus:ring-2 focus:ring-ring focus:ring-offset-2;
-  transition: background-color 0.2s ease;
-  min-height: 44px; /* Touch-friendly */
-}
-
-/* Clean Form Elements */
-.form-input {
-  @apply w-full px-3 py-2 bg-background border border-input rounded-lg;
-  @apply focus:border-ring focus:ring-1 focus:ring-ring focus:outline-none;
-  @apply text-foreground placeholder:text-muted-foreground;
-  font-size: 16px; /* Prevents zoom on iOS */
-  min-height: 44px; /* Touch-friendly */
-}
-
-.form-select {
-  @apply w-full px-3 py-2 bg-background border border-input rounded-lg;
-  @apply focus:border-ring focus:ring-1 focus:ring-ring focus:outline-none;
-  @apply text-foreground;
-  font-size: 16px; /* Prevents zoom on iOS */
-  min-height: 44px; /* Touch-friendly */
-}
-
-.form-textarea {
-  @apply w-full px-3 py-2 bg-background border border-input rounded-lg;
-  @apply focus:border-ring focus:ring-1 focus:ring-ring focus:outline-none;
-  @apply text-foreground placeholder:text-muted-foreground;
-  font-size: 16px; /* Prevents zoom on iOS */
-  min-height: 44px; /* Touch-friendly */
-  resize: vertical;
-}
-
-/* Navigation - Clean and Minimal */
-.nav {
-  @apply bg-background border-b border-border;
-  @apply sticky top-0 z-50;
-  backdrop-filter: blur(8px);
-}
-
-/* Mobile-First Responsive Design - Enhanced Readability */
-@media (max-width: 768px) {
-  html {
-    font-size: 16px; /* Maintain readable size on mobile */
-  }
-
-  body {
-    line-height: 1.7; /* Increased line height for better readability */
-  }
-
-  h1 {
-    @apply text-2xl font-bold;
+    @apply text-3xl sm:text-4xl font-semibold tracking-tight;
     line-height: 1.3;
   }
 
-  h2 {
-    @apply text-xl font-semibold;
-    line-height: 1.4;
-  }
-
-  h3 {
-    @apply text-lg font-semibold;
-    line-height: 1.4;
-  }
-
+  /* Body Typography */
   p {
-    @apply text-base;
-    line-height: 1.7; /* More spacing between lines */
+    @apply text-lg leading-relaxed;
   }
 
-  /* Larger touch targets on mobile */
-  .btn-primary,
-  .btn-secondary,
-  .btn-ghost,
-  .form-input,
-  .form-select,
-  .form-textarea {
-    min-height: 48px; /* Larger on mobile */
-    @apply py-3 text-base;
-    font-size: 16px !important; /* Prevent zoom on iOS */
-  }
-
-  /* Mobile-friendly spacing */
-  .container {
-    @apply px-4;
-  }
-
-  /* Simplify cards on mobile */
-  .card {
-    @apply rounded-lg;
+  /* Links */
+  a {
+    @apply text-[#0071E3] hover:text-[#0077ED] transition-colors;
   }
 }
 
-@media (max-width: 480px) {
-  html {
-    font-size: 16px; /* Keep minimum 16px for readability */
+@layer components {
+  /* Apple Glass Card */
+  .glass-card {
+    @apply backdrop-blur-[12px] bg-[rgba(255,255,255,0.08)] border border-[rgba(255,255,255,0.15)] rounded-[24px] p-6;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   }
 
-  body {
-    line-height: 1.75; /* Even more spacing on small screens */
+  .glass-card:hover {
+    @apply bg-[rgba(255,255,255,0.12)];
+    box-shadow: 0 0 20px rgba(0, 113, 227, 0.3), 0 12px 48px rgba(0, 0, 0, 0.15);
+    transform: translateY(-4px);
   }
 
-  /* Extra large touch targets on small screens */
-  .btn-primary,
-  .btn-secondary,
-  .btn-ghost,
-  .form-input,
-  .form-select,
-  .form-textarea {
-    min-height: 52px;
-    @apply py-4 text-base;
-    font-size: 16px !important;
+  /* Search Bar Glass */
+  .glass-search {
+    @apply backdrop-blur-[12px] bg-[rgba(255,255,255,0.08)] border border-[rgba(255,255,255,0.15)] rounded-full px-6 py-4 w-full;
+    font-size: 17px;
+  }
+
+  .glass-search:focus {
+    @apply outline-none border-[rgba(0,113,227,0.5)] bg-[rgba(255,255,255,0.12)];
+    box-shadow: 0 0 20px rgba(0, 113, 227, 0.4);
+  }
+
+  /* Primary Action Button */
+  .btn-primary {
+    @apply px-8 py-3 rounded-full bg-[#0071E3] text-white font-600 text-base transition-all duration-300;
+  }
+
+  .btn-primary:hover {
+    @apply bg-[#0077ED];
+    box-shadow: 0 0 20px rgba(0, 113, 227, 0.5);
+  }
+
+  /* Trust Badge */
+  .trust-pill {
+    @apply inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[rgba(0,245,160,0.1)] border border-[rgba(0,245,160,0.3)] text-xs font-500 text-[#00F5A0];
+  }
+
+  /* Container with max width and centered */
+  .container-apple {
+    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
   }
 }
 
-/* High Contrast Support */
-@media (prefers-contrast: high) {
-  :root {
-    --border: hsl(0 0% 70%);
+/* Smooth transitions */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
-  
-  .dark {
-    --border: hsl(0 0% 40%);
-  }
-}
-
-/* Reduced Motion Support */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* Loading States - Simple and Clean */
-.skeleton {
-  @apply bg-muted animate-pulse;
-}
-
-@keyframes pulse {
-  0%, 100% {
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
     opacity: 1;
   }
-  50% {
-    opacity: 0.5;
-  }
 }
 
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+.animate-slide-up {
+  animation: slideUp 0.6s ease-out forwards;
 }
 
-/* Enhanced Haptic Feedback Styles */
-.haptic-button {
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  transform-origin: center;
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
 }
 
-.haptic-button:active {
-  transform: scale(0.95);
+/* Scrollbar customization */
+::-webkit-scrollbar {
+  width: 8px;
 }
 
-.haptic-button:focus {
-  outline: 2px solid hsl(var(--primary));
-  outline-offset: 2px;
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
 }
 
-/* Improved Card Hover Effects with Haptic Feel */
-.card-hover {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
 }
 
-.card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-}
-
-.card-hover:active {
-  transform: translateY(-1px);
-}
-
-/* Minimal Design Utilities */
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.line-clamp-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Enhanced Interactive Elements */
-.interactive-element {
-  @apply transition-all duration-200 ease-in-out;
-  @apply hover:scale-[1.02] active:scale-[0.98];
-  @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
-}
-
-/* Utility Classes */
-.container {
-  @apply max-w-7xl mx-auto px-4 lg:px-8;
-}
-
-.content-container {
-  @apply max-w-4xl mx-auto px-4 lg:px-8;
-}
-
-.section {
-  @apply py-12 lg:py-20;
-}
-
-.section-sm {
-  @apply py-8 lg:py-12;
-}
-
-/* Focus Ring for Accessibility */
-.focus-ring {
-  @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
-}
-
-/* Screen Reader Only */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-/* Glassmorphism Utility Classes - Pronounced iOS-style effect */
-.glass {
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--backdrop-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--backdrop-blur)) saturate(180%);
-  border: 2.5px solid var(--glass-border);
-  border-radius: var(--radius);
-  box-shadow: 
-    var(--glass-shadow),
-    inset 0 0 0 2px rgba(255, 255, 255, 0.25),
-    inset 0 -2px 20px rgba(255, 255, 255, 0.15),
-    0 0 40px rgba(255, 255, 255, 0.12);
-  position: relative;
-  transition: all 0.3s ease;
-  color: hsl(222 47% 11%);
-}
-
-/* Gradient highlight overlay for extra depth */
-.glass::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 50%;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.15), transparent);
-  border-radius: var(--radius) var(--radius) 0 0;
-  pointer-events: none;
-}
-
-.night .glass {
-  color: hsl(210 20% 98%);
-}
-
-.night .glass::before {
-  background: linear-gradient(to bottom, rgba(147, 197, 253, 0.1), transparent);
-}
-
-.glass:hover {
-  transform: translateY(-2px);
-  box-shadow: 
-    var(--glass-shadow-hover),
-    inset 0 0 0 2px rgba(255, 255, 255, 0.3),
-    inset 0 -2px 25px rgba(255, 255, 255, 0.2),
-    0 0 50px rgba(255, 255, 255, 0.18);
-  border-color: rgba(255, 255, 255, 0.9);
-}
-
-.glass-card {
-  @apply glass;
-  padding: 1.5rem;
-}
-
-/* High-contrast variant for text-heavy areas like AETHER */
-.glass-contrast {
-  @apply glass;
-  background: rgba(255, 255, 255, 0.5);
-}
-
-.night .glass-contrast {
-  background: rgba(17, 24, 39, 0.85);
-}
-
-/* Legend text - ensure maximum legibility */
-.legend-heading {
-  color: #1F2937 !important;
-}
-
-.night .legend-heading {
-  color: #FFFFFF !important;
-}
-
-.legend-text {
-  color: #1F2937 !important;
-}
-
-.night .legend-text {
-  color: #F9FAFB !important;
-}
-
-/* Remove text-shadow from glass containers for better legibility */
-.glass *, .glass-card *, .glass-contrast * {
-  text-shadow: none !important;
-}
-
-.glass-button {
-  @apply glass;
-  padding: 0.75rem 1.5rem;
-  cursor: pointer;
-  background: var(--primary);
-  border-color: var(--primary);
-  color: var(--primary-foreground);
-  font-weight: 600;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.glass-button:hover {
-  background: hsl(from var(--primary) h s calc(l - 5%));
-  box-shadow: 0 8px 24px rgba(255, 107, 53, 0.4);
-}
-
-.glass-input {
-  @apply glass;
-  padding: 0.75rem 1rem;
-  width: 100%;
-  background: var(--input);
-  color: var(--foreground);
-}
-
-.glass-input::placeholder {
-  color: var(--muted-foreground);
-  opacity: 0.7;
-}
-
-.glass-panel {
-  @apply glass;
-  padding: 2rem;
-}
-
-/* Mobile optimization - lighter blur for performance */
-@media (max-width: 768px) {
-  .glass {
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-  }
-}
-
-/* Night mode glass adjustments - enhanced blue glow with better contrast */
-.night .glass {
-  box-shadow: 
-    var(--glass-shadow),
-    inset 0 0 0 1.5px rgba(147, 197, 253, 0.2),
-    0 0 30px rgba(147, 197, 253, 0.18);
-  border-color: rgba(147, 197, 253, 0.5);
-}
-
-.night .glass:hover {
-  box-shadow: 
-    var(--glass-shadow-hover),
-    inset 0 0 0 1.5px rgba(147, 197, 253, 0.25),
-    0 0 40px rgba(147, 197, 253, 0.22);
-  border-color: rgba(147, 197, 253, 0.7);
-}
-
-/* Fallback for browsers that don't support backdrop-filter */
-@supports not (backdrop-filter: blur(0)) {
-  .glass {
-    background: rgba(255, 255, 255, 0.3) !important;
-  }
-  
-  .night .glass {
-    background: rgba(31, 41, 55, 0.7) !important;
-  }
-}
-
-/* Remove global text-shadow for better legibility - add contextually where needed */
-
-/* Print Styles */
-@media print {
-  * {
-    box-shadow: none !important;
-    text-shadow: none !important;
-  }
-  
-  .no-print {
-    display: none !important;
-  }
-  
-  .print-break {
-    page-break-before: always;
-  }
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
 }

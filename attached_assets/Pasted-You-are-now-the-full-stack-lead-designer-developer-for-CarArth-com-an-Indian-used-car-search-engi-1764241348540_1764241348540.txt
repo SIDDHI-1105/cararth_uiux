@@ -1,0 +1,42 @@
+You are now the full-stack lead designer + developer for CarArth.com (an Indian used-car search engine).  
+Your task: Build the complete responsive front-end (mobile + tablet + desktop) that looks and feels exactly like apple.com in 2025, with perfect glassmorphism, extreme minimalism, and zero visual clutter.
+
+MANDATORY DESIGN RULES (Apple.com 2025 spec – do not deviate):
+- Background: pure black #000000 (dark mode default) or #FBFBFB (light mode auto-sync with system)
+- Glassmorphism on ALL cards/filters/sheets: backdrop-filter: blur(12px) saturation(180%), opacity 0.68–0.78, 24px border-radius, subtle #0071E3 glow on hover/active
+- Typography: Inter Variable only (Google Fonts). Hero titles 96px–120px, section titles 48px, body 17px
+- Primary accent: Apple’s 2025 electric indigo #0071E3
+- Trust badges: tiny frosted pills with green check #00F5A0
+- Negative space: 70%+ of screen empty above the fold
+- One primary action per screen
+- Micro-animations: card lift 12px + stronger glow + 60fps blur shift on hover/tap
+- Search bar: 60px rounded, transparent → frosted on scroll, with mic icon for voice (Indic-ready)
+- Car cards: frosted glass, show only Price (96px bold), Year, Km, Location + 3 tiny trust pills. Tap → full-screen glass overlay with 360° and docs
+- Filters: mobile = bottom frosted sheet (like iOS Control Center), desktop = sticky frosted top bar
+- No banners, no “Hot Deals”, no flashing badges, no pop-ups ever
+
+PAGES TO BUILD (Next.js 15 + Tailwind CSS + Framer Motion):
+1. Homepage (hero search + one large hero car + “50,000+ Verified Used Cars in India”)
+2. Search Results grid (1-col mobile, 2-col tablet, 3-col desktop) with glass cards
+3. Single Car Detail page (full-screen hero + sticky frosted header + sliding glass spec panels)
+4. Responsive breakpoints: iPhone 16, iPad Pro, MacBook 16", Android foldables
+
+TECH STACK (already in Replit):
+- Next.js 15 App Router
+- Tailwind CSS v3.4+
+- Framer Motion for glass lift & blur transitions
+- Lucide icons + microphone for voice search
+- Responsive images (next/image)
+
+OUTPUT:
+- Fully working, deployable site
+- Dark/light mode auto-switch
+- 60 fps interactions
+- Deploy button ready on Replit
+
+Bonus points:
+- Add subtle parallax tilt on hero car
+- Keyboard navigation (← →) on desktop
+- Voice search placeholder “Say: Swift under 5 lakh in Pune”
+
+Start coding now. When finished, deploy and give me the live URL.
