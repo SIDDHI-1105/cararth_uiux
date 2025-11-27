@@ -47,7 +47,7 @@ export default function Layout({
     >
       {showNavbar && <Navbar />}
       
-      <main className="content-wrapper flex-1">
+      <main className="content-wrapper flex-1 pt-28">
         <div className={`container-responsive ${containerClass} ${className}`}>
           <div className="page-content">
             {children}

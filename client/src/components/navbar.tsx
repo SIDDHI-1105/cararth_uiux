@@ -23,10 +23,10 @@ export default function Navbar() {
   return (
     <>
       {/* Launch Status Banner */}
-      <div className="glass bg-gradient-to-r from-green-600/90 to-blue-600/90 text-white py-2 px-4 text-center text-sm md:text-base font-semibold border-b shadow-sm">
+      <div className="glass fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-green-600/90 to-blue-600/90 text-white py-2 px-4 text-center text-sm md:text-base font-semibold border-b shadow-sm">
         🚀 <strong>Hyderabad – Live Now!</strong> | <strong>Delhi NCR – Coming Soon</strong>
       </div>
-      <nav className="glass sticky top-0 z-50">
+      <nav className="glass fixed top-10 left-0 right-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 py-2">
           <div className="flex items-center space-x-6">
