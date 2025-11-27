@@ -47,7 +47,7 @@ export default function Layout({
     >
       {showNavbar && <Navbar />}
       
-      <main className="content-wrapper flex-1 pt-32">
+      <main className="content-wrapper flex-1" style={{ paddingTop: '110px' }}>
         <div className={`container-responsive ${containerClass} ${className}`}>
           <div className="page-content">
             {children}
