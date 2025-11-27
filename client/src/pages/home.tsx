@@ -40,12 +40,12 @@ export default function Home() {
             style={{
               color: isDark ? "#f5f5f7" : "#1d1d1f",
             }}
-            className="text-7xl sm:text-8xl lg:text-9xl font-900 tracking-tighter leading-none mb-8 animate-fade-in transition-colors duration-300"
+            className="text-6xl sm:text-7xl lg:text-8xl font-900 tracking-tighter leading-none mb-8 animate-fade-in transition-colors duration-300"
           >
-            Find Your Perfect
+            Find your perfect
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0071E3] to-[#0077ED]">
-              Car
+              pre-loved car
             </span>
           </h1>
 
