@@ -128,7 +128,6 @@ export default function Home() {
                 color: isDark ? "#f5f5f7" : "#1d1d1f",
               }}
               className="flex-1 text-lg outline-none transition-colors duration-300"
-              placeholderStyle={{ color: isDark ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.4)" }}
             />
             <button className="p-2 hover:bg-white/10 rounded-full transition-colors">
               <Mic 
