@@ -28,6 +28,19 @@ export default function Home() {
     }
   };
 
+  const toggleTheme = () => {
+    const newIsDark = !isDark;
+    setIsDark(newIsDark);
+    
+    if (newIsDark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    
+    localStorage.setItem("theme", newIsDark ? "dark" : "light");
+  };
+
   return (
     <div className="min-h-screen bg-black dark:bg-black text-white dark:text-white overflow-x-hidden">
       {/* Header */}
@@ -35,8 +48,8 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
           <BrandWordmark variant="header" showTagline={false} />
           <button
-            onClick={() => setIsDark(!isDark)}
-            className="px-4 py-2 text-sm font-500 text-white/60 hover:text-white transition-colors"
+            onClick={toggleTheme}
+            className="px-4 py-2 text-sm font-semibold text-white/60 hover:text-white transition-colors"
           >
             {isDark ? "Light" : "Dark"}
           </button>
