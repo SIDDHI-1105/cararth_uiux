@@ -291,8 +291,8 @@ export default function Home() {
                 </p>
                 <h4 className="text-lg font-semibold mb-2">{stat.title}</h4>
                 <p 
-                  style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.75)" }}
-                  className="text-sm transition-colors duration-300"
+                  style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "#1d1d1f" }}
+                  className="text-sm transition-colors duration-300 font-medium"
                 >
                   {stat.description}
                 </p>
