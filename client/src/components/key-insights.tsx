@@ -2,44 +2,50 @@ import { Shield, Leaf, Zap } from "lucide-react";
 
 export default function KeyInsights() {
   return (
-    <div className="py-12 bg-transparent" data-testid="section-key-insights">
+    <div className="py-20 md:py-28" data-testid="section-key-insights" style={{ backgroundColor: 'var(--background)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-2xl font-bold text-center mb-8 text-gray-900 night:text-white" data-testid="text-key-insights-title">
+        <h2 className="text-5xl md:text-6xl font-bold text-center mb-16 md:mb-20" data-testid="text-key-insights-title" style={{ color: 'var(--foreground)' }}>
           Key Insights
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
           {/* AI-Verified Listings */}
-          <div className="flex items-start space-x-4 bg-white dark:bg-gray-900 rounded-lg p-5 border-2 border-blue-400/40 night:border-blue-400/30" data-testid="card-insight-ai-verified">
+          <div className="glass-card flex items-start space-x-4" data-testid="card-insight-ai-verified">
             <div className="flex-shrink-0">
-              <Shield className="w-8 h-8 text-blue-600 night:text-blue-400" />
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(0, 113, 227, 0.15)' }}>
+                <Shield className="w-7 h-7" style={{ color: '#0071E3' }} />
+              </div>
             </div>
-            <div>
-              <p className="text-gray-800 night:text-gray-100" data-testid="text-insight-ai-verified">
-                <strong className="text-gray-900 night:text-white">AI-Verified Listings:</strong> Multi-LLM checks (e.g., Gemini for OCR, Claude for compliance) ensure trust and accuracy.
+            <div className="flex-1">
+              <p className="text-base leading-relaxed" data-testid="text-insight-ai-verified">
+                <strong className="font-bold" style={{ color: 'var(--foreground)' }}>AI-Verified Listings:</strong> <span style={{ color: 'var(--secondary-text)' }}>Multi-LLM checks (e.g., Gemini for OCR, Claude for compliance) ensure trust and accuracy.</span>
               </p>
             </div>
           </div>
 
           {/* Carbon Savings Dashboard */}
-          <div className="flex items-start space-x-4 bg-white dark:bg-gray-900 rounded-lg p-5 border-2 border-green-400/40 night:border-green-400/30" data-testid="card-insight-carbon-savings">
+          <div className="glass-card flex items-start space-x-4" data-testid="card-insight-carbon-savings">
             <div className="flex-shrink-0">
-              <Leaf className="w-8 h-8 text-green-600 night:text-green-400" />
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(0, 245, 160, 0.15)' }}>
+                <Leaf className="w-7 h-7" style={{ color: '#00F5A0' }} />
+              </div>
             </div>
-            <div>
-              <p className="text-gray-800 night:text-gray-100" data-testid="text-insight-carbon-savings">
-                <strong className="text-gray-900 night:text-white">Carbon Savings Dashboard:</strong> Quantifies CO₂ reductions for each sale, promoting eco-friendly choices.
+            <div className="flex-1">
+              <p className="text-base leading-relaxed" data-testid="text-insight-carbon-savings">
+                <strong className="font-bold" style={{ color: 'var(--foreground)' }}>Carbon Savings Dashboard:</strong> <span style={{ color: 'var(--secondary-text)' }}>Quantifies CO₂ reductions for each sale, promoting eco-friendly choices.</span>
               </p>
             </div>
           </div>
 
           {/* One-Upload Syndication */}
-          <div className="flex items-start space-x-4 bg-white dark:bg-gray-900 rounded-lg p-5 border-2 border-purple-400/40 night:border-purple-400/30" data-testid="card-insight-syndication">
+          <div className="glass-card flex items-start space-x-4" data-testid="card-insight-syndication">
             <div className="flex-shrink-0">
-              <Zap className="w-8 h-8 text-purple-600 night:text-purple-400" />
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(168, 85, 247, 0.15)' }}>
+                <Zap className="w-7 h-7" style={{ color: '#A855F7' }} />
+              </div>
             </div>
-            <div>
-              <p className="text-gray-800 night:text-gray-100" data-testid="text-insight-syndication">
-                <strong className="text-gray-900 night:text-white">One-Upload Syndication:</strong> Maximizes reach by distributing listings to platforms like OLX, Cars24, CarDekho, and Facebook Marketplace.
+            <div className="flex-1">
+              <p className="text-base leading-relaxed" data-testid="text-insight-syndication">
+                <strong className="font-bold" style={{ color: 'var(--foreground)' }}>One-Upload Syndication:</strong> <span style={{ color: 'var(--secondary-text)' }}>Maximizes reach by distributing listings to platforms like OLX, Cars24, CarDekho, and Facebook Marketplace.</span>
               </p>
             </div>
           </div>

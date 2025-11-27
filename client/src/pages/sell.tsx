@@ -122,7 +122,7 @@ export default function SellPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
       <SEOHead
         title="Sell Your Car - CarArth | AI-Verified Listings"
         description="Sell your used car on CarArth. Free AI-verified listings, reach buyers across India, no paid promotions. List once, reach everywhere."
@@ -133,13 +133,13 @@ export default function SellPage() {
       
       <Navbar />
       
-      <main className="container mx-auto px-4 py-12 max-w-4xl">
+      <main className="container mx-auto px-4 py-16 md:py-24 max-w-4xl">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+        <div className="text-center mb-16 md:mb-20">
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6" style={{ color: 'var(--foreground)' }}>
             List your car here. Reach everywhere!
           </h1>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-lg md:text-xl" style={{ color: 'var(--secondary-text)' }}>
             AI verifies every listing — no paid promotions.
           </p>
         </div>

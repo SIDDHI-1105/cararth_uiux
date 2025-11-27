@@ -5,50 +5,50 @@ import { BrandWordmark } from "@/components/brand-wordmark";
 
 export default function Footer() {
   return (
-    <footer className="glass border-t">
+    <footer style={{ backgroundColor: 'var(--secondary-bg)', borderTopColor: 'var(--border)' }} className="border-t transition-colors duration-300">
       {/* Legal Disclaimer Banner */}
-      <div className="bg-primary/10 border-b border-primary/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+      <div style={{ backgroundColor: 'rgba(0, 113, 227, 0.1)', borderBottomColor: 'rgba(0, 113, 227, 0.2)' }} className="border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-center text-center">
-            <div className="text-sm text-primary">
-              <span className="font-medium">🔒 Legal Compliance:</span> All vehicle data is sourced exclusively through verified APIs and publicly available market listings. We comply with all applicable data protection and privacy laws.
+            <div className="text-sm" style={{ color: '#0071E3' }}>
+              <span className="font-bold">🔒 Legal Compliance:</span> All vehicle data is sourced exclusively through verified APIs and publicly available market listings. We comply with all applicable data protection and privacy laws.
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8">
           {/* Brand Section */}
           <div className="col-span-1 md:col-span-2">
-            <Link href="/" className="flex items-center mb-4">
+            <Link href="/" className="flex items-center mb-6">
               <BrandWordmark variant="footer" showTagline={true} className="transition-opacity duration-300 hover:opacity-90" />
             </Link>
-            <p className="text-muted-foreground text-sm mb-4 max-w-md">
+            <p className="text-base mb-6 max-w-md leading-relaxed" style={{ color: 'var(--secondary-text)' }}>
               Discover cars from across platforms, compare smarter, and buy or sell with confidence. More than a marketplace — your guide, your community, your trusted car partner.
             </p>
-            <div className="text-xs text-muted-foreground">
+            <div className="text-sm" style={{ color: 'var(--secondary-text)' }}>
               🇮🇳 Proudly Made in India
             </div>
           </div>
 
           {/* Popular Brands */}
           <div>
-            <h4 className="font-semibold mb-4">Popular Brands</h4>
-            <div className="space-y-2 text-sm">
-              <Link href="/?brand=Maruti Suzuki" className="block text-muted-foreground hover:text-accent transition-colors">
+            <h4 className="font-bold text-lg mb-6" style={{ color: 'var(--foreground)' }}>Popular Brands</h4>
+            <div className="space-y-3 text-base">
+              <Link href="/?brand=Maruti Suzuki" className="block transition-colors hover:text-[#0071E3]" style={{ color: 'var(--secondary-text)' }}>
                 Maruti Suzuki
               </Link>
-              <Link href="/?brand=Hyundai" className="block text-muted-foreground hover:text-accent transition-colors">
+              <Link href="/?brand=Hyundai" className="block transition-colors hover:text-[#0071E3]" style={{ color: 'var(--secondary-text)' }}>
                 Hyundai
               </Link>
-              <Link href="/?brand=Tata" className="block text-muted-foreground hover:text-accent transition-colors">
+              <Link href="/?brand=Tata" className="block transition-colors hover:text-[#0071E3]" style={{ color: 'var(--secondary-text)' }}>
                 Tata Motors
               </Link>
-              <Link href="/?brand=Mahindra" className="block text-muted-foreground hover:text-accent transition-colors">
+              <Link href="/?brand=Mahindra" className="block transition-colors hover:text-[#0071E3]" style={{ color: 'var(--secondary-text)' }}>
                 Mahindra
               </Link>
-              <Link href="/?brand=Honda" className="block text-muted-foreground hover:text-accent transition-colors">
+              <Link href="/?brand=Honda" className="block transition-colors hover:text-[#0071E3]" style={{ color: 'var(--secondary-text)' }}>
                 Honda
               </Link>
             </div>
@@ -56,24 +56,24 @@ export default function Footer() {
 
           {/* Popular Cities */}
           <div>
-            <h4 className="font-semibold mb-4">Popular Cities</h4>
-            <div className="space-y-2 text-sm">
-              <Link href="/used-cars-hyderabad" className="block text-muted-foreground hover:text-accent transition-colors">
+            <h4 className="font-bold text-lg mb-6" style={{ color: 'var(--foreground)' }}>Popular Cities</h4>
+            <div className="space-y-3 text-base">
+              <Link href="/used-cars-hyderabad" className="block transition-colors hover:text-[#0071E3]" style={{ color: 'var(--secondary-text)' }}>
                 Hyderabad
               </Link>
-              <Link href="/used-cars-delhi-ncr" className="block text-muted-foreground hover:text-accent transition-colors">
+              <Link href="/used-cars-delhi-ncr" className="block transition-colors hover:text-[#0071E3]" style={{ color: 'var(--secondary-text)' }}>
                 Delhi NCR
               </Link>
-              <Link href="/used-cars-mumbai" className="block text-muted-foreground hover:text-accent transition-colors">
+              <Link href="/used-cars-mumbai" className="block transition-colors hover:text-[#0071E3]" style={{ color: 'var(--secondary-text)' }}>
                 Mumbai
               </Link>
-              <Link href="/used-cars-bangalore" className="block text-muted-foreground hover:text-accent transition-colors">
+              <Link href="/used-cars-bangalore" className="block transition-colors hover:text-[#0071E3]" style={{ color: 'var(--secondary-text)' }}>
                 Bangalore
               </Link>
-              <Link href="/used-cars-pune" className="block text-muted-foreground hover:text-accent transition-colors">
+              <Link href="/used-cars-pune" className="block transition-colors hover:text-[#0071E3]" style={{ color: 'var(--secondary-text)' }}>
                 Pune
               </Link>
-              <Link href="/used-cars-chennai" className="block text-muted-foreground hover:text-accent transition-colors">
+              <Link href="/used-cars-chennai" className="block transition-colors hover:text-[#0071E3]" style={{ color: 'var(--secondary-text)' }}>
                 Chennai
               </Link>
             </div>
@@ -81,34 +81,36 @@ export default function Footer() {
 
           {/* Contact Information */}
           <div>
-            <h4 className="font-semibold mb-4">Contact Us</h4>
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center space-x-2">
-                <Mail className="h-4 w-4 text-muted-foreground" />
+            <h4 className="font-bold text-lg mb-6" style={{ color: 'var(--foreground)' }}>Contact Us</h4>
+            <div className="space-y-4 text-base">
+              <div className="flex items-center space-x-3">
+                <Mail className="h-5 w-5" style={{ color: 'var(--secondary-text)' }} />
                 <a 
                   href="mailto:connect@cararth.com" 
-                  className="text-muted-foreground hover:text-accent transition-colors"
+                  className="transition-colors hover:text-[#0071E3]"
                   data-testid="link-email"
+                  style={{ color: 'var(--secondary-text)' }}
                 >
                   connect@cararth.com
                 </a>
               </div>
-              <div className="flex items-center space-x-2">
-                <MessageCircle className="h-4 w-4 text-muted-foreground" />
+              <div className="flex items-center space-x-3">
+                <MessageCircle className="h-5 w-5" style={{ color: 'var(--secondary-text)' }} />
                 <a 
                   href="https://wa.me/919573424321" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-accent transition-colors"
+                  className="transition-colors hover:text-[#0071E3]"
                   data-testid="link-whatsapp"
+                  style={{ color: 'var(--secondary-text)' }}
                 >
                   WhatsApp: +91 XXXXX XXX21
                 </a>
               </div>
               
               {/* Social Media Links */}
-              <div className="pt-2">
-                <p className="text-xs text-muted-foreground mb-2">Follow Us:</p>
+              <div className="pt-4">
+                <p className="text-sm font-semibold mb-3" style={{ color: 'var(--secondary-text)' }}>Follow Us:</p>
                 <SocialMediaLinks size="md" variant="footer" />
               </div>
             </div>
@@ -116,12 +118,12 @@ export default function Footer() {
 
           {/* Legal & Compliance */}
           <div>
-            <h4 className="font-semibold mb-4">Legal & Support</h4>
-            <div className="space-y-2 text-sm">
-              <Link href="/faq" className="block text-muted-foreground hover:text-accent transition-colors" data-testid="link-faq">
+            <h4 className="font-bold text-lg mb-6" style={{ color: 'var(--foreground)' }}>Legal & Support</h4>
+            <div className="space-y-3 text-base">
+              <Link href="/faq" className="block transition-colors hover:text-[#0071E3]" data-testid="link-faq" style={{ color: 'var(--secondary-text)' }}>
                 FAQ
               </Link>
-              <Link href="/data-sources-policy" className="block text-muted-foreground hover:text-accent transition-colors">
+              <Link href="/data-sources-policy" className="block transition-colors hover:text-[#0071E3]" style={{ color: 'var(--secondary-text)' }}>
                 Data Sources Policy
               </Link>
               <Link href="/api-compliance" className="block text-muted-foreground hover:text-accent transition-colors">

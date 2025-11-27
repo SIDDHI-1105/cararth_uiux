@@ -52,32 +52,32 @@ export function TrustSection() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
       
-      <section className="py-12 bg-background" data-testid="section-trust">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+      <section className="py-20 md:py-28" style={{ backgroundColor: 'var(--background)' }} data-testid="section-trust">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16 md:mb-20">
+            <h2 className="text-5xl md:text-6xl font-bold mb-6" style={{ color: 'var(--foreground)' }}>
               Why CarArth is Trusted
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-xl md:text-2xl max-w-3xl mx-auto" style={{ color: 'var(--secondary-text)' }}>
               Built on trust, powered by AI. No compromises on authenticity.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
             {trustPoints.map((point, index) => {
               const Icon = point.icon;
               return (
-                <div key={index} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-6 hover:scale-105 transition-transform" data-testid={`card-trust-${index}`}>
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Icon className="w-6 h-6 text-primary" />
+                <div key={index} className="glass-card group" data-testid={`card-trust-${index}`}>
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(0, 113, 227, 0.15)' }}>
+                      <Icon className="w-7 h-7" style={{ color: '#0071E3' }} />
                     </div>
-                    <span className="text-xs font-semibold px-2 py-1 bg-green-500 text-white night:bg-green-600 rounded-full shadow-sm">
+                    <span className="text-xs font-bold px-3 py-1.5 rounded-full" style={{ backgroundColor: 'rgba(0, 245, 160, 0.2)', color: '#00F5A0', border: '1px solid rgba(0, 245, 160, 0.3)' }}>
                       {point.badge}
                     </span>
                   </div>
-                  <h3 className="font-semibold mb-2 text-gray-900 night:text-white">{point.title}</h3>
-                  <p className="text-sm text-gray-700 night:text-gray-200">{point.description}</p>
+                  <h3 className="text-lg font-semibold mb-3" style={{ color: 'var(--foreground)' }}>{point.title}</h3>
+                  <p className="text-sm leading-relaxed" style={{ color: 'var(--secondary-text)' }}>{point.description}</p>
                 </div>
               );
             })}
