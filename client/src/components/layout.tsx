@@ -37,7 +37,14 @@ export default function Layout({
   }[containerSize];
 
   return (
-    <div className="min-h-screen bg-background text-foreground page-background">
+    <div 
+      style={{
+        backgroundColor: 'var(--background)',
+        color: 'var(--foreground)',
+        minHeight: '100vh',
+      }}
+      className="page-background transition-colors duration-300"
+    >
       {showNavbar && <Navbar />}
       
       <main className="content-wrapper flex-1">
@@ -64,7 +71,14 @@ export function FullWidthLayout({
   className = ""
 }: Omit<LayoutProps, "containerSize">) {
   return (
-    <div className="min-h-screen bg-background text-foreground page-background">
+    <div 
+      style={{
+        backgroundColor: 'var(--background)',
+        color: 'var(--foreground)',
+        minHeight: '100vh',
+      }}
+      className="page-background transition-colors duration-300"
+    >
       {showNavbar && <Navbar />}
       
       <main className="content-wrapper flex-1">
@@ -88,7 +102,14 @@ export function CenteredLayout({
   className = ""
 }: Omit<LayoutProps, "containerSize">) {
   return (
-    <div className="min-h-screen bg-background text-foreground page-background">
+    <div 
+      style={{
+        backgroundColor: 'var(--background)',
+        color: 'var(--foreground)',
+        minHeight: '100vh',
+      }}
+      className="page-background transition-colors duration-300"
+    >
       {showNavbar && <Navbar />}
       
       <main className="content-wrapper flex-1 flex items-center justify-center">

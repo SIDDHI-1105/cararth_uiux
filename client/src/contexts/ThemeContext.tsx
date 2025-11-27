@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
-type Theme = 'day' | 'night';
+type Theme = 'dark' | 'light';
 
 interface ThemeContextType {
   theme: Theme;
@@ -10,48 +10,52 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-interface ThemeProviderProps {
-  children: ReactNode;
-}
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [theme, setThemeState] = useState<Theme>('dark');
+  const [mounted, setMounted] = useState(false);
 
-export function ThemeProvider({ children }: ThemeProviderProps) {
-  // SSR-safe: default to 'day' until useEffect runs
-  const [theme, setThemeState] = useState<Theme>('day');
-
-  // Initialize theme from localStorage or system preference after mount
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    // Get theme from localStorage or system preference
+    const storedTheme = localStorage.getItem('theme') as Theme | null;
+    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const initialTheme = storedTheme || (systemDark ? 'dark' : 'light');
     
-    const stored = localStorage.getItem('cararth-theme');
-    if (stored === 'day' || stored === 'night') {
-      setThemeState(stored);
-    } else {
-      // Optionally respect system preference
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setThemeState(prefersDark ? 'night' : 'day');
-    }
+    setThemeState(initialTheme);
+    applyTheme(initialTheme);
+    setMounted(true);
   }, []);
 
-  useEffect(() => {
+  const applyTheme = (newTheme: Theme) => {
     const root = document.documentElement;
     
     // Remove both classes first
-    root.classList.remove('day', 'night');
+    root.classList.remove('light', 'dark');
     
-    // Add the current theme class
-    root.classList.add(theme);
+    // Add the new theme class
+    root.classList.add(newTheme);
     
-    // Persist to localStorage
-    localStorage.setItem('cararth-theme', theme);
-  }, [theme]);
-
-  const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme);
+    // Set data-theme attribute
+    root.setAttribute('data-theme', newTheme);
+    
+    // Save to localStorage
+    localStorage.setItem('theme', newTheme);
   };
 
   const toggleTheme = () => {
-    setThemeState(prev => prev === 'day' ? 'night' : 'day');
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setThemeState(newTheme);
+    applyTheme(newTheme);
   };
+
+  const setTheme = (newTheme: Theme) => {
+    setThemeState(newTheme);
+    applyTheme(newTheme);
+  };
+
+  // Prevent flash of wrong theme
+  if (!mounted) {
+    return <>{children}</>;
+  }
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
@@ -63,16 +67,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 export function useTheme() {
   const context = useContext(ThemeContext);
   if (context === undefined) {
-    // Return a fallback when ThemeProvider is not available
-    return {
-      theme: (typeof document !== 'undefined' && document.documentElement.classList.contains('dark') ? 'night' : 'day') as Theme,
-      toggleTheme: () => {
-        if (typeof document !== 'undefined') {
-          document.documentElement.classList.toggle('dark');
-        }
-      },
-      setTheme: () => {}
-    };
+    throw new Error('useTheme must be used within a ThemeProvider');
   }
   return context;
 }
