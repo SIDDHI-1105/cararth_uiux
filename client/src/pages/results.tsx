@@ -482,6 +482,7 @@ export default function Results() {
                 </div>
               )}
             </div>
+          </div>
         </div>
       </Layout>
     </>
