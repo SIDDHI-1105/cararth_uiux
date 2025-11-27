@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import Layout from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -411,7 +412,8 @@ export default function ThrottleTalkPage() {
   const allPostsForSEO = [...marketInsightsPosts, ...communityPosts];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950">
+    <Layout>
+      <div className="min-h-screen bg-white dark:bg-gray-950">
       {/* SEO & Schema Markup */}
       <NewsSEOHead posts={allPostsForSEO.map((p: ForumPost) => ({ ...p, publishedAt: new Date(p.lastReply) }))} />
       <FAQSchemaMarkup />
@@ -1780,6 +1782,7 @@ export default function ThrottleTalkPage() {
         open={isStoryDialogOpen} 
         onOpenChange={setIsStoryDialogOpen} 
       />
-    </div>
+      </div>
+    </Layout>
   );
 }

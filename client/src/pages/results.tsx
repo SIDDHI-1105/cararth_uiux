@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { SEOHead } from "@/components/seo-head";
-import Navbar from "@/components/navbar";
+import Layout from "@/components/layout";
 import { FilterPanel, FilterState } from "@/components/filter-panel";
 import { ListingCard } from "@/components/listing-card";
 import { SkeletonCard } from "@/components/skeleton-card";
@@ -269,10 +269,8 @@ export default function Results() {
         structuredData={itemListSchema}
       />
       
-      <Navbar />
-      
-      <main className="min-h-screen bg-gray-50 dark:bg-gray-950 py-8">
-        <div className="max-w-7xl mx-auto px-4">
+      <Layout>
+        <div className="py-8">
           {/* Header */}
           <div className="mb-6">
             <h1 className="text-3xl md:text-4xl font-bold mb-2 text-gray-900 dark:text-gray-100" data-testid="text-results-heading">
@@ -484,9 +482,8 @@ export default function Results() {
                 </div>
               )}
             </div>
-          </div>
         </div>
-      </main>
+      </Layout>
     </>
   );
 }
