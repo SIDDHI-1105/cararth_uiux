@@ -42,14 +42,29 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-black dark:bg-black text-white dark:text-white overflow-x-hidden">
+    <div 
+      style={{
+        backgroundColor: isDark ? "#000000" : "#fbfbfb",
+        color: isDark ? "#f5f5f7" : "#1d1d1f",
+      }}
+      className="min-h-screen overflow-x-hidden transition-colors duration-300"
+    >
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-black/30 border-b border-white/10">
+      <header 
+        style={{
+          backgroundColor: isDark ? "rgba(0, 0, 0, 0.3)" : "rgba(255, 255, 255, 0.8)",
+          borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
+        }}
+        className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b transition-colors duration-300"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
           <BrandWordmark variant="header" showTagline={false} />
           <button
             onClick={toggleTheme}
-            className="px-4 py-2 text-sm font-semibold text-white/60 hover:text-white transition-colors"
+            style={{
+              color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)",
+            }}
+            className="px-4 py-2 text-sm font-semibold hover:opacity-100 transition-opacity duration-300"
           >
             {isDark ? "Light" : "Dark"}
           </button>
@@ -60,7 +75,12 @@ export default function Home() {
       <section className="pt-40 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
           {/* Main Headline - Huge, Minimal */}
-          <h1 className="text-7xl sm:text-8xl lg:text-9xl font-900 tracking-tighter leading-none mb-8 animate-fade-in">
+          <h1 
+            style={{
+              color: isDark ? "#f5f5f7" : "#1d1d1f",
+            }}
+            className="text-7xl sm:text-8xl lg:text-9xl font-900 tracking-tighter leading-none mb-8 animate-fade-in transition-colors duration-300"
+          >
             Find Your Perfect
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0071E3] to-[#0077ED]">
@@ -69,23 +89,32 @@ export default function Home() {
           </h1>
 
           {/* Subheading - Clean, Minimal */}
-          <p className="text-lg sm:text-xl text-white/60 max-w-2xl mb-12 leading-relaxed animate-fade-in">
+          <p 
+            style={{
+              color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)",
+            }}
+            className="text-lg sm:text-xl max-w-2xl mb-12 leading-relaxed animate-fade-in transition-colors duration-300"
+          >
             Search 50,000+ verified used cars across India. Compare prices, authenticity, and value in seconds.
           </p>
 
           {/* Search Bar - Glassmorphic, Massive, Centered */}
           <div
-            className={`
-              backdrop-blur-[12px] rounded-full border transition-all duration-300
-              ${
-                focusedInput
-                  ? "bg-white/12 border-white/20 shadow-lg"
-                  : "bg-white/8 border-white/10"
-              }
-              flex items-center gap-3 px-6 py-4 mb-8 animate-slide-up
-            `}
+            style={{
+              backgroundColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.5)",
+              borderColor: isDark 
+                ? focusedInput ? "rgba(255, 255, 255, 0.2)" : "rgba(255, 255, 255, 0.1)"
+                : focusedInput ? "rgba(0, 0, 0, 0.2)" : "rgba(0, 0, 0, 0.1)",
+              boxShadow: focusedInput 
+                ? "0 0 20px rgba(0, 113, 227, 0.4)"
+                : "none",
+            }}
+            className="backdrop-blur-[12px] rounded-full border transition-all duration-300 flex items-center gap-3 px-6 py-4 mb-8 animate-slide-up"
           >
-            <Search className="w-5 h-5 text-white/40" />
+            <Search 
+              style={{ color: isDark ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.4)" }}
+              className="w-5 h-5"
+            />
             <input
               type="text"
               placeholder="Swift under 5 lakh in Pune..."
@@ -94,21 +123,32 @@ export default function Home() {
               onFocus={() => setFocusedInput(true)}
               onBlur={() => setFocusedInput(false)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              className="flex-1 bg-transparent text-white text-lg outline-none placeholder-white/40"
+              style={{
+                backgroundColor: "transparent",
+                color: isDark ? "#f5f5f7" : "#1d1d1f",
+              }}
+              className="flex-1 text-lg outline-none transition-colors duration-300"
+              placeholderStyle={{ color: isDark ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.4)" }}
             />
             <button className="p-2 hover:bg-white/10 rounded-full transition-colors">
-              <Mic className="w-5 h-5 text-white/60 hover:text-white/80" />
+              <Mic 
+                style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)" }}
+                className="w-5 h-5"
+              />
             </button>
             <button
               onClick={handleSearch}
-              className="px-6 py-2 bg-[#0071E3] hover:bg-[#0077ED] rounded-full font-600 text-white transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/50"
+              className="px-6 py-2 bg-[#0071E3] hover:bg-[#0077ED] rounded-full font-semibold text-white transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/50"
             >
               Search
             </button>
           </div>
 
           {/* Quick Stats - Minimal Pills */}
-          <div className="flex flex-wrap gap-3 text-sm text-white/60">
+          <div 
+            style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)" }}
+            className="flex flex-wrap gap-3 text-sm transition-colors duration-300"
+          >
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-[#00F5A0]" />
               <span>50,000+ Verified Listings</span>
