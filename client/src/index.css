@@ -108,7 +108,7 @@
 
   /* Primary Action Button */
   .btn-primary {
-    @apply px-8 py-3 rounded-full bg-[#0071E3] text-white font-600 text-base transition-all duration-300;
+    @apply px-8 py-3 rounded-full bg-[#0071E3] text-white font-semibold text-base transition-all duration-300;
   }
 
   .btn-primary:hover {
@@ -118,7 +118,7 @@
 
   /* Trust Badge */
   .trust-pill {
-    @apply inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[rgba(0,245,160,0.1)] border border-[rgba(0,245,160,0.3)] text-xs font-500 text-[#00F5A0];
+    @apply inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[rgba(0,245,160,0.1)] border border-[rgba(0,245,160,0.3)] text-xs font-medium text-[#00F5A0];
   }
 
   /* Container with max width and centered */
