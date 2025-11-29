@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { SEOHead } from "@/components/seo-head";
-import Navbar from "@/components/navbar";
+import NavbarImproved from "@/components/navbar-improved";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -45,7 +45,7 @@ export default function ListingDetail() {
   if (isLoading) {
     return (
       <>
-        <Navbar />
+        <NavbarImproved />
         <main className="min-h-screen bg-gray-50 dark:bg-gray-950 py-8">
           <div className="max-w-6xl mx-auto px-4">
             <div className="animate-pulse space-y-6">
@@ -61,7 +61,7 @@ export default function ListingDetail() {
   if (!car) {
     return (
       <>
-        <Navbar />
+        <NavbarImproved />
         <main className="min-h-screen bg-gray-50 dark:bg-gray-950 py-8">
           <div className="max-w-6xl mx-auto px-4 text-center py-12">
             <h1 className="text-2xl font-bold mb-4">Car Not Found</h1>
@@ -336,7 +336,7 @@ export default function ListingDetail() {
         structuredData={structuredData}
       />
 
-      <Navbar />
+      <NavbarImproved />
 
       <main className="min-h-screen bg-gray-50 dark:bg-gray-950 py-8">
         <div className="max-w-6xl mx-auto px-4">

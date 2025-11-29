@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import Navbar from '@/components/navbar';
+import NavbarImproved from '@/components/navbar-improved';
 import ContactModal from '@/components/contact-modal';
 import LoanWidget from '@/components/loan-widget';
 
@@ -71,7 +71,7 @@ export default function MarketplaceListing() {
   if (isLoading || !listing) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar />
+        <NavbarImproved />
         <div className="max-w-6xl mx-auto p-6">
           <div className="animate-pulse space-y-6">
             <div className="h-8 bg-muted rounded w-1/2"></div>

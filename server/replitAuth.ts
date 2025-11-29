@@ -8,12 +8,18 @@ import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
-if (!process.env.REPLIT_DOMAINS) {
-  throw new Error("Environment variable REPLIT_DOMAINS not provided");
+// Skip Replit authentication if not running on Replit
+const isReplitEnvironment = !!process.env.REPLIT_DOMAINS;
+
+if (!isReplitEnvironment) {
+  console.log("⚠️  Replit Auth: Skipping (not running on Replit)");
 }
 
 const getOidcConfig = memoize(
   async () => {
+    if (!isReplitEnvironment) {
+      throw new Error("Cannot use OIDC config outside of Replit environment");
+    }
     const issuerUrl = process.env.ISSUER_URL || "https://replit.com/oidc";
     console.log(`🔐 OIDC Config: Using issuer ${issuerUrl} with client ID ${process.env.REPL_ID}`);
     return await client.discovery(

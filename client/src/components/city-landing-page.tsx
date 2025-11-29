@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, TrendingUp, Shield, Search } from "lucide-react";
 import { Link } from "wouter";
-import Navbar from "@/components/navbar";
+import NavbarImproved from "@/components/navbar-improved";
 import Footer from "@/components/footer";
 
 export interface CityData {
@@ -102,7 +102,7 @@ export function CityLandingPage({ cityData }: CityLandingPageProps) {
         structuredData={structuredData}
       />
       
-      <Navbar />
+      <NavbarImproved />
       
       <main className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Hero Section */}

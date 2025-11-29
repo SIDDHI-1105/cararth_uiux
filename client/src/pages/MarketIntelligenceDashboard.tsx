@@ -6,6 +6,7 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, L
 import { TrendingUp, TrendingDown, Building2, Activity, BarChart3, Target } from 'lucide-react';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { SkeletonStatCard, SkeletonCard, EmptyState, ErrorState } from '@/components/loading-skeleton';
 
 interface SiamData {
   brand: string;
@@ -121,7 +122,7 @@ export default function MarketIntelligenceDashboard() {
   const [selectedDealer, setSelectedDealer] = useState<string>('');
 
   // OEM Market Intelligence Query
-  const { data: oemData, isLoading: oemLoading } = useQuery<OEMMarketData>({
+  const { data: oemData, isLoading: oemLoading, isError: oemError, refetch: refetchOem } = useQuery<OEMMarketData>({
     queryKey: ['/api/analytics/oem-market', { forecast: true }],
   });
 
@@ -131,18 +132,10 @@ export default function MarketIntelligenceDashboard() {
   });
 
   // Dealer Performance Query
-  const { data: dealerData, isLoading: dealerLoading } = useQuery<DealerPerformance>({
+  const { data: dealerData, isLoading: dealerLoading, isError: dealerError, refetch: refetchDealer } = useQuery<DealerPerformance>({
     queryKey: ['/api/analytics/dealer-performance', selectedDealer, { compareToMarket: true }],
     enabled: !!selectedDealer,
   });
-
-  if (oemLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen" data-testid="loading-container">
-        <Activity className="w-8 h-8 animate-spin" data-testid="loading-spinner" />
-      </div>
-    );
-  }
 
   // Prepare OEM chart data
   const oemCurrentData = oemData?.currentMonth.data || [];
@@ -181,6 +174,51 @@ export default function MarketIntelligenceDashboard() {
   const dealerInventoryByCondition = dealerData?.metrics.byCondition
     ? Object.entries(dealerData.metrics.byCondition).map(([name, value]) => ({ name, value }))
     : [];
+
+  // Show error state
+  if (oemError) {
+    return (
+      <div className="container mx-auto p-6">
+        <ErrorState
+          title="Failed to load market intelligence data"
+          description="We couldn't fetch the analytics. Please try again."
+          onRetry={() => refetchOem()}
+        />
+      </div>
+    );
+  }
+
+  // Show loading state
+  if (oemLoading) {
+    return (
+      <div className="container mx-auto p-6 space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Market Intelligence Analytics</h1>
+          <p className="text-muted-foreground">OEM-level market insights & dealer performance analytics</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <SkeletonStatCard />
+          <SkeletonStatCard />
+          <SkeletonStatCard />
+        </div>
+        <SkeletonCard />
+        <SkeletonCard />
+      </div>
+    );
+  }
+
+  // Show empty state if no data
+  if (!oemData || !oemData.currentMonth.data.length) {
+    return (
+      <div className="container mx-auto p-6">
+        <EmptyState
+          icon="📊"
+          title="No market data available"
+          description="We don't have any market analytics data to display yet. Please check back later."
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-6 space-y-6" data-testid="market-intelligence-dashboard">
@@ -241,11 +279,15 @@ export default function MarketIntelligenceDashboard() {
                     <TrendingDown className="w-5 h-5 text-red-500" data-testid="icon-trending-down" />
                   ) : null}
                   <span className="text-2xl font-bold" data-testid="text-mom-change">
-                    {oemData?.trends?.monthOverMonthChange?.toFixed(1) ?? 'N/A'}%
+                    {oemData?.trends?.monthOverMonthChange != null
+                      ? `${oemData.trends.monthOverMonthChange.toFixed(1)}%`
+                      : '—'}
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  vs {oemData?.previousMonth.year}-{String(oemData?.previousMonth.month).padStart(2, '0')}
+                  {oemData?.trends?.monthOverMonthChange != null
+                    ? `vs ${oemData?.previousMonth.year}-${String(oemData?.previousMonth.month).padStart(2, '0')}`
+                    : 'Insufficient data for comparison'}
                 </p>
               </CardContent>
             </Card>
@@ -257,12 +299,21 @@ export default function MarketIntelligenceDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold" data-testid="text-top-brand">
-                  {brandComparisonData[0]?.brand || 'N/A'}
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {brandComparisonData[0]?.current?.toLocaleString() ?? 'N/A'} units sold
-                </p>
+                {brandComparisonData.length > 0 ? (
+                  <>
+                    <div className="text-2xl font-bold" data-testid="text-top-brand">
+                      {brandComparisonData[0].brand}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {brandComparisonData[0].current.toLocaleString()} units sold
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-2xl font-bold text-muted-foreground">—</div>
+                    <p className="text-sm text-muted-foreground">No brand data available</p>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -582,9 +633,29 @@ export default function MarketIntelligenceDashboard() {
           )}
 
           {dealerLoading && selectedDealer && (
-            <div className="flex items-center justify-center py-8">
-              <Activity className="w-6 h-6 animate-spin" data-testid="loading-dealer" />
+            <div className="space-y-4">
+              <SkeletonCard />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <SkeletonCard />
+                <SkeletonCard />
+              </div>
             </div>
+          )}
+
+          {dealerError && selectedDealer && (
+            <ErrorState
+              title="Failed to load dealer performance"
+              description="We couldn't fetch the dealer analytics. Please try again."
+              onRetry={() => refetchDealer()}
+            />
+          )}
+
+          {!dealerLoading && !dealerError && selectedDealer && !dealerData && (
+            <EmptyState
+              icon="🏢"
+              title="No dealer data available"
+              description="We don't have performance data for this dealer yet."
+            />
           )}
         </TabsContent>
       </Tabs>

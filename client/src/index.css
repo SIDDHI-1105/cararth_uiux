@@ -14,7 +14,14 @@
   --input: rgba(255, 255, 255, 0.08);
   --secondary-bg: rgba(255, 255, 255, 0.05);
   --secondary-text: rgba(255, 255, 255, 0.6);
-  
+
+  /* Popover & Dropdown Components */
+  --popover: #1a1a1a; /* Solid dark background for dropdowns */
+  --popover-foreground: #f5f5f7;
+  --muted: rgba(255, 255, 255, 0.1);
+  --muted-foreground: rgba(255, 255, 255, 0.6);
+  --accent-foreground: #ffffff;
+
   /* Glassmorphism - Apple Specification */
   --glass-blur: 12px;
   --glass-opacity: 0.72;
@@ -22,7 +29,7 @@
   --glass-border: rgba(255, 255, 255, 0.15);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   --glass-glow: 0 0 20px rgba(0, 113, 227, 0.3);
-  
+
   /* Typography */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
@@ -38,6 +45,14 @@ html.light, html[data-theme="light"] {
   --glass-bg: rgba(255, 255, 255, 0.78);
   --glass-border: rgba(0, 0, 0, 0.1);
   --glass-glow: 0 0 20px rgba(0, 113, 227, 0.15);
+
+  /* Popover & Dropdown Components - Light Mode */
+  --popover: #ffffff; /* Solid white background for dropdowns */
+  --popover-foreground: #1d1d1f;
+  --muted: rgba(0, 0, 0, 0.05);
+  --muted-foreground: rgba(0, 0, 0, 0.6);
+  --accent: rgba(0, 113, 227, 0.1);
+  --accent-foreground: #1d1d1f;
 }
 
 /* Dark Mode - Apple.com 2025 */
@@ -51,6 +66,14 @@ html.dark, html[data-theme="dark"] {
   --glass-bg: rgba(255, 255, 255, 0.08);
   --glass-border: rgba(255, 255, 255, 0.15);
   --glass-glow: 0 0 20px rgba(0, 113, 227, 0.3);
+
+  /* Popover & Dropdown Components - Dark Mode */
+  --popover: #1a1a1a; /* Solid dark background for dropdowns */
+  --popover-foreground: #f5f5f7;
+  --muted: rgba(255, 255, 255, 0.1);
+  --muted-foreground: rgba(255, 255, 255, 0.6);
+  --accent: rgba(255, 255, 255, 0.1);
+  --accent-foreground: #ffffff;
 }
 
 @layer base {
@@ -263,6 +286,36 @@ html.dark, html[data-theme="dark"] {
   p {
     @apply text-base;
   }
+}
+
+/* Shimmer animation for loading skeletons */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Ripple animation for buttons */
+@keyframes ripple {
+  to {
+    width: 500px;
+    height: 500px;
+    opacity: 0;
+  }
+}
+
+.animate-ripple {
+  animation: ripple 0.6s ease-out;
+}
+
+/* Shadow glow effect for cards */
+.shadow-glow {
+  box-shadow:
+    0 0 20px rgba(0, 113, 227, 0.3),
+    0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 /* Responsive glass elements for mobile */

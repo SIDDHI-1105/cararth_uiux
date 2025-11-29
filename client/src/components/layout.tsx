@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import Navbar from "@/components/navbar";
+import NavbarImproved from "@/components/navbar-improved";
 import Footer from "@/components/footer";
 
 interface LayoutProps {
@@ -45,7 +45,7 @@ export default function Layout({
       }}
       className="page-background transition-colors duration-300"
     >
-      {showNavbar && <Navbar />}
+      {showNavbar && <NavbarImproved />}
       
       <main className="content-wrapper flex-1" style={{ paddingTop: '110px' }}>
         <div className={`container-responsive ${containerClass} ${className}`}>
@@ -79,7 +79,7 @@ export function FullWidthLayout({
       }}
       className="page-background transition-colors duration-300"
     >
-      {showNavbar && <Navbar />}
+      {showNavbar && <NavbarImproved />}
       
       <main className="content-wrapper flex-1">
         <div className={className}>
@@ -110,7 +110,7 @@ export function CenteredLayout({
       }}
       className="page-background transition-colors duration-300"
     >
-      {showNavbar && <Navbar />}
+      {showNavbar && <NavbarImproved />}
       
       <main className="content-wrapper flex-1 flex items-center justify-center">
         <div className={`w-full max-w-2xl mx-auto px-4 py-8 ${className}`}>

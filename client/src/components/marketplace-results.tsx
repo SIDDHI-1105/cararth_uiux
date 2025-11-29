@@ -649,7 +649,7 @@ export default function MarketplaceResults({ searchResult, isLoading, error, sea
                   <p className="text-muted-foreground mb-4">
                     Be the first to list your car exclusively on CarArth for maximum visibility.
                   </p>
-                  <Link href="/sell-car">
+                  <Link href="/sell">
                     <Button className="btn-metallic" data-testid="button-list-car">
                       List Your Car
                     </Button>

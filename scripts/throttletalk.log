@@ -1,0 +1,119 @@
+Throttle Talk Automation Log
+[2025-10-31T03:57:16.465Z] [INFO] 🚀 Throttle Talk automation started
+[2025-10-31T03:57:16.477Z] [INFO] Mode: 🧪 DRY RUN
+[2025-10-31T03:57:16.478Z] [INFO] Fetch recent posts - Attempt 1/5
+[2025-10-31T03:57:16.479Z] [INFO] Fetching recent posts from https://www.cararth.com/api/news?from=2025-10-17&limit=100
+[2025-10-31T03:57:16.707Z] [WARN] Fetch recent posts - Attempt 1 failed: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+[2025-10-31T03:57:16.709Z] [INFO] Backing off for 2000ms before retry
+[2025-10-31T03:57:18.711Z] [INFO] Fetch recent posts - Attempt 2/5
+[2025-10-31T03:57:18.713Z] [INFO] Fetching recent posts from https://www.cararth.com/api/news?from=2025-10-17&limit=100
+[2025-10-31T03:57:18.788Z] [WARN] Fetch recent posts - Attempt 2 failed: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+[2025-10-31T03:57:18.788Z] [INFO] Backing off for 4000ms before retry
+[2025-10-31T03:57:22.791Z] [INFO] Fetch recent posts - Attempt 3/5
+[2025-10-31T03:57:22.798Z] [INFO] Fetching recent posts from https://www.cararth.com/api/news?from=2025-10-17&limit=100
+[2025-10-31T03:57:22.891Z] [WARN] Fetch recent posts - Attempt 3 failed: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+[2025-10-31T03:57:22.892Z] [INFO] Backing off for 8000ms before retry
+[2025-10-31T03:57:30.894Z] [INFO] Fetch recent posts - Attempt 4/5
+[2025-10-31T03:57:30.895Z] [INFO] Fetching recent posts from https://www.cararth.com/api/news?from=2025-10-17&limit=100
+[2025-10-31T03:57:30.997Z] [WARN] Fetch recent posts - Attempt 4 failed: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+[2025-10-31T03:57:31.001Z] [INFO] Backing off for 16000ms before retry
+[2025-10-31T03:57:47.013Z] [INFO] Fetch recent posts - Attempt 5/5
+[2025-10-31T03:57:47.014Z] [INFO] Fetching recent posts from https://www.cararth.com/api/news?from=2025-10-17&limit=100
+[2025-10-31T03:57:47.150Z] [WARN] Fetch recent posts - Attempt 5 failed: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+[2025-10-31T03:57:47.156Z] [ERROR] ❌ Throttle Talk automation failed
+{
+  "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+  "stack": "SyntaxError: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at parseJSONFromBytes (node:internal/deps/undici/undici:5738:19)\n    at successSteps (node:internal/deps/undici/undici:5719:27)\n    at fullyReadBody (node:internal/deps/undici/undici:4609:9)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async consumeBody (node:internal/deps/undici/undici:5728:7)\n    at async fetchRecentPosts (/home/runner/workspace/scripts/throttle-talk-automation.ts:120:17)\n    at async retryWithBackoff (/home/runner/workspace/scripts/throttle-talk-automation.ts:61:14)\n    at async main (/home/runner/workspace/scripts/throttle-talk-automation.ts:504:25)"
+}
+[2025-10-31T03:58:21.379Z] [INFO] 🚀 Throttle Talk automation started
+[2025-10-31T03:58:21.381Z] [INFO] Mode: 🧪 DRY RUN
+[2025-10-31T03:58:21.382Z] [INFO] Fetch recent posts - Attempt 1/5
+[2025-10-31T03:58:21.382Z] [INFO] Fetching recent posts from http://localhost:5000/api/news?from=2025-10-17&limit=100
+[2025-10-31T03:58:21.946Z] [SUCCESS] Fetched 8 recent posts for deduplication
+[2025-10-31T03:58:21.947Z] [INFO] Perplexity API call - Attempt 1/5
+[2025-10-31T03:58:21.948Z] [INFO] Calling Perplexity API for news generation
+[2025-10-31T03:58:23.091Z] [WARN] Perplexity API call - Attempt 1 failed: Perplexity API error 401: <html>
+<head><title>401 Authorization Required</title></head>
+<body>
+<center><h1>401 Authorization Required</h1></center>
+<hr><center>openresty/1.27.4</center>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99703bd219c77da3',t:'MTc2MTg4MzEwMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
+
+[2025-10-31T03:58:23.092Z] [INFO] Backing off for 2000ms before retry
+[2025-10-31T03:58:25.093Z] [INFO] Perplexity API call - Attempt 2/5
+[2025-10-31T03:58:25.094Z] [INFO] Calling Perplexity API for news generation
+[2025-10-31T03:58:26.153Z] [WARN] Perplexity API call - Attempt 2 failed: Perplexity API error 401: <html>
+<head><title>401 Authorization Required</title></head>
+<body>
+<center><h1>401 Authorization Required</h1></center>
+<hr><center>openresty/1.27.4</center>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99703be52ba87da3',t:'MTc2MTg4MzEwNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
+
+[2025-10-31T03:58:26.154Z] [INFO] Backing off for 4000ms before retry
+[2025-10-31T03:58:30.155Z] [INFO] Perplexity API call - Attempt 3/5
+[2025-10-31T03:58:30.156Z] [INFO] Calling Perplexity API for news generation
+[2025-10-31T03:58:31.312Z] [WARN] Perplexity API call - Attempt 3 failed: Perplexity API error 401: <html>
+<head><title>401 Authorization Required</title></head>
+<body>
+<center><h1>401 Authorization Required</h1></center>
+<hr><center>openresty/1.27.4</center>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99703c051c1c4531',t:'MTc2MTg4MzExMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
+
+[2025-10-31T03:58:31.314Z] [INFO] Backing off for 8000ms before retry
+[2025-10-31T03:58:39.320Z] [INFO] Perplexity API call - Attempt 4/5
+[2025-10-31T03:58:39.321Z] [INFO] Calling Perplexity API for news generation
+[2025-10-31T03:58:40.462Z] [WARN] Perplexity API call - Attempt 4 failed: Perplexity API error 401: <html>
+<head><title>401 Authorization Required</title></head>
+<body>
+<center><h1>401 Authorization Required</h1></center>
+<hr><center>openresty/1.27.4</center>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99703c3e5c26f41d',t:'MTc2MTg4MzEyMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
+
+[2025-10-31T03:58:40.463Z] [INFO] Backing off for 16000ms before retry
+[2025-10-31T03:58:56.475Z] [INFO] Perplexity API call - Attempt 5/5
+[2025-10-31T03:58:56.476Z] [INFO] Calling Perplexity API for news generation
+[2025-10-31T03:58:57.558Z] [WARN] Perplexity API call - Attempt 5 failed: Perplexity API error 401: <html>
+<head><title>401 Authorization Required</title></head>
+<body>
+<center><h1>401 Authorization Required</h1></center>
+<hr><center>openresty/1.27.4</center>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99703ca98c541978',t:'MTc2MTg4MzEzNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
+
+[2025-10-31T03:58:57.559Z] [ERROR] Perplexity API failed, falling back to xAI Grok
+{
+  "error": "Perplexity API error 401: <html>\r\n<head><title>401 Authorization Required</title></head>\r\n<body>\r\n<center><h1>401 Authorization Required</h1></center>\r\n<hr><center>openresty/1.27.4</center>\r\n<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML=\"window.__CF$cv$params={r:'99703ca98c541978',t:'MTc2MTg4MzEzNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);\";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>\r\n</html>\r\n"
+}
+[2025-10-31T03:58:57.560Z] [INFO] xAI Grok API call - Attempt 1/5
+[2025-10-31T03:58:57.561Z] [INFO] Calling xAI Grok API as fallback
+[2025-10-31T03:58:58.658Z] [WARN] xAI Grok API call - Attempt 1 failed: xAI Grok API error 429: {"code":"Some resource has been exhausted","error":"Your team dc4a19d1-7dea-4514-a1d6-50f46840aee0 has either used all available credits or reached its monthly spending limit. To continue making API requests, please purchase more credits or raise your spending limit."}
+[2025-10-31T03:58:58.658Z] [INFO] Backing off for 2000ms before retry
+[2025-10-31T03:59:00.660Z] [INFO] xAI Grok API call - Attempt 2/5
+[2025-10-31T03:59:00.661Z] [INFO] Calling xAI Grok API as fallback
+[2025-10-31T03:59:01.703Z] [WARN] xAI Grok API call - Attempt 2 failed: xAI Grok API error 429: {"code":"Some resource has been exhausted","error":"Your team dc4a19d1-7dea-4514-a1d6-50f46840aee0 has either used all available credits or reached its monthly spending limit. To continue making API requests, please purchase more credits or raise your spending limit."}
+[2025-10-31T03:59:01.704Z] [INFO] Backing off for 4000ms before retry
+[2025-10-31T03:59:05.707Z] [INFO] xAI Grok API call - Attempt 3/5
+[2025-10-31T03:59:05.707Z] [INFO] Calling xAI Grok API as fallback
+[2025-10-31T03:59:06.791Z] [WARN] xAI Grok API call - Attempt 3 failed: xAI Grok API error 429: {"code":"Some resource has been exhausted","error":"Your team dc4a19d1-7dea-4514-a1d6-50f46840aee0 has either used all available credits or reached its monthly spending limit. To continue making API requests, please purchase more credits or raise your spending limit."}
+[2025-10-31T03:59:06.791Z] [INFO] Backing off for 8000ms before retry
+[2025-10-31T03:59:14.795Z] [INFO] xAI Grok API call - Attempt 4/5
+[2025-10-31T03:59:14.796Z] [INFO] Calling xAI Grok API as fallback
+[2025-10-31T03:59:15.899Z] [WARN] xAI Grok API call - Attempt 4 failed: xAI Grok API error 429: {"code":"Some resource has been exhausted","error":"Your team dc4a19d1-7dea-4514-a1d6-50f46840aee0 has either used all available credits or reached its monthly spending limit. To continue making API requests, please purchase more credits or raise your spending limit."}
+[2025-10-31T03:59:15.900Z] [INFO] Backing off for 16000ms before retry
+[2025-10-31T03:59:31.912Z] [INFO] xAI Grok API call - Attempt 5/5
+[2025-10-31T03:59:31.913Z] [INFO] Calling xAI Grok API as fallback
+[2025-10-31T03:59:32.994Z] [WARN] xAI Grok API call - Attempt 5 failed: xAI Grok API error 429: {"code":"Some resource has been exhausted","error":"Your team dc4a19d1-7dea-4514-a1d6-50f46840aee0 has either used all available credits or reached its monthly spending limit. To continue making API requests, please purchase more credits or raise your spending limit."}
+[2025-10-31T03:59:32.995Z] [ERROR] Both Perplexity and xAI Grok failed
+{
+  "perplexityError": "Perplexity API error 401: <html>\r\n<head><title>401 Authorization Required</title></head>\r\n<body>\r\n<center><h1>401 Authorization Required</h1></center>\r\n<hr><center>openresty/1.27.4</center>\r\n<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML=\"window.__CF$cv$params={r:'99703ca98c541978',t:'MTc2MTg4MzEzNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);\";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>\r\n</html>\r\n",
+  "grokError": "xAI Grok API error 429: {\"code\":\"Some resource has been exhausted\",\"error\":\"Your team dc4a19d1-7dea-4514-a1d6-50f46840aee0 has either used all available credits or reached its monthly spending limit. To continue making API requests, please purchase more credits or raise your spending limit.\"}"
+}
+[2025-10-31T03:59:33.001Z] [ERROR] ❌ Throttle Talk automation failed
+{
+  "error": "All content generation APIs failed",
+  "stack": "Error: All content generation APIs failed\n    at generateArticle (/home/runner/workspace/scripts/throttle-talk-automation.ts:339:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async main (/home/runner/workspace/scripts/throttle-talk-automation.ts:507:25)"
+}

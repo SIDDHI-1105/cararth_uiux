@@ -1,0 +1,904 @@
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CarBazaar - Buy & Sell Cars in India</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                borderRadius: {
+                    lg: "var(--radius)",
+                    md: "calc(var(--radius) - 2px)",
+                    sm: "calc(var(--radius) - 4px)",
+                },
+                colors: {
+                    background: "var(--background)",
+                    foreground: "var(--foreground)",
+                    card: {
+                        DEFAULT: "var(--card)",
+                        foreground: "var(--card-foreground)",
+                    },
+                    popover: {
+                        DEFAULT: "var(--popover)",
+                        foreground: "var(--popover-foreground)",
+                    },
+                    primary: {
+                        DEFAULT: "var(--primary)",
+                        foreground: "var(--primary-foreground)",
+                    },
+                    secondary: {
+                        DEFAULT: "var(--secondary)",
+                        foreground: "var(--secondary-foreground)",
+                    },
+                    muted: {
+                        DEFAULT: "var(--muted)",
+                        foreground: "var(--muted-foreground)",
+                    },
+                    accent: {
+                        DEFAULT: "var(--accent)",
+                        foreground: "var(--accent-foreground)",
+                    },
+                    destructive: {
+                        DEFAULT: "var(--destructive)",
+                        foreground: "var(--destructive-foreground)",
+                    },
+                    border: "var(--border)",
+                    input: "var(--input)",
+                    ring: "var(--ring)",
+                },
+                fontFamily: {
+                    sans: ["Inter", "system-ui", "sans-serif"],
+                }
+            },
+        }
+    };
+    </script>
+    <style>
+        :root {
+            --background: hsl(0 0% 100%);
+            --foreground: hsl(222.2 84% 4.9%);
+            --card: hsl(0 0% 100%);
+            --card-foreground: hsl(222.2 84% 4.9%);
+            --popover: hsl(0 0% 100%);
+            --popover-foreground: hsl(222.2 84% 4.9%);
+            --primary: hsl(214 100% 42%);
+            --primary-foreground: hsl(210 40% 98%);
+            --secondary: hsl(210 40% 96%);
+            --secondary-foreground: hsl(222.2 84% 4.9%);
+            --muted: hsl(210 40% 96%);
+            --muted-foreground: hsl(215.4 16.3% 46.9%);
+            --accent: hsl(22 100% 55%);
+            --accent-foreground: hsl(210 40% 98%);
+            --destructive: hsl(0 84.2% 60.2%);
+            --destructive-foreground: hsl(210 40% 98%);
+            --border: hsl(214.3 31.8% 91.4%);
+            --input: hsl(214.3 31.8% 91.4%);
+            --ring: hsl(214 100% 42%);
+            --radius: 0.5rem;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --background: hsl(222.2 84% 4.9%);
+                --foreground: hsl(210 40% 98%);
+                --card: hsl(222.2 84% 4.9%);
+                --card-foreground: hsl(210 40% 98%);
+                --popover: hsl(222.2 84% 4.9%);
+                --popover-foreground: hsl(210 40% 98%);
+                --primary: hsl(214 100% 50%);
+                --primary-foreground: hsl(222.2 84% 4.9%);
+                --secondary: hsl(217.2 32.6% 17.5%);
+                --secondary-foreground: hsl(210 40% 98%);
+                --muted: hsl(217.2 32.6% 17.5%);
+                --muted-foreground: hsl(215 20.2% 65.1%);
+                --accent: hsl(22 100% 55%);
+                --accent-foreground: hsl(210 40% 98%);
+                --destructive: hsl(0 62.8% 30.6%);
+                --destructive-foreground: hsl(210 40% 98%);
+                --border: hsl(217.2 32.6% 17.5%);
+                --input: hsl(217.2 32.6% 17.5%);
+                --ring: hsl(214 100% 50%);
+            }
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        
+        .hero-gradient {
+            background: linear-gradient(135deg, hsl(214 100% 42%) 0%, hsl(214 100% 35%) 100%);
+        }
+        
+        .car-card {
+            transition: all 0.3s ease;
+        }
+        
+        .car-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .filter-sidebar {
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+        
+        @media (max-width: 768px) {
+            .filter-sidebar {
+                max-height: none;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-background text-foreground">
+    <!-- @COMPONENT: Navigation -->
+    <nav class="bg-card border-b border-border sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-2xl font-bold text-primary">
+                            <i class="fas fa-car mr-2"></i>CarBazaar
+                        </h1>
+                    </div>
+                </div>
+                
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#" class="text-foreground hover:text-primary px-3 py-2 rounded-md text-sm font-medium">Buy Cars</a>
+                        <a href="#" class="text-muted-foreground hover:text-primary px-3 py-2 rounded-md text-sm font-medium">Sell Your Car</a>
+                        <a href="#" class="text-muted-foreground hover:text-primary px-3 py-2 rounded-md text-sm font-medium">Compare</a>
+                        <a href="#" class="text-muted-foreground hover:text-primary px-3 py-2 rounded-md text-sm font-medium">Reviews</a>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <button class="text-muted-foreground hover:text-primary">
+                        <i class="fas fa-heart"></i>
+                    </button>
+                    <button class="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors">
+                        Login
+                    </button>
+                    <button class="md:hidden text-muted-foreground">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <!-- @END_COMPONENT: Navigation -->
+
+    <!-- @COMPONENT: Hero Section -->
+    <section class="hero-gradient text-white py-16 px-4">
+        <div class="max-w-4xl mx-auto text-center">
+            <h1 class="text-4xl md:text-6xl font-bold mb-6">Find Your Perfect Car</h1>
+            <p class="text-xl md:text-2xl mb-8 text-blue-100">Discover thousands of verified cars across India</p>
+            
+            <!-- Search Form -->
+            <div class="bg-white rounded-lg p-6 shadow-xl">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                    <div>
+                        <label class="block text-gray-700 text-sm font-medium mb-2">Brand</label>
+                        <select class="w-full px-3 py-2 border border-input rounded-md text-gray-900 bg-background">
+                            <option>All Brands</option>
+                            <option>Maruti Suzuki</option>
+                            <option>Hyundai</option>
+                            <option>Tata</option>
+                            <option>Mahindra</option>
+                            <option>Honda</option>
+                            <option>Toyota</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 text-sm font-medium mb-2">Budget</label>
+                        <select class="w-full px-3 py-2 border border-input rounded-md text-gray-900 bg-background">
+                            <option>Any Budget</option>
+                            <option>Under ₹2 Lakh</option>
+                            <option>₹2-5 Lakh</option>
+                            <option>₹5-10 Lakh</option>
+                            <option>₹10-15 Lakh</option>
+                            <option>Above ₹15 Lakh</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 text-sm font-medium mb-2">City</label>
+                        <select class="w-full px-3 py-2 border border-input rounded-md text-gray-900 bg-background">
+                            <option>Select City</option>
+                            <option>Mumbai</option>
+                            <option>Delhi</option>
+                            <option>Bangalore</option>
+                            <option>Chennai</option>
+                            <option>Hyderabad</option>
+                            <option>Pune</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 text-sm font-medium mb-2">Fuel Type</label>
+                        <select class="w-full px-3 py-2 border border-input rounded-md text-gray-900 bg-background">
+                            <option>Any Fuel</option>
+                            <option>Petrol</option>
+                            <option>Diesel</option>
+                            <option>CNG</option>
+                            <option>Electric</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button class="w-full bg-accent text-accent-foreground py-3 px-6 rounded-md font-semibold hover:bg-accent/90 transition-colors">
+                    <i class="fas fa-search mr-2"></i>Search Cars
+                </button>
+            </div>
+        </div>
+    </section>
+    <!-- @END_COMPONENT: Hero Section -->
+
+    <!-- @COMPONENT: Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex flex-col lg:flex-row gap-8">
+            
+            <!-- @COMPONENT: Filters Sidebar -->
+            <aside class="lg:w-1/4">
+                <div class="bg-card rounded-lg border border-border p-6 filter-sidebar">
+                    <h3 class="text-lg font-semibold mb-4">Filters</h3>
+                    
+                    <!-- Price Filter -->
+                    <div class="mb-6">
+                        <h4 class="font-medium mb-3">Price Range</h4>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="mr-2">
+                                <span class="text-sm">Under ₹2 Lakh</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="mr-2">
+                                <span class="text-sm">₹2-5 Lakh</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="mr-2">
+                                <span class="text-sm">₹5-10 Lakh</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="mr-2">
+                                <span class="text-sm">₹10-15 Lakh</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Brand Filter -->
+                    <div class="mb-6">
+                        <h4 class="font-medium mb-3">Brand</h4>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="mr-2">
+                                <span class="text-sm">Maruti Suzuki</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="mr-2">
+                                <span class="text-sm">Hyundai</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="mr-2">
+                                <span class="text-sm">Tata</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="mr-2">
+                                <span class="text-sm">Mahindra</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Year Filter -->
+                    <div class="mb-6">
+                        <h4 class="font-medium mb-3">Year</h4>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="mr-2">
+                                <span class="text-sm">2020 & Above</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="mr-2">
+                                <span class="text-sm">2015-2019</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="mr-2">
+                                <span class="text-sm">2010-2014</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Transmission Filter -->
+                    <div class="mb-6">
+                        <h4 class="font-medium mb-3">Transmission</h4>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="mr-2">
+                                <span class="text-sm">Manual</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="mr-2">
+                                <span class="text-sm">Automatic</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button class="w-full bg-primary text-primary-foreground py-2 px-4 rounded-md font-medium hover:bg-primary/90 transition-colors">
+                        Apply Filters
+                    </button>
+                </div>
+            </aside>
+            <!-- @END_COMPONENT: Filters Sidebar -->
+
+            <!-- @COMPONENT: Car Listings -->
+            <div class="lg:w-3/4">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Used Cars in India</h2>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-muted-foreground text-sm">Sort by:</span>
+                        <select class="px-3 py-1 border border-input rounded-md text-sm bg-background">
+                            <option>Price: Low to High</option>
+                            <option>Price: High to Low</option>
+                            <option>Year: Newest First</option>
+                            <option>Mileage: Low to High</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- @MAP: carListings.map(car => ( -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <!-- Car Card 1 -->
+                    <div class="car-card bg-card border border-border rounded-lg overflow-hidden">
+                        <!-- Modern red Maruti Swift hatchback car -->
+                        <img src="https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=300" 
+                             alt="Maruti Swift" class="w-full h-48 object-cover">
+                        <div class="p-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-lg font-semibold">2020 Maruti Swift VXI</h3>
+                                <button class="text-muted-foreground hover:text-accent">
+                                    <i class="far fa-heart"></i>
+                                </button>
+                            </div>
+                            <p class="text-2xl font-bold text-accent mb-2">₹6.25 Lakh</p>
+                            <div class="grid grid-cols-2 gap-4 text-sm text-muted-foreground mb-4">
+                                <div><i class="fas fa-calendar mr-1"></i>2020</div>
+                                <div><i class="fas fa-tachometer-alt mr-1"></i>35,000 km</div>
+                                <div><i class="fas fa-gas-pump mr-1"></i>Petrol</div>
+                                <div><i class="fas fa-cog mr-1"></i>Manual</div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-muted-foreground">
+                                    <i class="fas fa-map-marker-alt mr-1"></i>Mumbai, Maharashtra
+                                </span>
+                                <button class="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors">
+                                    View Details
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Car Card 2 -->
+                    <div class="car-card bg-card border border-border rounded-lg overflow-hidden">
+                        <!-- White Hyundai i20 compact car -->
+                        <img src="https://images.unsplash.com/photo-1583121274602-3e2820c69888?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=300" 
+                             alt="Hyundai i20" class="w-full h-48 object-cover">
+                        <div class="p-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-lg font-semibold">2019 Hyundai i20 Sportz</h3>
+                                <button class="text-accent">
+                                    <i class="fas fa-heart"></i>
+                                </button>
+                            </div>
+                            <p class="text-2xl font-bold text-accent mb-2">₹7.80 Lakh</p>
+                            <div class="grid grid-cols-2 gap-4 text-sm text-muted-foreground mb-4">
+                                <div><i class="fas fa-calendar mr-1"></i>2019</div>
+                                <div><i class="fas fa-tachometer-alt mr-1"></i>42,000 km</div>
+                                <div><i class="fas fa-gas-pump mr-1"></i>Diesel</div>
+                                <div><i class="fas fa-cog mr-1"></i>Manual</div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-muted-foreground">
+                                    <i class="fas fa-map-marker-alt mr-1"></i>Delhi, Delhi
+                                </span>
+                                <button class="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors">
+                                    View Details
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Car Card 3 -->
+                    <div class="car-card bg-card border border-border rounded-lg overflow-hidden">
+                        <!-- Blue Tata Nexon compact SUV -->
+                        <img src="https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=300" 
+                             alt="Tata Nexon" class="w-full h-48 object-cover">
+                        <div class="p-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-lg font-semibold">2021 Tata Nexon XZ+</h3>
+                                <button class="text-muted-foreground hover:text-accent">
+                                    <i class="far fa-heart"></i>
+                                </button>
+                            </div>
+                            <p class="text-2xl font-bold text-accent mb-2">₹9.50 Lakh</p>
+                            <div class="grid grid-cols-2 gap-4 text-sm text-muted-foreground mb-4">
+                                <div><i class="fas fa-calendar mr-1"></i>2021</div>
+                                <div><i class="fas fa-tachometer-alt mr-1"></i>28,000 km</div>
+                                <div><i class="fas fa-gas-pump mr-1"></i>Petrol</div>
+                                <div><i class="fas fa-cog mr-1"></i>Manual</div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-muted-foreground">
+                                    <i class="fas fa-map-marker-alt mr-1"></i>Bangalore, Karnataka
+                                </span>
+                                <button class="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors">
+                                    View Details
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Car Card 4 -->
+                    <div class="car-card bg-card border border-border rounded-lg overflow-hidden">
+                        <!-- Silver Honda City sedan -->
+                        <img src="https://images.unsplash.com/photo-1600712242805-5f78671b24da?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=300" 
+                             alt="Honda City" class="w-full h-48 object-cover">
+                        <div class="p-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-lg font-semibold">2018 Honda City VX</h3>
+                                <button class="text-muted-foreground hover:text-accent">
+                                    <i class="far fa-heart"></i>
+                                </button>
+                            </div>
+                            <p class="text-2xl font-bold text-accent mb-2">₹8.90 Lakh</p>
+                            <div class="grid grid-cols-2 gap-4 text-sm text-muted-foreground mb-4">
+                                <div><i class="fas fa-calendar mr-1"></i>2018</div>
+                                <div><i class="fas fa-tachometer-alt mr-1"></i>52,000 km</div>
+                                <div><i class="fas fa-gas-pump mr-1"></i>Petrol</div>
+                                <div><i class="fas fa-cog mr-1"></i>CVT</div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-muted-foreground">
+                                    <i class="fas fa-map-marker-alt mr-1"></i>Chennai, Tamil Nadu
+                                </span>
+                                <button class="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors">
+                                    View Details
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Car Card 5 -->
+                    <div class="car-card bg-card border border-border rounded-lg overflow-hidden">
+                        <!-- Dark Mahindra XUV500 SUV -->
+                        <img src="https://pixabay.com/get/g74d2edb73c0af2c28d85337c9fca7dba950ed5a7304fc969f6386870eaf804adebf05fac7ee85afeb4d3077ba46391a547c02ff1fce7cf565a0de3586f814b34_1280.jpg" 
+                             alt="Mahindra XUV500" class="w-full h-48 object-cover">
+                        <div class="p-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-lg font-semibold">2020 Mahindra XUV500 W8</h3>
+                                <button class="text-muted-foreground hover:text-accent">
+                                    <i class="far fa-heart"></i>
+                                </button>
+                            </div>
+                            <p class="text-2xl font-bold text-accent mb-2">₹12.75 Lakh</p>
+                            <div class="grid grid-cols-2 gap-4 text-sm text-muted-foreground mb-4">
+                                <div><i class="fas fa-calendar mr-1"></i>2020</div>
+                                <div><i class="fas fa-tachometer-alt mr-1"></i>38,000 km</div>
+                                <div><i class="fas fa-gas-pump mr-1"></i>Diesel</div>
+                                <div><i class="fas fa-cog mr-1"></i>Manual</div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-muted-foreground">
+                                    <i class="fas fa-map-marker-alt mr-1"></i>Pune, Maharashtra
+                                </span>
+                                <button class="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors">
+                                    View Details
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Car Card 6 -->
+                    <div class="car-card bg-card border border-border rounded-lg overflow-hidden">
+                        <!-- White Toyota Innova -->
+                        <img src="https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=300" 
+                             alt="Toyota Innova" class="w-full h-48 object-cover">
+                        <div class="p-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-lg font-semibold">2019 Toyota Innova Crysta VX</h3>
+                                <button class="text-muted-foreground hover:text-accent">
+                                    <i class="far fa-heart"></i>
+                                </button>
+                            </div>
+                            <p class="text-2xl font-bold text-accent mb-2">₹15.20 Lakh</p>
+                            <div class="grid grid-cols-2 gap-4 text-sm text-muted-foreground mb-4">
+                                <div><i class="fas fa-calendar mr-1"></i>2019</div>
+                                <div><i class="fas fa-tachometer-alt mr-1"></i>45,000 km</div>
+                                <div><i class="fas fa-gas-pump mr-1"></i>Diesel</div>
+                                <div><i class="fas fa-cog mr-1"></i>Manual</div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-muted-foreground">
+                                    <i class="fas fa-map-marker-alt mr-1"></i>Hyderabad, Telangana
+                                </span>
+                                <button class="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors">
+                                    View Details
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_MAP )) -->
+
+                <!-- Pagination -->
+                <div class="flex justify-center items-center space-x-2 mt-8">
+                    <button class="px-3 py-2 border border-border rounded-md text-muted-foreground hover:bg-muted">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="px-3 py-2 bg-primary text-primary-foreground rounded-md">1</button>
+                    <button class="px-3 py-2 border border-border rounded-md hover:bg-muted">2</button>
+                    <button class="px-3 py-2 border border-border rounded-md hover:bg-muted">3</button>
+                    <span class="px-3 py-2">...</span>
+                    <button class="px-3 py-2 border border-border rounded-md hover:bg-muted">10</button>
+                    <button class="px-3 py-2 border border-border rounded-md text-muted-foreground hover:bg-muted">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: Car Listings -->
+        </div>
+    </main>
+    <!-- @END_COMPONENT: Main Content -->
+
+    <!-- @COMPONENT: Car Detail Modal -->
+    <div id="carDetailModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-card rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold">2020 Maruti Swift VXI</h2>
+                        <button class="text-muted-foreground hover:text-foreground">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Image Gallery -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <!-- Main car image - modern red hatchback -->
+                            <img src="https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400" 
+                                 alt="Car main view" class="w-full h-80 object-cover rounded-lg">
+                            <div class="grid grid-cols-4 gap-2 mt-4">
+                                <!-- Car interior view -->
+                                <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=100" 
+                                     alt="Interior" class="w-full h-20 object-cover rounded border-2 border-primary">
+                                <!-- Car dashboard view -->
+                                <img src="https://images.unsplash.com/photo-1555215695-3004980ad54e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=100" 
+                                     alt="Dashboard" class="w-full h-20 object-cover rounded">
+                                <!-- Car engine bay -->
+                                <img src="https://images.unsplash.com/photo-1486326658981-ed68abe5868e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=100" 
+                                     alt="Engine" class="w-full h-20 object-cover rounded">
+                                <!-- Car side profile -->
+                                <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=100" 
+                                     alt="Side view" class="w-full h-20 object-cover rounded">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="bg-muted rounded-lg p-6 mb-4">
+                                <div class="text-3xl font-bold text-accent mb-2">₹6.25 Lakh</div>
+                                <div class="text-muted-foreground mb-4">EMI starts at ₹12,500/month</div>
+                                
+                                <div class="grid grid-cols-2 gap-4 mb-6">
+                                    <div>
+                                        <div class="text-sm text-muted-foreground">Year</div>
+                                        <div class="font-semibold">2020</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm text-muted-foreground">KM Driven</div>
+                                        <div class="font-semibold">35,000 km</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm text-muted-foreground">Fuel Type</div>
+                                        <div class="font-semibold">Petrol</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm text-muted-foreground">Transmission</div>
+                                        <div class="font-semibold">Manual</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm text-muted-foreground">Owners</div>
+                                        <div class="font-semibold">1st Owner</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm text-muted-foreground">Location</div>
+                                        <div class="font-semibold">Mumbai, MH</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="space-y-3">
+                                    <button class="w-full bg-accent text-accent-foreground py-3 px-4 rounded-md font-semibold hover:bg-accent/90 transition-colors">
+                                        <i class="fas fa-phone mr-2"></i>Contact Seller
+                                    </button>
+                                    <button class="w-full bg-primary text-primary-foreground py-3 px-4 rounded-md font-semibold hover:bg-primary/90 transition-colors">
+                                        <i class="fas fa-calendar mr-2"></i>Schedule Test Drive
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Features -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="text-lg font-semibold mb-4">Key Features</h3>
+                            <div class="space-y-2">
+                                <div class="flex items-center text-sm">
+                                    <i class="fas fa-check text-green-500 mr-2"></i>
+                                    Power Steering
+                                </div>
+                                <div class="flex items-center text-sm">
+                                    <i class="fas fa-check text-green-500 mr-2"></i>
+                                    Air Conditioning
+                                </div>
+                                <div class="flex items-center text-sm">
+                                    <i class="fas fa-check text-green-500 mr-2"></i>
+                                    Central Locking
+                                </div>
+                                <div class="flex items-center text-sm">
+                                    <i class="fas fa-check text-green-500 mr-2"></i>
+                                    ABS with EBD
+                                </div>
+                                <div class="flex items-center text-sm">
+                                    <i class="fas fa-check text-green-500 mr-2"></i>
+                                    Dual Airbags
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-lg font-semibold mb-4">Seller Information</h3>
+                            <div class="bg-muted rounded-lg p-4">
+                                <div class="flex items-center mb-2">
+                                    <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center mr-3">
+                                        <i class="fas fa-user text-primary-foreground"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold" data-mock="true">Rajesh Kumar</div>
+                                        <div class="text-sm text-muted-foreground">Individual Seller</div>
+                                    </div>
+                                </div>
+                                <div class="text-sm text-muted-foreground mb-3">
+                                    <i class="fas fa-star text-yellow-400 mr-1"></i>
+                                    4.8 rating • 23 reviews
+                                </div>
+                                <div class="text-sm text-muted-foreground">
+                                    <i class="fas fa-map-marker-alt mr-1"></i>
+                                    Andheri West, Mumbai
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: Car Detail Modal -->
+
+    <!-- @COMPONENT: Contact Form Modal -->
+    <div id="contactModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-card rounded-lg max-w-md w-full">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold">Contact Seller</h2>
+                        <button class="text-muted-foreground hover:text-foreground">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <form class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Your Name</label>
+                            <input type="text" class="w-full px-3 py-2 border border-input rounded-md bg-background" 
+                                   placeholder="Enter your name" data-mock="true">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Phone Number</label>
+                            <input type="tel" class="w-full px-3 py-2 border border-input rounded-md bg-background" 
+                                   placeholder="+91 XXXXX XXXXX" data-mock="true">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Email</label>
+                            <input type="email" class="w-full px-3 py-2 border border-input rounded-md bg-background" 
+                                   placeholder="your.email@example.com" data-mock="true">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Message</label>
+                            <textarea class="w-full px-3 py-2 border border-input rounded-md bg-background h-24" 
+                                      placeholder="I'm interested in this car..." data-mock="true"></textarea>
+                        </div>
+                        
+                        <div class="flex space-x-3">
+                            <button type="button" class="flex-1 border border-border py-2 px-4 rounded-md hover:bg-muted transition-colors">
+                                Cancel
+                            </button>
+                            <button type="submit" class="flex-1 bg-primary text-primary-foreground py-2 px-4 rounded-md hover:bg-primary/90 transition-colors">
+                                Send Message
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: Contact Form Modal -->
+
+    <!-- @COMPONENT: Footer -->
+    <footer class="bg-muted border-t border-border mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-lg font-bold text-primary mb-4">
+                        <i class="fas fa-car mr-2"></i>CarBazaar
+                    </h3>
+                    <p class="text-muted-foreground text-sm mb-4">
+                        India's most trusted platform for buying and selling used cars.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-muted-foreground hover:text-primary">
+                            <i class="fab fa-facebook"></i>
+                        </a>
+                        <a href="#" class="text-muted-foreground hover:text-primary">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="text-muted-foreground hover:text-primary">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="text-muted-foreground hover:text-primary">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">Popular Brands</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#" class="text-muted-foreground hover:text-primary">Maruti Suzuki</a></li>
+                        <li><a href="#" class="text-muted-foreground hover:text-primary">Hyundai</a></li>
+                        <li><a href="#" class="text-muted-foreground hover:text-primary">Tata</a></li>
+                        <li><a href="#" class="text-muted-foreground hover:text-primary">Mahindra</a></li>
+                        <li><a href="#" class="text-muted-foreground hover:text-primary">Honda</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">Popular Cities</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#" class="text-muted-foreground hover:text-primary">Mumbai</a></li>
+                        <li><a href="#" class="text-muted-foreground hover:text-primary">Delhi</a></li>
+                        <li><a href="#" class="text-muted-foreground hover:text-primary">Bangalore</a></li>
+                        <li><a href="#" class="text-muted-foreground hover:text-primary">Chennai</a></li>
+                        <li><a href="#" class="text-muted-foreground hover:text-primary">Hyderabad</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">Support</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#" class="text-muted-foreground hover:text-primary">Help Center</a></li>
+                        <li><a href="#" class="text-muted-foreground hover:text-primary">Contact Us</a></li>
+                        <li><a href="#" class="text-muted-foreground hover:text-primary">Privacy Policy</a></li>
+                        <li><a href="#" class="text-muted-foreground hover:text-primary">Terms of Service</a></li>
+                        <li><a href="#" class="text-muted-foreground hover:text-primary">Sell Your Car</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-border mt-8 pt-8 text-center">
+                <p class="text-muted-foreground text-sm">
+                    © 2024 CarBazaar. All rights reserved. | Made with ❤️ for car enthusiasts in India
+                </p>
+            </div>
+        </div>
+    </footer>
+    <!-- @END_COMPONENT: Footer -->
+
+    <script>
+        // Basic interaction handlers - TODO: Implement full functionality
+        (function() {
+            // Mobile menu toggle
+            const mobileMenuButton = document.querySelector('.md\\:hidden button');
+            // TODO: Implement mobile menu toggle functionality
+            
+            // Car card interactions
+            const carCards = document.querySelectorAll('.car-card');
+            carCards.forEach(card => {
+                const viewButton = card.querySelector('button:last-child');
+                if (viewButton && viewButton.textContent.includes('View Details')) {
+                    viewButton.addEventListener('click', function() {
+                        // TODO: Show car detail modal with specific car data
+                        const modal = document.getElementById('carDetailModal');
+                        if (modal) {
+                            modal.classList.remove('hidden');
+                        }
+                    });
+                }
+            });
+            
+            // Modal close handlers
+            const modals = document.querySelectorAll('[id$="Modal"]');
+            modals.forEach(modal => {
+                const closeButton = modal.querySelector('.fa-times').closest('button');
+                if (closeButton) {
+                    closeButton.addEventListener('click', function() {
+                        modal.classList.add('hidden');
+                    });
+                }
+                
+                // Close on backdrop click
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        modal.classList.add('hidden');
+                    }
+                });
+            });
+            
+            // Contact seller button
+            const contactButtons = document.querySelectorAll('button[class*="bg-accent"]');
+            contactButtons.forEach(button => {
+                if (button.textContent.includes('Contact Seller')) {
+                    button.addEventListener('click', function() {
+                        // TODO: Open contact modal with seller information
+                        const contactModal = document.getElementById('contactModal');
+                        if (contactModal) {
+                            contactModal.classList.remove('hidden');
+                        }
+                    });
+                }
+            });
+            
+            // Filter form submission
+            const filterForm = document.querySelector('.filter-sidebar button');
+            if (filterForm) {
+                filterForm.addEventListener('click', function() {
+                    // TODO: Apply filters and update car listings
+                    console.log('Applying filters...');
+                });
+            }
+            
+            // Search form submission
+            const searchButton = document.querySelector('.hero-gradient button');
+            if (searchButton) {
+                searchButton.addEventListener('click', function() {
+                    // TODO: Perform search with form data
+                    console.log('Searching cars...');
+                });
+            }
+            
+            // Heart/favorite toggles
+            const heartButtons = document.querySelectorAll('.fa-heart').map(icon => icon.closest('button'));
+            heartButtons.forEach(button => {
+                if (button) {
+                    button.addEventListener('click', function() {
+                        const icon = button.querySelector('.fa-heart');
+                        if (icon) {
+                            // TODO: Toggle favorite status
+                            icon.classList.toggle('far');
+                            icon.classList.toggle('fas');
+                        }
+                    });
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

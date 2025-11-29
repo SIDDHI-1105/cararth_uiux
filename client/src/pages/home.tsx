@@ -1,26 +1,29 @@
-import { useState, useEffect } from "react";
-import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Mic, Search, ChevronRight } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Mic, Search } from "lucide-react";
 import { FullWidthLayout } from "@/components/layout";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const [isDark, setIsDark] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [focusedInput, setFocusedInput] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const searchBarRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     // Detect current theme from document
     const checkTheme = () => {
       setIsDark(document.documentElement.classList.contains("dark"));
     };
-    
+
     checkTheme();
-    
+
     // Watch for theme changes
     const observer = new MutationObserver(checkTheme);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    
+
     return () => observer.disconnect();
   }, []);
 
@@ -28,6 +31,96 @@ export default function Home() {
     if (searchQuery.trim()) {
       window.location.href = `/results?q=${encodeURIComponent(searchQuery)}`;
     }
+  };
+
+  const handleMicClick = () => {
+    // Check for Speech Recognition support
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      toast({
+        title: "Voice search not supported",
+        description: "Your browser doesn't support voice input. Please use Chrome, Edge, or Safari.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // If already listening, stop
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+      return;
+    }
+
+    // Create new recognition instance
+    const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
+
+    recognition.lang = 'en-IN'; // English (India)
+    recognition.continuous = false; // Stop after first result
+    recognition.interimResults = false; // Only get final results
+
+    recognition.onstart = () => {
+      setIsListening(true);
+      toast({
+        title: "Listening...",
+        description: "Speak your search query now",
+      });
+    };
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setSearchQuery(transcript);
+      setIsListening(false);
+
+      toast({
+        title: "Got it!",
+        description: `You said: "${transcript}"`,
+      });
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error);
+      setIsListening(false);
+
+      let errorMessage = "Could not process voice input";
+
+      if (event.error === 'not-allowed' || event.error === 'permission-denied') {
+        errorMessage = "Microphone access denied. Please allow microphone permission in your browser settings.";
+      } else if (event.error === 'no-speech') {
+        errorMessage = "No speech detected. Please try again.";
+      } else if (event.error === 'network') {
+        errorMessage = "Network error. Please check your internet connection.";
+      }
+
+      toast({
+        title: "Voice search error",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    // Start listening
+    try {
+      recognition.start();
+    } catch (error) {
+      console.error('Failed to start speech recognition:', error);
+      setIsListening(false);
+      toast({
+        title: "Error",
+        description: "Failed to start voice input. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const scrollToSearchBar = () => {
+    searchBarRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
   return (
@@ -61,18 +154,19 @@ export default function Home() {
 
           {/* Search Bar - Glassmorphic, Massive, Centered */}
           <div
+            ref={searchBarRef}
             style={{
               backgroundColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.5)",
-              borderColor: isDark 
+              borderColor: isDark
                 ? focusedInput ? "rgba(255, 255, 255, 0.2)" : "rgba(255, 255, 255, 0.1)"
                 : focusedInput ? "rgba(0, 0, 0, 0.2)" : "rgba(0, 0, 0, 0.1)",
-              boxShadow: focusedInput 
+              boxShadow: focusedInput
                 ? "0 0 20px rgba(0, 113, 227, 0.4)"
                 : "none",
             }}
             className="backdrop-blur-[12px] rounded-full border transition-all duration-300 flex items-center gap-3 px-6 py-4 mb-8 animate-slide-up"
           >
-            <Search 
+            <Search
               style={{ color: isDark ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.4)" }}
               className="w-5 h-5"
             />
@@ -90,10 +184,14 @@ export default function Home() {
               }}
               className="flex-1 text-lg outline-none transition-colors duration-300"
             />
-            <button className="p-2 hover:bg-white/10 rounded-full transition-colors">
-              <Mic 
-                style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)" }}
-                className="w-5 h-5"
+            <button
+              onClick={handleMicClick}
+              className={`p-2 hover:bg-white/10 rounded-full transition-all ${isListening ? 'bg-red-500/20' : ''}`}
+              title="Voice search"
+            >
+              <Mic
+                style={{ color: isListening ? "#ef4444" : (isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)") }}
+                className={`w-5 h-5 ${isListening ? 'animate-pulse' : ''}`}
               />
             </button>
             <button
@@ -309,26 +407,30 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section 
-        style={{ 
+      <section
+        style={{
           borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
         }}
         className="py-20 px-4 sm:px-6 lg:px-8 border-t transition-colors duration-300"
       >
         <div className="max-w-4xl mx-auto text-center">
-          <h2 
+          <h2
             style={{ color: isDark ? "#f5f5f7" : "#1d1d1f" }}
             className="text-5xl font-bold mb-6 transition-colors duration-300"
           >
             Ready to find your car?
           </h2>
-          <p 
+          <p
             style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.75)" }}
             className="text-xl mb-8 max-w-2xl mx-auto transition-colors duration-300"
           >
             Search across multiple platforms. AI-verified listings. Real-time updates from India's top markets.
           </p>
-          <button className="btn-primary text-lg px-8 py-4">
+          <button
+            type="button"
+            onClick={scrollToSearchBar}
+            className="btn-primary text-lg px-8 py-4"
+          >
             Search Cars
           </button>
         </div>

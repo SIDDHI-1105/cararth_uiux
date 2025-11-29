@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -11,11 +11,14 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Upload, Car, FileCheck, Send } from "lucide-react";
+import { CheckCircle2, XCircle, Upload, Car, FileCheck, Send, Loader2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 const BRANDS = ["Maruti Suzuki", "Hyundai", "Tata", "Mahindra", "Honda", "Toyota", "Ford", "Renault", "Nissan", "Volkswagen"];
+const FUEL_TYPES = ["Petrol", "Diesel", "CNG", "Electric", "Hybrid"];
+const TRANSMISSIONS = ["Manual", "Automatic", "CVT"];
+const CITIES = ["Hyderabad", "Delhi", "Mumbai", "Bangalore", "Pune", "Chennai", "Kolkata", "Ahmedabad", "Jaipur", "Lucknow"];
 const CURRENT_YEAR = new Date().getFullYear();
 const YEARS = Array.from({ length: 30 }, (_, i) => CURRENT_YEAR - i);
 
@@ -24,7 +27,12 @@ const sellFormSchema = z.object({
   model: z.string().min(2, "Please enter the car model"),
   year: z.coerce.number().int().min(1990, "Year must be 1990 or later").max(CURRENT_YEAR, `Year cannot be after ${CURRENT_YEAR}`),
   price: z.coerce.number().positive("Price must be greater than 0").min(10000, "Price must be at least ₹10,000"),
-  mileage: z.coerce.number().positive("Mileage must be positive").optional().or(z.literal("")),
+  mileage: z.coerce.number().positive("Mileage must be positive").min(0, "Mileage cannot be negative"),
+  fuelType: z.string().min(1, "Please select a fuel type"),
+  transmission: z.string().min(1, "Please select transmission type"),
+  city: z.string().min(1, "Please select a city"),
+  owners: z.coerce.number().int().min(1, "Number of owners must be at least 1").max(10, "Number of owners cannot exceed 10").optional().default(1),
+  description: z.string().optional(),
   image: z.any().optional(),
 });
 
@@ -36,9 +44,76 @@ const STEPS = [
   { id: 3, name: "Publish", icon: Send, description: "Go live" }
 ];
 
+// Price ranges by year (rough estimates for Indian market)
+const getPriceRange = (year: number) => {
+  const age = CURRENT_YEAR - year;
+
+  if (age <= 2) return { min: 300000, max: 25000000 }; // 3L to 2.5Cr
+  if (age <= 5) return { min: 150000, max: 15000000 }; // 1.5L to 1.5Cr
+  if (age <= 10) return { min: 50000, max: 8000000 }; // 50k to 80L
+  return { min: 20000, max: 5000000 }; // 20k to 50L for older cars
+};
+
+// Verification result type
+type VerificationResult = {
+  status: "ok" | "error" | "verifying";
+  checks: {
+    price: { passed: boolean; message: string };
+    details: { passed: boolean; message: string };
+    compliance: { passed: boolean; message: string };
+  };
+  overallMessage?: string;
+};
+
+// Verification function
+const verifyListing = (data: SellFormValues): Promise<VerificationResult> => {
+  return new Promise((resolve) => {
+    // Simulate async verification (500ms delay)
+    setTimeout(() => {
+      const priceRange = getPriceRange(data.year);
+      const checks = {
+        price: {
+          passed: data.price >= priceRange.min && data.price <= priceRange.max,
+          message: data.price < priceRange.min
+            ? `Price seems too low for a ${data.year} model. Expected minimum: ₹${(priceRange.min / 100000).toFixed(1)}L`
+            : data.price > priceRange.max
+            ? `Price seems unrealistically high for a ${data.year} model. Expected maximum: ₹${(priceRange.max / 100000).toFixed(1)}L`
+            : `Price is within market range for ${data.year} models`
+        },
+        details: {
+          passed: data.brand && data.model && data.year && data.fuelType && data.transmission && data.city,
+          message: data.brand && data.model && data.year && data.fuelType && data.transmission && data.city
+            ? "All required fields are present and valid"
+            : "Missing required fields"
+        },
+        compliance: {
+          passed: data.mileage >= 0 && data.mileage <= 500000 && (data.owners || 1) <= 10,
+          message: data.mileage > 500000
+            ? "Mileage exceeds 5 lakh km - please verify"
+            : (data.owners || 1) > 10
+            ? "Number of owners exceeds reasonable limit"
+            : "Listing meets platform standards"
+        }
+      };
+
+      const allPassed = checks.price.passed && checks.details.passed && checks.compliance.passed;
+
+      resolve({
+        status: allPassed ? "ok" : "error",
+        checks,
+        overallMessage: allPassed
+          ? "All verification checks passed! You can now publish your listing."
+          : "Some checks failed. Please review and correct the issues before publishing."
+      });
+    }, 500);
+  });
+};
+
 export default function SellPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<SellFormValues>({
@@ -49,39 +124,144 @@ export default function SellPage() {
       year: undefined,
       price: undefined,
       mileage: undefined,
+      fuelType: "",
+      transmission: "",
+      city: "",
+      owners: 1,
+      description: "",
     }
   });
 
   const submitMutation = useMutation({
     mutationFn: async (data: SellFormValues) => {
-      return apiRequest('POST', '/api/cars', {
+      console.log("🚀 Submitting listing with data:", {
+        ...data,
+        price: `₹${data.price}`,
+        mileage: `${data.mileage} km`
+      });
+
+      // Create full payload with all required fields
+      const payload = {
+        sellerId: "anonymous", // For now, using anonymous seller
+        title: `${data.brand} ${data.model} ${data.year}`,
         brand: data.brand,
         model: data.model,
         year: data.year,
         price: data.price,
-        mileage: data.mileage || undefined,
-      });
+        mileage: data.mileage,
+        fuelType: data.fuelType,
+        transmission: data.transmission,
+        owners: data.owners || 1,
+        location: data.city, // Using city as location
+        city: data.city,
+        state: "Telangana", // Default for now, should be mapped from city
+        description: data.description || `${data.brand} ${data.model} ${data.year} for sale in ${data.city}`,
+        features: [],
+        images: [],
+        source: null,
+        listingSource: "user_direct"
+      };
+
+      console.log("📤 Sending payload to POST /api/cars:", payload);
+
+      try {
+        const response = await apiRequest('POST', '/api/cars', payload);
+
+        console.log("✅ Success! Response status:", response.status);
+
+        if (response.ok) {
+          const responseData = await response.json();
+          console.log("📥 Response data:", responseData);
+          return responseData;
+        } else {
+          const errorText = await response.text();
+          console.error("❌ Error response:", {
+            status: response.status,
+            statusText: response.statusText,
+            body: errorText
+          });
+          throw new Error(errorText || `Server error: ${response.status}`);
+        }
+      } catch (error: any) {
+        console.error("❌ Request failed:", error);
+        throw error;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("🎉 Listing created successfully:", data);
       toast({
         title: "Success!",
-        description: "Your car listing has been submitted for verification.",
+        description: "Your car listing has been published successfully.",
       });
       setCurrentStep(3);
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error("💥 Submission error:", error);
       toast({
         title: "Error",
-        description: "Failed to submit listing. Please try again.",
+        description: error.message || "Failed to submit listing. Please try again.",
         variant: "destructive"
       });
     }
   });
 
+  // Run verification when entering step 2
+  useEffect(() => {
+    if (currentStep === 2) {
+      const runVerification = async () => {
+        setIsVerifying(true);
+        setVerificationResult({
+          status: "verifying",
+          checks: {
+            price: { passed: false, message: "Checking..." },
+            details: { passed: false, message: "Checking..." },
+            compliance: { passed: false, message: "Checking..." }
+          }
+        });
+
+        const formData = form.getValues();
+        console.log("🔍 Running verification on data:", formData);
+
+        const result = await verifyListing(formData);
+        console.log("✅ Verification result:", result);
+
+        setVerificationResult(result);
+        setIsVerifying(false);
+
+        if (result.status === "error") {
+          toast({
+            title: "Verification Failed",
+            description: result.overallMessage,
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Verification Passed",
+            description: result.overallMessage,
+          });
+        }
+      };
+
+      runVerification();
+    }
+  }, [currentStep, form, toast]);
+
   const onSubmit = (data: SellFormValues) => {
+    console.log("📝 Form submitted with data:", data);
+
     if (currentStep === 1) {
+      console.log("➡️ Moving to verification step");
       setCurrentStep(2);
     } else if (currentStep === 2) {
+      if (verificationResult?.status !== "ok") {
+        toast({
+          title: "Cannot publish",
+          description: "Please fix verification errors before publishing.",
+          variant: "destructive"
+        });
+        return;
+      }
+      console.log("🚀 Publishing listing...");
       submitMutation.mutate(data);
     }
   };
@@ -120,6 +300,8 @@ export default function SellPage() {
     }
   };
 
+  const canPublish = verificationResult?.status === "ok" && !isVerifying;
+
   return (
     <Layout>
       <SEOHead
@@ -129,7 +311,7 @@ export default function SellPage() {
         canonical="https://www.cararth.com/sell"
         structuredData={structuredData}
       />
-      
+
       <main className="container mx-auto px-4 py-16 md:py-24 max-w-4xl mt-2">
         {/* Header */}
         <div className="text-center mb-16 md:mb-20">
@@ -145,17 +327,17 @@ export default function SellPage() {
         <div className="mb-12">
           <div className="flex justify-between items-center relative">
             <div className="absolute top-5 left-0 right-0 h-1 bg-muted -z-10">
-              <div 
+              <div
                 className="h-full bg-primary transition-all duration-500"
                 style={{ width: `${((currentStep - 1) / (STEPS.length - 1)) * 100}%` }}
               />
             </div>
-            
+
             {STEPS.map((step) => {
               const Icon = step.icon;
               const isActive = currentStep >= step.id;
               const isCurrent = currentStep === step.id;
-              
+
               return (
                 <div key={step.id} className="flex flex-col items-center">
                   <div className={`
@@ -195,7 +377,7 @@ export default function SellPage() {
               {currentStep === 3 && "Your car is now live on CarArth"}
             </CardDescription>
           </CardHeader>
-          
+
           <CardContent>
             {currentStep === 3 ? (
               <div className="text-center py-8">
@@ -277,8 +459,8 @@ export default function SellPage() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Year</FormLabel>
-                              <Select 
-                                onValueChange={field.onChange} 
+                              <Select
+                                onValueChange={field.onChange}
                                 defaultValue={field.value?.toString()}
                               >
                                 <FormControl>
@@ -314,14 +496,122 @@ export default function SellPage() {
                         />
                       </div>
 
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                          control={form.control}
+                          name="fuelType"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Fuel Type</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger data-testid="select-fuel-type">
+                                    <SelectValue placeholder="Select fuel type" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {FUEL_TYPES.map((fuel) => (
+                                    <SelectItem key={fuel} value={fuel}>
+                                      {fuel}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="transmission"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Transmission</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger data-testid="select-transmission">
+                                    <SelectValue placeholder="Select transmission" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {TRANSMISSIONS.map((trans) => (
+                                    <SelectItem key={trans} value={trans}>
+                                      {trans}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                          control={form.control}
+                          name="mileage"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Kilometers Driven</FormLabel>
+                              <FormControl>
+                                <Input type="number" placeholder="50000" {...field} data-testid="input-mileage" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="city"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>City</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger data-testid="select-city">
+                                    <SelectValue placeholder="Select city" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {CITIES.map((city) => (
+                                    <SelectItem key={city} value={city}>
+                                      {city}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
                       <FormField
                         control={form.control}
-                        name="mileage"
+                        name="owners"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Kilometers Driven (Optional)</FormLabel>
+                            <FormLabel>Number of Owners</FormLabel>
                             <FormControl>
-                              <Input type="number" placeholder="50000" {...field} data-testid="input-mileage" />
+                              <Input type="number" placeholder="1" {...field} data-testid="input-owners" min="1" max="10" />
+                            </FormControl>
+                            <FormDescription>How many owners has the car had?</FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="description"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Description (Optional)</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Additional details about your car" {...field} data-testid="input-description" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -366,33 +656,88 @@ export default function SellPage() {
                     <div className="space-y-6 py-8">
                       <div className="text-center">
                         <div className="mb-6">
-                          <FileCheck className="w-16 h-16 text-primary mx-auto mb-4 animate-pulse" />
-                          <h3 className="text-xl font-semibold mb-2">Verifying Your Listing</h3>
+                          {isVerifying ? (
+                            <Loader2 className="w-16 h-16 text-primary mx-auto mb-4 animate-spin" />
+                          ) : verificationResult?.status === "ok" ? (
+                            <CheckCircle2 className="w-16 h-16 text-green-600 mx-auto mb-4" />
+                          ) : (
+                            <FileCheck className="w-16 h-16 text-primary mx-auto mb-4" />
+                          )}
+                          <h3 className="text-xl font-semibold mb-2">
+                            {isVerifying ? "Verifying Your Listing" : verificationResult?.status === "ok" ? "Verification Complete" : "Verification Issues Found"}
+                          </h3>
                           <p className="text-muted-foreground">
-                            Our AI is checking your listing details for accuracy and compliance.
+                            {verificationResult?.overallMessage || "Our AI is checking your listing details for accuracy and compliance."}
                           </p>
                         </div>
-                        
+
                         <div className="space-y-3 text-left max-w-md mx-auto">
-                          <div className="flex items-start gap-3">
-                            <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
-                            <div>
+                          {/* Price Validation */}
+                          <div className={`flex items-start gap-3 p-3 rounded-lg ${
+                            verificationResult?.checks.price.passed
+                              ? 'bg-green-50 dark:bg-green-950/20'
+                              : verificationResult?.status === "error"
+                              ? 'bg-red-50 dark:bg-red-950/20'
+                              : ''
+                          }`}>
+                            {isVerifying || !verificationResult ? (
+                              <Loader2 className="w-5 h-5 text-muted-foreground mt-0.5 animate-spin" />
+                            ) : verificationResult.checks.price.passed ? (
+                              <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
+                            ) : (
+                              <XCircle className="w-5 h-5 text-red-600 mt-0.5" />
+                            )}
+                            <div className="flex-1">
                               <p className="font-medium">Price Validation</p>
-                              <p className="text-sm text-muted-foreground">Ensuring fair market pricing</p>
+                              <p className="text-sm text-muted-foreground">
+                                {verificationResult?.checks.price.message || "Ensuring fair market pricing"}
+                              </p>
                             </div>
                           </div>
-                          <div className="flex items-start gap-3">
-                            <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
-                            <div>
+
+                          {/* Details Verification */}
+                          <div className={`flex items-start gap-3 p-3 rounded-lg ${
+                            verificationResult?.checks.details.passed
+                              ? 'bg-green-50 dark:bg-green-950/20'
+                              : verificationResult?.status === "error"
+                              ? 'bg-red-50 dark:bg-red-950/20'
+                              : ''
+                          }`}>
+                            {isVerifying || !verificationResult ? (
+                              <Loader2 className="w-5 h-5 text-muted-foreground mt-0.5 animate-spin" />
+                            ) : verificationResult.checks.details.passed ? (
+                              <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
+                            ) : (
+                              <XCircle className="w-5 h-5 text-red-600 mt-0.5" />
+                            )}
+                            <div className="flex-1">
                               <p className="font-medium">Details Verification</p>
-                              <p className="text-sm text-muted-foreground">Validating car information</p>
+                              <p className="text-sm text-muted-foreground">
+                                {verificationResult?.checks.details.message || "Validating car information"}
+                              </p>
                             </div>
                           </div>
-                          <div className="flex items-start gap-3">
-                            <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
-                            <div>
+
+                          {/* Compliance Check */}
+                          <div className={`flex items-start gap-3 p-3 rounded-lg ${
+                            verificationResult?.checks.compliance.passed
+                              ? 'bg-green-50 dark:bg-green-950/20'
+                              : verificationResult?.status === "error"
+                              ? 'bg-red-50 dark:bg-red-950/20'
+                              : ''
+                          }`}>
+                            {isVerifying || !verificationResult ? (
+                              <Loader2 className="w-5 h-5 text-muted-foreground mt-0.5 animate-spin" />
+                            ) : verificationResult.checks.compliance.passed ? (
+                              <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
+                            ) : (
+                              <XCircle className="w-5 h-5 text-red-600 mt-0.5" />
+                            )}
+                            <div className="flex-1">
                               <p className="font-medium">Compliance Check</p>
-                              <p className="text-sm text-muted-foreground">Meeting platform standards</p>
+                              <p className="text-sm text-muted-foreground">
+                                {verificationResult?.checks.compliance.message || "Meeting platform standards"}
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -423,11 +768,11 @@ export default function SellPage() {
                       <Button
                         type="submit"
                         className="flex-1"
-                        disabled={submitMutation.isPending}
+                        disabled={currentStep === 2 && (!canPublish || submitMutation.isPending)}
                         data-testid="button-next"
                       >
                         {currentStep === 1 && "Continue to Verification"}
-                        {currentStep === 2 && (submitMutation.isPending ? "Publishing..." : "Publish Listing")}
+                        {currentStep === 2 && (submitMutation.isPending ? "Publishing..." : canPublish ? "Publish Listing" : "Verification Required")}
                       </Button>
                     )}
                   </div>
