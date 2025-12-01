@@ -17,6 +17,8 @@ export default defineConfig({
     emptyOutDir: true,
   },
   server: {
+    host: "0.0.0.0",
+    port: 5173,
     fs: {
       strict: true,
       deny: ["**/.*"],
@@ -31,6 +33,6 @@ export default defineConfig({
   preview: {
     host: "0.0.0.0",
     port: 4173,
-    allowedHosts: ["cararth-uiux.onrender.com"],
+    strictPort: false,
   },
 });
