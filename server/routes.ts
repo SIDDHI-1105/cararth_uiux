@@ -508,18 +508,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     logError({ message: 'Continuing without scheduler - batch ingestion will need manual triggers', statusCode: 200 }, 'Scheduler fallback');
   }
 
+  // Environment detection for authentication
+  const isRenderEnvironment = !!process.env.RENDER || !!process.env.RENDER_SERVICE_ID;
+  const STRICT_AUTH = process.env.STRICT_AUTH_IN_PRODUCTION === 'true';
+
   // Auth middleware with error handling
   try {
     await setupAuth(app);
     logError({ message: 'Authentication middleware configured successfully', statusCode: 200 }, 'Authentication setup');
   } catch (error) {
     logError(createAppError('Authentication middleware setup failed', 500, ErrorCategory.AUTHENTICATION), 'Authentication configuration');
-    // In production, authentication failure should be fatal
-    if (process.env.NODE_ENV === 'production') {
-      console.error('❌ Authentication is required in production. Exiting.');
-      throw new Error('Authentication setup failed in production');
+
+    // Only fatal if STRICT_AUTH_IN_PRODUCTION is explicitly set to true
+    if (process.env.NODE_ENV === 'production' && STRICT_AUTH) {
+      console.error('❌ Authentication is required in strict auth mode. Exiting.');
+      throw new Error('Authentication setup failed in production with STRICT_AUTH_IN_PRODUCTION=true');
     } else {
-      console.log('⚠️ Continuing without authentication in development');
+      if (isRenderEnvironment) {
+        console.log('⚠️  Auth disabled: running in unauthenticated mode on Render');
+        console.log('⚠️  Set STRICT_AUTH_IN_PRODUCTION=true to enforce authentication');
+      } else {
+        console.log('⚠️ Continuing without authentication in development');
+      }
     }
   }
   
@@ -529,12 +539,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('✅ Social authentication configured');
   } catch (error) {
     console.error('❌ Failed to setup social auth:', error);
-    // In production, social auth failure should be fatal
-    if (process.env.NODE_ENV === 'production') {
-      console.error('❌ Social authentication is required in production. Exiting.');
-      throw new Error('Social authentication setup failed in production');
+
+    // Only fatal if STRICT_AUTH_IN_PRODUCTION is explicitly set to true
+    if (process.env.NODE_ENV === 'production' && STRICT_AUTH) {
+      console.error('❌ Social authentication is required in strict auth mode. Exiting.');
+      throw new Error('Social authentication setup failed in production with STRICT_AUTH_IN_PRODUCTION=true');
     } else {
-      console.log('⚠️ Continuing without social authentication in development');
+      if (isRenderEnvironment) {
+        console.log('⚠️  Social auth disabled: running in unauthenticated mode on Render');
+      } else {
+        console.log('⚠️ Continuing without social authentication in development');
+      }
     }
   }
 

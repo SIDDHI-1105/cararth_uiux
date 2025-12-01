@@ -8,11 +8,17 @@ import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
-// Skip Replit authentication if not running on Replit
+// Environment detection
 const isReplitEnvironment = !!process.env.REPLIT_DOMAINS;
+const isRenderEnvironment = !!process.env.RENDER || !!process.env.RENDER_SERVICE_ID;
+const STRICT_AUTH = process.env.STRICT_AUTH_IN_PRODUCTION === 'true';
 
 if (!isReplitEnvironment) {
   console.log("⚠️  Replit Auth: Skipping (not running on Replit)");
+}
+
+if (isRenderEnvironment && !STRICT_AUTH) {
+  console.log("⚠️  Running on Render in unauthenticated mode (STRICT_AUTH_IN_PRODUCTION not set)");
 }
 
 const getOidcConfig = memoize(
@@ -31,6 +37,12 @@ const getOidcConfig = memoize(
 );
 
 export function getSession() {
+  // If SESSION_SECRET is missing and we're not in strict auth mode, return no-op middleware
+  if (!process.env.SESSION_SECRET && !STRICT_AUTH) {
+    console.log("⚠️  No SESSION_SECRET found - using no-op session middleware");
+    return (_req: any, _res: any, next: any) => next();
+  }
+
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
@@ -80,6 +92,26 @@ export async function setupAuth(app: Express) {
   app.use(getSession());
   app.use(passport.initialize());
   app.use(passport.session());
+
+  // If not in Replit environment, skip OIDC setup
+  if (!isReplitEnvironment) {
+    console.log("⚠️  Skipping OIDC configuration (not in Replit environment)");
+
+    // Setup no-op auth routes for compatibility
+    app.get("/api/login", (_req, res) => {
+      res.status(501).json({ message: "Authentication not configured" });
+    });
+
+    app.get("/api/callback", (_req, res) => {
+      res.status(501).json({ message: "Authentication not configured" });
+    });
+
+    app.get("/api/logout", (_req, res) => {
+      res.status(501).json({ message: "Authentication not configured" });
+    });
+
+    return;
+  }
 
   const config = await getOidcConfig();
 
@@ -137,6 +169,18 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
+  // Unauthenticated mode bypass (Render without STRICT_AUTH)
+  if (!STRICT_AUTH && (isRenderEnvironment || process.env.NODE_ENV === 'development')) {
+    console.log('🔓 Unauthenticated mode: Bypassing authentication check');
+    if (!req.user) {
+      req.user = {
+        id: 'unauthenticated-user',
+        claims: { sub: 'unauthenticated-user' }
+      } as any;
+    }
+    return next();
+  }
+
   // Development mode bypass - create mock admin user
   if (process.env.NODE_ENV === 'development') {
     console.log('🔓 Development mode: Creating mock authenticated user');
@@ -190,6 +234,12 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 
 // Admin authentication middleware
 export const isAdmin: RequestHandler = async (req, res, next) => {
+  // Unauthenticated mode bypass (Render without STRICT_AUTH)
+  if (!STRICT_AUTH && (isRenderEnvironment || process.env.NODE_ENV === 'development')) {
+    console.log('🔓 Unauthenticated mode: Bypassing admin check');
+    return next();
+  }
+
   // Development mode bypass - allow all requests
   if (process.env.NODE_ENV === 'development') {
     console.log('🔓 Development mode: Bypassing admin check');
@@ -208,14 +258,14 @@ export const isAdmin: RequestHandler = async (req, res, next) => {
   try {
     const { storage } = await import('./storage.js');
     const userId = user.claims?.sub || user.id;
-    
+
     if (!userId) {
       console.log('🔒 Admin check failed: No user ID found');
       return res.status(401).json({ message: "Unauthorized - Invalid user session" });
     }
 
     const dbUser = await storage.getUser(userId);
-    
+
     if (!dbUser) {
       console.log('🔒 Admin check failed: User not found in database');
       return res.status(401).json({ message: "Unauthorized - User not found" });
