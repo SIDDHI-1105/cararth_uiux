@@ -1,24 +1,16 @@
-// FILE: client/src/components/navbar.tsx – Luxury Glassmorphic redesign applied
+// FILE: client/src/components/navbar.tsx – Dark/light mode fixed
 
 import { Link, useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import { Sun, Moon } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function Navbar() {
   const [location] = useLocation();
-  const [isDark, setIsDark] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const checkDarkMode = () => {
-      setIsDark(document.documentElement.classList.contains('dark'));
-    };
-    checkDarkMode();
-    const observer = new MutationObserver(checkDarkMode);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return () => observer.disconnect();
-  }, []);
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === 'dark';
 
   useEffect(() => {
     // Detect scroll for fade-in effect
@@ -28,18 +20,6 @@ export default function Navbar() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  const toggleTheme = () => {
-    const newIsDark = !isDark;
-    setIsDark(newIsDark);
-    if (newIsDark) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  };
 
   return (
     <>
@@ -53,7 +33,7 @@ export default function Navbar() {
         }}
       >
         <div className="text-center text-white py-3 px-4 text-sm font-bold tracking-wide">
-          🚀 <span className="animate-pulse">Hyderabad – Live Now!</span> | <span>Delhi NCR – Coming Soon</span>
+          🚀 <span className="animate-pulse">Hyderabad Live</span> | <span>Delhi NCR Soon</span>
         </div>
       </div>
 
@@ -172,7 +152,7 @@ export default function Navbar() {
                 color: isDark ? '#ffffff' : '#1d1d1f',
                 backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)'
               }}
-              aria-label="Toggle theme"
+              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
               data-testid="button-theme-toggle"
             >
               <div

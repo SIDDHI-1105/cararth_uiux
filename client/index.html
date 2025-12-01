@@ -4,18 +4,19 @@
     <!-- Theme initialization - Runs before page load to prevent flash -->
     <script>
       (function() {
-        // Priority: User's explicit choice > Default to light mode
+        // Priority: User's explicit choice > System preference > Default to light
         const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') {
-          document.documentElement.classList.add('dark');
-          document.documentElement.setAttribute('data-theme', 'dark');
-        } else {
-          // Default to light mode on mobile, even if system prefers dark
-          document.documentElement.classList.remove('dark');
-          document.documentElement.setAttribute('data-theme', 'light');
-          if (!savedTheme) {
-            localStorage.setItem('theme', 'light');
-          }
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+
+        // Apply theme immediately
+        document.documentElement.classList.remove('light', 'dark');
+        document.documentElement.classList.add(theme);
+        document.documentElement.setAttribute('data-theme', theme);
+
+        // Save to localStorage if not already saved
+        if (!savedTheme) {
+          localStorage.setItem('theme', theme);
         }
       })();
     </script>

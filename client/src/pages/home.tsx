@@ -1,33 +1,20 @@
-// FILE: client/src/pages/home.tsx – Luxury Glassmorphic redesign applied
+// FILE: client/src/pages/home.tsx – Dark/light mode fixed
 
 import { useState, useEffect, useRef } from "react";
 import { Mic, Search, Sparkles, Zap, Shield } from "lucide-react";
 import { FullWidthLayout } from "@/components/layout";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function Home() {
-  const [isDark, setIsDark] = useState(true);
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const [searchQuery, setSearchQuery] = useState("");
   const [focusedInput, setFocusedInput] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const searchBarRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const { toast } = useToast();
-
-  useEffect(() => {
-    // Detect current theme from document
-    const checkTheme = () => {
-      setIsDark(document.documentElement.classList.contains("dark"));
-    };
-
-    checkTheme();
-
-    // Watch for theme changes
-    const observer = new MutationObserver(checkTheme);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-
-    return () => observer.disconnect();
-  }, []);
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
@@ -41,8 +28,8 @@ export default function Home() {
 
     if (!SpeechRecognition) {
       toast({
-        title: "Voice search not supported",
-        description: "Your browser doesn't support voice input. Please use Chrome, Edge, or Safari.",
+        title: "Voice search unavailable",
+        description: "Use Chrome, Edge, or Safari for voice search.",
         variant: "destructive"
       });
       return;
@@ -67,7 +54,7 @@ export default function Home() {
       setIsListening(true);
       toast({
         title: "Listening...",
-        description: "Speak your search query now",
+        description: "Speak now",
       });
     };
 
@@ -78,7 +65,7 @@ export default function Home() {
 
       toast({
         title: "Got it!",
-        description: `You said: "${transcript}"`,
+        description: `"${transcript}"`,
       });
     };
 
@@ -86,18 +73,18 @@ export default function Home() {
       console.error('Speech recognition error:', event.error);
       setIsListening(false);
 
-      let errorMessage = "Could not process voice input";
+      let errorMessage = "Voice input failed";
 
       if (event.error === 'not-allowed' || event.error === 'permission-denied') {
-        errorMessage = "Microphone access denied. Please allow microphone permission in your browser settings.";
+        errorMessage = "Microphone access denied. Enable it in browser settings.";
       } else if (event.error === 'no-speech') {
-        errorMessage = "No speech detected. Please try again.";
+        errorMessage = "No speech detected. Try again.";
       } else if (event.error === 'network') {
-        errorMessage = "Network error. Please check your internet connection.";
+        errorMessage = "Network error. Check your connection.";
       }
 
       toast({
-        title: "Voice search error",
+        title: "Voice search failed",
         description: errorMessage,
         variant: "destructive"
       });
@@ -115,7 +102,7 @@ export default function Home() {
       setIsListening(false);
       toast({
         title: "Error",
-        description: "Failed to start voice input. Please try again.",
+        description: "Voice input failed. Try again.",
         variant: "destructive"
       });
     }
@@ -180,7 +167,7 @@ export default function Home() {
               textShadow: isDark ? '0 0 60px rgba(0, 113, 227, 0.3)' : 'none'
             }}
           >
-            Find your perfect
+            Your car.
             <br />
             <span
               className="text-transparent bg-clip-text animate-glow-pulse"
@@ -189,7 +176,7 @@ export default function Home() {
                 backgroundSize: '200% 200%'
               }}
             >
-              pre-loved car
+              Found fast.
             </span>
           </h1>
 
@@ -201,7 +188,7 @@ export default function Home() {
               animationDelay: '0.1s'
             }}
           >
-            Search across Cars24, Spinny, OLX, CarWale, and Facebook Marketplace. AI-powered verification helps you find authentic deals faster.
+            One search. All platforms. AI-verified listings. No scams.
           </p>
 
           {/* MASSIVE Floating Search Bar - Premium Glass */}
@@ -244,7 +231,7 @@ export default function Home() {
 
               <input
                 type="text"
-                placeholder="e.g., Swift under 5 lakh in Hyderabad..."
+                placeholder="Swift under 5L in Hyderabad"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => setFocusedInput(true)}
@@ -292,9 +279,9 @@ export default function Home() {
             }}
           >
             {[
-              { icon: Sparkles, text: "Multi-Platform Search" },
-              { icon: Shield, text: "AI Verification" },
-              { icon: Zap, text: "Real-Time Listings" }
+              { icon: Sparkles, text: "5+ Platforms" },
+              { icon: Shield, text: "AI-Verified" },
+              { icon: Zap, text: "Real-Time" }
             ].map((item, idx) => (
               <div
                 key={idx}
@@ -327,7 +314,7 @@ export default function Home() {
                 color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)"
               }}
             >
-              Experience the future of car shopping with our AI-powered platform
+              Smart search. Real listings. Zero fees.
             </p>
           </div>
 
@@ -337,20 +324,20 @@ export default function Home() {
               {
                 number: "5+",
                 color: "#0071E3",
-                title: "Platforms Searched",
-                description: "Cars24, Spinny, OLX, CarWale, Facebook Marketplace - all in one intelligent search"
+                title: "All Platforms",
+                description: "Cars24, Spinny, OLX, CarWale, Facebook Marketplace in one search"
               },
               {
                 number: "AI",
                 color: "#00F5A0",
-                title: "Verified Listings",
-                description: "Advanced multi-LLM AI screens every listing to filter out scams and fake deals automatically"
+                title: "Scam-Free",
+                description: "Multi-LLM AI filters fake listings automatically"
               },
               {
                 number: "₹0",
                 color: "#FF6B35",
-                title: "No Hidden Fees",
-                description: "100% free for buyers - no commissions, no premium listings, completely transparent"
+                title: "Free Forever",
+                description: "No commissions. No hidden fees. Completely transparent."
               }
             ].map((stat, idx) => (
               <div
@@ -408,25 +395,25 @@ export default function Home() {
               color: isDark ? "#f5f5f7" : "#1d1d1f"
             }}
           >
-            Platform Intelligence
+            How It Works
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
                 number: "5+",
-                title: "Platform Aggregation",
-                description: "Unified search across OLX, Cars24, Spinny, CarWale, Facebook Marketplace",
+                title: "All Platforms. One Search.",
+                description: "OLX, Cars24, Spinny, CarWale, Facebook Marketplace",
               },
               {
                 number: "AI",
-                title: "Powered Intelligence",
-                description: "Multi-LLM verification system for authenticity and fraud detection",
+                title: "Smart Filtering",
+                description: "AI removes scams and fake listings automatically",
               },
               {
                 number: "HYD",
-                title: "Hyderabad Focus",
-                description: "Deep local market intelligence with real-time pricing data",
+                title: "Hyderabad Live",
+                description: "Real-time pricing and market intelligence",
               },
             ].map((stat, idx) => (
               <div
@@ -483,30 +470,30 @@ export default function Home() {
               color: isDark ? "#f5f5f7" : "#1d1d1f"
             }}
           >
-            Frequently Asked Questions
+            Common Questions
           </h2>
 
           <div className="space-y-6">
             {[
               {
                 question: "What is CarArthX?",
-                answer: "CarArthX is India's first unified used car search engine. We aggregate listings from Cars24, Spinny, OLX, CarWale, and Facebook Marketplace into one simple search, powered by AI verification to help you find authentic deals."
+                answer: "India's first unified used car search. We search Cars24, Spinny, OLX, CarWale, and Facebook Marketplace—all in one place. AI-verified for authenticity."
               },
               {
-                question: "Is CarArthX free to use?",
-                answer: "Yes, CarArthX is 100% free for buyers. We don't charge any commissions or fees. Our mission is to make the used car buying process transparent and hassle-free."
+                question: "Is it free?",
+                answer: "100% free. No commissions. No hidden fees. Ever."
               },
               {
                 question: "How does AI verification work?",
-                answer: "Our multi-LLM AI system analyzes every listing for authenticity markers, pricing anomalies, and potential scam indicators. We screen out fraudulent listings so you only see genuine deals."
+                answer: "Our AI scans every listing for pricing anomalies, scam patterns, and fake details. You only see real listings."
               },
               {
-                question: "Which cities does CarArthX cover?",
-                answer: "We're currently live in Hyderabad with deep market intelligence. Delhi NCR is coming soon, with more major cities to follow."
+                question: "Which cities?",
+                answer: "Live in Hyderabad now. Delhi NCR coming soon. More cities after."
               },
               {
-                question: "How often are listings updated?",
-                answer: "Our scrapers run continuously to bring you real-time listings. Most listings are updated within hours of being posted on partner platforms."
+                question: "How fresh are listings?",
+                answer: "Real-time updates. Most listings appear within hours of posting."
               }
             ].map((faq, idx) => (
               <div
@@ -562,7 +549,7 @@ export default function Home() {
               textShadow: isDark ? '0 0 60px rgba(0, 113, 227, 0.2)' : 'none'
             }}
           >
-            Ready to find your car?
+            Start searching now
           </h2>
 
           <p
@@ -572,7 +559,7 @@ export default function Home() {
               animationDelay: '0.1s'
             }}
           >
-            Search across multiple platforms. AI-verified listings. Real-time updates from India's top markets.
+            5+ platforms. AI-verified. Real-time.
           </p>
 
           <button
@@ -583,7 +570,7 @@ export default function Home() {
               animationDelay: '0.2s'
             }}
           >
-            Search Cars Now
+            Find Your Car
           </button>
         </div>
       </section>
@@ -609,7 +596,7 @@ export default function Home() {
                 color: isDark ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.4)"
               }}
             >
-              * CarArthX aggregates listings from third-party platforms including Cars24, Spinny, OLX, CarWale, and Facebook Marketplace. We do not own or sell any vehicles directly. All listings are subject to availability and accuracy as provided by source platforms. AI verification is designed to filter potential scams but cannot guarantee authenticity of all listings. Users are advised to conduct their own due diligence before any purchase. Prices shown are indicative and may vary. CarArthX is not responsible for any transactions conducted through linked platforms.
+              * CarArthX aggregates listings from Cars24, Spinny, OLX, CarWale, and Facebook Marketplace. We don't own or sell vehicles. Listings depend on source platform accuracy. AI verification filters scams but isn't foolproof—always verify before buying. Prices may vary. CarArthX isn't liable for transactions on linked platforms.
             </p>
           </div>
         </div>

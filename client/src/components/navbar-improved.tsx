@@ -1,22 +1,16 @@
+// FILE: client/src/components/navbar-improved.tsx – Dark/light mode fixed
+
 import { Link, useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import { Sun, Moon, Menu, X } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function NavbarImproved() {
   const [location] = useLocation();
-  const [isDark, setIsDark] = useState(false);
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === 'dark';
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const checkDarkMode = () => {
-      setIsDark(document.documentElement.classList.contains('dark'));
-    };
-    checkDarkMode();
-    const observer = new MutationObserver(checkDarkMode);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return () => observer.disconnect();
-  }, []);
 
   // Close mobile menu when route changes
   useEffect(() => {
@@ -40,18 +34,6 @@ export default function NavbarImproved() {
       document.body.style.overflow = '';
     };
   }, [mobileMenuOpen]);
-
-  const toggleTheme = () => {
-    const newIsDark = !isDark;
-    setIsDark(newIsDark);
-    if (newIsDark) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  };
 
   const bannerStyle: React.CSSProperties = {
     position: 'fixed',
@@ -181,7 +163,7 @@ export default function NavbarImproved() {
             <button
               onClick={toggleTheme}
               style={themeButtonStyle}
-              aria-label="Toggle theme"
+              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
               data-testid="button-theme-toggle"
             >
               {isDark ? <Sun size={20} /> : <Moon size={20} />}
@@ -193,7 +175,7 @@ export default function NavbarImproved() {
             <button
               onClick={toggleTheme}
               style={themeButtonStyle}
-              aria-label="Toggle theme"
+              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
               data-testid="button-theme-toggle-mobile"
             >
               {isDark ? <Sun size={20} /> : <Moon size={20} />}

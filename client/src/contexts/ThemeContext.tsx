@@ -1,3 +1,5 @@
+// FILE: client/src/contexts/ThemeContext.tsx – Dark/light mode fixed
+
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
 type Theme = 'dark' | 'light';
@@ -11,32 +13,43 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('dark');
+  // Read initial theme from the HTML element (set by inline script)
+  const getInitialTheme = (): Theme => {
+    if (typeof window === 'undefined') return 'light';
+    return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+  };
+
+  const [theme, setThemeState] = useState<Theme>(getInitialTheme);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Get theme from localStorage or system preference
-    const storedTheme = localStorage.getItem('theme') as Theme | null;
-    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const initialTheme = storedTheme || (systemDark ? 'dark' : 'light');
-    
-    setThemeState(initialTheme);
-    applyTheme(initialTheme);
     setMounted(true);
+    // Sync with any external theme changes
+    const observer = new MutationObserver(() => {
+      const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+      setThemeState(currentTheme);
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+
+    return () => observer.disconnect();
   }, []);
 
   const applyTheme = (newTheme: Theme) => {
     const root = document.documentElement;
-    
+
     // Remove both classes first
     root.classList.remove('light', 'dark');
-    
+
     // Add the new theme class
     root.classList.add(newTheme);
-    
-    // Set data-theme attribute
+
+    // Set data-theme attribute for CSS variables
     root.setAttribute('data-theme', newTheme);
-    
+
     // Save to localStorage
     localStorage.setItem('theme', newTheme);
   };
@@ -52,9 +65,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     applyTheme(newTheme);
   };
 
-  // Prevent flash of wrong theme
+  // Prevent flash - show nothing until mounted
   if (!mounted) {
-    return <>{children}</>;
+    return null;
   }
 
   return (
