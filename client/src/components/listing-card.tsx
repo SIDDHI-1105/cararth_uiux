@@ -93,7 +93,15 @@ export function ListingCard({
   const sourceBadge = getSourceBadge();
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200 border border-gray-200 dark:border-gray-800" data-testid={`card-listing-${id}`}>
+    <div
+      className="rounded-3xl overflow-hidden backdrop-blur-[12px] border transition-all duration-300 hover:scale-[1.02] hover:shadow-glow"
+      style={{
+        backgroundColor: 'var(--glass-bg)',
+        borderColor: 'var(--glass-border)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+      }}
+      data-testid={`card-listing-${id}`}
+    >
       <Link href={`/listing/${id}`} className="block">
         <div className="relative">
           <img
@@ -105,14 +113,21 @@ export function ListingCard({
               e.currentTarget.src = "https://placehold.co/400x300/e5e7eb/6b7280?text=No+Image";
             }}
           />
-          {/* Source Badge */}
-          <div className={`absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-bold ${sourceBadge.className}`} data-testid="badge-source">
+          {/* Source Badge - Glassmorphic */}
+          <div
+            className={`absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-lg ${sourceBadge.className}`}
+            style={{
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              borderColor: 'rgba(255, 255, 255, 0.2)'
+            }}
+            data-testid="badge-source"
+          >
             {sourceBadge.text}
           </div>
-          {/* Top Right Badges */}
+          {/* Top Right Badges - Glassmorphic */}
           <div className="absolute top-2 right-2 flex flex-col gap-1">
             {googleCompliant && (
-              <div className="bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1" data-testid="badge-google-ready">
+              <div className="bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1 backdrop-blur-md shadow-lg" data-testid="badge-google-ready">
                 <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                   <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -123,7 +138,7 @@ export function ListingCard({
               </div>
             )}
             {isVerified && (
-              <div className="bg-green-600 text-white px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
+              <div className="bg-green-600 text-white px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1 backdrop-blur-md shadow-lg">
                 <ShieldCheck className="w-3 h-3" />
                 Verified
               </div>
@@ -155,19 +170,43 @@ export function ListingCard({
           )}
           
           <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 dark:text-gray-400 mb-3">
-            <div className="flex items-center gap-1">
+            <div
+              className="flex items-center gap-1 p-2 rounded-xl backdrop-blur-sm border transition-all duration-300 hover:scale-105"
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                borderColor: 'rgba(255, 255, 255, 0.1)'
+              }}
+            >
               <Calendar className="w-3.5 h-3.5" />
               <span>{year}</span>
             </div>
-            <div className="flex items-center gap-1">
+            <div
+              className="flex items-center gap-1 p-2 rounded-xl backdrop-blur-sm border transition-all duration-300 hover:scale-105"
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                borderColor: 'rgba(255, 255, 255, 0.1)'
+              }}
+            >
               <Gauge className="w-3.5 h-3.5" />
               <span>{formatMileage(mileage)}</span>
             </div>
-            <div className="flex items-center gap-1">
+            <div
+              className="flex items-center gap-1 p-2 rounded-xl backdrop-blur-sm border transition-all duration-300 hover:scale-105"
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                borderColor: 'rgba(255, 255, 255, 0.1)'
+              }}
+            >
               <Fuel className="w-3.5 h-3.5" />
               <span>{fuelType}</span>
             </div>
-            <div className="flex items-center gap-1">
+            <div
+              className="flex items-center gap-1 p-2 rounded-xl backdrop-blur-sm border transition-all duration-300 hover:scale-105"
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                borderColor: 'rgba(255, 255, 255, 0.1)'
+              }}
+            >
               <span className="text-xs">⚙️</span>
               <span>{transmission}</span>
             </div>

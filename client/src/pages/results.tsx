@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useLocation } from "wouter";
 import { SEOHead } from "@/components/seo-head";
 import Layout from "@/components/layout";
 import { FilterPanel, FilterState } from "@/components/filter-panel";
@@ -13,7 +12,6 @@ import { Search, SlidersHorizontal } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function Results() {
-  const [, setLocation] = useLocation();
   const currentYear = new Date().getFullYear();
   
   const [filters, setFilters] = useState<FilterState>({
@@ -271,8 +269,15 @@ export default function Results() {
       
       <Layout containerSize="2xl">
         <div className="py-8">
-          {/* Header */}
-          <div className="mb-6 mt-2">
+          {/* Header - Glassmorphic */}
+          <div
+            className="mb-6 mt-2 p-6 rounded-2xl backdrop-blur-md border transition-all duration-300"
+            style={{
+              backgroundColor: 'var(--glass-bg)',
+              borderColor: 'var(--glass-border)',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
+            }}
+          >
             <h1 className="text-3xl md:text-4xl font-bold mb-2 text-gray-900 dark:text-gray-100" data-testid="text-results-heading">
               Used Cars Matching Your Search
             </h1>
@@ -284,15 +289,15 @@ export default function Results() {
           {/* Badge Legend */}
           <BadgeLegend />
 
-          {/* Source Filter Buttons */}
+          {/* Source Filter Buttons - Glassmorphic */}
           <div className="mb-6">
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setSourceFilter("all")}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 backdrop-blur-sm border ${
                   sourceFilter === "all"
-                    ? "glass-button-primary shadow-lg"
-                    : "glass-button hover:scale-105"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30 scale-105 border-blue-500"
+                    : "bg-white/10 hover:bg-white/20 dark:bg-white/5 dark:hover:bg-white/10 hover:scale-105 border-white/20"
                 }`}
                 data-testid="filter-all"
               >
@@ -300,10 +305,10 @@ export default function Results() {
               </button>
               <button
                 onClick={() => setSourceFilter("ethical_ai")}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 backdrop-blur-sm border ${
                   sourceFilter === "ethical_ai"
-                    ? "bg-green-600 text-white shadow-lg scale-105"
-                    : "glass-button text-green-700 dark:text-green-300 hover:scale-105 hover:border-green-400"
+                    ? "bg-green-600 text-white shadow-lg shadow-green-500/30 scale-105 border-green-500"
+                    : "bg-green-50/50 text-green-700 dark:bg-green-950/30 dark:text-green-300 hover:scale-105 hover:border-green-400 border-green-200 dark:border-green-800"
                 }`}
                 data-testid="filter-ethical-ai"
               >
@@ -311,10 +316,10 @@ export default function Results() {
               </button>
               <button
                 onClick={() => setSourceFilter("exclusive_dealer")}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 backdrop-blur-sm border ${
                   sourceFilter === "exclusive_dealer"
-                    ? "bg-blue-600 text-white shadow-lg scale-105"
-                    : "glass-button text-blue-700 dark:text-blue-300 hover:scale-105 hover:border-blue-400"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30 scale-105 border-blue-500"
+                    : "bg-blue-50/50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300 hover:scale-105 hover:border-blue-400 border-blue-200 dark:border-blue-800"
                 }`}
                 data-testid="filter-dealer"
               >
@@ -322,10 +327,10 @@ export default function Results() {
               </button>
               <button
                 onClick={() => setSourceFilter("user_direct")}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 backdrop-blur-sm border ${
                   sourceFilter === "user_direct"
-                    ? "bg-orange-600 text-white shadow-lg scale-105"
-                    : "glass-button text-orange-700 dark:text-orange-300 hover:scale-105 hover:border-orange-400"
+                    ? "bg-orange-600 text-white shadow-lg shadow-orange-500/30 scale-105 border-orange-500"
+                    : "bg-orange-50/50 text-orange-700 dark:bg-orange-950/30 dark:text-orange-300 hover:scale-105 hover:border-orange-400 border-orange-200 dark:border-orange-800"
                 }`}
                 data-testid="filter-user"
               >
@@ -419,9 +424,17 @@ export default function Results() {
                 </div>
               )}
 
-              {/* No Results State */}
+              {/* No Results State - Glassmorphic */}
               {!isLoading && !error && sortedCars.length === 0 && (
-                <div className="text-center py-12 glass-card" data-testid="no-results">
+                <div
+                  className="text-center py-12 rounded-3xl backdrop-blur-md border transition-all duration-300"
+                  style={{
+                    backgroundColor: 'var(--glass-bg)',
+                    borderColor: 'var(--glass-border)',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+                  }}
+                  data-testid="no-results"
+                >
                   <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">No Cars Found</h3>
                   <p className="text-gray-600 dark:text-gray-400 mb-6">

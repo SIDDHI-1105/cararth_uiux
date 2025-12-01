@@ -125,11 +125,11 @@ export default function Home() {
 
   return (
     <FullWidthLayout showFooter={true}>
-      {/* Hero Section - Maximum Negative Space */}
+      {/* Hero Section - Maximum Negative Space with Glassmorphic Elements */}
       <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
           {/* Main Headline - Huge, Minimal */}
-          <h1 
+          <h1
             style={{
               color: isDark ? "#f5f5f7" : "#1d1d1f",
             }}
@@ -143,7 +143,7 @@ export default function Home() {
           </h1>
 
           {/* Subheading - Clean, Minimal */}
-          <p 
+          <p
             style={{
               color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.75)",
             }}
@@ -155,16 +155,16 @@ export default function Home() {
           {/* Search Bar - Glassmorphic, Massive, Centered */}
           <div
             ref={searchBarRef}
+            className="glass-card backdrop-blur-[20px] rounded-full border flex items-center gap-3 px-6 py-4 mb-8 animate-slide-up transition-all duration-300"
             style={{
               backgroundColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.5)",
               borderColor: isDark
-                ? focusedInput ? "rgba(255, 255, 255, 0.2)" : "rgba(255, 255, 255, 0.1)"
-                : focusedInput ? "rgba(0, 0, 0, 0.2)" : "rgba(0, 0, 0, 0.1)",
+                ? focusedInput ? "rgba(0, 113, 227, 0.5)" : "rgba(255, 255, 255, 0.15)"
+                : focusedInput ? "rgba(0, 113, 227, 0.5)" : "rgba(0, 0, 0, 0.1)",
               boxShadow: focusedInput
-                ? "0 0 20px rgba(0, 113, 227, 0.4)"
-                : "none",
+                ? "0 0 32px rgba(0, 113, 227, 0.4), 0 8px 32px rgba(0, 0, 0, 0.2)"
+                : "0 8px 32px rgba(0, 0, 0, 0.1)",
             }}
-            className="backdrop-blur-[12px] rounded-full border transition-all duration-300 flex items-center gap-3 px-6 py-4 mb-8 animate-slide-up"
           >
             <Search
               style={{ color: isDark ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.4)" }}
@@ -182,11 +182,13 @@ export default function Home() {
                 backgroundColor: "transparent",
                 color: isDark ? "#f5f5f7" : "#1d1d1f",
               }}
-              className="flex-1 text-lg outline-none transition-colors duration-300"
+              className="flex-1 text-lg outline-none transition-colors duration-300 placeholder:text-opacity-60"
             />
             <button
               onClick={handleMicClick}
-              className={`p-2 hover:bg-white/10 rounded-full transition-all ${isListening ? 'bg-red-500/20' : ''}`}
+              className={`p-2 rounded-full transition-all duration-300 ${
+                isListening ? 'bg-red-500/20 shadow-lg shadow-red-500/30' : 'hover:bg-white/10'
+              }`}
               title="Voice search"
             >
               <Mic
@@ -196,60 +198,60 @@ export default function Home() {
             </button>
             <button
               onClick={handleSearch}
-              className="px-6 py-2 bg-[#0071E3] hover:bg-[#0077ED] rounded-full font-semibold text-white transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/50"
+              className="px-6 py-2 bg-[#0071E3] hover:bg-[#0077ED] rounded-full font-semibold text-white transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/50"
             >
               Search
             </button>
           </div>
 
           {/* Quick Stats - Minimal Pills */}
-          <div 
+          <div
             style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.75)" }}
             className="flex flex-wrap gap-3 text-sm transition-colors duration-300"
           >
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-[#00F5A0]" />
+              <div className="w-2 h-2 rounded-full bg-[#00F5A0] animate-pulse" />
               <span>Multi-Platform Search</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-[#00F5A0]" />
+              <div className="w-2 h-2 rounded-full bg-[#00F5A0] animate-pulse" />
               <span>AI Verification</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-[#00F5A0]" />
+              <div className="w-2 h-2 rounded-full bg-[#00F5A0] animate-pulse" />
               <span>No Paid Listings</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-[#00F5A0]" />
+              <div className="w-2 h-2 rounded-full bg-[#00F5A0] animate-pulse" />
               <span>Real-Time Listings</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Why CarArth Section - Clean Stats */}
-      <section 
+      {/* Why CarArth Section - Glassmorphic Stats Cards */}
+      <section
         style={{ borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)" }}
         className="py-20 px-4 sm:px-6 lg:px-8 border-t transition-colors duration-300"
       >
         <div className="max-w-7xl mx-auto">
-          <h2 
+          <h2
             style={{ color: isDark ? "#f5f5f7" : "#1d1d1f" }}
             className="text-4xl font-bold mb-12 transition-colors duration-300"
           >
             Why CarArth?
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div 
-              style={{ 
-                backgroundColor: isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.02)",
-                borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
+            <div
+              className="glass-card backdrop-blur-[12px] p-8 rounded-3xl border transition-all duration-300 hover:scale-105 hover:shadow-glow"
+              style={{
+                backgroundColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.5)",
+                borderColor: isDark ? "rgba(255, 255, 255, 0.15)" : "rgba(0, 0, 0, 0.1)"
               }}
-              className="p-8 rounded-2xl border transition-colors duration-300"
             >
               <div className="text-5xl font-bold text-[#0071E3] mb-4">5+</div>
-              <h3 
+              <h3
                 style={{ color: isDark ? "#f5f5f7" : "#1d1d1f" }}
                 className="text-xl font-semibold mb-2 transition-colors duration-300"
               >
@@ -259,16 +261,16 @@ export default function Home() {
                 Cars24, Spinny, OLX, CarWale, Facebook Marketplace - all in one search
               </p>
             </div>
-            
-            <div 
-              style={{ 
-                backgroundColor: isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.02)",
-                borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
+
+            <div
+              className="glass-card backdrop-blur-[12px] p-8 rounded-3xl border transition-all duration-300 hover:scale-105 hover:shadow-glow"
+              style={{
+                backgroundColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.5)",
+                borderColor: isDark ? "rgba(255, 255, 255, 0.15)" : "rgba(0, 0, 0, 0.1)"
               }}
-              className="p-8 rounded-2xl border transition-colors duration-300"
             >
               <div className="text-5xl font-bold text-[#00F5A0] mb-4">AI</div>
-              <h3 
+              <h3
                 style={{ color: isDark ? "#f5f5f7" : "#1d1d1f" }}
                 className="text-xl font-semibold mb-2 transition-colors duration-300"
               >
@@ -278,16 +280,16 @@ export default function Home() {
                 Advanced AI screens every listing to filter out scams and fake deals
               </p>
             </div>
-            
-            <div 
-              style={{ 
-                backgroundColor: isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.02)",
-                borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
+
+            <div
+              className="glass-card backdrop-blur-[12px] p-8 rounded-3xl border transition-all duration-300 hover:scale-105 hover:shadow-glow"
+              style={{
+                backgroundColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.5)",
+                borderColor: isDark ? "rgba(255, 255, 255, 0.15)" : "rgba(0, 0, 0, 0.1)"
               }}
-              className="p-8 rounded-2xl border transition-colors duration-300"
             >
               <div className="text-5xl font-bold text-[#FF6B35] mb-4">₹0</div>
-              <h3 
+              <h3
                 style={{ color: isDark ? "#f5f5f7" : "#1d1d1f" }}
                 className="text-xl font-semibold mb-2 transition-colors duration-300"
               >
@@ -301,10 +303,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Quick Stats Grid */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 border-t border-white/10">
+      {/* Quick Stats Grid - Glassmorphic */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 border-t" style={{ borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)" }}>
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl font-bold mb-12">Why CarArth</h2>
+          <h2 className="text-4xl font-bold mb-12" style={{ color: isDark ? "#f5f5f7" : "#1d1d1f" }}>Why CarArth</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Stat Cards */}
@@ -325,13 +327,20 @@ export default function Home() {
                 description: "Deep local market intelligence",
               },
             ].map((stat, idx) => (
-              <div key={idx} className="glass-card">
+              <div
+                key={idx}
+                className="glass-card backdrop-blur-[12px] p-6 rounded-3xl border transition-all duration-300 hover:scale-105 hover:shadow-glow"
+                style={{
+                  backgroundColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.5)",
+                  borderColor: isDark ? "rgba(255, 255, 255, 0.15)" : "rgba(0, 0, 0, 0.1)"
+                }}
+              >
                 <p className="text-4xl font-bold text-[#0071E3] mb-2">
                   {stat.number}
                 </p>
-                <h4 className="text-lg font-semibold mb-2">{stat.title}</h4>
-                <p 
-                  style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "#1d1d1f" }}
+                <h4 className="text-lg font-semibold mb-2" style={{ color: isDark ? "#f5f5f7" : "#1d1d1f" }}>{stat.title}</h4>
+                <p
+                  style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)" }}
                   className="text-sm transition-colors duration-300 font-medium"
                 >
                   {stat.description}
@@ -342,21 +351,21 @@ export default function Home() {
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section 
-        style={{ 
+      {/* FAQ Section - Glassmorphic Accordion */}
+      <section
+        style={{
           borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
         }}
         className="py-20 px-4 sm:px-6 lg:px-8 border-t transition-colors duration-300"
       >
         <div className="max-w-4xl mx-auto">
-          <h2 
+          <h2
             style={{ color: isDark ? "#f5f5f7" : "#1d1d1f" }}
             className="text-4xl font-bold mb-12 transition-colors duration-300"
           >
             Frequently Asked Questions
           </h2>
-          
+
           <div className="space-y-6">
             {[
               {
@@ -380,21 +389,21 @@ export default function Home() {
                 answer: "Our scrapers run continuously to bring you real-time listings. Most listings are updated within hours of being posted on partner platforms."
               }
             ].map((faq, idx) => (
-              <div 
+              <div
                 key={idx}
-                style={{ 
-                  backgroundColor: isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.02)",
-                  borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
+                className="glass-card backdrop-blur-[12px] p-6 rounded-2xl border transition-all duration-300 hover:shadow-glow"
+                style={{
+                  backgroundColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.5)",
+                  borderColor: isDark ? "rgba(255, 255, 255, 0.15)" : "rgba(0, 0, 0, 0.1)"
                 }}
-                className="p-6 rounded-2xl border transition-colors duration-300"
               >
-                <h3 
+                <h3
                   style={{ color: isDark ? "#f5f5f7" : "#1d1d1f" }}
                   className="text-lg font-semibold mb-3 transition-colors duration-300"
                 >
                   {faq.question}
                 </h3>
-                <p 
+                <p
                   style={{ color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)" }}
                   className="leading-relaxed transition-colors duration-300"
                 >
@@ -406,7 +415,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* CTA Section - Glassmorphic */}
       <section
         style={{
           borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
@@ -429,22 +438,22 @@ export default function Home() {
           <button
             type="button"
             onClick={scrollToSearchBar}
-            className="btn-primary text-lg px-8 py-4"
+            className="btn-primary text-lg px-8 py-4 shadow-xl hover:shadow-2xl hover:shadow-blue-500/50"
           >
             Search Cars
           </button>
         </div>
       </section>
 
-      {/* Footnotes */}
-      <section 
-        style={{ 
+      {/* Footnotes - Glassmorphic */}
+      <section
+        style={{
           borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
         }}
         className="py-8 px-4 sm:px-6 lg:px-8 border-t transition-colors duration-300"
       >
         <div className="max-w-4xl mx-auto">
-          <p 
+          <p
             style={{ color: isDark ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.4)" }}
             className="text-xs leading-relaxed transition-colors duration-300"
           >

@@ -5,9 +5,9 @@ import { BrandWordmark } from "@/components/brand-wordmark";
 
 export default function Footer() {
   return (
-    <footer style={{ backgroundColor: 'var(--secondary-bg)', borderTopColor: 'var(--border)' }} className="border-t transition-colors duration-300">
-      {/* Legal Disclaimer Banner */}
-      <div style={{ backgroundColor: 'rgba(0, 113, 227, 0.1)', borderBottomColor: 'rgba(0, 113, 227, 0.2)' }} className="border-b">
+    <footer className="border-t backdrop-blur-md transition-all duration-300" style={{ backgroundColor: 'var(--glass-bg)', borderTopColor: 'var(--glass-border)' }}>
+      {/* Legal Disclaimer Banner - Glassmorphic */}
+      <div className="border-b backdrop-blur-sm" style={{ backgroundColor: 'rgba(0, 113, 227, 0.08)', borderBottomColor: 'rgba(0, 113, 227, 0.2)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-center text-center">
             <div className="text-sm" style={{ color: '#0071E3' }}>

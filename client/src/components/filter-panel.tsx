@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -77,7 +76,15 @@ export function FilterPanel({ filters, onChange, onSearch, isCollapsed = false, 
   }
 
   return (
-    <div className="glass-card p-6 space-y-6" data-testid="panel-filters">
+    <div
+      className="p-6 space-y-6 rounded-3xl backdrop-blur-[12px] border transition-all duration-300"
+      style={{
+        backgroundColor: 'var(--glass-bg)',
+        borderColor: 'var(--glass-border)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+      }}
+      data-testid="panel-filters"
+    >
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold flex items-center gap-2">
           <SlidersHorizontal className="w-5 h-5" />
@@ -88,7 +95,7 @@ export function FilterPanel({ filters, onChange, onSearch, isCollapsed = false, 
             onClick={handleClearAll}
             variant="ghost"
             size="sm"
-            className="text-xs"
+            className="text-xs hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400 transition-all duration-300"
             data-testid="button-clear-filters"
           >
             Clear All
@@ -96,45 +103,45 @@ export function FilterPanel({ filters, onChange, onSearch, isCollapsed = false, 
         )}
       </div>
 
-      {/* Active Filters */}
+      {/* Active Filters - Glassmorphic badges */}
       {activeCount > 0 && (
         <div className="flex flex-wrap gap-2" data-testid="active-filters-chips">
           {filters.brand && filters.brand !== "all" && (
-            <Badge variant="secondary" className="gap-1">
+            <Badge variant="secondary" className="gap-1 backdrop-blur-sm bg-blue-50/80 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800">
               {filters.brand}
-              <button onClick={() => onChange({ ...filters, brand: "all" })}>
+              <button onClick={() => onChange({ ...filters, brand: "all" })} className="hover:text-red-600 transition-colors">
                 <X className="w-3 h-3" />
               </button>
             </Badge>
           )}
           {(filters.priceMin > 0 || filters.priceMax < 5000000) && (
-            <Badge variant="secondary" className="gap-1">
+            <Badge variant="secondary" className="gap-1 backdrop-blur-sm bg-green-50/80 text-green-700 border-green-200 dark:bg-green-950/50 dark:text-green-300 dark:border-green-800">
               ₹{(filters.priceMin / 100000).toFixed(1)}L - ₹{(filters.priceMax / 100000).toFixed(1)}L
-              <button onClick={() => onChange({ ...filters, priceMin: 0, priceMax: 5000000 })}>
+              <button onClick={() => onChange({ ...filters, priceMin: 0, priceMax: 5000000 })} className="hover:text-red-600 transition-colors">
                 <X className="w-3 h-3" />
               </button>
             </Badge>
           )}
           {filters.fuelType !== "all" && (
-            <Badge variant="secondary" className="gap-1">
+            <Badge variant="secondary" className="gap-1 backdrop-blur-sm bg-purple-50/80 text-purple-700 border-purple-200 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800">
               {filters.fuelType}
-              <button onClick={() => onChange({ ...filters, fuelType: "all" })}>
+              <button onClick={() => onChange({ ...filters, fuelType: "all" })} className="hover:text-red-600 transition-colors">
                 <X className="w-3 h-3" />
               </button>
             </Badge>
           )}
           {filters.transmission !== "all" && (
-            <Badge variant="secondary" className="gap-1">
+            <Badge variant="secondary" className="gap-1 backdrop-blur-sm bg-orange-50/80 text-orange-700 border-orange-200 dark:bg-orange-950/50 dark:text-orange-300 dark:border-orange-800">
               {filters.transmission}
-              <button onClick={() => onChange({ ...filters, transmission: "all" })}>
+              <button onClick={() => onChange({ ...filters, transmission: "all" })} className="hover:text-red-600 transition-colors">
                 <X className="w-3 h-3" />
               </button>
             </Badge>
           )}
           {filters.city !== "all" && (
-            <Badge variant="secondary" className="gap-1">
+            <Badge variant="secondary" className="gap-1 backdrop-blur-sm bg-indigo-50/80 text-indigo-700 border-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-800">
               {filters.city}
-              <button onClick={() => onChange({ ...filters, city: "all" })}>
+              <button onClick={() => onChange({ ...filters, city: "all" })} className="hover:text-red-600 transition-colors">
                 <X className="w-3 h-3" />
               </button>
             </Badge>

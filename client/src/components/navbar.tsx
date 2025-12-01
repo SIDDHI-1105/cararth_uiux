@@ -6,7 +6,7 @@ import { Sun, Moon } from "lucide-react";
 export default function Navbar() {
   const [location] = useLocation();
   const [isDark, setIsDark] = useState(false);
-  
+
   useEffect(() => {
     const checkDarkMode = () => {
       setIsDark(document.documentElement.classList.contains('dark'));
@@ -29,100 +29,75 @@ export default function Navbar() {
     }
   };
 
-  const bannerStyle: React.CSSProperties = {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 9999,
-    background: 'linear-gradient(90deg, #16a34a, #0071E3)',
-    color: 'white',
-    padding: '10px 16px',
-    textAlign: 'center',
-    fontSize: '14px',
-    fontWeight: 600,
-    width: '100%',
-    boxSizing: 'border-box',
-  };
-
-  const navStyle: React.CSSProperties = {
-    position: 'fixed',
-    top: '42px',
-    left: 0,
-    right: 0,
-    zIndex: 9998,
-    backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
-    color: isDark ? '#ffffff' : '#1d1d1f',
-    borderBottom: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e5e7eb',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-    width: '100%',
-    height: '64px',
-    display: 'flex',
-    alignItems: 'center',
-    boxSizing: 'border-box',
-  };
-
-  const containerStyle: React.CSSProperties = {
-    maxWidth: '80rem',
-    margin: '0 auto',
-    width: '100%',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '0 16px',
-  };
-
-  const linkStyle = (isActive: boolean, color?: string): React.CSSProperties => ({
-    padding: '8px 16px',
-    cursor: 'pointer',
-    color: isActive ? '#ffffff' : (isDark ? '#ffffff' : '#1d1d1f'),
-    backgroundColor: isActive ? (color || '#0071E3') : 'transparent',
-    borderRadius: '8px',
-    fontWeight: 600,
-    fontSize: '15px',
-    textDecoration: 'none',
-    display: 'inline-block',
-  });
-
-  const themeButtonStyle: React.CSSProperties = {
-    padding: '8px',
-    cursor: 'pointer',
-    color: isDark ? '#ffffff' : '#1d1d1f',
-    backgroundColor: 'transparent',
-    border: 'none',
-    borderRadius: '8px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  };
-
   return (
     <>
-      {/* Launch Status Banner */}
-      <div style={bannerStyle}>
-        🚀 <strong>Hyderabad – Live Now!</strong> | <strong>Delhi NCR – Coming Soon</strong>
+      {/* Launch Status Banner - Glassmorphic */}
+      <div
+        className="fixed top-0 left-0 right-0 z-[9999] w-full backdrop-blur-md"
+        style={{
+          background: 'linear-gradient(90deg, rgba(22, 163, 74, 0.9), rgba(0, 113, 227, 0.9))',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+        }}
+      >
+        <div className="text-center text-white py-2.5 px-4 text-sm font-semibold">
+          🚀 <strong>Hyderabad – Live Now!</strong> | <strong>Delhi NCR – Coming Soon</strong>
+        </div>
       </div>
-      
-      {/* Main Navigation */}
-      <nav style={navStyle}>
-        <div style={containerStyle}>
+
+      {/* Main Navigation - Glassmorphic */}
+      <nav
+        className="fixed top-[42px] left-0 right-0 z-[9998] w-full backdrop-blur-[12px] border-b transition-all duration-300"
+        style={{
+          backgroundColor: isDark ? 'rgba(26, 26, 26, 0.72)' : 'rgba(255, 255, 255, 0.72)',
+          borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+          boxShadow: '0 4px 24px rgba(0, 0, 0, 0.12)',
+        }}
+      >
+        <div className="max-w-[80rem] mx-auto w-full flex justify-between items-center px-4 h-16">
           <Link href="/" data-testid="link-home">
             <BrandWordmark variant="header" showTagline={false} />
           </Link>
-          
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <Link href="/" style={linkStyle(location === '/' || location === '/results')} data-testid="link-buy-cars">
+
+          <div className="flex gap-2 items-center">
+            <Link
+              href="/"
+              data-testid="link-buy-cars"
+              className={`px-4 py-2 rounded-xl font-semibold text-[15px] transition-all duration-300 ${
+                location === '/' || location === '/results'
+                  ? 'bg-[#0071E3] text-white shadow-lg shadow-blue-500/30'
+                  : `${isDark ? 'text-white hover:bg-white/10' : 'text-[#1d1d1f] hover:bg-black/5'}`
+              }`}
+            >
               Buy
             </Link>
-            <Link href="/sell-car" style={linkStyle(location === '/sell-car' || location === '/sell', '#16a34a')} data-testid="link-sell-car">
+            <Link
+              href="/sell-car"
+              data-testid="link-sell-car"
+              className={`px-4 py-2 rounded-xl font-semibold text-[15px] transition-all duration-300 ${
+                location === '/sell-car' || location === '/sell'
+                  ? 'bg-[#16a34a] text-white shadow-lg shadow-green-500/30'
+                  : `${isDark ? 'text-white hover:bg-white/10' : 'text-[#1d1d1f] hover:bg-black/5'}`
+              }`}
+            >
               💰 Sell
             </Link>
-            <Link href="/news" style={linkStyle(location === '/news', '#3b82f6')} data-testid="link-throttle-talk">
+            <Link
+              href="/news"
+              data-testid="link-throttle-talk"
+              className={`px-4 py-2 rounded-xl font-semibold text-[15px] transition-all duration-300 ${
+                location === '/news'
+                  ? 'bg-[#3b82f6] text-white shadow-lg shadow-blue-400/30'
+                  : `${isDark ? 'text-white hover:bg-white/10' : 'text-[#1d1d1f] hover:bg-black/5'}`
+              }`}
+            >
               🚗 Throttle Talk
             </Link>
-            <button 
-              onClick={toggleTheme} 
-              style={themeButtonStyle}
+            <button
+              onClick={toggleTheme}
+              className={`p-2 rounded-xl transition-all duration-300 ${
+                isDark ? 'hover:bg-white/10' : 'hover:bg-black/5'
+              }`}
+              style={{ color: isDark ? '#ffffff' : '#1d1d1f' }}
               aria-label="Toggle theme"
               data-testid="button-theme-toggle"
             >
