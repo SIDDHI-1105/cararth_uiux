@@ -1,43 +1,76 @@
+// FILE: client/src/components/badge-legend.tsx – Luxury Glassmorphic redesign applied
+
 import { Info } from "lucide-react";
 
 export function BadgeLegend() {
   return (
     <div
-      className="rounded-2xl p-5 mb-6 border-2 backdrop-blur-md transition-all duration-300"
+      className="glass-card-premium p-8 mb-8 border-2 transition-all duration-500 hover:shadow-2xl group"
       style={{
-        backgroundColor: 'rgba(59, 130, 246, 0.08)',
-        borderColor: 'rgba(59, 130, 246, 0.3)',
-        boxShadow: '0 4px 24px rgba(59, 130, 246, 0.1)'
+        backgroundColor: 'rgba(59, 130, 246, 0.05)',
+        borderColor: 'rgba(59, 130, 246, 0.2)',
+        boxShadow: '0 8px 32px rgba(59, 130, 246, 0.15)'
       }}
     >
-      <div className="flex items-start gap-3">
-        <Info className="w-5 h-5 text-blue-600 dark:text-blue-300 flex-shrink-0 mt-0.5" />
-        <div>
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
+      <div className="flex items-start gap-4">
+        {/* Info Icon with Glow */}
+        <div
+          className="p-3 rounded-2xl transition-all duration-500 group-hover:scale-110 flex-shrink-0"
+          style={{
+            backgroundColor: 'rgba(59, 130, 246, 0.15)',
+            boxShadow: '0 0 20px rgba(59, 130, 246, 0.3)'
+          }}
+        >
+          <Info className="w-6 h-6 text-blue-600 dark:text-blue-300" />
+        </div>
+
+        <div className="flex-1">
+          <h3 className="font-black text-xl text-gray-900 dark:text-white mb-6">
             Understanding Listing Sources
           </h3>
-          <div className="grid md:grid-cols-3 gap-4 text-sm">
-            <div className="flex items-start gap-2">
-              <span className="bg-green-500 text-white dark:bg-green-600 px-2 py-1 rounded-full text-xs font-bold whitespace-nowrap shadow-lg backdrop-blur-sm">
+
+          <div className="grid md:grid-cols-3 gap-6 text-sm">
+            {/* Ethical AI Badge */}
+            <div className="flex items-start gap-3 group/item">
+              <div
+                className="bg-green-500 text-white dark:bg-green-600 px-4 py-2 rounded-full text-xs font-black whitespace-nowrap shadow-xl backdrop-blur-sm transition-all duration-500 group-hover/item:scale-110 group-hover/item:shadow-2xl flex-shrink-0"
+                style={{
+                  boxShadow: '0 0 20px rgba(34, 197, 94, 0.4)'
+                }}
+              >
                 🧠 Ethical AI
-              </span>
-              <p className="text-gray-900 dark:text-white font-medium">
-                Listings sourced and verified by CarArth's AI from public data
+              </div>
+              <p className="text-gray-900 dark:text-white font-semibold leading-relaxed">
+                Listings sourced and verified by CarArthX's AI from public data
               </p>
             </div>
-            <div className="flex items-start gap-2">
-              <span className="bg-blue-500 text-white dark:bg-blue-600 px-2 py-1 rounded-full text-xs font-bold whitespace-nowrap shadow-lg backdrop-blur-sm">
+
+            {/* Dealer Badge */}
+            <div className="flex items-start gap-3 group/item">
+              <div
+                className="bg-blue-500 text-white dark:bg-blue-600 px-4 py-2 rounded-full text-xs font-black whitespace-nowrap shadow-xl backdrop-blur-sm transition-all duration-500 group-hover/item:scale-110 group-hover/item:shadow-2xl flex-shrink-0"
+                style={{
+                  boxShadow: '0 0 20px rgba(59, 130, 246, 0.4)'
+                }}
+              >
                 🤝 Dealer
-              </span>
-              <p className="text-gray-900 dark:text-white font-medium">
-                Listings from CarArth's verified dealer partners
+              </div>
+              <p className="text-gray-900 dark:text-white font-semibold leading-relaxed">
+                Listings from CarArthX's verified dealer partners
               </p>
             </div>
-            <div className="flex items-start gap-2">
-              <span className="bg-orange-500 text-white dark:bg-orange-600 px-2 py-1 rounded-full text-xs font-bold whitespace-nowrap shadow-lg backdrop-blur-sm">
+
+            {/* User Badge */}
+            <div className="flex items-start gap-3 group/item">
+              <div
+                className="bg-orange-500 text-white dark:bg-orange-600 px-4 py-2 rounded-full text-xs font-black whitespace-nowrap shadow-xl backdrop-blur-sm transition-all duration-500 group-hover/item:scale-110 group-hover/item:shadow-2xl flex-shrink-0"
+                style={{
+                  boxShadow: '0 0 20px rgba(249, 115, 22, 0.4)'
+                }}
+              >
                 👤 User
-              </span>
-              <p className="text-gray-900 dark:text-white font-medium">
+              </div>
+              <p className="text-gray-900 dark:text-white font-semibold leading-relaxed">
                 Listings posted directly by individual sellers like you
               </p>
             </div>

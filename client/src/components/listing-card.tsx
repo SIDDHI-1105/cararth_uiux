@@ -1,3 +1,5 @@
+// FILE: client/src/components/listing-card.tsx – Luxury Glassmorphic redesign applied
+
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { ShieldCheck, MapPin, Fuel, Gauge, Calendar } from "lucide-react";
@@ -73,19 +75,19 @@ export function ListingCard({
     switch (listingSource) {
       case "ethical_ai":
         return {
-          text: "🧠 CarArthX Ethical AI",
-          className: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
+          text: "🧠 Ethical AI",
+          className: "bg-green-500/90 text-white dark:bg-green-600/90",
         };
       case "exclusive_dealer":
         return {
-          text: "🤝 CarArthX Exclusive Dealer",
-          className: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
+          text: "🤝 Dealer",
+          className: "bg-blue-500/90 text-white dark:bg-blue-600/90",
         };
       case "user_direct":
       default:
         return {
-          text: "👤 CarArthX User",
-          className: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
+          text: "👤 User",
+          className: "bg-orange-500/90 text-white dark:bg-orange-600/90",
         };
     }
   };
@@ -94,41 +96,44 @@ export function ListingCard({
 
   return (
     <div
-      className="rounded-3xl overflow-hidden backdrop-blur-[12px] border transition-all duration-300 hover:scale-[1.02] hover:shadow-glow"
-      style={{
-        backgroundColor: 'var(--glass-bg)',
-        borderColor: 'var(--glass-border)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
-      }}
+      className="glass-card-premium group overflow-hidden transition-all duration-500 hover:scale-[1.03] animate-slide-in-up"
       data-testid={`card-listing-${id}`}
+      style={{
+        animationDelay: `${Math.random() * 0.2}s`
+      }}
     >
       <Link href={`/listing/${id}`} className="block">
-        <div className="relative">
+        {/* Image Container with Overlay Gradient */}
+        <div className="relative overflow-hidden">
           <img
             src={image}
             alt={title}
-            className="w-full h-48 object-cover"
+            className="w-full h-56 object-cover transition-transform duration-700 group-hover:scale-110"
             loading="lazy"
             onError={(e) => {
               e.currentTarget.src = "https://placehold.co/400x300/e5e7eb/6b7280?text=No+Image";
             }}
           />
-          {/* Source Badge - Glassmorphic */}
+
+          {/* Gradient Overlay on Hover */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+          {/* Source Badge - Floating with Backdrop Blur */}
           <div
-            className={`absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-lg ${sourceBadge.className}`}
-            style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.5)',
-              borderColor: 'rgba(255, 255, 255, 0.2)'
-            }}
+            className={`absolute top-3 left-3 px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-[20px] shadow-xl transition-all duration-500 group-hover:scale-110 ${sourceBadge.className}`}
             data-testid="badge-source"
           >
             {sourceBadge.text}
           </div>
-          {/* Top Right Badges - Glassmorphic */}
-          <div className="absolute top-2 right-2 flex flex-col gap-1">
+
+          {/* Top Right Badges - Floating Glass Pills */}
+          <div className="absolute top-3 right-3 flex flex-col gap-2">
             {googleCompliant && (
-              <div className="bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1 backdrop-blur-md shadow-lg" data-testid="badge-google-ready">
-                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+              <div
+                className="bg-blue-600/95 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 backdrop-blur-[20px] shadow-xl transition-all duration-500 group-hover:scale-110"
+                data-testid="badge-google-ready"
+              >
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                   <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                   <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -138,88 +143,103 @@ export function ListingCard({
               </div>
             )}
             {isVerified && (
-              <div className="bg-green-600 text-white px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1 backdrop-blur-md shadow-lg">
-                <ShieldCheck className="w-3 h-3" />
+              <div className="bg-green-600/95 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 backdrop-blur-[20px] shadow-xl transition-all duration-500 group-hover:scale-110">
+                <ShieldCheck className="w-3.5 h-3.5" />
                 Verified
               </div>
             )}
           </div>
         </div>
-        
-        <div className="p-4">
-          <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2 line-clamp-1" data-testid="text-listing-title">
+
+        {/* Card Content - Premium Spacing */}
+        <div className="p-6 space-y-4">
+          {/* Title with Hover Effect */}
+          <h3
+            className="font-bold text-gray-900 dark:text-gray-100 text-lg line-clamp-1 group-hover:text-[#0071E3] transition-colors duration-300"
+            data-testid="text-listing-title"
+          >
             {title}
           </h3>
-          
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-blue-700 dark:text-blue-400 font-bold text-xl" data-testid="text-listing-price">
+
+          {/* Price and Score Row */}
+          <div className="flex items-center justify-between">
+            <p
+              className="text-blue-700 dark:text-blue-400 font-black text-2xl"
+              data-testid="text-listing-price"
+              style={{
+                textShadow: '0 0 20px rgba(0, 113, 227, 0.2)'
+              }}
+            >
               {formatPrice(price)}
             </p>
             {listingScore && listingScore >= 80 && (
-              <div className="flex items-center gap-1 text-sm">
-                <span className="text-yellow-500">⭐</span>
-                <span className="font-semibold text-gray-700 dark:text-gray-300">{Math.round(listingScore)}</span>
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-yellow-500/10 backdrop-blur-sm border border-yellow-500/20">
+                <span className="text-yellow-500 text-lg">⭐</span>
+                <span className="font-black text-gray-700 dark:text-gray-300">{Math.round(listingScore)}</span>
               </div>
             )}
           </div>
-          
+
+          {/* Price Fairness Label */}
           {priceFairnessLabel && (
-            <p className="text-xs text-green-600 dark:text-green-400 font-medium mb-2">
+            <p className="text-sm text-green-600 dark:text-green-400 font-bold">
               {priceFairnessLabel}
             </p>
           )}
-          
-          <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 dark:text-gray-400 mb-3">
+
+          {/* Specs Grid - Premium Glass Tiles */}
+          <div className="grid grid-cols-2 gap-3 text-sm text-gray-600 dark:text-gray-400">
             <div
-              className="flex items-center gap-1 p-2 rounded-xl backdrop-blur-sm border transition-all duration-300 hover:scale-105"
+              className="flex items-center gap-2 p-3 rounded-2xl backdrop-blur-md border transition-all duration-300 hover:scale-105 hover:shadow-lg group/spec"
               style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                borderColor: 'rgba(255, 255, 255, 0.1)'
+                backgroundColor: 'rgba(0, 113, 227, 0.05)',
+                borderColor: 'rgba(0, 113, 227, 0.1)'
               }}
             >
-              <Calendar className="w-3.5 h-3.5" />
-              <span>{year}</span>
+              <Calendar className="w-4 h-4 text-blue-500 group-hover/spec:scale-110 transition-transform duration-300" />
+              <span className="font-semibold">{year}</span>
             </div>
             <div
-              className="flex items-center gap-1 p-2 rounded-xl backdrop-blur-sm border transition-all duration-300 hover:scale-105"
+              className="flex items-center gap-2 p-3 rounded-2xl backdrop-blur-md border transition-all duration-300 hover:scale-105 hover:shadow-lg group/spec"
               style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                borderColor: 'rgba(255, 255, 255, 0.1)'
+                backgroundColor: 'rgba(0, 245, 160, 0.05)',
+                borderColor: 'rgba(0, 245, 160, 0.1)'
               }}
             >
-              <Gauge className="w-3.5 h-3.5" />
-              <span>{formatMileage(mileage)}</span>
+              <Gauge className="w-4 h-4 text-green-500 group-hover/spec:scale-110 transition-transform duration-300" />
+              <span className="font-semibold">{formatMileage(mileage)}</span>
             </div>
             <div
-              className="flex items-center gap-1 p-2 rounded-xl backdrop-blur-sm border transition-all duration-300 hover:scale-105"
+              className="flex items-center gap-2 p-3 rounded-2xl backdrop-blur-md border transition-all duration-300 hover:scale-105 hover:shadow-lg group/spec"
               style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                borderColor: 'rgba(255, 255, 255, 0.1)'
+                backgroundColor: 'rgba(255, 107, 53, 0.05)',
+                borderColor: 'rgba(255, 107, 53, 0.1)'
               }}
             >
-              <Fuel className="w-3.5 h-3.5" />
-              <span>{fuelType}</span>
+              <Fuel className="w-4 h-4 text-orange-500 group-hover/spec:scale-110 transition-transform duration-300" />
+              <span className="font-semibold">{fuelType}</span>
             </div>
             <div
-              className="flex items-center gap-1 p-2 rounded-xl backdrop-blur-sm border transition-all duration-300 hover:scale-105"
+              className="flex items-center gap-2 p-3 rounded-2xl backdrop-blur-md border transition-all duration-300 hover:scale-105 hover:shadow-lg group/spec"
               style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                borderColor: 'rgba(255, 255, 255, 0.1)'
+                backgroundColor: 'rgba(147, 51, 234, 0.05)',
+                borderColor: 'rgba(147, 51, 234, 0.1)'
               }}
             >
-              <span className="text-xs">⚙️</span>
-              <span>{transmission}</span>
+              <span className="text-sm text-purple-500 group-hover/spec:scale-110 transition-transform duration-300">⚙️</span>
+              <span className="font-semibold">{transmission}</span>
             </div>
           </div>
-          
-          <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 mb-3">
-            <MapPin className="w-3.5 h-3.5" />
+
+          {/* Location */}
+          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 font-medium">
+            <MapPin className="w-4 h-4" />
             <span>{city}</span>
           </div>
-          
-          {/* Trust Score Card - Only show if trust score data is available */}
+
+          {/* Trust Score Card */}
           {trustScore && trustScoreLabel && trustScoreColor && trustScoreBreakdown && (
-            <div className="mb-3">
+            <div>
               <TrustScoreCard
                 overall={trustScore}
                 label={trustScoreLabel}
@@ -228,12 +248,20 @@ export function ListingCard({
               />
             </div>
           )}
-          
-          <div className="flex justify-between items-center pt-3 border-t border-gray-100 dark:border-gray-800">
-            <Badge variant={sellerType === "verified" ? "default" : "secondary"} className="text-xs">
-              {sellerType === "verified" && "✅ "}{sellerType === "dealer" ? "Dealer" : sellerType === "verified" ? "Verified Seller" : "Private Owner"}
+
+          {/* Footer - Seller Badge and CTA */}
+          <div className="flex justify-between items-center pt-4 border-t border-gray-100 dark:border-gray-800">
+            <Badge
+              variant={sellerType === "verified" ? "default" : "secondary"}
+              className="text-xs font-bold px-3 py-1"
+            >
+              {sellerType === "verified" && "✅ "}
+              {sellerType === "dealer" ? "Dealer" : sellerType === "verified" ? "Verified Seller" : "Private Owner"}
             </Badge>
-            <span className="text-blue-700 dark:text-blue-400 font-medium hover:underline text-sm" data-testid="link-view-details">
+            <span
+              className="text-blue-700 dark:text-blue-400 font-bold hover:underline text-sm transition-all duration-300 group-hover:translate-x-2"
+              data-testid="link-view-details"
+            >
               View Details →
             </span>
           </div>
