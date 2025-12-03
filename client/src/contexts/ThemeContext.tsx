@@ -13,6 +13,8 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
+  console.log("[DEBUG] ThemeProvider: Rendering");
+
   // Read initial theme from the HTML element (set by inline script)
   const getInitialTheme = (): Theme => {
     if (typeof window === 'undefined') return 'light';
@@ -21,6 +23,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const [theme, setThemeState] = useState<Theme>(getInitialTheme);
   const [mounted, setMounted] = useState(false);
+
+  console.log("[DEBUG] ThemeProvider: theme=", theme, "mounted=", mounted);
 
   useEffect(() => {
     setMounted(true);
@@ -64,11 +68,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setThemeState(newTheme);
     applyTheme(newTheme);
   };
-
-  // Prevent flash - show nothing until mounted
-  if (!mounted) {
-    return null;
-  }
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>

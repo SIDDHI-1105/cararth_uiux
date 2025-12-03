@@ -150,8 +150,11 @@ function Router() {
 }
 
 function App() {
+  console.log("[DEBUG] App.tsx: App component rendering");
+
   // Initialize GA4 on app mount
   useEffect(() => {
+    console.log("[DEBUG] App.tsx: App mounted, initializing GA4");
     const ga4Id = import.meta.env.VITE_GA4_MEASUREMENT_ID;
     if (ga4Id) {
       initGA4(ga4Id);
