@@ -1,116 +1,13 @@
 // FILE: client/src/pages/home.tsx – Dark/light mode fixed
 
-import { useState, useEffect, useRef } from "react";
-import { Mic, Search, Sparkles, Zap, Shield } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Sparkles, Zap, Shield } from "lucide-react";
 import { FullWidthLayout } from "@/components/layout";
-import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/contexts/ThemeContext";
 
 export default function Home() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-  const [searchQuery, setSearchQuery] = useState("");
-  const [focusedInput, setFocusedInput] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const searchBarRef = useRef<HTMLDivElement>(null);
-  const recognitionRef = useRef<any>(null);
-  const { toast } = useToast();
-
-  const handleSearch = () => {
-    if (searchQuery.trim()) {
-      window.location.href = `/results?q=${encodeURIComponent(searchQuery)}`;
-    }
-  };
-
-  const handleMicClick = () => {
-    // Check for Speech Recognition support
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-
-    if (!SpeechRecognition) {
-      toast({
-        title: "Voice search unavailable",
-        description: "Use Chrome, Edge, or Safari for voice search.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // If already listening, stop
-    if (isListening && recognitionRef.current) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-      return;
-    }
-
-    // Create new recognition instance
-    const recognition = new SpeechRecognition();
-    recognitionRef.current = recognition;
-
-    recognition.lang = 'en-IN'; // English (India)
-    recognition.continuous = false; // Stop after first result
-    recognition.interimResults = false; // Only get final results
-
-    recognition.onstart = () => {
-      setIsListening(true);
-      toast({
-        title: "Listening...",
-        description: "Speak now",
-      });
-    };
-
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setSearchQuery(transcript);
-      setIsListening(false);
-
-      toast({
-        title: "Got it!",
-        description: `"${transcript}"`,
-      });
-    };
-
-    recognition.onerror = (event: any) => {
-      console.error('Speech recognition error:', event.error);
-      setIsListening(false);
-
-      let errorMessage = "Voice input failed";
-
-      if (event.error === 'not-allowed' || event.error === 'permission-denied') {
-        errorMessage = "Microphone access denied. Enable it in browser settings.";
-      } else if (event.error === 'no-speech') {
-        errorMessage = "No speech detected. Try again.";
-      } else if (event.error === 'network') {
-        errorMessage = "Network error. Check your connection.";
-      }
-
-      toast({
-        title: "Voice search failed",
-        description: errorMessage,
-        variant: "destructive"
-      });
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
-
-    // Start listening
-    try {
-      recognition.start();
-    } catch (error) {
-      console.error('Failed to start speech recognition:', error);
-      setIsListening(false);
-      toast({
-        title: "Error",
-        description: "Voice input failed. Try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const scrollToSearchBar = () => {
-    searchBarRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  };
 
   return (
     <FullWidthLayout showFooter={true}>
@@ -191,106 +88,145 @@ export default function Home() {
             One search. All platforms. AI-verified listings. No scams.
           </p>
 
-          {/* MASSIVE Floating Search Bar - Premium Glass */}
+          {/* Spinny-Style Hero Benefits Card */}
           <div
-            ref={searchBarRef}
-            className="glass-search-premium relative group mb-12 animate-slide-in-up"
+            className="max-w-5xl mx-auto animate-slide-in-up"
             style={{
               animationDelay: '0.2s'
             }}
           >
-            {/* Pulsing Border Glow on Focus */}
-            {focusedInput && (
-              <div
-                className="absolute -inset-1 rounded-full opacity-75 blur-xl animate-glow-pulse"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(0, 113, 227, 0.6), rgba(0, 245, 160, 0.4))',
-                }}
-              />
-            )}
-
             <div
-              className="relative backdrop-blur-[30px] rounded-full border-2 flex items-center gap-4 px-8 py-6 transition-all duration-500 shadow-2xl"
+              className="backdrop-blur-md rounded-3xl p-8 md:p-10 shadow-2xl border-2"
               style={{
-                backgroundColor: isDark
-                  ? focusedInput ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.08)'
-                  : focusedInput ? 'rgba(255, 255, 255, 0.85)' : 'rgba(255, 255, 255, 0.7)',
-                borderColor: isDark
-                  ? focusedInput ? 'rgba(0, 113, 227, 0.6)' : 'rgba(255, 255, 255, 0.2)'
-                  : focusedInput ? 'rgba(0, 113, 227, 0.4)' : 'rgba(0, 0, 0, 0.08)',
-                boxShadow: focusedInput
-                  ? '0 0 40px rgba(0, 113, 227, 0.4), 0 20px 60px rgba(0, 0, 0, 0.3)'
-                  : '0 20px 60px rgba(0, 0, 0, 0.2)',
-                transform: focusedInput ? 'scale(1.02)' : 'scale(1)'
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.9)',
+                borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(147, 51, 234, 0.1)',
               }}
             >
-              <Search
-                className="w-7 h-7 flex-shrink-0"
-                style={{ color: isDark ? "rgba(255, 255, 255, 0.5)" : "rgba(0, 0, 0, 0.5)" }}
-              />
-
-              <input
-                type="text"
-                placeholder="Swift under 5L in Hyderabad"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setFocusedInput(true)}
-                onBlur={() => setFocusedInput(false)}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                className="flex-1 text-xl sm:text-2xl outline-none bg-transparent font-light placeholder:text-opacity-50 transition-all duration-300"
+              {/* Toggle Pill */}
+              <div className="inline-flex rounded-2xl p-1.5 mb-8 shadow-lg border-2"
                 style={{
-                  color: isDark ? "#f5f5f7" : "#1d1d1f",
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#ffffff',
+                  borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)'
                 }}
-              />
-
-              {/* Voice Button with Pulse Animation */}
-              <button
-                onClick={handleMicClick}
-                className={`p-3 rounded-full transition-all duration-300 ${
-                  isListening
-                    ? 'bg-red-500/20 shadow-lg shadow-red-500/40 scale-110'
-                    : 'hover:bg-white/10 hover:scale-110'
-                }`}
-                title="Voice search"
               >
-                <Mic
-                  className={`w-6 h-6 ${isListening ? 'animate-pulse' : ''}`}
+                <a
+                  href="/"
+                  className="px-6 py-3 rounded-xl font-bold text-sm transition-all duration-300"
                   style={{
-                    color: isListening ? "#ef4444" : (isDark ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.7)")
+                    backgroundColor: '#7c3aed',
+                    color: '#ffffff',
+                    boxShadow: '0 4px 12px rgba(124, 58, 237, 0.4)'
                   }}
-                />
-              </button>
-
-              {/* Premium Search Button */}
-              <button
-                onClick={handleSearch}
-                className="btn-primary-premium px-10 py-4 text-lg font-semibold"
-              >
-                Search
-              </button>
-            </div>
-          </div>
-
-          {/* Live Status Pills - Glassmorphic Badges */}
-          <div
-            className="flex flex-wrap gap-4 text-base animate-slide-in-up"
-            style={{
-              animationDelay: '0.3s'
-            }}
-          >
-            {[
-              { icon: Sparkles, text: "5+ Platforms" },
-              { icon: Shield, text: "AI-Verified" },
-              { icon: Zap, text: "Real-Time" }
-            ].map((item, idx) => (
-              <div
-                key={idx}
-                className="glow-badge group"
-              >
-                <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
-                <span>{item.text}</span>
+                >
+                  Buy car
+                </a>
+                <a
+                  href="/sell"
+                  className="px-6 py-3 rounded-xl font-bold text-sm transition-all duration-300 hover:bg-white/10"
+                  style={{
+                    color: isDark ? '#c4b5fd' : '#7c3aed'
+                  }}
+                >
+                  Sell car
+                </a>
               </div>
-            ))}
+
+              {/* Title */}
+              <h2
+                className="text-3xl md:text-4xl font-black mb-8"
+                style={{
+                  color: isDark ? '#e9d5ff' : '#581c87'
+                }}
+              >
+                Why Choose CarArthX?
+              </h2>
+
+              {/* Benefits Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                {/* Benefit 1 */}
+                <article
+                  className="rounded-2xl p-6 border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                  style={{
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#ffffff',
+                    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)'
+                  }}
+                >
+                  <div className="text-4xl mb-4">🔧</div>
+                  <h4 className="font-bold mb-2 text-lg" style={{ color: isDark ? '#f5f5f7' : '#1d1d1f' }}>
+                    AI-Verified Listings
+                  </h4>
+                  <p className="text-sm leading-relaxed" style={{ color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
+                    Every listing is carefully verified using multi-LLM AI to filter scams and fakes.
+                  </p>
+                </article>
+
+                {/* Benefit 2 */}
+                <article
+                  className="rounded-2xl p-6 border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                  style={{
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#ffffff',
+                    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)'
+                  }}
+                >
+                  <div className="text-4xl mb-4">🛡️</div>
+                  <h4 className="font-bold mb-2 text-lg" style={{ color: isDark ? '#f5f5f7' : '#1d1d1f' }}>
+                    All Platforms. One Search.
+                  </h4>
+                  <p className="text-sm leading-relaxed" style={{ color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
+                    Search Cars24, Spinny, OLX, CarWale & Facebook Marketplace in one place.
+                  </p>
+                </article>
+
+                {/* Benefit 3 */}
+                <article
+                  className="rounded-2xl p-6 border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                  style={{
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#ffffff',
+                    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)'
+                  }}
+                >
+                  <div className="text-4xl mb-4">⚡</div>
+                  <h4 className="font-bold mb-2 text-lg" style={{ color: isDark ? '#f5f5f7' : '#1d1d1f' }}>
+                    Real-Time Updates
+                  </h4>
+                  <p className="text-sm leading-relaxed" style={{ color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
+                    Fresh listings appear within hours. Never miss the perfect deal.
+                  </p>
+                </article>
+
+                {/* Benefit 4 */}
+                <article
+                  className="rounded-2xl p-6 border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                  style={{
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#ffffff',
+                    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)'
+                  }}
+                >
+                  <div className="text-4xl mb-4">💸</div>
+                  <h4 className="font-bold mb-2 text-lg" style={{ color: isDark ? '#f5f5f7' : '#1d1d1f' }}>
+                    100% Free Forever
+                  </h4>
+                  <p className="text-sm leading-relaxed" style={{ color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
+                    No commissions. No hidden fees. Completely transparent pricing.
+                  </p>
+                </article>
+              </div>
+
+              {/* CTA Button */}
+              <div className="text-center">
+                <a
+                  href="/"
+                  className="inline-block px-10 py-4 rounded-full font-bold text-lg shadow-2xl transition-all duration-300 hover:scale-105"
+                  style={{
+                    background: 'linear-gradient(135deg, #ec4899 0%, #f43f5e 100%)',
+                    color: '#ffffff',
+                    boxShadow: '0 8px 24px rgba(236, 72, 153, 0.4)'
+                  }}
+                >
+                  Browse Cars
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </section>
