@@ -85,6 +85,7 @@ import { grokService } from "./grokService.js";
 import { marketDataService } from "./marketDataService.js";
 import dealerRoutes from "./dealerRoutes.js";
 import { googleVehicleFeed } from "./googleVehicleFeed.js";
+import { registerSpinnyRoutes } from "./spinnyRoutes.js";
 
 // Security utility functions to prevent PII leakage in logs
 const maskPhoneNumber = (phone: string): string => {
@@ -574,6 +575,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register dealer inventory upload routes
   app.use('/api/dealer', dealerRoutes);
   console.log('✅ Dealer routes registered');
+
+  // Register Spinny-style routes (RTO lookup, listings, uploads, auth)
+  registerSpinnyRoutes(app);
 
   // Batch ingestion endpoint for external cron jobs (cron-job.org, GitHub Actions, Railway)
   app.post('/api/run_ingestion', async (req, res) => {
