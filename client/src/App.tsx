@@ -31,6 +31,7 @@ import MonthlyOEMReport from "./pages/MonthlyOEMReport";
 import ThrottleTalk from "./pages/news";
 import ThrottleTalkNew from "./pages/throttle-talk";
 import NewsDetail from "./pages/news-detail";
+import LoginPage from "./pages/login";
 import Community from "./pages/community";
 import PrivacyPolicy from "./pages/privacy-policy";
 import TermsOfService from "./pages/terms-of-service";
@@ -121,6 +122,7 @@ function Router() {
       <Route path="/news/:id" component={NewsDetail} />
       <Route path="/news" component={ThrottleTalk} />
       <Route path="/throttle-talk" component={ThrottleTalkNew} />
+      <Route path="/login" component={LoginPage} />
       <Route path="/community" component={Community} />
       <Route path="/faq" component={FAQPage} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
