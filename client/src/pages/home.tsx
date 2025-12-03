@@ -1,6 +1,6 @@
 // FILE: client/src/pages/home.tsx – Dark/light mode fixed
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Sparkles, Zap, Shield } from "lucide-react";
 import { FullWidthLayout } from "@/components/layout";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -8,6 +8,56 @@ import { useTheme } from "@/contexts/ThemeContext";
 export default function Home() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+
+  // Scroll to header search bar function
+  const scrollToSearchBar = useCallback(() => {
+    // Try to find the search input in the header
+    const target = document.querySelector("#header-search, [data-header-search], input[placeholder*='Search cars']");
+
+    if (!target) {
+      console.warn("[scrollToSearchBar] Search bar element not found");
+      return;
+    }
+
+    try {
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+      // Focus the search input after scrolling
+      setTimeout(() => {
+        if (target instanceof HTMLInputElement) {
+          target.focus();
+        }
+      }, 500);
+    } catch (err) {
+      // Fallback for browsers that don't support smooth scroll
+      const rect = target.getBoundingClientRect();
+      window.scrollTo({
+        top: rect.top + window.scrollY - 80,
+        behavior: "smooth",
+      });
+    }
+  }, []);
+
+  // Set up global fallback for scrollToSearchBar (for any legacy scripts)
+  useEffect(() => {
+    if (typeof window !== "undefined" && !window.scrollToSearchBar) {
+      window.scrollToSearchBar = () => {
+        const el = document.querySelector("#header-search, [data-header-search]");
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          if (el instanceof HTMLInputElement) {
+            setTimeout(() => el.focus(), 500);
+          }
+        }
+      };
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (typeof window !== "undefined" && window.scrollToSearchBar) {
+        delete window.scrollToSearchBar;
+      }
+    };
+  }, []);
 
   return (
     <FullWidthLayout showFooter={true}>

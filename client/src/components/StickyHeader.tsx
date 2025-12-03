@@ -218,6 +218,8 @@ export function StickyHeader() {
                 {/* Search Bar */}
                 <div className="flex-1 relative">
                   <input
+                    id="header-search"
+                    data-header-search
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
