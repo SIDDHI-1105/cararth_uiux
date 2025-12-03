@@ -29,6 +29,7 @@ import DealerDashboard from "./pages/DealerDashboard";
 import OemAnalyticsDashboard from "./pages/OemAnalyticsDashboard";
 import MonthlyOEMReport from "./pages/MonthlyOEMReport";
 import ThrottleTalk from "./pages/news";
+import ThrottleTalkNew from "./pages/throttle-talk";
 import NewsDetail from "./pages/news-detail";
 import Community from "./pages/community";
 import PrivacyPolicy from "./pages/privacy-policy";
@@ -119,6 +120,7 @@ function Router() {
       <Route path="/news/best-used-car-portals-india-2025" component={BestUsedCarPortalsGuide2025} />
       <Route path="/news/:id" component={NewsDetail} />
       <Route path="/news" component={ThrottleTalk} />
+      <Route path="/throttle-talk" component={ThrottleTalkNew} />
       <Route path="/community" component={Community} />
       <Route path="/faq" component={FAQPage} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
