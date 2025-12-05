@@ -579,6 +579,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register Spinny-style routes (RTO lookup, listings, uploads, auth)
   registerSpinnyRoutes(app);
 
+  // User session endpoint - returns current logged in user or null
+  app.get('/api/me', (req, res) => {
+    if (req.isAuthenticated && req.isAuthenticated() && req.user) {
+      // Return user info without sensitive data
+      const user = req.user as any;
+      res.json({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        name: user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+        profileImageUrl: user.profileImageUrl,
+        isAuthenticated: true
+      });
+    } else {
+      res.json({
+        isAuthenticated: false,
+        user: null
+      });
+    }
+  });
+
   // Batch ingestion endpoint for external cron jobs (cron-job.org, GitHub Actions, Railway)
   app.post('/api/run_ingestion', async (req, res) => {
     try {

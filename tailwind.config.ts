@@ -1,10 +1,27 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
+import tailwindcssTypography from "@tailwindcss/typography";
 
 export default {
   darkMode: ["class"],
   content: ["./client/index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
+      // Spinny Design System (Dec 2025) - Spacing & Typography
+      spacing:{
+        4: '0.4rem', 8: '0.8rem', 12:'1.2rem', 16:'1.6rem',
+        20:'2rem', 24:'2.4rem', 32:'3.2rem', 40:'4rem', 48:'4.8rem'
+      },
+      fontSize:{
+        xs:['1.2rem',{lineHeight:'1.4',letterSpacing:'0.03em'}],
+        sm:['1.3rem',{lineHeight:'1.45',letterSpacing:'0.02em'}],
+        base:['1.6rem',{lineHeight:'1.5'}],
+        lg:['1.8rem',{lineHeight:'1.45'}],
+        xl:['2rem', {lineHeight:'1.4',letterSpacing:'-0.01em'}],
+        '2xl':['2.4rem',{lineHeight:'1.3',letterSpacing:'-0.01em'}],
+        '3xl':['3rem', {lineHeight:'1.2',letterSpacing:'-0.02em'}],
+        '4xl':['3.6rem',{lineHeight:'1.1',letterSpacing:'-0.02em'}]
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
@@ -95,5 +112,5 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
+  plugins: [tailwindcssAnimate, tailwindcssTypography],
 } satisfies Config;

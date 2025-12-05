@@ -35,20 +35,41 @@ function checkRequiredSecrets() {
 // Setup social authentication strategies
 export function setupSocialAuth(app: Express) {
   const hasRequiredSecrets = checkRequiredSecrets();
-  
+
   if (!hasRequiredSecrets) {
     logError({ message: 'Social authentication disabled - missing required secrets', statusCode: 500 }, 'Social auth configuration check');
     return;
   }
 
+  // Passport serialization for session management
+  passport.serializeUser((user: any, done) => {
+    done(null, user.id);
+  });
+
+  passport.deserializeUser(async (id: string, done) => {
+    try {
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, id))
+        .limit(1);
+      done(null, user);
+    } catch (error) {
+      done(error, null);
+    }
+  });
+
   // Google OAuth Strategy
   if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    console.log('✅ Google OAuth configured with Client ID:', process.env.GOOGLE_CLIENT_ID.substring(0, 20) + '...');
+
     passport.use(new GoogleStrategy({
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "/api/auth/google/callback"
+      callbackURL: process.env.GOOGLE_REDIRECT_URI || "http://localhost:5000/auth/google/callback"
     }, async (accessToken, refreshToken, profile, done) => {
       try {
+        console.log('✅ Google OAuth callback received for user:', profile.emails?.[0]?.value);
         const socialProfile: SocialProfile = {
           id: profile.id,
           provider: 'google',
@@ -56,25 +77,56 @@ export function setupSocialAuth(app: Express) {
           name: profile.displayName,
           avatar: profile.photos?.[0]?.value
         };
-        
+
         const user = await handleSocialLogin(socialProfile, accessToken, refreshToken);
         return done(null, user);
       } catch (error) {
+        console.error('❌ Google OAuth error:', error);
         return done(error, false);
       }
     }));
 
     // Google OAuth routes
-    app.get('/api/auth/google',
+    app.get('/auth/google',
+      (_req, _res, next) => {
+        console.log('🔐 Initiating Google OAuth flow...');
+        next();
+      },
       passport.authenticate('google', { scope: ['profile', 'email'] })
     );
 
-    app.get('/api/auth/google/callback',
-      passport.authenticate('google', { failureRedirect: '/login' }),
-      (req, res) => {
-        res.redirect('/news'); // Redirect to Throttle Talk after login
+    app.get('/auth/google/callback',
+      (_req, _res, next) => {
+        console.log('🔄 Google OAuth callback received, processing...');
+        next();
+      },
+      passport.authenticate('google', {
+        failureRedirect: '/login',
+        failureMessage: true
+      }),
+      (_req, res) => {
+        console.log('✅ Google sign-in successful, redirecting to home');
+        res.redirect('/'); // Redirect to home after successful login
       }
     );
+  } else {
+    console.log('⚠️ Google OAuth not configured - GOOGLE_CLIENT_SECRET missing');
+
+    // Add debug route to show configuration issues
+    app.get('/auth/google', (req, res) => {
+      res.status(500).send(`
+        <h1>Google OAuth Not Configured</h1>
+        <p><strong>Missing:</strong> GOOGLE_CLIENT_SECRET environment variable</p>
+        <p><strong>Steps to fix:</strong></p>
+        <ol>
+          <li>Get your Google Client Secret from <a href="https://console.cloud.google.com/apis/credentials">Google Cloud Console</a></li>
+          <li>Open <code>.env</code> file and paste the secret where it says <code>&lt;PASTE_GOOGLE_CLIENT_SECRET_HERE&gt;</code></li>
+          <li>Restart the development server: <code>npm run dev</code></li>
+        </ol>
+        <p><strong>Expected redirect URI:</strong> ${process.env.GOOGLE_REDIRECT_URI || 'http://localhost:5000/auth/google/callback'}</p>
+        <p>Make sure this URL is added to "Authorized redirect URIs" in Google Console</p>
+      `);
+    });
   }
 
   // Facebook OAuth Strategy (if configured)
