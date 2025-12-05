@@ -126,23 +126,9 @@ export function StickyHeader() {
 
   return (
     <>
-      {/* Launch Status Banner */}
-      <div
-        className="fixed top-0 left-0 right-0 z-[9999] w-full backdrop-blur-[20px] transition-all duration-500"
-        style={{
-          background: 'linear-gradient(90deg, rgba(22, 163, 74, 0.95), rgba(0, 113, 227, 0.95))',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.15)',
-          boxShadow: '0 4px 24px rgba(0, 0, 0, 0.1)'
-        }}
-      >
-        <div className="text-center text-white py-3 px-4 text-sm font-bold tracking-wide">
-          🚀 <span className="animate-pulse">Hyderabad Live</span> | <span>Delhi NCR Soon</span>
-        </div>
-      </div>
-
       {/* Main Sticky Header */}
       <header
-        className="fixed top-[46px] left-0 right-0 z-[9998] w-full backdrop-blur-[40px] border-b transition-all duration-500"
+        className="fixed top-0 left-0 right-0 z-[9998] w-full backdrop-blur-[40px] border-b transition-all duration-500"
         style={{
           backgroundColor: isDark
             ? scrolled ? 'rgba(10, 10, 10, 0.85)' : 'rgba(10, 10, 10, 0.75)'
@@ -253,8 +239,8 @@ export function StickyHeader() {
                   type="submit"
                   className="hidden md:flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-white transition-all duration-300 hover:scale-105"
                   style={{
-                    background: 'linear-gradient(135deg, #0071E3 0%, #0077ED 100%)',
-                    boxShadow: '0 0 30px rgba(0, 113, 227, 0.4), 0 8px 24px rgba(0, 113, 227, 0.2)'
+                    background: 'linear-gradient(135deg, var(--brand), var(--brand-accent))',
+                    boxShadow: 'var(--glow-primary), 0 8px 24px rgba(11,29,83,0.12)'
                   }}
                 >
                   Search
@@ -274,10 +260,10 @@ export function StickyHeader() {
                 }`}
                 style={{
                   background: location === '/' || location === '/results'
-                    ? 'linear-gradient(135deg, #0071E3 0%, #0077ED 100%)'
+                    ? 'linear-gradient(135deg, var(--brand), color-mix(in srgb, var(--brand) 75%, var(--brand-accent) 25%))'
                     : 'transparent',
                   boxShadow: location === '/' || location === '/results'
-                    ? '0 0 20px rgba(0, 113, 227, 0.3)'
+                    ? '0 0 20px rgba(11,29,83,0.14)'
                     : 'none'
                 }}
               >
@@ -295,10 +281,10 @@ export function StickyHeader() {
                 }`}
                 style={{
                   background: location === '/sell' || location === '/sell-car'
-                    ? 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)'
+                    ? 'linear-gradient(135deg, var(--success), color-mix(in srgb, var(--success) 70%, var(--brand) 30%))'
                     : 'transparent',
                   boxShadow: location === '/sell' || location === '/sell-car'
-                    ? '0 0 20px rgba(22, 163, 74, 0.3)'
+                    ? '0 0 20px rgba(16,128,64,0.12)'
                     : 'none'
                 }}
               >
@@ -316,10 +302,10 @@ export function StickyHeader() {
                 }`}
                 style={{
                   background: location === '/throttle-talk' || location.startsWith('/news')
-                    ? 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)'
+                    ? 'linear-gradient(135deg, var(--brand-alt), color-mix(in srgb, var(--brand-alt) 60%, var(--brand) 40%))'
                     : 'transparent',
                   boxShadow: location === '/throttle-talk' || location.startsWith('/news')
-                    ? '0 0 20px rgba(59, 130, 246, 0.3)'
+                    ? '0 0 20px rgba(11,29,83,0.12)'
                     : 'none'
                 }}
               >
@@ -361,7 +347,7 @@ export function StickyHeader() {
       </header>
 
       {/* Spacer to prevent content from going under sticky header */}
-      <div style={{ height: '110px' }} />
+      <div style={{ height: '64px' }} />
     </>
   );
 }

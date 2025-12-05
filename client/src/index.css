@@ -243,7 +243,6 @@ html.dark, html[data-theme="dark"] {
     transition: color .2s ease;
   }
   a:hover { color: var(--brand-accent); }
-  }
 
   input, textarea, select {
     background-color: var(--input);
@@ -880,6 +879,8 @@ h2{ margin-bottom:var(--s-4); font-size:clamp(2.2rem, 1.3rem + 1.2vw, 3.0rem); }
 .primary-pill.active {
   box-shadow: 0 0 30px rgba(11,29,83,0.28);
 }
+
+.link-btn {
   font-size: 14px;
   cursor: pointer;
   padding: 8px 12px;

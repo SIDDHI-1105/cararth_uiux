@@ -1,34 +1,41 @@
-// FILE: client/src/pages/home.tsx – Dark/light mode fixed
-
+// FILE: client/src/pages/home.tsx – Updated to include all homepage sections (fixed)
 import { useState, useEffect, useCallback } from "react";
 import { Sparkles, Zap, Shield } from "lucide-react";
 import { FullWidthLayout } from "@/components/layout";
 import { useTheme } from "@/contexts/ThemeContext";
 
+/**
+ * Home page — full content (Hero, Metrics, Testimonials, Popular Models, Budgets, How It Works, FAQ, CTA)
+ * Preserves:
+ *  - useTheme / isDark logic
+ *  - scrollToSearchBar helper (exposed on window)
+ *  - search form state & handleSearch
+ *
+ * Note: This file is intentionally self-contained; small presentational helper components are defined inline.
+ */
+
+type TabType = "buy" | "sell";
+
 export default function Home() {
   const { theme } = useTheme();
-  const isDark = theme === 'dark';
+  const isDark = theme === "dark";
 
-  // Scroll to header search bar function
+  // Scroll-to-search helper (used by CTA)
   const scrollToSearchBar = useCallback(() => {
-    // Try to find the search input in the header
-    const target = document.querySelector("#header-search, [data-header-search], input[placeholder*='Search cars']");
+    const target =
+      document.querySelector("#header-search, [data-header-search], input[placeholder*='Search cars']");
 
     if (!target) {
-      console.warn("[scrollToSearchBar] Search bar element not found");
+      console.warn("[scrollToSearchBar] search element not found");
       return;
     }
 
     try {
       target.scrollIntoView({ behavior: "smooth", block: "center" });
-      // Focus the search input after scrolling
       setTimeout(() => {
-        if (target instanceof HTMLInputElement) {
-          target.focus();
-        }
+        if (target instanceof HTMLInputElement) target.focus();
       }, 500);
     } catch (err) {
-      // Fallback for browsers that don't support smooth scroll
       const rect = target.getBoundingClientRect();
       window.scrollTo({
         top: rect.top + window.scrollY - 80,
@@ -37,557 +44,407 @@ export default function Home() {
     }
   }, []);
 
-  // Set up global fallback for scrollToSearchBar (for any legacy scripts)
+  // Global fallback for legacy scripts:
   useEffect(() => {
-    if (typeof window !== "undefined" && !window.scrollToSearchBar) {
-      window.scrollToSearchBar = () => {
+    if (typeof window !== "undefined" && !(window as any).scrollToSearchBar) {
+      (window as any).scrollToSearchBar = () => {
         const el = document.querySelector("#header-search, [data-header-search]");
         if (el) {
-          el.scrollIntoView({ behavior: "smooth", block: "center" });
-          if (el instanceof HTMLInputElement) {
-            setTimeout(() => el.focus(), 500);
-          }
+          (el as HTMLElement).scrollIntoView({ behavior: "smooth", block: "center" });
+          if (el instanceof HTMLInputElement) setTimeout(() => el.focus(), 500);
         }
       };
     }
-
-    // Cleanup on unmount
     return () => {
-      if (typeof window !== "undefined" && window.scrollToSearchBar) {
-        delete window.scrollToSearchBar;
+      if (typeof window !== "undefined" && (window as any).scrollToSearchBar) {
+        delete (window as any).scrollToSearchBar;
       }
     };
   }, []);
 
+  // Search form state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCity, setSelectedCity] = useState("Hyderabad");
+  const [selectedBudget, setSelectedBudget] = useState("All Budgets");
+  const [activeTab, setActiveTab] = useState<TabType>("buy");
+
+  const cities = ["Hyderabad", "Delhi NCR", "Mumbai", "Bangalore", "Pune", "Chennai"];
+  const budgets = ["All Budgets", "Under ₹3L", "₹3L - ₹5L", "₹5L - ₹10L", "Above ₹10L"];
+
+  const handleSearch = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const base = "/results";
+    const q = searchQuery.trim();
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (selectedCity) params.set("city", selectedCity);
+    if (selectedBudget && selectedBudget !== "All Budgets") params.set("budget", selectedBudget);
+    window.location.href = `${base}?${params.toString()}`;
+  };
+
+  /* ---------- Small inline Presentational helpers ---------- */
+
+  const MetricCard = ({ value, label }: { value: string; label: string }) => (
+    <div className="flex flex-col items-center">
+      <div className="text-4xl font-black text-gray-900 dark:text-white">{value}</div>
+      <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">{label}</div>
+    </div>
+  );
+
+  const TestimonialCard = ({ quote, author, city }: { quote: string; author: string; city: string }) => (
+    <article className="card-base p-6 rounded-2xl">
+      <div className="mb-3 text-yellow-500">★★★★★</div>
+      <blockquote className="italic text-lg mb-4 text-gray-700 dark:text-gray-200">{quote}</blockquote>
+      <div className="font-semibold text-gray-900 dark:text-white">{author}</div>
+      <div className="text-xs text-gray-500 dark:text-gray-400">{city}</div>
+    </article>
+  );
+
+  /* ---------- Main render ---------- */
   return (
     <FullWidthLayout showFooter={true}>
-      {/* HERO SECTION - Immersive Luxury Glassmorphism */}
-      <section className="relative pt-40 pb-32 px-6 sm:px-8 lg:px-12 overflow-hidden">
-        {/* Animated Gradient Background with Car Silhouettes */}
-        <div className="absolute inset-0 -z-10">
-          {/* Primary Gradient Layer */}
-          <div
-            className="absolute inset-0 opacity-60"
-            style={{
-              background: isDark
-                ? 'radial-gradient(ellipse at top, rgba(0, 113, 227, 0.15) 0%, transparent 50%), radial-gradient(ellipse at bottom right, rgba(0, 245, 160, 0.08) 0%, transparent 50%)'
-                : 'radial-gradient(ellipse at top, rgba(0, 113, 227, 0.08) 0%, transparent 50%), radial-gradient(ellipse at bottom right, rgba(0, 245, 160, 0.05) 0%, transparent 50%)'
-            }}
-          />
+      {/* HERO */}
+      <section
+        className="hero-custom hero-compact relative flex items-center pt-24 md:pt-28 lg:pt-32"
+        aria-label="Hero"
+      >
+        {/* preload hero image to avoid flash */}
+        <img src="/assets/hero_custom.jpg" alt="" style={{ display: "none" }} />
 
-          {/* Floating Ambient Orbs */}
-          <div
-            className="absolute top-20 left-1/4 w-96 h-96 rounded-full blur-3xl opacity-20 animate-float"
-            style={{
-              background: 'radial-gradient(circle, rgba(0, 113, 227, 0.4) 0%, transparent 70%)',
-              animationDelay: '0s',
-              animationDuration: '20s'
-            }}
-          />
-          <div
-            className="absolute bottom-20 right-1/4 w-80 h-80 rounded-full blur-3xl opacity-20 animate-float"
-            style={{
-              background: 'radial-gradient(circle, rgba(0, 245, 160, 0.3) 0%, transparent 70%)',
-              animationDelay: '5s',
-              animationDuration: '25s'
-            }}
-          />
-
-          {/* Subtle Grid Pattern */}
-          <div
-            className="absolute inset-0 opacity-5"
-            style={{
-              backgroundImage: isDark
-                ? 'linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px)'
-                : 'linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px)',
-              backgroundSize: '80px 80px'
-            }}
-          />
-        </div>
-
-        <div className="max-w-6xl mx-auto">
-          {/* Hero Headline - Massive with Glow */}
-          <h1
-            className="text-7xl sm:text-8xl lg:text-9xl font-black tracking-tighter leading-[0.9] mb-10 animate-slide-in-up"
-            style={{
-              color: isDark ? "#f5f5f7" : "#1d1d1f",
-              textShadow: isDark ? '0 0 60px rgba(0, 113, 227, 0.3)' : 'none'
-            }}
-          >
-            Your car.
-            <br />
-            <span
-              className="text-transparent bg-clip-text animate-glow-pulse"
-              style={{
-                backgroundImage: 'linear-gradient(135deg, #0071E3 0%, #00F5A0 50%, #0077ED 100%)',
-                backgroundSize: '200% 200%'
-              }}
-            >
-              Found fast.
-            </span>
-          </h1>
-
-          {/* Subheading - Premium Typography */}
-          <p
-            className="text-xl sm:text-2xl max-w-3xl mb-16 leading-relaxed animate-slide-in-up font-light"
-            style={{
-              color: isDark ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.7)",
-              animationDelay: '0.1s'
-            }}
-          >
-            One search. All platforms. AI-verified listings. No scams.
-          </p>
-
-          {/* Spinny-Style Hero Benefits Card */}
-          <div
-            className="max-w-5xl mx-auto animate-slide-in-up"
-            style={{
-              animationDelay: '0.2s'
-            }}
-          >
-            <div
-              className="backdrop-blur-md rounded-3xl p-8 md:p-10 shadow-2xl border-2"
-              style={{
-                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.9)',
-                borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(147, 51, 234, 0.1)',
-              }}
-            >
-              {/* Toggle Pill */}
-              <div className="inline-flex rounded-2xl p-1.5 mb-8 shadow-lg border-2"
-                style={{
-                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#ffffff',
-                  borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)'
-                }}
+        <div className="relative z-10 w-full container py-8 lg:py-12">
+          <div className="grid grid-cols-1 lg:grid-cols-[0.6fr_0.4fr] gap-8 items-start">
+            {/* Left: Headline + search card */}
+            <div>
+              <h1
+                className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight leading-[1.05] mb-3 text-gray-900 dark:text-white"
               >
-                <a
-                  href="/"
-                  className="px-6 py-3 rounded-xl font-bold text-sm transition-all duration-300"
-                  style={{
-                    backgroundColor: '#7c3aed',
-                    color: '#ffffff',
-                    boxShadow: '0 4px 12px rgba(124, 58, 237, 0.4)'
-                  }}
-                >
-                  Buy car
-                </a>
-                <a
-                  href="/sell"
-                  className="px-6 py-3 rounded-xl font-bold text-sm transition-all duration-300 hover:bg-white/10"
-                  style={{
-                    color: isDark ? '#c4b5fd' : '#7c3aed'
-                  }}
-                >
-                  Sell car
-                </a>
+                Your car.
+                <br />
+                <span className="text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(135deg, var(--brand), var(--brand-accent))' }}>
+                  Found fast.
+                </span>
+              </h1>
+
+              <p className="text-lg sm:text-xl lg:text-2xl mb-4 leading-relaxed font-light text-gray-700 dark:text-gray-300">
+                One search. All platforms. AI-verified listings. No scams.
+              </p>
+
+              {/* Search card */}
+              <div className="card-base p-5 sm:p-6">
+                {/* Buy/Sell */}
+                <div className="flex gap-2 mb-6">
+                  <button
+                    onClick={() => setActiveTab("buy")}
+                    className={`flex-1 px-6 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === "buy" ? 'tab-active' : 'tab-default'}`}
+                    aria-pressed={activeTab === "buy"}
+                  >
+                    Buy Car
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("sell")}
+                    className={`flex-1 px-6 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === "sell" ? 'tab-active' : 'tab-default'}`}
+                    aria-pressed={activeTab === "sell"}
+                  >
+                    Sell Car
+                  </button>
+                </div>
+
+                <form onSubmit={handleSearch} className="space-y-4" aria-label="Home search form">
+                  <div>
+                    <label htmlFor="location" className="block text-xs font-semibold text-gray-600 mb-2">
+                      LOCATION
+                    </label>
+                    <select
+                      id="location"
+                      value={selectedCity}
+                      onChange={(e) => setSelectedCity(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl text-sm font-medium border-2 transition-all form-token"
+                    >
+                      {cities.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="search" className="block text-xs font-semibold text-gray-600 mb-2">
+                      SEARCH BY BRAND, MODEL
+                    </label>
+                    <input
+                      id="search"
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="e.g., Swift, Creta, Nexon..."
+                      className="w-full px-4 py-3 rounded-xl text-sm font-medium border-2 transition-all focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                      aria-label="search by brand or model"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="budget" className="block text-xs font-semibold text-gray-600 mb-2">
+                      BUDGET
+                    </label>
+                    <select
+                      id="budget"
+                      value={selectedBudget}
+                      onChange={(e) => setSelectedBudget(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl text-sm font-medium border-2 transition-all focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                    >
+                      {budgets.map((b) => (
+                        <option key={b} value={b}>
+                          {b}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full btn-primary-premium text-base"
+                  >
+                    Search Cars
+                  </button>
+                </form>
+
+                <div className="mt-6 flex flex-wrap gap-2">
+                  <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 mr-2">Popular:</span>
+                  {["Swift", "Creta", "Nexon", "City"].map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setSearchQuery(t)}
+                      className="px-3 py-1 rounded-lg text-xs font-semibold transition-all hover:scale-105 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200"
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
               </div>
+            </div>
 
-              {/* Title */}
-              <h2
-                className="text-3xl md:text-4xl font-black mb-8"
-                style={{
-                  color: isDark ? '#e9d5ff' : '#581c87'
-                }}
-              >
-                Why Choose CarArthX?
-              </h2>
-
-              {/* Benefits Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                {/* Benefit 1 */}
-                <article
-                  className="rounded-2xl p-6 border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl"
-                  style={{
-                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#ffffff',
-                    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)'
-                  }}
-                >
-                  <div className="text-4xl mb-4">🔧</div>
-                  <h4 className="font-bold mb-2 text-lg" style={{ color: isDark ? '#f5f5f7' : '#1d1d1f' }}>
-                    AI-Verified Listings
-                  </h4>
-                  <p className="text-sm leading-relaxed" style={{ color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
-                    Every listing is carefully verified using multi-LLM AI to filter scams and fakes.
-                  </p>
-                </article>
-
-                {/* Benefit 2 */}
-                <article
-                  className="rounded-2xl p-6 border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl"
-                  style={{
-                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#ffffff',
-                    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)'
-                  }}
-                >
-                  <div className="text-4xl mb-4">🛡️</div>
-                  <h4 className="font-bold mb-2 text-lg" style={{ color: isDark ? '#f5f5f7' : '#1d1d1f' }}>
-                    All Platforms. One Search.
-                  </h4>
-                  <p className="text-sm leading-relaxed" style={{ color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
-                    Search Cars24, Spinny, OLX, CarWale & Facebook Marketplace in one place.
-                  </p>
-                </article>
-
-                {/* Benefit 3 */}
-                <article
-                  className="rounded-2xl p-6 border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl"
-                  style={{
-                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#ffffff',
-                    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)'
-                  }}
-                >
-                  <div className="text-4xl mb-4">⚡</div>
-                  <h4 className="font-bold mb-2 text-lg" style={{ color: isDark ? '#f5f5f7' : '#1d1d1f' }}>
-                    Real-Time Updates
-                  </h4>
-                  <p className="text-sm leading-relaxed" style={{ color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
-                    Fresh listings appear within hours. Never miss the perfect deal.
-                  </p>
-                </article>
-
-                {/* Benefit 4 */}
-                <article
-                  className="rounded-2xl p-6 border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl"
-                  style={{
-                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#ffffff',
-                    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)'
-                  }}
-                >
-                  <div className="text-4xl mb-4">💸</div>
-                  <h4 className="font-bold mb-2 text-lg" style={{ color: isDark ? '#f5f5f7' : '#1d1d1f' }}>
-                    100% Free Forever
-                  </h4>
-                  <p className="text-sm leading-relaxed" style={{ color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
-                    No commissions. No hidden fees. Completely transparent pricing.
-                  </p>
-                </article>
-              </div>
-
-              {/* CTA Button */}
-              <div className="text-center">
-                <a
-                  href="/"
-                  className="inline-block px-10 py-4 rounded-full font-bold text-lg shadow-2xl transition-all duration-300 hover:scale-105"
-                  style={{
-                    background: 'linear-gradient(135deg, #ec4899 0%, #f43f5e 100%)',
-                    color: '#ffffff',
-                    boxShadow: '0 8px 24px rgba(236, 72, 153, 0.4)'
-                  }}
-                >
-                  Browse Cars
-                </a>
-              </div>
+            {/* Right: visual/pricing panel — clamped image for consistent hero height */}
+            <div className="hidden lg:flex items-center justify-center mt-6 md:mt-10" aria-hidden>
+              <img
+                src="/assets/hero_custom.jpg"
+                alt=""
+                className="hero-bg-clamped rounded-2xl shadow-lg"
+                style={{ objectPosition: 'center', filter: 'brightness(0.95)' }}
+              />
             </div>
           </div>
         </div>
       </section>
 
-      {/* WHY CARARTHX SECTION - Premium Glass Cards */}
-      <section className="relative py-32 px-6 sm:px-8 lg:px-12">
-        <div className="max-w-7xl mx-auto">
-          {/* Section Header */}
-          <div className="mb-16 animate-slide-in-up">
-            <h2
-              className="text-5xl sm:text-6xl font-black mb-6 tracking-tight"
-              style={{
-                color: isDark ? "#f5f5f7" : "#1d1d1f"
-              }}
-            >
-              Why CarArthX?
-            </h2>
-            <p
-              className="text-xl font-light max-w-3xl"
-              style={{
-                color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)"
-              }}
-            >
-              Smart search. Real listings. Zero fees.
-            </p>
+      {/* TRUSTED / METRICS */}
+      <section className="relative py-12 sm:py-16 lg:py-20">
+        <div className="container text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-black text-gray-700 dark:text-gray-200">
+            Trusted by Thousands
+          </h2>
+        </div>
+        <div className="container grid grid-cols-1 md:grid-cols-4 gap-8 justify-items-center">
+          <MetricCard value="50,000+" label="Happy Customers" />
+          <MetricCard value="10,000+" label="Verified Cars" />
+          <MetricCard value="4.8/5" label="Customer Rating" />
+          <MetricCard value="100%" label="AI Verified" />
+        </div>
+      </section>
+
+      {/* TESTIMONIALS */}
+      <section className="py-12 sm:py-16 lg:py-20 bg-transparent">
+        <div className="container">
+          <h3 className="text-3xl sm:text-4xl font-bold mb-6">What customers say</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <TestimonialCard
+              quote={`"Found my dream Swift in just 2 days! The AI verification gave me confidence."`}
+              author="Rajesh Kumar"
+              city="Hyderabad"
+            />
+            <TestimonialCard
+              quote={`"Best car buying experience. No hassle, no scams. Highly recommended!"`}
+              author="Priya Sharma"
+              city="Delhi"
+            />
+            <TestimonialCard
+              quote={`"Saved ₹50,000 by comparing across all platforms. Thank you CarArth!"`}
+              author="Amit Patel"
+              city="Mumbai"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* POPULAR MODELS */}
+      <section className="py-12 sm:py-16 lg:py-20">
+        <div className="container">
+          <div className="flex justify-between items-end mb-6">
+            <div>
+              <h3 className="text-3xl sm:text-4xl font-black">Popular Models</h3>
+              <p className="text-sm text-gray-500">Trending cars in Hyderabad</p>
+            </div>
+            <div>
+              <a className="text-blue-600 font-semibold">View All →</a>
+            </div>
           </div>
 
-          {/* Premium Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              {
-                number: "5+",
-                color: "#0071E3",
-                title: "All Platforms",
-                description: "Cars24, Spinny, OLX, CarWale, Facebook Marketplace in one search"
-              },
-              {
-                number: "AI",
-                color: "#00F5A0",
-                title: "Scam-Free",
-                description: "Multi-LLM AI filters fake listings automatically"
-              },
-              {
-                number: "₹0",
-                color: "#FF6B35",
-                title: "Free Forever",
-                description: "No commissions. No hidden fees. Completely transparent."
-              }
-            ].map((stat, idx) => (
-              <div
-                key={idx}
-                className="glass-card-premium p-10 animate-slide-in-up group"
-                style={{
-                  animationDelay: `${idx * 0.1}s`
-                }}
-              >
-                {/* Stat Number with Glow */}
-                <div
-                  className="text-7xl font-black mb-6 transition-all duration-500 group-hover:scale-110"
-                  style={{
-                    color: stat.color,
-                    textShadow: `0 0 40px ${stat.color}40`
-                  }}
-                >
-                  {stat.number}
+              { name: "Maruti Swift", price: "₹4.5L", reviews: "4.5 (450)" },
+              { name: "Hyundai Creta", price: "₹12.8L", reviews: "4.7 (470)" },
+              { name: "Tata Nexon", price: "₹7.2L", reviews: "4.6 (459)" },
+              { name: "Honda City", price: "₹9.5L", reviews: "4.4 (440)" },
+            ].map((m) => (
+              <div key={m.name} className="card-base p-6 flex flex-col justify-between">
+                <div>
+                  <div className="text-4xl mb-4">🚗</div>
+                  <h4 className="font-bold text-lg mb-1">{m.name}</h4>
+                  <div className="text-xs text-yellow-500 mb-2">★ {m.reviews}</div>
                 </div>
 
-                <h3
-                  className="text-2xl font-bold mb-4"
-                  style={{
-                    color: isDark ? "#f5f5f7" : "#1d1d1f"
-                  }}
-                >
-                  {stat.title}
-                </h3>
-
-                <p
-                  className="text-base leading-relaxed font-light"
-                  style={{
-                    color: isDark ? "rgba(255, 255, 255, 0.65)" : "rgba(0, 0, 0, 0.65)"
-                  }}
-                >
-                  {stat.description}
-                </p>
+                <div className="flex items-center justify-between mt-4">
+                  <div>
+                    <div className="text-xl font-black">{m.price}</div>
+                    <div className="text-xs text-gray-500">2020 onwards</div>
+                  </div>
+                  <button className="px-4 py-2 rounded-lg text-sm font-semibold btn-secondary">View</button>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ADDITIONAL STATS - Premium Grid */}
-      <section
-        className="relative py-32 px-6 sm:px-8 lg:px-12 border-t"
-        style={{
-          borderColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.08)"
-        }}
-      >
-        <div className="max-w-7xl mx-auto">
-          <h2
-            className="text-5xl font-black mb-16 tracking-tight"
-            style={{
-              color: isDark ? "#f5f5f7" : "#1d1d1f"
-            }}
-          >
-            How It Works
-          </h2>
+      {/* SHOP BY BUDGET */}
+      <section className="py-12 sm:py-16 lg:py-20 bg-transparent">
+        <div className="container text-center mb-8">
+          <h3 className="text-3xl sm:text-4xl font-black">Shop by Budget</h3>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="rounded-2xl p-8 text-left budget-card">
+            <div className="text-5xl mb-4">₹</div>
+            <h4 className="text-2xl font-black mb-2">Under ₹3 Lakh</h4>
+            <div className="text-sm">2,500+ cars</div>
+            <div className="mt-6 font-semibold">Explore →</div>
+          </div>
+
+          <div className="rounded-2xl p-8 text-left budget-card">
+            <div className="text-5xl mb-4">₹</div>
+            <h4 className="text-2xl font-black mb-2">₹3L - ₹5L</h4>
+            <div className="text-sm">3,800+ cars</div>
+            <div className="mt-6 font-semibold">Explore →</div>
+          </div>
+
+          <div className="rounded-2xl p-8 text-left budget-card">
+            <div className="text-5xl mb-4">₹</div>
+            <h4 className="text-2xl font-black mb-2">₹5L - ₹10L</h4>
+            <div className="text-sm">2,200+ cars</div>
+            <div className="mt-6 font-semibold">Explore →</div>
+          </div>
+
+          <div className="rounded-2xl p-8 text-left budget-card">
+            <div className="text-5xl mb-4">₹</div>
+            <h4 className="text-2xl font-black mb-2">Above ₹10L</h4>
+            <div className="text-sm">1,500+ cars</div>
+            <div className="mt-6 font-semibold">Explore →</div>
+          </div>
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section className="py-12 sm:py-16 lg:py-20 border-t" style={{ borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }}>
+        <div className="container text-center mb-12">
+          <h3 className="text-4xl sm:text-4xl font-black">How It Works</h3>
+          <p className="text-gray-500 mt-3">Buy your dream car in 3 simple steps</p>
+        </div>
+
+        <div className="container grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="text-center p-6">
+            <div className="mx-auto mb-4" style={{ width: 72, height: 72, borderRadius: 36, background: 'linear-gradient(90deg, color-mix(in srgb, var(--brand-accent) 60%, var(--brand) 40%))', display: "flex", alignItems: "center", justifyContent: "center", color: "var(--white)" }}>
+              🔍
+            </div>
+            <h4 className="font-bold mb-2">Search & Filter</h4>
+            <p className="text-gray-500">Find your perfect car from 10,000+ verified listings</p>
+          </div>
+
+          <div className="text-center p-6">
+            <div className="mx-auto mb-4" style={{ width: 72, height: 72, borderRadius: 36, background: 'linear-gradient(90deg, var(--success), var(--brand))', display: "flex", alignItems: "center", justifyContent: "center", color: "var(--white)" }}>
+              🛡
+            </div>
+            <h4 className="font-bold mb-2">AI Verification</h4>
+            <p className="text-gray-500">Every listing is verified by our multi-LLM AI system</p>
+          </div>
+
+          <div className="text-center p-6">
+            <div className="mx-auto mb-4" style={{ width: 72, height: 72, borderRadius: 36, background: 'linear-gradient(90deg, color-mix(in srgb, var(--brand-accent) 60%, #FF6B35 40%))', display: "flex", alignItems: "center", justifyContent: "center", color: "var(--white)" }}>
+              🚗
+            </div>
+            <h4 className="font-bold mb-2">Buy with Confidence</h4>
+            <p className="text-gray-500">Complete paperwork and drive home your car</p>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-12 sm:py-16 lg:py-20">
+        <div className="container max-w-5xl mx-auto">
+          <h3 className="text-4xl sm:text-4xl font-black mb-8">Common Questions</h3>
+
+          <div className="space-y-4">
             {[
               {
-                number: "5+",
-                title: "All Platforms. One Search.",
-                description: "OLX, Cars24, Spinny, CarWale, Facebook Marketplace",
+                q: "What is CarArthX?",
+                a: "India's first unified used car search. We search Cars24, Spinny, OLX, CarWale, and Facebook Marketplace—all in one place. AI-verified for authenticity.",
               },
+              { q: "Is it free?", a: "100% free. No commissions. No hidden fees. Ever." },
               {
-                number: "AI",
-                title: "Smart Filtering",
-                description: "AI removes scams and fake listings automatically",
+                q: "How does AI verification work?",
+                a: "Our AI scans every listing for pricing anomalies, scam patterns, and fake details. You only see real listings.",
               },
-              {
-                number: "HYD",
-                title: "Hyderabad Live",
-                description: "Real-time pricing and market intelligence",
-              },
-            ].map((stat, idx) => (
-              <div
-                key={idx}
-                className="glass-card-premium p-8 animate-slide-in-up group"
-                style={{
-                  animationDelay: `${idx * 0.1}s`
-                }}
-              >
-                <p
-                  className="text-6xl font-black mb-4 transition-transform duration-500 group-hover:scale-110"
-                  style={{
-                    color: "#0071E3",
-                    textShadow: "0 0 30px rgba(0, 113, 227, 0.3)"
-                  }}
-                >
-                  {stat.number}
-                </p>
-
-                <h4
-                  className="text-xl font-bold mb-3"
-                  style={{
-                    color: isDark ? "#f5f5f7" : "#1d1d1f"
-                  }}
-                >
-                  {stat.title}
-                </h4>
-
-                <p
-                  className="text-base leading-relaxed font-light"
-                  style={{
-                    color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.6)"
-                  }}
-                >
-                  {stat.description}
-                </p>
-              </div>
+              { q: "Which cities?", a: "Live in Hyderabad now. Delhi NCR coming soon. More cities after." },
+            ].map((faq, i) => (
+              <details key={i} className="p-6 rounded-2xl border border-theme">
+                <summary className="cursor-pointer font-semibold mb-2">{faq.q}</summary>
+                <p className="text-gray-500 mt-2">{faq.a}</p>
+              </details>
             ))}
           </div>
         </div>
       </section>
 
-      {/* FAQ SECTION - Premium Glassmorphic Accordion */}
-      <section
-        className="relative py-32 px-6 sm:px-8 lg:px-12 border-t"
-        style={{
-          borderColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.08)"
-        }}
-      >
-        <div className="max-w-5xl mx-auto">
-          <h2
-            className="text-5xl sm:text-6xl font-black mb-16 tracking-tight"
-            style={{
-              color: isDark ? "#f5f5f7" : "#1d1d1f"
-            }}
-          >
-            Common Questions
-          </h2>
-
-          <div className="space-y-6">
-            {[
-              {
-                question: "What is CarArthX?",
-                answer: "India's first unified used car search. We search Cars24, Spinny, OLX, CarWale, and Facebook Marketplace—all in one place. AI-verified for authenticity."
-              },
-              {
-                question: "Is it free?",
-                answer: "100% free. No commissions. No hidden fees. Ever."
-              },
-              {
-                question: "How does AI verification work?",
-                answer: "Our AI scans every listing for pricing anomalies, scam patterns, and fake details. You only see real listings."
-              },
-              {
-                question: "Which cities?",
-                answer: "Live in Hyderabad now. Delhi NCR coming soon. More cities after."
-              },
-              {
-                question: "How fresh are listings?",
-                answer: "Real-time updates. Most listings appear within hours of posting."
-              }
-            ].map((faq, idx) => (
-              <div
-                key={idx}
-                className="glass-card-premium p-8 hover:shadow-2xl transition-all duration-500 animate-slide-in-up group"
-                style={{
-                  animationDelay: `${idx * 0.05}s`
-                }}
-              >
-                <h3
-                  className="text-xl font-bold mb-4 group-hover:text-[#0071E3] transition-colors duration-300"
-                  style={{
-                    color: isDark ? "#f5f5f7" : "#1d1d1f"
-                  }}
-                >
-                  {faq.question}
-                </h3>
-
-                <p
-                  className="text-base leading-relaxed font-light"
-                  style={{
-                    color: isDark ? "rgba(255, 255, 255, 0.65)" : "rgba(0, 0, 0, 0.65)"
-                  }}
-                >
-                  {faq.answer}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA SECTION - Premium Glass Hero Card */}
-      <section
-        className="relative py-32 px-6 sm:px-8 lg:px-12 border-t"
-        style={{
-          borderColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.08)"
-        }}
-      >
-        {/* Gradient Background */}
-        <div
-          className="absolute inset-0 -z-10 opacity-30"
-          style={{
-            background: 'radial-gradient(ellipse at center, rgba(0, 113, 227, 0.2) 0%, transparent 70%)'
-          }}
-        />
-
-        <div className="max-w-5xl mx-auto text-center">
-          <h2
-            className="text-6xl sm:text-7xl font-black mb-8 tracking-tight animate-slide-in-up"
-            style={{
-              color: isDark ? "#f5f5f7" : "#1d1d1f",
-              textShadow: isDark ? '0 0 60px rgba(0, 113, 227, 0.2)' : 'none'
-            }}
-          >
-            Start searching now
-          </h2>
-
-          <p
-            className="text-2xl mb-12 max-w-3xl mx-auto leading-relaxed font-light animate-slide-in-up"
-            style={{
-              color: isDark ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.7)",
-              animationDelay: '0.1s'
-            }}
-          >
-            5+ platforms. AI-verified. Real-time.
+      {/* CTA */}
+      <section className="py-12 sm:py-16 lg:py-20" style={{ background: 'linear-gradient(90deg, var(--brand), var(--brand-accent))' }}>
+        <div className="container max-w-5xl mx-auto text-center text-white">
+          <h2 className="text-4xl sm:text-5xl font-black mb-4">Ready to Find Your Dream Car?</h2>
+          <p className="mb-8 text-lg">
+            Join 50,000+ happy customers who found their perfect car with CarArth.
           </p>
-
           <button
             type="button"
             onClick={scrollToSearchBar}
-            className="btn-primary-premium text-xl px-12 py-5 animate-slide-in-up shadow-2xl"
-            style={{
-              animationDelay: '0.2s'
-            }}
+            className="px-10 py-3 md:py-4 rounded-2xl font-bold btn-primary-premium"
           >
-            Find Your Car
+            Start Searching Now
           </button>
         </div>
       </section>
 
-      {/* FOOTNOTES - Subtle Glass Panel */}
-      <section
-        className="relative py-12 px-6 sm:px-8 lg:px-12 border-t"
-        style={{
-          borderColor: isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.05)"
-        }}
-      >
-        <div className="max-w-5xl mx-auto">
-          <div
-            className="backdrop-blur-md rounded-2xl p-6 border"
-            style={{
-              backgroundColor: isDark ? "rgba(255, 255, 255, 0.03)" : "rgba(255, 255, 255, 0.5)",
-              borderColor: isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.05)"
-            }}
-          >
-            <p
-              className="text-xs leading-relaxed font-light"
-              style={{
-                color: isDark ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.4)"
-              }}
-            >
-              * CarArthX aggregates listings from Cars24, Spinny, OLX, CarWale, and Facebook Marketplace. We don't own or sell vehicles. Listings depend on source platform accuracy. AI verification filters scams but isn't foolproof—always verify before buying. Prices may vary. CarArthX isn't liable for transactions on linked platforms.
+      {/* FOOTNOTES */}
+      <section className="py-12 px-6 sm:px-8 lg:px-12 border-t" style={{ borderColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.06)" }}>
+          <div className="max-w-5xl mx-auto">
+          <div className="glass-card-premium">
+              <p className="text-xs leading-relaxed font-light text-gray-500 dark:text-gray-400">
+              * CarArthX aggregates listings from Cars24, Spinny, OLX, CarWale, and Facebook Marketplace.
+              We don't own or sell vehicles. Listings depend on source platform accuracy.
+              AI verification filters scams but is not foolproof — always verify before buying.
+              Prices may vary. CarArthX is not liable for transactions conducted on external platforms.
             </p>
           </div>
         </div>
       </section>
-
     </FullWidthLayout>
   );
 }

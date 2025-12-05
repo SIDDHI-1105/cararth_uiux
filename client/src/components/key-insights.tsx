@@ -11,8 +11,8 @@ export default function KeyInsights() {
           {/* AI-Verified Listings */}
           <div className="glass-card flex items-start space-x-4" data-testid="card-insight-ai-verified">
             <div className="flex-shrink-0">
-              <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(0, 113, 227, 0.15)' }}>
-                <Shield className="w-7 h-7" style={{ color: '#0071E3' }} />
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(11,29,83,0.12)' }}>
+                <Shield className="w-7 h-7" style={{ color: 'var(--brand)' }} />
               </div>
             </div>
             <div className="flex-1">
@@ -25,8 +25,8 @@ export default function KeyInsights() {
           {/* Carbon Savings Dashboard */}
           <div className="glass-card flex items-start space-x-4" data-testid="card-insight-carbon-savings">
             <div className="flex-shrink-0">
-              <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(0, 245, 160, 0.15)' }}>
-                <Leaf className="w-7 h-7" style={{ color: '#00F5A0' }} />
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(0,245,160,0.12)' }}>
+                <Leaf className="w-7 h-7" style={{ color: 'var(--success)' }} />
               </div>
             </div>
             <div className="flex-1">
@@ -39,8 +39,8 @@ export default function KeyInsights() {
           {/* One-Upload Syndication */}
           <div className="glass-card flex items-start space-x-4" data-testid="card-insight-syndication">
             <div className="flex-shrink-0">
-              <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(168, 85, 247, 0.15)' }}>
-                <Zap className="w-7 h-7" style={{ color: '#A855F7' }} />
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(197,154,78,0.10)' }}>
+                <Zap className="w-7 h-7" style={{ color: 'var(--brand-accent)' }} />
               </div>
             </div>
             <div className="flex-1">

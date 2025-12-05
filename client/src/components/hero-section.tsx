@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, ShieldCheck, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface HeroSearchProps {
   onSearch: (filters: {
@@ -39,6 +40,7 @@ const currentYear = new Date().getFullYear();
 const yearOptions = Array.from({ length: 20 }, (_, i) => currentYear - i);
 
 export default function HeroSection({ onSearch, hasSearched = false, isSearching = false, redirectToResults = false }: HeroSearchProps) {
+  const { theme } = useTheme();
   const [, setLocation] = useLocation();
   const [brand, setBrand] = useState("");
   const [budget, setBudget] = useState("");
@@ -76,30 +78,49 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
   };
 
   return (
-    <section className="px-4 py-8 md:py-16 relative">
-      {/* Gradient Overlay for depth */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/20 pointer-events-none" />
-      
-      <div className="max-w-6xl mx-auto w-full relative z-10">
+    <section className="relative overflow-hidden h-screen min-h-[600px] flex items-center">
+      {/* Full-screen Hero Background */}
+      <div className="absolute inset-0 pointer-events-none">
+        {/* Background Image - Full Width & Height */}
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: 'url(/assets/hero_custom.jpg)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center center',
+            backgroundRepeat: 'no-repeat',
+          }}
+        />
+
+        {/* Left-to-Right White Gradient Overlay for Text Readability */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'linear-gradient(90deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.7) 35%, rgba(255,255,255,0.3) 60%, rgba(255,255,255,0) 100%)',
+          }}
+        />
+      </div>
+
+      <div className="container mx-auto px-4 md:px-8 lg:px-16 w-full relative z-10">
         
-        {/* Enhanced Headline with Gradient */}
-        <div className="text-center mb-8 space-y-4">
-          <div className="inline-flex items-center gap-2 px-4 py-2 glass rounded-full mb-4">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium">India's Trusted Car Discovery Platform</span>
+        {/* Enhanced Headline */}
+        <div className="text-left md:max-w-xl mb-8 space-y-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 dark:bg-purple-900/30 rounded-full mb-4 border border-purple-200 dark:border-purple-800">
+            <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+            <span className="text-sm font-medium text-purple-700 dark:text-purple-300">India's Trusted Car Discovery Platform</span>
           </div>
-          
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 bg-gradient-to-r from-foreground via-foreground to-primary bg-clip-text text-transparent leading-tight">
+
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 text-gray-900 dark:text-white leading-tight">
             One trusted place for<br />every verified car
           </h1>
-          
-          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto font-medium">
+
+          <p className="text-base sm:text-lg text-gray-700 dark:text-gray-200 md:max-w-lg font-medium">
             {statsLoading ? (
               "Loading live data..."
             ) : heroStats ? (
               <>
-                <span className="text-primary font-bold">{heroStats.totalListings.toLocaleString()}+</span> verified listings from{" "}
-                <span className="text-primary font-bold">{heroStats.totalPlatforms}</span> platforms · List once · No paid listings
+                <span className="text-purple-600 dark:text-purple-400 font-bold">{heroStats.totalListings.toLocaleString()}+</span> verified listings from{" "}
+                <span className="text-purple-600 dark:text-purple-400 font-bold">{heroStats.totalPlatforms}</span> platforms · List once · No paid listings
               </>
             ) : (
               "Verified listings from multiple platforms · List once · No paid listings"
@@ -108,7 +129,7 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
         </div>
 
         {/* Central Search Card with Glass Effect */}
-        <div className="glass-card max-w-4xl mx-auto mb-6" data-testid="hero-search-form">
+        <div className="glass-card max-w-4xl md:max-w-2xl mb-6" data-testid="hero-search-form">
           {/* Desktop: Grid Layout */}
           <div className="hidden md:grid md:grid-cols-5 gap-2 mb-3">
             <Select value={brand} onValueChange={setBrand}>
@@ -275,7 +296,7 @@ export default function HeroSection({ onSearch, hasSearched = false, isSearching
         </div>
 
         {/* Enhanced Trust Badges with Glass Effect */}
-        <div className="flex flex-wrap justify-center gap-3 max-w-3xl mx-auto">
+        <div className="flex flex-wrap justify-start md:justify-start gap-3 max-w-2xl">
           <div className="glass px-4 py-2.5 rounded-full flex items-center gap-2 border-green-200/30 dark:border-green-800/30" data-testid="badge-verified">
             <ShieldCheck className="w-4 h-4 text-green-600 dark:text-green-400" />
             <span className="text-sm font-semibold text-green-700 dark:text-green-300">Verified by CarArthX</span>

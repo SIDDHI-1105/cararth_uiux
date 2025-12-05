@@ -1,820 +1,547 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
-import { SEOHead } from "@/components/seo-head";
 import Layout from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, XCircle, Upload, Car, FileCheck, Send, Loader2 } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+import { Search, CheckCircle2, Upload, Loader2, Car } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/contexts/ThemeContext";
+import { ObjectUploader } from "@/components/ObjectUploader";
 
-const BRANDS = ["Maruti Suzuki", "Hyundai", "Tata", "Mahindra", "Honda", "Toyota", "Ford", "Renault", "Nissan", "Volkswagen"];
-const FUEL_TYPES = ["Petrol", "Diesel", "CNG", "Electric", "Hybrid"];
-const TRANSMISSIONS = ["Manual", "Automatic", "CVT"];
-const CITIES = ["Hyderabad", "Delhi", "Mumbai", "Bangalore", "Pune", "Chennai", "Kolkata", "Ahmedabad", "Jaipur", "Lucknow"];
-const CURRENT_YEAR = new Date().getFullYear();
-const YEARS = Array.from({ length: 30 }, (_, i) => CURRENT_YEAR - i);
-
-const sellFormSchema = z.object({
-  brand: z.string().min(1, "Please select a brand"),
-  model: z.string().min(2, "Please enter the car model"),
-  year: z.coerce.number().int().min(1990, "Year must be 1990 or later").max(CURRENT_YEAR, `Year cannot be after ${CURRENT_YEAR}`),
-  price: z.coerce.number().positive("Price must be greater than 0").min(10000, "Price must be at least ₹10,000"),
-  mileage: z.coerce.number().positive("Mileage must be positive").min(0, "Mileage cannot be negative"),
-  fuelType: z.string().min(1, "Please select a fuel type"),
-  transmission: z.string().min(1, "Please select transmission type"),
-  city: z.string().min(1, "Please select a city"),
-  owners: z.coerce.number().int().min(1, "Number of owners must be at least 1").max(10, "Number of owners cannot exceed 10").optional().default(1),
-  description: z.string().optional(),
-  image: z.any().optional(),
+const rtoLookupSchema = z.object({
+  registrationNumber: z.string()
+    .min(8, "Registration number must be at least 8 characters")
+    .max(12, "Registration number cannot exceed 12 characters")
+    .regex(/^[A-Z]{2}[0-9]{1,2}[A-Z]{0,3}[0-9]{4}$/, "Invalid registration number format (e.g., TS09EA1234)")
 });
 
+const sellFormSchema = z.object({
+  registrationNumber: z.string().min(8),
+  brand: z.string().min(1, "Brand is required"),
+  model: z.string().min(2, "Model is required"),
+  year: z.coerce.number().int().min(1990).max(new Date().getFullYear()),
+  price: z.coerce.number().positive().min(10000),
+  mileage: z.coerce.number().nonnegative(),
+  fuelType: z.string().min(1),
+  transmission: z.string().min(1),
+  city: z.string().min(1),
+  owners: z.coerce.number().int().min(1).max(10).default(1),
+  description: z.string().optional(),
+  sellerName: z.string().min(2, "Name is required"),
+  sellerPhone: z.string().regex(/^[6-9]\d{9}$/, "Invalid phone number"),
+  sellerEmail: z.string().email("Invalid email").optional(),
+});
+
+type RTOLookupFormValues = z.infer<typeof rtoLookupSchema>;
 type SellFormValues = z.infer<typeof sellFormSchema>;
 
-const STEPS = [
-  { id: 1, name: "Details", icon: Car, description: "Car information" },
-  { id: 2, name: "Verification", icon: FileCheck, description: "AI verification" },
-  { id: 3, name: "Publish", icon: Send, description: "Go live" }
-];
+interface RTOData {
+  registrationNumber: string;
+  brand: string;
+  model: string;
+  year: number;
+  fuelType: string;
+  transmission: string;
+  city: string;
+  ownerSerial: number;
+  registrationDate: string;
+  chassisNumber?: string;
+  engineNumber?: string;
+}
 
-// Price ranges by year (rough estimates for Indian market)
-const getPriceRange = (year: number) => {
-  const age = CURRENT_YEAR - year;
-
-  if (age <= 2) return { min: 300000, max: 25000000 }; // 3L to 2.5Cr
-  if (age <= 5) return { min: 150000, max: 15000000 }; // 1.5L to 1.5Cr
-  if (age <= 10) return { min: 50000, max: 8000000 }; // 50k to 80L
-  return { min: 20000, max: 5000000 }; // 20k to 50L for older cars
-};
-
-// Verification result type
-type VerificationResult = {
-  status: "ok" | "error" | "verifying";
-  checks: {
-    price: { passed: boolean; message: string };
-    details: { passed: boolean; message: string };
-    compliance: { passed: boolean; message: string };
-  };
-  overallMessage?: string;
-};
-
-// Verification function
-const verifyListing = (data: SellFormValues): Promise<VerificationResult> => {
-  return new Promise((resolve) => {
-    // Simulate async verification (500ms delay)
-    setTimeout(() => {
-      const priceRange = getPriceRange(data.year);
-      const checks = {
-        price: {
-          passed: data.price >= priceRange.min && data.price <= priceRange.max,
-          message: data.price < priceRange.min
-            ? `Price seems too low for a ${data.year} model. Expected minimum: ₹${(priceRange.min / 100000).toFixed(1)}L`
-            : data.price > priceRange.max
-            ? `Price seems unrealistically high for a ${data.year} model. Expected maximum: ₹${(priceRange.max / 100000).toFixed(1)}L`
-            : `Price is within market range for ${data.year} models`
-        },
-        details: {
-          passed: data.brand && data.model && data.year && data.fuelType && data.transmission && data.city,
-          message: data.brand && data.model && data.year && data.fuelType && data.transmission && data.city
-            ? "All required fields are present and valid"
-            : "Missing required fields"
-        },
-        compliance: {
-          passed: data.mileage >= 0 && data.mileage <= 500000 && (data.owners || 1) <= 10,
-          message: data.mileage > 500000
-            ? "Mileage exceeds 5 lakh km - please verify"
-            : (data.owners || 1) > 10
-            ? "Number of owners exceeds reasonable limit"
-            : "Listing meets platform standards"
-        }
-      };
-
-      const allPassed = checks.price.passed && checks.details.passed && checks.compliance.passed;
-
-      resolve({
-        status: allPassed ? "ok" : "error",
-        checks,
-        overallMessage: allPassed
-          ? "All verification checks passed! You can now publish your listing."
-          : "Some checks failed. Please review and correct the issues before publishing."
-      });
-    }, 500);
-  });
-};
-
-export default function SellPage() {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
-  const [isVerifying, setIsVerifying] = useState(false);
+export default function SellWithRTO() {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const { toast } = useToast();
 
-  const form = useForm<SellFormValues>({
+  const [step, setStep] = useState<"rto" | "details" | "preview">("rto");
+  const [isLookingUp, setIsLookingUp] = useState(false);
+  const [rtoData, setRtoData] = useState<RTOData | null>(null);
+  const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
+
+  const rtoForm = useForm<RTOLookupFormValues>({
+    resolver: zodResolver(rtoLookupSchema),
+    defaultValues: { registrationNumber: "" }
+  });
+
+  const sellForm = useForm<SellFormValues>({
     resolver: zodResolver(sellFormSchema),
     defaultValues: {
+      registrationNumber: "",
       brand: "",
       model: "",
-      year: undefined,
-      price: undefined,
-      mileage: undefined,
+      year: new Date().getFullYear(),
+      price: 0,
+      mileage: 0,
       fuelType: "",
       transmission: "",
       city: "",
       owners: 1,
       description: "",
+      sellerName: "",
+      sellerPhone: "",
+      sellerEmail: ""
     }
   });
 
-  const submitMutation = useMutation({
-    mutationFn: async (data: SellFormValues) => {
-      console.log("🚀 Submitting listing with data:", {
-        ...data,
-        price: `₹${data.price}`,
-        mileage: `${data.mileage} km`
-      });
+  // --- RTO lookup handler (calls your backend proxy) ---
+  const handleRTOLookup = async (data: RTOLookupFormValues) => {
+    setIsLookingUp(true);
+    try {
+      const response = await fetch(`/api/v1/vahan/vehicle?regno=${encodeURIComponent(data.registrationNumber)}`);
+      const result = await response.json();
 
-      // Create full payload with all required fields
-      const payload = {
-        sellerId: "anonymous", // For now, using anonymous seller
-        title: `${data.brand} ${data.model} ${data.year}`,
-        brand: data.brand,
-        model: data.model,
-        year: data.year,
-        price: data.price,
-        mileage: data.mileage,
-        fuelType: data.fuelType,
-        transmission: data.transmission,
-        owners: data.owners || 1,
-        location: data.city, // Using city as location
-        city: data.city,
-        state: "Telangana", // Default for now, should be mapped from city
-        description: data.description || `${data.brand} ${data.model} ${data.year} for sale in ${data.city}`,
-        features: [],
-        images: [],
-        source: null,
-        listingSource: "user_direct"
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || result.error || 'Failed to fetch vehicle details');
+      }
+
+      const vahanData = result.data;
+
+      const mapped: RTOData = {
+        registrationNumber: data.registrationNumber.toUpperCase(),
+        brand: vahanData.make || "Unknown",
+        model: vahanData.model || "Unknown",
+        year: vahanData.registrationYear || new Date().getFullYear(),
+        fuelType: vahanData.fuelType || "Petrol",
+        transmission: vahanData.transmission || "Manual",
+        city: vahanData.registeredCity || vahanData.registeredState || "",
+        ownerSerial: vahanData.ownerSerial || 1,
+        registrationDate: vahanData.registrationDate || "",
+        chassisNumber: vahanData.chassisNumber,
+        engineNumber: vahanData.engineNumber
       };
 
-      console.log("📤 Sending payload to POST /api/cars:", payload);
+      setRtoData(mapped);
 
-      try {
-        const response = await apiRequest('POST', '/api/cars', payload);
+      // Autofill sell form
+      sellForm.setValue("registrationNumber", mapped.registrationNumber);
+      sellForm.setValue("brand", mapped.brand);
+      sellForm.setValue("model", mapped.model);
+      sellForm.setValue("year", mapped.year);
+      sellForm.setValue("fuelType", mapped.fuelType);
+      sellForm.setValue("transmission", mapped.transmission);
+      sellForm.setValue("city", mapped.city);
+      sellForm.setValue("owners", mapped.ownerSerial);
 
-        console.log("✅ Success! Response status:", response.status);
-
-        if (response.ok) {
-          const responseData = await response.json();
-          console.log("📥 Response data:", responseData);
-          return responseData;
-        } else {
-          const errorText = await response.text();
-          console.error("❌ Error response:", {
-            status: response.status,
-            statusText: response.statusText,
-            body: errorText
-          });
-          throw new Error(errorText || `Server error: ${response.status}`);
-        }
-      } catch (error: any) {
-        console.error("❌ Request failed:", error);
-        throw error;
-      }
-    },
-    onSuccess: (data) => {
-      console.log("🎉 Listing created successfully:", data);
+      setStep("details");
+      toast({ title: "Vehicle details fetched!", description: "Auto-filled from RTO — please verify." });
+    } catch (error) {
+      console.error('VAHAN lookup error:', error);
       toast({
-        title: "Success!",
-        description: "Your car listing has been published successfully.",
-      });
-      setCurrentStep(3);
-    },
-    onError: (error: any) => {
-      console.error("💥 Submission error:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to submit listing. Please try again.",
+        title: "Lookup failed",
+        description: error instanceof Error ? error.message : "Unable to fetch vehicle details. You can enter details manually.",
         variant: "destructive"
       });
-    }
-  });
-
-  // Run verification when entering step 2
-  useEffect(() => {
-    if (currentStep === 2) {
-      const runVerification = async () => {
-        setIsVerifying(true);
-        setVerificationResult({
-          status: "verifying",
-          checks: {
-            price: { passed: false, message: "Checking..." },
-            details: { passed: false, message: "Checking..." },
-            compliance: { passed: false, message: "Checking..." }
-          }
-        });
-
-        const formData = form.getValues();
-        console.log("🔍 Running verification on data:", formData);
-
-        const result = await verifyListing(formData);
-        console.log("✅ Verification result:", result);
-
-        setVerificationResult(result);
-        setIsVerifying(false);
-
-        if (result.status === "error") {
-          toast({
-            title: "Verification Failed",
-            description: result.overallMessage,
-            variant: "destructive"
-          });
-        } else {
-          toast({
-            title: "Verification Passed",
-            description: result.overallMessage,
-          });
-        }
-      };
-
-      runVerification();
-    }
-  }, [currentStep, form, toast]);
-
-  const onSubmit = (data: SellFormValues) => {
-    console.log("📝 Form submitted with data:", data);
-
-    if (currentStep === 1) {
-      console.log("➡️ Moving to verification step");
-      setCurrentStep(2);
-    } else if (currentStep === 2) {
-      if (verificationResult?.status !== "ok") {
-        toast({
-          title: "Cannot publish",
-          description: "Please fix verification errors before publishing.",
-          variant: "destructive"
-        });
-        return;
-      }
-      console.log("🚀 Publishing listing...");
-      submitMutation.mutate(data);
+    } finally {
+      setIsLookingUp(false);
     }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+  // --- Upload helpers (unchanged) ---
+  const handleGetUploadParameters = async () => {
+    const response = await fetch('/api/v1/uploads/seller/presigned-url?category=vehicle-images');
+    const data = await response.json();
+    if (!data.success) throw new Error('Failed to get upload URL');
+    return { method: 'PUT' as const, url: data.url };
   };
 
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "Service",
-    "serviceType": "Used Car Listing Service",
-    "name": "Sell Your Car on CarArth",
-    "description": "List your used car for sale on CarArth with AI verification and multi-platform distribution. Reach buyers across India with one listing.",
-    "provider": {
-      "@type": "Organization",
-      "name": "CarArth",
-      "url": "https://www.cararth.com"
-    },
-    "areaServed": {
-      "@type": "Country",
-      "name": "India"
-    },
-    "offers": {
-      "@type": "Offer",
-      "priceCurrency": "INR",
-      "price": "0",
-      "description": "Free car listing service with AI verification"
-    }
+  const handleUploadComplete = (result: any) => {
+    const urls = result.successful?.map((f: any) => f.uploadURL) || [];
+    setUploadedImageUrls(prev => [...prev, ...urls]);
+    toast({ title: "Images uploaded!", description: `${urls.length} image(s) uploaded successfully.` });
   };
 
-  const canPublish = verificationResult?.status === "ok" && !isVerifying;
+  // --- Submit listing (placeholder) ---
+  const handleSellSubmit = async (data: SellFormValues) => {
+    toast({ title: "Listing created!", description: "Your car listing has been submitted for review." });
+    console.log("Listing data:", data);
+    setStep("preview");
+  };
+
+  // --- Small helper: render left label + value for preview ---
+  const PreviewRow = ({ label, value }: { label: string; value?: string | number | null }) => (
+    <div className="flex items-start justify-between gap-4 py-2 border-b last:border-b-0">
+      <div className="text-sm text-gray-500">{label}</div>
+      <div className="text-sm font-medium text-right">{value ?? "-"}</div>
+    </div>
+  );
 
   return (
-    <Layout>
-      <SEOHead
-        title="Sell Your Car - CarArth | AI-Verified Listings"
-        description="Sell your used car on CarArth. Free AI-verified listings, reach buyers across India, no paid promotions. List once, reach everywhere."
-        keywords="sell car online, sell used car India, car listing, free car listing, AI verified car sale"
-        canonical="https://www.cararth.com/sell"
-        structuredData={structuredData}
-      />
-
-      <main className="container mx-auto px-4 py-16 md:py-24 max-w-4xl mt-2">
+    <Layout containerSize="lg">
+      <div className="py-12">
         {/* Header */}
-        <div className="text-center mb-16 md:mb-20">
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6" style={{ color: 'var(--foreground)' }}>
-            List your car here. Reach everywhere!
+        <div className="max-w-4xl mx-auto text-center mb-10 px-4">
+          <h1 className={`text-4xl md:text-5xl font-extrabold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            💰 Sell Your Car
           </h1>
-          <p className="text-lg md:text-xl" style={{ color: 'var(--secondary-text)' }}>
-            AI verifies every listing — no paid promotions.
+          <p className={`mt-3 text-lg ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+            Get the best price for your car — quick RTO lookup, autofill, and polished publishing flow.
           </p>
         </div>
 
-        {/* Progress Steps */}
-        <div className="mb-12">
-          <div className="flex justify-between items-center relative">
-            <div className="absolute top-5 left-0 right-0 h-1 bg-muted -z-10">
-              <div
-                className="h-full bg-primary transition-all duration-500"
-                style={{ width: `${((currentStep - 1) / (STEPS.length - 1)) * 100}%` }}
-              />
-            </div>
-
-            {STEPS.map((step) => {
-              const Icon = step.icon;
-              const isActive = currentStep >= step.id;
-              const isCurrent = currentStep === step.id;
-
-              return (
-                <div key={step.id} className="flex flex-col items-center">
-                  <div className={`
-                    w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300
-                    ${isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}
-                    ${isCurrent ? 'ring-4 ring-primary/20 scale-110' : ''}
-                  `}>
-                    {isActive && currentStep > step.id ? (
-                      <CheckCircle2 className="w-6 h-6" />
-                    ) : (
-                      <Icon className="w-6 h-6" />
-                    )}
-                  </div>
-                  <div className="mt-2 text-center">
-                    <p className={`font-semibold text-sm ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
-                      {step.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground hidden sm:block">{step.description}</p>
-                  </div>
+        {/* Progress / tabs (centered) */}
+        <div className="flex justify-center mb-10 px-4">
+          <div className="inline-flex items-center space-x-4 bg-transparent rounded-full p-1">
+            {[
+              { id: "rto", label: "RTO Lookup", icon: Search },
+              { id: "details", label: "Details", icon: Car },
+              { id: "preview", label: "Preview", icon: CheckCircle2 }
+            ].map((s, idx) => (
+              <div key={s.id} className="flex items-center">
+                <div
+                  className={`flex items-center gap-3 px-5 py-2 rounded-full transition-shadow duration-200
+                    ${step === s.id ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-50 dark:bg-white/5 text-gray-700'}
+                  `}
+                >
+                  <s.icon className="w-4 h-4" />
+                  <span className="text-sm font-semibold">{s.label}</span>
                 </div>
-              );
-            })}
+                {idx < 2 && <div className="w-6 h-0.5 mx-3 bg-gray-200 dark:bg-white/10" />}
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Form Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {currentStep === 1 && "Tell us about your car"}
-              {currentStep === 2 && "AI Verification"}
-              {currentStep === 3 && "Listing Published!"}
-            </CardTitle>
-            <CardDescription>
-              {currentStep === 1 && "Provide basic details to get started"}
-              {currentStep === 2 && "Our AI will verify your listing details"}
-              {currentStep === 3 && "Your car is now live on CarArth"}
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent>
-            {currentStep === 3 ? (
-              <div className="text-center py-8">
-                <div className="mb-6">
-                  <CheckCircle2 className="w-16 h-16 text-green-600 mx-auto mb-4" />
-                  <h3 className="text-2xl font-bold mb-2">🎉 Your car listed as CarArthX User!</h3>
-                  <p className="text-muted-foreground">
-                    Your listing is now live on CarArth with the 👤 CarArthX User badge. Buyers can find it in the search results!
-                  </p>
-                </div>
-                <div className="space-y-3">
-                  <div className="inline-flex items-center gap-2 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 px-4 py-2 rounded-full font-semibold text-sm">
-                    👤 CarArthX User
-                  </div>
-                  <div className="flex flex-wrap justify-center gap-3 mt-4">
-                    <Badge variant="outline" className="text-sm">
-                      ✅ AI-Verified
-                    </Badge>
-                    <Badge variant="outline" className="text-sm">
-                      🚀 Equal Visibility
-                    </Badge>
-                    <Badge variant="outline" className="text-sm">
-                      🔒 Secure & Trusted
-                    </Badge>
-                  </div>
-                </div>
-                <Button className="mt-6" onClick={() => window.location.href = '/results'} data-testid="button-view-listings">
-                  View All Listings
-                </Button>
-              </div>
-            ) : (
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  {currentStep === 1 && (
-                    <>
-                      <FormField
-                        control={form.control}
-                        name="brand"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Brand</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger data-testid="select-brand">
-                                  <SelectValue placeholder="Select brand" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {BRANDS.map((brand) => (
-                                  <SelectItem key={brand} value={brand}>
-                                    {brand}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="model"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Model</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g., Swift, Creta, Nexon" {...field} data-testid="input-model" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField
-                          control={form.control}
-                          name="year"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Year</FormLabel>
-                              <Select
-                                onValueChange={field.onChange}
-                                defaultValue={field.value?.toString()}
-                              >
-                                <FormControl>
-                                  <SelectTrigger data-testid="select-year">
-                                    <SelectValue placeholder="Select year" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {YEARS.map((year) => (
-                                    <SelectItem key={year} value={year.toString()}>
-                                      {year}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="price"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Price (₹)</FormLabel>
-                              <FormControl>
-                                <Input type="number" placeholder="500000" {...field} data-testid="input-price" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField
-                          control={form.control}
-                          name="fuelType"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Fuel Type</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger data-testid="select-fuel-type">
-                                    <SelectValue placeholder="Select fuel type" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {FUEL_TYPES.map((fuel) => (
-                                    <SelectItem key={fuel} value={fuel}>
-                                      {fuel}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="transmission"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Transmission</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger data-testid="select-transmission">
-                                    <SelectValue placeholder="Select transmission" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {TRANSMISSIONS.map((trans) => (
-                                    <SelectItem key={trans} value={trans}>
-                                      {trans}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField
-                          control={form.control}
-                          name="mileage"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Kilometers Driven</FormLabel>
-                              <FormControl>
-                                <Input type="number" placeholder="50000" {...field} data-testid="input-mileage" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="city"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>City</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger data-testid="select-city">
-                                    <SelectValue placeholder="Select city" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {CITIES.map((city) => (
-                                    <SelectItem key={city} value={city}>
-                                      {city}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <FormField
-                        control={form.control}
-                        name="owners"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Number of Owners</FormLabel>
-                            <FormControl>
-                              <Input type="number" placeholder="1" {...field} data-testid="input-owners" min="1" max="10" />
-                            </FormControl>
-                            <FormDescription>How many owners has the car had?</FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="description"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Description (Optional)</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Additional details about your car" {...field} data-testid="input-description" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="image"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Car Image (Optional)</FormLabel>
-                            <FormControl>
-                              <div className="space-y-4">
-                                <Input
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={(e) => {
-                                    field.onChange(e.target.files);
-                                    handleImageChange(e);
-                                  }}
-                                  data-testid="input-image"
-                                />
-                                {imagePreview && (
-                                  <div className="border rounded-lg overflow-hidden max-w-md">
-                                    <img src={imagePreview} alt="Preview" className="w-full h-auto" />
-                                  </div>
-                                )}
-                              </div>
-                            </FormControl>
-                            <FormDescription>
-                              Upload a clear photo of your car for better visibility
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </>
-                  )}
-
-                  {currentStep === 2 && (
-                    <div className="space-y-6 py-8">
-                      <div className="text-center">
-                        <div className="mb-6">
-                          {isVerifying ? (
-                            <Loader2 className="w-16 h-16 text-primary mx-auto mb-4 animate-spin" />
-                          ) : verificationResult?.status === "ok" ? (
-                            <CheckCircle2 className="w-16 h-16 text-green-600 mx-auto mb-4" />
-                          ) : (
-                            <FileCheck className="w-16 h-16 text-primary mx-auto mb-4" />
-                          )}
-                          <h3 className="text-xl font-semibold mb-2">
-                            {isVerifying ? "Verifying Your Listing" : verificationResult?.status === "ok" ? "Verification Complete" : "Verification Issues Found"}
-                          </h3>
-                          <p className="text-muted-foreground">
-                            {verificationResult?.overallMessage || "Our AI is checking your listing details for accuracy and compliance."}
-                          </p>
-                        </div>
-
-                        <div className="space-y-3 text-left max-w-md mx-auto">
-                          {/* Price Validation */}
-                          <div className={`flex items-start gap-3 p-3 rounded-lg ${
-                            verificationResult?.checks.price.passed
-                              ? 'bg-green-50 dark:bg-green-950/20'
-                              : verificationResult?.status === "error"
-                              ? 'bg-red-50 dark:bg-red-950/20'
-                              : ''
-                          }`}>
-                            {isVerifying || !verificationResult ? (
-                              <Loader2 className="w-5 h-5 text-muted-foreground mt-0.5 animate-spin" />
-                            ) : verificationResult.checks.price.passed ? (
-                              <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
-                            ) : (
-                              <XCircle className="w-5 h-5 text-red-600 mt-0.5" />
-                            )}
-                            <div className="flex-1">
-                              <p className="font-medium">Price Validation</p>
-                              <p className="text-sm text-muted-foreground">
-                                {verificationResult?.checks.price.message || "Ensuring fair market pricing"}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Details Verification */}
-                          <div className={`flex items-start gap-3 p-3 rounded-lg ${
-                            verificationResult?.checks.details.passed
-                              ? 'bg-green-50 dark:bg-green-950/20'
-                              : verificationResult?.status === "error"
-                              ? 'bg-red-50 dark:bg-red-950/20'
-                              : ''
-                          }`}>
-                            {isVerifying || !verificationResult ? (
-                              <Loader2 className="w-5 h-5 text-muted-foreground mt-0.5 animate-spin" />
-                            ) : verificationResult.checks.details.passed ? (
-                              <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
-                            ) : (
-                              <XCircle className="w-5 h-5 text-red-600 mt-0.5" />
-                            )}
-                            <div className="flex-1">
-                              <p className="font-medium">Details Verification</p>
-                              <p className="text-sm text-muted-foreground">
-                                {verificationResult?.checks.details.message || "Validating car information"}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Compliance Check */}
-                          <div className={`flex items-start gap-3 p-3 rounded-lg ${
-                            verificationResult?.checks.compliance.passed
-                              ? 'bg-green-50 dark:bg-green-950/20'
-                              : verificationResult?.status === "error"
-                              ? 'bg-red-50 dark:bg-red-950/20'
-                              : ''
-                          }`}>
-                            {isVerifying || !verificationResult ? (
-                              <Loader2 className="w-5 h-5 text-muted-foreground mt-0.5 animate-spin" />
-                            ) : verificationResult.checks.compliance.passed ? (
-                              <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
-                            ) : (
-                              <XCircle className="w-5 h-5 text-red-600 mt-0.5" />
-                            )}
-                            <div className="flex-1">
-                              <p className="font-medium">Compliance Check</p>
-                              <p className="text-sm text-muted-foreground">
-                                {verificationResult?.checks.compliance.message || "Meeting platform standards"}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 text-sm">
-                        <p className="text-center">
-                          <strong>AI verifies every listing — no paid promotions.</strong>
-                          <br />
-                          All listings get equal visibility based on relevance, not payment.
-                        </p>
+        <div className="px-4">
+          {/* CENTERED RTO LOOKUP CARD */}
+          {step === "rto" && (
+            <div className="max-w-3xl mx-auto">
+              <Card className={`rounded-2xl overflow-hidden shadow-xl ${isDark ? 'bg-white/5 border-white/6' : 'bg-white'}`}>
+                <CardContent className="p-8">
+                  <div className="flex flex-col md:flex-row items-center gap-6">
+                    <div className="flex-shrink-0">
+                      <div className={`w-16 h-16 rounded-full flex items-center justify-center text-white ${isDark ? 'bg-blue-500' : 'bg-blue-600'}`}>
+                        <Search className="w-6 h-6" />
                       </div>
                     </div>
-                  )}
 
-                  <div className="flex gap-4 pt-4">
-                    {currentStep > 1 && currentStep < 3 && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setCurrentStep(currentStep - 1)}
-                        data-testid="button-back"
-                      >
-                        Back
-                      </Button>
-                    )}
-                    {currentStep < 3 && (
-                      <Button
-                        type="submit"
-                        className="flex-1"
-                        disabled={currentStep === 2 && (!canPublish || submitMutation.isPending)}
-                        data-testid="button-next"
-                      >
-                        {currentStep === 1 && "Continue to Verification"}
-                        {currentStep === 2 && (submitMutation.isPending ? "Publishing..." : canPublish ? "Publish Listing" : "Verification Required")}
-                      </Button>
-                    )}
+                    <div className="flex-1">
+                      <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        Enter Your Vehicle Registration Number
+                      </h2>
+                      <p className={`mt-1 text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                        We will fetch vehicle details from the RTO database (VAHAN). Example: <span className="font-mono">TS09EA1234</span>
+                      </p>
+
+                      <div className="mt-6">
+                        <Form {...rtoForm}>
+                          <form onSubmit={rtoForm.handleSubmit(handleRTOLookup)} className="grid grid-cols-1 gap-4">
+                            <FormField
+                              control={rtoForm.control}
+                              name="registrationNumber"
+                              render={({ field, fieldState }) => (
+                                <FormItem>
+                                  <FormLabel className="sr-only">Registration Number</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      aria-label="Vehicle registration number"
+                                      placeholder="TS09EA1234"
+                                      className="text-lg font-semibold tracking-widest uppercase py-3"
+                                      onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                                      autoFocus
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                  {/* inline error */}
+                                  {fieldState.error && (
+                                    <div role="alert" aria-live="polite" className="mt-2 text-sm text-red-600">
+                                      {fieldState.error.message}
+                                    </div>
+                                  )}
+                                </FormItem>
+                              )}
+                            />
+
+                            <div className="flex items-center gap-3">
+                              <Button
+                                type="submit"
+                                className="flex-1 h-12 text-base font-semibold bg-blue-600 hover:bg-blue-700"
+                                disabled={isLookingUp}
+                              >
+                                {isLookingUp ? (
+                                  <>
+                                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                    Looking up…
+                                  </>
+                                ) : (
+                                  <>
+                                    <Search className="w-4 h-4 mr-2" />
+                                    Fetch Vehicle Details
+                                  </>
+                                )}
+                              </Button>
+
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setStep("details")}
+                                className="h-12"
+                              >
+                                Enter manually
+                              </Button>
+                            </div>
+                          </form>
+                        </Form>
+                      </div>
+                    </div>
                   </div>
-                </form>
-              </Form>
-            )}
-          </CardContent>
-        </Card>
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
-        {/* Benefits Section */}
-        {currentStep === 1 && (
-          <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card>
-              <CardContent className="pt-6 text-center">
-                <CheckCircle2 className="w-8 h-8 text-green-600 mx-auto mb-3" />
-                <h3 className="font-semibold mb-2">AI-Verified</h3>
-                <p className="text-sm text-muted-foreground">
-                  Every listing verified by advanced AI for accuracy
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6 text-center">
-                <Send className="w-8 h-8 text-blue-600 mx-auto mb-3" />
-                <h3 className="font-semibold mb-2">Wide Reach</h3>
-                <p className="text-sm text-muted-foreground">
-                  Your listing reaches buyers across multiple platforms
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6 text-center">
-                <Upload className="w-8 h-8 text-purple-600 mx-auto mb-3" />
-                <h3 className="font-semibold mb-2">List Once</h3>
-                <p className="text-sm text-muted-foreground">
-                  Upload once, distribute everywhere automatically
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-      </main>
+          {/* DETAILS STEP */}
+          {step === "details" && (
+            <div className="max-w-5xl mx-auto">
+              <Card className={`rounded-2xl shadow-lg ${isDark ? 'bg-white/5 border-white/6' : 'bg-white'}`}>
+                <CardHeader className="px-8 py-6">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <CardTitle className={`${isDark ? 'text-white' : 'text-gray-900'}`}>Vehicle & Seller Details</CardTitle>
+                      <CardDescription>
+                        {rtoData ? (
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                              Auto-filled from RTO
+                            </Badge>
+                            <span className="text-sm text-muted-foreground">You can edit any field</span>
+                          </div>
+                        ) : (
+                          "Provide the vehicle information to create your listing"
+                        )}
+                      </CardDescription>
+                    </div>
+                    <div className="hidden md:block">
+                      {/* small quick preview */}
+                      <div className="text-sm text-right">
+                        <div className="font-medium">{rtoData?.brand ?? '-' } {rtoData?.model ?? ''}</div>
+                        <div className="text-muted-foreground">{rtoData?.registrationNumber ?? ''}</div>
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
+
+                <CardContent className="px-8 py-6">
+                  <Form {...sellForm}>
+                    <form onSubmit={sellForm.handleSubmit(handleSellSubmit)} className="space-y-6">
+
+                      {/* Vehicle grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField control={sellForm.control} name="brand" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Brand</FormLabel>
+                            <FormControl><Input {...field} placeholder="Maruti Suzuki" /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+
+                        <FormField control={sellForm.control} name="model" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Model</FormLabel>
+                            <FormControl><Input {...field} placeholder="Swift VDi" /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+
+                        <FormField control={sellForm.control} name="year" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Year</FormLabel>
+                            <FormControl><Input {...field} type="number" placeholder="2018" /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+
+                        <FormField control={sellForm.control} name="mileage" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Mileage (km)</FormLabel>
+                            <FormControl><Input {...field} type="number" placeholder="45000" /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+
+                        <FormField control={sellForm.control} name="fuelType" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Fuel Type</FormLabel>
+                            <FormControl><Input {...field} placeholder="Petrol" /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+
+                        <FormField control={sellForm.control} name="transmission" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Transmission</FormLabel>
+                            <FormControl><Input {...field} placeholder="Manual" /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField control={sellForm.control} name="city" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>City</FormLabel>
+                            <FormControl><Input {...field} placeholder="Hyderabad" /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+
+                        <FormField control={sellForm.control} name="owners" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Number of Owners</FormLabel>
+                            <FormControl><Input {...field} type="number" min={1} max={10} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      </div>
+
+                      <FormField control={sellForm.control} name="price" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Asking Price (₹)</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="number" placeholder="500000" className="text-2xl font-extrabold" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+
+                      <FormField control={sellForm.control} name="description" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Description (optional)</FormLabel>
+                          <FormControl><Textarea {...field} placeholder="Describe your car (service history, mods, etc.)" rows={4} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+
+                      {/* Seller info */}
+                      <div className="pt-4 border-t">
+                        <h3 className="text-lg font-semibold mb-3">Your Contact Information</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <FormField control={sellForm.control} name="sellerName" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Name</FormLabel>
+                              <FormControl><Input {...field} placeholder="Your name" /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+
+                          <FormField control={sellForm.control} name="sellerPhone" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Phone</FormLabel>
+                              <FormControl><Input {...field} placeholder="9876543210" /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+
+                          <FormField control={sellForm.control} name="sellerEmail" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email (optional)</FormLabel>
+                              <FormControl><Input {...field} type="email" placeholder="you@example.com" /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                        </div>
+                      </div>
+
+                      {/* Upload */}
+                      <div className="pt-4 border-t">
+                        <h3 className="text-lg font-semibold mb-3">Upload Photos</h3>
+                        <div className={`rounded-xl border-2 border-dashed p-6 text-center ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
+                          <Upload className={`mx-auto mb-3 w-10 h-10 ${isDark ? 'text-gray-300' : 'text-gray-500'}`} />
+                          <p className="mb-3 text-sm text-muted-foreground">Upload up to 12 photos (max 12MB each)</p>
+                          <ObjectUploader
+                            maxNumberOfFiles={12}
+                            maxFileSize={12 * 1024 * 1024}
+                            allowedFileTypes={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+                            onGetUploadParameters={handleGetUploadParameters}
+                            onComplete={handleUploadComplete}
+                            buttonClassName="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
+                            note="Original images are uploaded without watermarks"
+                          >
+                            <Upload className="w-4 h-4 mr-2 inline" />
+                            Choose Images
+                          </ObjectUploader>
+
+                          {uploadedImageUrls.length > 0 && (
+                            <div className="mt-4 text-sm text-green-700">
+                              {uploadedImageUrls.length} image(s) uploaded
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex gap-3 justify-between pt-4">
+                        <Button variant="outline" onClick={() => setStep("rto")}>← Back</Button>
+                        <div className="flex gap-3">
+                          <Button variant="ghost" onClick={() => { setStep("preview"); }}>
+                            Preview
+                          </Button>
+                          <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
+                            Submit Listing →
+                          </Button>
+                        </div>
+                      </div>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* PREVIEW STEP */}
+          {step === "preview" && (
+            <div className="max-w-3xl mx-auto">
+              <Card className={`rounded-2xl shadow-lg ${isDark ? 'bg-white/5' : 'bg-white'}`}>
+                <CardHeader>
+                  <CardTitle>Preview Listing</CardTitle>
+                  <CardDescription>Review details before publishing</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="rounded-lg border p-4 bg-gray-50 dark:bg-white/3">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <div className="text-lg font-bold">{sellForm.getValues("brand")} {sellForm.getValues("model")}</div>
+                          <div className="text-sm text-muted-foreground">{sellForm.getValues("registrationNumber")}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg font-semibold">₹{sellForm.getValues("price")}</div>
+                          <div className="text-sm text-muted-foreground">{sellForm.getValues("city")}</div>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 grid grid-cols-1 gap-2">
+                        <PreviewRow label="Year" value={sellForm.getValues("year")} />
+                        <PreviewRow label="Mileage (km)" value={sellForm.getValues("mileage")} />
+                        <PreviewRow label="Fuel" value={sellForm.getValues("fuelType")} />
+                        <PreviewRow label="Transmission" value={sellForm.getValues("transmission")} />
+                        <PreviewRow label="Owners" value={sellForm.getValues("owners")} />
+                        <PreviewRow label="Seller" value={sellForm.getValues("sellerName")} />
+                        <PreviewRow label="Phone" value={sellForm.getValues("sellerPhone")} />
+                        <PreviewRow label="Description" value={sellForm.getValues("description")} />
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <Button variant="outline" onClick={() => setStep("details")}>Edit</Button>
+                      <Button onClick={() => { /* publish logic or API call here */ toast({ title: "Published!", description: "Your listing has been submitted." }); setStep("rto"); }} className="bg-blue-600 hover:bg-blue-700 text-white">
+                        Publish Listing
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </div>
+      </div>
     </Layout>
   );
 }

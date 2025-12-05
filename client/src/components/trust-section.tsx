@@ -69,10 +69,10 @@ export function TrustSection() {
               return (
                 <div key={index} className="glass-card group" data-testid={`card-trust-${index}`}>
                   <div className="flex items-start justify-between mb-6">
-                    <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(0, 113, 227, 0.15)' }}>
-                      <Icon className="w-7 h-7" style={{ color: '#0071E3' }} />
+                    <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(11,29,83,0.12)' }}>
+                      <Icon className="w-7 h-7" style={{ color: 'var(--brand)' }} />
                     </div>
-                    <span className="text-xs font-bold px-3 py-1.5 rounded-full" style={{ backgroundColor: 'rgba(0, 245, 160, 0.2)', color: '#00F5A0', border: '1px solid rgba(0, 245, 160, 0.3)' }}>
+                    <span className="text-xs font-bold px-3 py-1.5 rounded-full" style={{ backgroundColor: 'rgba(0,245,160,0.14)', color: 'var(--success)', border: '1px solid rgba(0,245,160,0.2)' }}>
                       {point.badge}
                     </span>
                   </div>

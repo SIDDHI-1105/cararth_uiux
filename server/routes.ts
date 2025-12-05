@@ -86,6 +86,7 @@ import { marketDataService } from "./marketDataService.js";
 import dealerRoutes from "./dealerRoutes.js";
 import { googleVehicleFeed } from "./googleVehicleFeed.js";
 import { registerSpinnyRoutes } from "./spinnyRoutes.js";
+import { vahanVehicleLookupService } from "./lib/vahanVehicleLookup.js";
 
 // Security utility functions to prevent PII leakage in logs
 const maskPhoneNumber = (phone: string): string => {
@@ -600,6 +601,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // VAHAN Vehicle Lookup API - fetch vehicle details by registration number
+  app.get('/api/v1/vahan/vehicle', asyncHandler(async (req, res) => {
+    const { regno } = req.query;
+
+    if (!regno || typeof regno !== 'string') {
+      return res.status(400).json({
+        error: 'Registration number is required',
+        message: 'Please provide a valid registration number (e.g., KA01AB1234)'
+      });
+    }
+
+    try {
+      console.log(`🚗 VAHAN lookup request for: ${maskPhoneNumber(regno)}`);
+      const vehicleData = await vahanVehicleLookupService.fetchByRegNumber(regno);
+
+      res.json({
+        success: true,
+        data: {
+          make: vehicleData.make,
+          model: vehicleData.model,
+          fuelType: vehicleData.fuelType,
+          registrationYear: vehicleData.registrationYear,
+          registrationDate: vehicleData.registrationDate,
+          engineNumber: vehicleData.engineNumber,
+          chassisNumber: vehicleData.chassisNumber,
+          color: vehicleData.color,
+          registeredState: vehicleData.registeredState,
+          registeredCity: vehicleData.registeredCity,
+          vehicleClass: vehicleData.vehicleClass,
+          transmission: vehicleData.transmission || 'Manual',
+          ownerSerial: vehicleData.ownerSerial || 1
+        }
+      });
+
+      console.log(`✅ VAHAN lookup successful for: ${maskPhoneNumber(regno)}`);
+    } catch (error) {
+      console.error(`❌ VAHAN lookup failed:`, error);
+
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch vehicle details';
+      res.status(500).json({
+        success: false,
+        error: errorMessage,
+        message: 'Unable to fetch vehicle details. Please enter details manually or try again later.'
+      });
+    }
+  }));
+
+  // Seller image upload - get presigned URL for direct S3 upload (no watermarks)
+  app.get('/api/v1/uploads/seller/presigned-url', asyncHandler(async (req, res) => {
+    try {
+      const { category = 'vehicle-images' } = req.query;
+
+      // Get presigned upload URL from object storage
+      const uploadUrl = await objectStorageService.getSellerUploadURL(category as string);
+
+      res.json({
+        success: true,
+        method: 'PUT',
+        url: uploadUrl
+      });
+
+      console.log(`✅ Generated seller upload URL for category: ${category}`);
+    } catch (error) {
+      console.error(`❌ Failed to generate upload URL:`, error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to generate upload URL'
+      });
+    }
+  }));
 
   // Batch ingestion endpoint for external cron jobs (cron-job.org, GitHub Actions, Railway)
   app.post('/api/run_ingestion', async (req, res) => {
@@ -4142,10 +4214,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const objectStorageService = new (await import('./objectStorage')).ObjectStorageService();
   const imageProxyService = new ImageProxyService();
 
-  // Image proxy endpoint to handle CORS for external car images  
+  // Image proxy endpoint to handle CORS for external car images
   app.get("/api/proxy/image", async (req, res) => {
     await imageProxyService.proxyImage(req, res);
   });
+
+  // VAHAN RTO Lookup Endpoint - Fetch vehicle details by registration number
+  app.post("/api/vahan/lookup", asyncHandler(async (req, res) => {
+    const { reg_number } = req.body;
+
+    if (!reg_number || typeof reg_number !== 'string') {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Registration number is required',
+        code: 'VALIDATION_ERROR'
+      });
+    }
+
+    try {
+      const vehicleDetails = await vahanVehicleLookupService.fetchByRegNumber(reg_number);
+
+      // Map backend response to frontend expected format
+      res.json({
+        status: 'ok',
+        vehicle: {
+          reg_number: vehicleDetails.registrationNumber,
+          make: vehicleDetails.make,
+          model: vehicleDetails.model,
+          variant: null,
+          manufacture_year: vehicleDetails.registrationYear.toString(),
+          registration_year: vehicleDetails.registrationYear.toString(),
+          fuel_type: vehicleDetails.fuelType,
+          transmission: vehicleDetails.transmission || 'Manual',
+          no_of_owners: vehicleDetails.ownerSerial || 1,
+          color: vehicleDetails.color,
+          chassis_number: vehicleDetails.chassisNumber,
+          engine_number: vehicleDetails.engineNumber,
+          registration_date: vehicleDetails.registrationDate,
+          images: []
+        },
+        source: 'vahan',
+        meta: {
+          fetched_at: new Date().toISOString(),
+          confidence: 0.95
+        }
+      });
+    } catch (error: any) {
+      console.error('[VAHAN] Lookup error:', error.message);
+
+      // Map error types to HTTP status codes
+      if (error.message.includes('not found')) {
+        return res.status(404).json({
+          status: 'not_found',
+          message: 'Vehicle not found in VAHAN database',
+          code: 'NOT_FOUND'
+        });
+      }
+
+      if (error.message.includes('rate limit')) {
+        return res.status(429).json({
+          status: 'error',
+          message: 'Too many requests. Please try again later.',
+          code: 'RATE_LIMITED'
+        });
+      }
+
+      if (error.message.includes('Invalid registration')) {
+        return res.status(400).json({
+          status: 'error',
+          message: error.message,
+          code: 'VALIDATION_ERROR'
+        });
+      }
+
+      // Generic error
+      res.status(503).json({
+        status: 'error',
+        message: 'VAHAN service temporarily unavailable. Please try again later.',
+        code: 'SERVICE_UNAVAILABLE'
+      });
+    }
+  }));
 
   // Create new seller listing
   app.post("/api/seller/listings", async (req: any, res) => {

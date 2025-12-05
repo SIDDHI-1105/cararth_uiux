@@ -23,23 +23,9 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Launch Status Banner - Premium Glass with Gradient */}
-      <div
-        className="fixed top-0 left-0 right-0 z-[9999] w-full backdrop-blur-[20px] transition-all duration-500"
-        style={{
-          background: 'linear-gradient(90deg, rgba(22, 163, 74, 0.95), rgba(0, 113, 227, 0.95))',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.15)',
-          boxShadow: '0 4px 24px rgba(0, 0, 0, 0.1)'
-        }}
-      >
-        <div className="text-center text-white py-3 px-4 text-sm font-bold tracking-wide">
-          🚀 <span className="animate-pulse">Hyderabad Live</span> | <span>Delhi NCR Soon</span>
-        </div>
-      </div>
-
       {/* Main Navigation - Ultra-Thin Frosted Glass */}
       <nav
-        className="fixed top-[46px] left-0 right-0 z-[9998] w-full backdrop-blur-[40px] border-b transition-all duration-500"
+        className="fixed top-0 left-0 right-0 z-[9998] w-full backdrop-blur-[40px] border-b transition-all duration-500"
         style={{
           backgroundColor: isDark
             ? scrolled ? 'rgba(10, 10, 10, 0.85)' : 'rgba(10, 10, 10, 0.75)'
@@ -69,12 +55,12 @@ export default function Navbar() {
                   ? 'text-white'
                   : `${isDark ? 'text-white hover:scale-105' : 'text-[#1d1d1f] hover:scale-105'}`
               }`}
-              style={{
+                style={{
                 background: location === '/' || location === '/results'
-                  ? 'linear-gradient(135deg, #0071E3 0%, #0077ED 100%)'
+                  ? 'linear-gradient(135deg, var(--brand), color-mix(in srgb, var(--brand) 75%, var(--brand-accent) 25%))'
                   : 'transparent',
                 boxShadow: location === '/' || location === '/results'
-                  ? '0 0 30px rgba(0, 113, 227, 0.4), 0 8px 24px rgba(0, 113, 227, 0.2)'
+                  ? '0 0 30px rgba(11,29,83,0.14), 0 8px 24px rgba(11,29,83,0.08)'
                   : 'none'
               }}
             >
@@ -97,12 +83,12 @@ export default function Navbar() {
                   ? 'text-white'
                   : `${isDark ? 'text-white hover:scale-105' : 'text-[#1d1d1f] hover:scale-105'}`
               }`}
-              style={{
+                style={{
                 background: location === '/sell-car' || location === '/sell'
-                  ? 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)'
+                  ? 'linear-gradient(135deg, var(--success), color-mix(in srgb, var(--success) 70%, var(--brand) 30%))'
                   : 'transparent',
                 boxShadow: location === '/sell-car' || location === '/sell'
-                  ? '0 0 30px rgba(22, 163, 74, 0.4), 0 8px 24px rgba(22, 163, 74, 0.2)'
+                  ? '0 0 30px rgba(16,128,64,0.12), 0 8px 24px rgba(16,128,64,0.06)'
                   : 'none'
               }}
             >
@@ -125,12 +111,12 @@ export default function Navbar() {
                   ? 'text-white'
                   : `${isDark ? 'text-white hover:scale-105' : 'text-[#1d1d1f] hover:scale-105'}`
               }`}
-              style={{
+                style={{
                 background: location === '/news'
-                  ? 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)'
+                  ? 'linear-gradient(135deg, var(--brand-alt), color-mix(in srgb, var(--brand-alt) 60%, var(--brand) 40%))'
                   : 'transparent',
                 boxShadow: location === '/news'
-                  ? '0 0 30px rgba(59, 130, 246, 0.4), 0 8px 24px rgba(59, 130, 246, 0.2)'
+                  ? '0 0 30px rgba(11,29,83,0.12), 0 8px 24px rgba(11,29,83,0.06)'
                   : 'none'
               }}
             >
@@ -148,8 +134,8 @@ export default function Navbar() {
             <button
               onClick={toggleTheme}
               className={`relative p-3 rounded-2xl transition-all duration-500 hover:scale-110 group overflow-hidden`}
-              style={{
-                color: isDark ? '#ffffff' : '#1d1d1f',
+                style={{
+                color: isDark ? 'var(--white)' : 'var(--foreground)',
                 backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)'
               }}
               aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}

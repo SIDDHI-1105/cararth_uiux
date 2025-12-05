@@ -155,7 +155,7 @@ export function ListingCard({
         <div className="p-6 space-y-4">
           {/* Title with Hover Effect */}
           <h3
-            className="font-bold text-gray-900 dark:text-gray-100 text-lg line-clamp-1 group-hover:text-[#0071E3] transition-colors duration-300"
+            className="font-bold text-gray-900 dark:text-gray-100 text-lg line-clamp-1 title-brand transition-colors duration-300"
             data-testid="text-listing-title"
           >
             {title}
@@ -164,11 +164,9 @@ export function ListingCard({
           {/* Price and Score Row */}
           <div className="flex items-center justify-between">
             <p
-              className="text-blue-700 dark:text-blue-400 font-black text-2xl"
+              className="text-[var(--brand)] dark:text-[var(--brand-accent)] font-black text-2xl"
               data-testid="text-listing-price"
-              style={{
-                textShadow: '0 0 20px rgba(0, 113, 227, 0.2)'
-              }}
+              style={{ textShadow: '0 0 18px rgba(11,29,83,0.12)' }}
             >
               {formatPrice(price)}
             </p>
@@ -192,9 +190,9 @@ export function ListingCard({
             <div
               className="flex items-center gap-2 p-3 rounded-2xl backdrop-blur-md border transition-all duration-300 hover:scale-105 hover:shadow-lg group/spec"
               style={{
-                backgroundColor: 'rgba(0, 113, 227, 0.05)',
-                borderColor: 'rgba(0, 113, 227, 0.1)'
-              }}
+                  backgroundColor: 'rgba(11,29,83,0.04)',
+                  borderColor: 'rgba(11,29,83,0.08)'
+                }}
             >
               <Calendar className="w-4 h-4 text-blue-500 group-hover/spec:scale-110 transition-transform duration-300" />
               <span className="font-semibold">{year}</span>
@@ -202,9 +200,9 @@ export function ListingCard({
             <div
               className="flex items-center gap-2 p-3 rounded-2xl backdrop-blur-md border transition-all duration-300 hover:scale-105 hover:shadow-lg group/spec"
               style={{
-                backgroundColor: 'rgba(0, 245, 160, 0.05)',
-                borderColor: 'rgba(0, 245, 160, 0.1)'
-              }}
+                  backgroundColor: 'rgba(0,245,160,0.04)',
+                  borderColor: 'rgba(0,245,160,0.08)'
+                }}
             >
               <Gauge className="w-4 h-4 text-green-500 group-hover/spec:scale-110 transition-transform duration-300" />
               <span className="font-semibold">{formatMileage(mileage)}</span>
@@ -212,9 +210,9 @@ export function ListingCard({
             <div
               className="flex items-center gap-2 p-3 rounded-2xl backdrop-blur-md border transition-all duration-300 hover:scale-105 hover:shadow-lg group/spec"
               style={{
-                backgroundColor: 'rgba(255, 107, 53, 0.05)',
-                borderColor: 'rgba(255, 107, 53, 0.1)'
-              }}
+                  backgroundColor: 'rgba(255,107,53,0.04)',
+                  borderColor: 'rgba(255,107,53,0.08)'
+                }}
             >
               <Fuel className="w-4 h-4 text-orange-500 group-hover/spec:scale-110 transition-transform duration-300" />
               <span className="font-semibold">{fuelType}</span>
@@ -222,9 +220,9 @@ export function ListingCard({
             <div
               className="flex items-center gap-2 p-3 rounded-2xl backdrop-blur-md border transition-all duration-300 hover:scale-105 hover:shadow-lg group/spec"
               style={{
-                backgroundColor: 'rgba(147, 51, 234, 0.05)',
-                borderColor: 'rgba(147, 51, 234, 0.1)'
-              }}
+                  backgroundColor: 'rgba(197,154,78,0.04)',
+                  borderColor: 'rgba(197,154,78,0.08)'
+                }}
             >
               <span className="text-sm text-purple-500 group-hover/spec:scale-110 transition-transform duration-300">⚙️</span>
               <span className="font-semibold">{transmission}</span>

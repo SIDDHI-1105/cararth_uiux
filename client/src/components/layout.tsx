@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
-import { StickyHeader } from "@/components/StickyHeader";
+// Replaced with CompactHeader (Spinny-inspired design)
+import { CompactHeader } from "@/components/CompactHeader";
 import Footer from "@/components/footer";
 
 interface LayoutProps {
@@ -45,7 +46,7 @@ export default function Layout({
       }}
       className="page-background transition-colors duration-300"
     >
-      {showNavbar && <StickyHeader />}
+      {showNavbar && <CompactHeader />}
 
       <main className="content-wrapper flex-1">
         <div className={`container-responsive ${containerClass} ${className}`}>
@@ -79,7 +80,7 @@ export function FullWidthLayout({
       }}
       className="page-background transition-colors duration-300"
     >
-      {showNavbar && <StickyHeader />}
+      {showNavbar && <CompactHeader />}
 
       <main className="content-wrapper flex-1">
         <div className={className}>
@@ -110,7 +111,7 @@ export function CenteredLayout({
       }}
       className="page-background transition-colors duration-300"
     >
-      {showNavbar && <StickyHeader />}
+      {showNavbar && <CompactHeader />}
 
       <main className="content-wrapper flex-1 flex items-center justify-center">
         <div className={`w-full max-w-2xl mx-auto px-4 py-8 ${className}`}>
