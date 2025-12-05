@@ -24,16 +24,42 @@ body {
 }
 
 :root {
+  /* --- Luxury Automotive Theme Tokens (Light Mode) --- */
+  --brand: #0B1D53;
+  --brand-accent: #C59A4E;
+  --brand-alt: #0F2E2B;
+
+  --success: #16A34A;
+  --warning: #EAB308;
+  --error: #DC2626;
+  --info: #0891B2;
+
+  --white: #FFFFFF;
+  --gray-50: #F7F8F9;
+  --gray-100: #E5E7EB;
+  --gray-200: #D1D5DB;
+  --gray-300: #9CA3AF;
+  --gray-400: #6B7280;
+  --gray-500: #4B5563;
+  --gray-600: #374151;
+  --gray-700: #1F2937;
+  --gray-800: #111827;
+  --gray-900: #030712;
+  --black: #000000;
+
+  --elevate-1: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+  --elevate-2: 0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.06);
+  --elevate-3: 0 10px 15px rgba(0,0,0,.06), 0 4px 6px rgba(0,0,0,.05);
+
   /* Spinny spacing tokens */
   --s-1:0.4rem; --s-2:0.8rem; --s-3:1.2rem; --s-4:1.6rem;
   --s-5:2rem; --s-6:2.4rem; --s-8:3.2rem; --s-10:4rem; --s-12:4.8rem;
 
-:
-  /* PREMIUM GLASSMORPHISM - Apple/Tesla Inspired */
+  /* PREMIUM GLASSMORPHISM - legacy tokens (kept for compat) */
   --background: #000000;
   --foreground: #f5f5f7;
-  --primary: #0071E3;
-  --accent: #0071E3;
+  --primary: var(--brand);
+  --accent: var(--brand);
   --trust-green: #00F5A0;
   --border: rgba(255, 255, 255, 0.1);
   --input: rgba(255, 255, 255, 0.08);
@@ -67,7 +93,7 @@ body {
   --shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.3);
   --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.2);
 
-  --glow-primary: 0 0 40px rgba(0, 113, 227, 0.4);
+  --glow-primary: 0 0 40px rgba(11, 29, 83, 0.28);
   --glow-success: 0 0 30px rgba(0, 245, 160, 0.4);
   --glow-ambient: 0 0 60px rgba(0, 113, 227, 0.15);
 
@@ -78,6 +104,37 @@ body {
 
   /* Typography */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Dark mode tokens override using user's palette (prefers-color-scheme) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --brand: #0B1D53;
+    --brand-accent: #D4AF37;
+    --brand-alt: #143E3A;
+
+    --success: #22C55E;
+    --warning: #FBBF24;
+    --error: #EF4444;
+    --info: #06B6D4;
+
+    --white: #030712;
+    --black: #FFFFFF;
+    --gray-900: #F7F8F9;
+    --gray-800: #E5E7EB;
+    --gray-700: #D1D5DB;
+    --gray-600: #9CA3AF;
+    --gray-500: #6B7280;
+    --gray-400: #4B5563;
+    --gray-300: #374151;
+    --gray-200: #1F2937;
+    --gray-100: #111827;
+    --gray-50: #030712;
+
+    --elevate-1: 0 1px 3px rgba(0,0,0,.5), 0 1px 2px rgba(0,0,0,.4);
+    --elevate-2: 0 4px 6px rgba(0,0,0,.45), 0 2px 4px rgba(0,0,0,.4);
+    --elevate-3: 0 10px 15px rgba(0,0,0,.4), 0 4px 6px rgba(0,0,0,.35);
+  }
 }
 
 /* Light Mode - Premium */
@@ -102,7 +159,7 @@ html.light, html[data-theme="light"] {
   --shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.08);
   --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.06);
 
-  --glow-primary: 0 0 40px rgba(0, 113, 227, 0.2);
+  --glow-primary: 0 0 40px rgba(11, 29, 83, 0.18);
   --glow-ambient: 0 0 60px rgba(0, 113, 227, 0.08);
 
   --gradient-hero: linear-gradient(135deg, rgba(0, 113, 227, 0.08) 0%, rgba(0, 245, 160, 0.06) 100%);
@@ -136,6 +193,8 @@ html.dark, html[data-theme="dark"] {
     line-height: 1.6;
     background-color: var(--background);
     color: var(--foreground);
+    /* Global Tailwind-friendly defaults for light/dark */
+    @apply bg-white text-gray-900 dark:bg-black dark:text-gray-100;
     min-height: 100vh;
     position: relative;
     overflow-x: hidden;
@@ -180,7 +239,10 @@ html.dark, html[data-theme="dark"] {
   }
 
   a {
-    @apply text-[#0071E3] hover:text-[#0077ED] transition-all duration-300;
+    color: var(--brand);
+    transition: color .2s ease;
+  }
+  a:hover { color: var(--brand-accent); }
   }
 
   input, textarea, select {
@@ -195,8 +257,9 @@ html.dark, html[data-theme="dark"] {
   }
 
   input:focus, textarea:focus, select:focus {
-    @apply outline-none ring-2 ring-[#0071E3]/50;
-    box-shadow: var(--glow-primary);
+    @apply outline-none;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 4px rgba(11,29,83,0.08), var(--glow-primary);
   }
 }
 
@@ -244,8 +307,8 @@ h2{ margin-bottom:var(--s-4); font-size:clamp(2.2rem, 1.3rem + 1.2vw, 3.0rem); }
   display:flex; flex-direction:column; gap:var(--s-3); /* 12 */
   padding:var(--s-5);                                   /* 20 */
   border-radius:0.8rem;                                 /* 8 px */
-  border:0.5px solid #e5e7eb;
-  background:#fff;
+  border:0.5px solid var(--gray-100);
+  background: var(--white);
 }
 
 @layer components {
@@ -323,11 +386,28 @@ h2{ margin-bottom:var(--s-4); font-size:clamp(2.2rem, 1.3rem + 1.2vw, 3.0rem); }
     transform: scale(0.97);
   }
 
+  /* Reusable card base that supports dark mode */
+  .card-base {
+    background: var(--white);
+    color: var(--gray-900);
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--elevate-1);
+    border-radius: .75rem;
+    padding: var(--s-4);
+  }
+  @media (prefers-color-scheme: dark) {
+    .card-base { background: var(--gray-900); color: var(--gray-100); border: 1px solid var(--gray-800); box-shadow: none; }
+  }
+
   /* Primary CTA Button */
   .btn-primary-premium {
-    @apply px-10 py-5 rounded-full bg-gradient-to-r from-[#0071E3] to-[#0077ED] text-white font-bold text-lg shadow-lg transition-all duration-300;
-    position: relative;
-    overflow: hidden;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: .9rem 2.4rem; border-radius: 999px; font-weight: 700; font-size: 1.6rem;
+    background: linear-gradient(90deg, var(--brand-accent), color-mix(in srgb, var(--brand-accent) 75%, #fff 25%));
+    color: var(--brand);
+    box-shadow: var(--elevate-2);
+    transition: transform .18s ease, box-shadow .18s ease;
+    position: relative; overflow: hidden;
   }
 
   .btn-primary-premium::before {
@@ -392,6 +472,57 @@ h2{ margin-bottom:var(--s-4); font-size:clamp(2.2rem, 1.3rem + 1.2vw, 3.0rem); }
   .section-premium {
     @apply py-20 sm:py-28 lg:py-32 px-4 sm:px-6 lg:px-8 relative;
   }
+
+  /* Theme-aware form controls */
+  .form-token {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-100);
+    color: var(--gray-900);
+    padding: .9rem 1.2rem;
+    border-radius: .75rem;
+  }
+  @media (prefers-color-scheme: dark) {
+    .form-token { background: var(--gray-900); border: 1px solid var(--gray-800); color: var(--gray-100); }
+  }
+
+  /* Secondary button (graphite) */
+  .btn-secondary {
+    background: var(--gray-100);
+    color: var(--gray-900);
+    padding: .6rem 1.2rem;
+    border-radius: .6rem;
+    font-weight: 600;
+    box-shadow: var(--elevate-1);
+    transition: transform .12s ease;
+  }
+
+  /* Tab button states */
+  .tab-active { background: var(--brand); color: var(--white); box-shadow: var(--elevate-2); }
+  .tab-default { background: transparent; color: var(--gray-700); }
+
+  /* Title hover helper for listing cards */
+  .group:hover .title-brand { color: var(--brand); }
+
+  /* small helper: apply brand color on hover for links */
+  .hover-brand:hover { color: var(--brand) !important; }
+  @media (prefers-color-scheme: dark) {
+    .btn-secondary { background: var(--gray-800); color: var(--gray-100); box-shadow: none; }
+  }
+
+  /* Budget card default aesthetic */
+  .budget-card {
+    border-radius: 1rem;
+    padding: 2rem;
+    color: var(--white);
+    background: linear-gradient(90deg, var(--brand-accent), color-mix(in srgb, var(--brand-accent) 60%, var(--brand) 40%));
+  }
+
+  /* Border theme helper (uses neutral tokens) */
+  .border-theme { border-color: rgba(0,0,0,0.06); }
+  @media (prefers-color-scheme: dark) { .border-theme { border-color: rgba(255,255,255,0.04); } }
+
+  /* Hero background using brand tokens */
+  .hero-custom { background: linear-gradient(135deg, var(--brand), var(--gray-800)); }
 
   /* Glass Section Background */
   .glass-section-bg {
@@ -695,7 +826,7 @@ h2{ margin-bottom:var(--s-4); font-size:clamp(2.2rem, 1.3rem + 1.2vw, 3.0rem); }
 }
 
 .mic-btn:hover {
-  background: rgba(59, 130, 246, 0.1);
+  background: rgba(11,29,83,0.06);
 }
 
 .cararth-header__right {
@@ -726,29 +857,29 @@ h2{ margin-bottom:var(--s-4); font-size:clamp(2.2rem, 1.3rem + 1.2vw, 3.0rem); }
   box-shadow: 0 6px 24px rgba(0, 113, 227, 0.35);
 }
 
-.primary-pill.active {
-  box-shadow: 0 0 30px rgba(0, 113, 227, 0.5);
-}
-
-.ghost-btn {
-  background: transparent;
-  border: 1px solid;
-  padding: 9px 16px;
-  border-radius: 20px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 14px;
-  transition: all 0.2s ease;
-}
-
-.ghost-btn:hover {
-  background: rgba(0, 0, 0, 0.04);
-}
-
-.link-btn {
-  background: transparent;
+.primary-pill {
+  background: linear-gradient(135deg, var(--brand), var(--brand-accent));
+  color: var(--white);
   border: none;
-  font-weight: 600;
+  padding: 9px 18px;
+  border-radius: 22px;
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: 0 4px 16px rgba(11,29,83,0.18);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+.primary-pill:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(11,29,83,0.22);
+}
+
+.primary-pill.active {
+  box-shadow: 0 0 30px rgba(11,29,83,0.28);
+}
   font-size: 14px;
   cursor: pointer;
   padding: 8px 12px;
@@ -764,8 +895,8 @@ h2{ margin-bottom:var(--s-4); font-size:clamp(2.2rem, 1.3rem + 1.2vw, 3.0rem); }
 }
 
 .link-btn.active {
-  background: rgba(59, 130, 246, 0.12);
-  color: #0071E3;
+  background: rgba(11,29,83,0.06);
+  color: var(--brand);
 }
 
 .icon-btn {
@@ -1020,4 +1151,40 @@ h2{ margin-bottom:var(--s-4); font-size:clamp(2.2rem, 1.3rem + 1.2vw, 3.0rem); }
   .hero-custom::after {
     display: none;
   }
+}
+
+/* HERO HEIGHT CONTROL — clamping and compact helpers */
+.hero-custom { position: relative; overflow: hidden; }
+
+/* limit how tall the decorative hero background becomes */
+.hero-bg-clamped {
+  width: 100%;
+  height: auto;
+  max-height: 420px; /* desktop max height — lowers hero height */
+  object-fit: cover;
+  display: block;
+}
+
+/* tighter hero vertical spacing */
+.hero-compact {
+  margin-top: -40px;    /* reduces top gap under header */
+  padding-top: 20px;    /* reduce top padding */
+  padding-bottom: 24px; /* reduce bottom padding */
+  min-height: 360px;    /* overall minimum height */
+}
+
+/* desktop override for very large screens */
+@media (min-width: 1400px) {
+  .hero-compact { max-height: 540px; min-height: 380px; }
+}
+
+/* optional small-screen adjustments */
+@media (max-width: 640px) {
+  .hero-compact { padding-top: 12px; padding-bottom: 16px; }
+  .hero-bg-clamped { max-height: 260px; }
+}
+
+/* Accessibility: reduce oversized headings on small screens */
+@media (max-width:640px){
+  .text-5xl { font-size:2.6rem !important; }
 }
